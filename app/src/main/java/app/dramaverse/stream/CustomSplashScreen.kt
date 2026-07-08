@@ -15,11 +15,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,8 +29,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -63,21 +59,21 @@ fun CustomSplashScreen(onFinished: () -> Unit) {
             drawCircle(
                 brush = Brush.radialGradient(
                     colors = listOf(
-                        Color.White.copy(alpha = 0.10f),
-                        Color.White.copy(alpha = 0.035f),
+                        Color.White.copy(alpha = 0.16f),
+                        Color.White.copy(alpha = 0.052f),
                         Color.Transparent
                     ),
                     center = ringCenter,
-                    radius = base * 1.28f
+                    radius = base * 1.34f
                 ),
-                radius = base * 1.28f,
+                radius = base * 1.34f,
                 center = ringCenter
             )
             drawCircle(
                 brush = Brush.radialGradient(
                     colors = listOf(
-                        Color.White.copy(alpha = 0.08f),
-                        Color(0x22FFA8AE),
+                        Color.White.copy(alpha = 0.11f),
+                        Color(0x2EFFA8AE),
                         Color.Transparent
                     ),
                     center = ringCenter,
@@ -85,18 +81,6 @@ fun CustomSplashScreen(onFinished: () -> Unit) {
                 ),
                 radius = base * 0.9f,
                 center = ringCenter
-            )
-            drawCircle(
-                color = Color(0x26FFFFFF),
-                radius = base,
-                center = ringCenter,
-                style = Stroke(width = 1.2f)
-            )
-            drawCircle(
-                color = Color(0x18FFFFFF),
-                radius = base * 0.78f,
-                center = ringCenter,
-                style = Stroke(width = 1f)
             )
         }
 
@@ -132,18 +116,7 @@ fun CustomSplashScreen(onFinished: () -> Unit) {
                 letterSpacing = 0.sp,
                 fontWeight = FontWeight.Light
             )
-            Spacer(modifier = Modifier.height(24.dp))
-            Box(
-                modifier = Modifier
-                    .width(86.dp)
-                    .height(1.dp)
-                    .background(
-                        Brush.horizontalGradient(
-                            listOf(Color.Transparent, Color(0x66FF9CA5), Color.Transparent)
-                        )
-                    )
-            )
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(26.dp))
             Text(
                 text = "Experience high-octane storytelling, curated for\nyour fastest moments.",
                 color = Color(0xFFB6959B),
@@ -156,14 +129,6 @@ fun CustomSplashScreen(onFinished: () -> Unit) {
             Spacer(modifier = Modifier.height(38.dp))
             LoadingDots()
             Spacer(modifier = Modifier.weight(1.35f))
-            Text(
-                text = "A PREMIER BITE-SIZED EXPERIENCE - EST. 2024",
-                color = Color(0xFF6E565E),
-                fontSize = 10.sp,
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = 0.sp,
-                textAlign = TextAlign.Center
-            )
         }
     }
 }
@@ -184,15 +149,6 @@ fun DramaVerseGlowBackground() {
             ),
             radius = size.width * 0.34f,
             center = Offset(size.width * 0.18f, size.height * 0.78f)
-        )
-        drawArc(
-            color = Color.White.copy(alpha = 0.42f),
-            startAngle = 126f,
-            sweepAngle = 116f,
-            useCenter = false,
-            topLeft = Offset(size.width * -0.16f, size.height * 0.5f),
-            size = Size(size.width * 0.82f, size.height * 0.32f),
-            style = Stroke(width = 1.1.dp.toPx(), cap = StrokeCap.Round)
         )
     }
 }

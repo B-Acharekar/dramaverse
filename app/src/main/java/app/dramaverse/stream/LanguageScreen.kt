@@ -1,13 +1,13 @@
 package app.dramaverse.stream
 
 import android.content.Context
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -29,11 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,6 +46,7 @@ fun LanguageScreen(
 ) {
     val context = LocalContext.current
     var selectedLanguage by remember { mutableStateOf<String?>(null) }
+    val listState = rememberLazyListState()
     val languages = remember {
         listOf(
             "English",
@@ -65,77 +63,91 @@ fun LanguageScreen(
             "\u4e2d\u6587"
         )
     }
-    val showDoneText = selectedLanguage == null || !delayDoneAfterSelection
+    val showActionButton = !delayDoneAfterSelection || selectedLanguage != null
+    val showDoneText = !delayDoneAfterSelection
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF161616))
     ) {
-        Column(
+        LanguageHeader(
+            showActionButton = showActionButton,
+            showDoneText = showDoneText,
+            onActionClick = {
+                val chosenLanguage = selectedLanguage ?: "English"
+                saveSelectedLanguage(context, chosenLanguage)
+                onContinue()
+            }
+        )
+
+        LazyColumn(
+            state = listState,
             modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFF161616))
-                .padding(horizontal = 24.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 11.5.dp),
+            contentPadding = PaddingValues(top = 7.5.dp, bottom = 7.5.dp),
+            verticalArrangement = Arrangement.spacedBy(7.5.dp)
         ) {
+            items(languages) { language ->
+                LanguageItem(
+                    name = language,
+                    selected = selectedLanguage == language,
+                    onClick = {
+                        selectedLanguage = language
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun LanguageHeader(
+    showActionButton: Boolean,
+    showDoneText: Boolean,
+    onActionClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(42.dp)
+            .padding(start = 13.dp, end = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Language",
+            color = Color.White,
+            fontSize = 17.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 0.sp
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        if (showActionButton) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(82.dp),
+                modifier = Modifier.clickable(onClick = onActionClick),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                GlobeIcon()
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "Language",
-                    color = Color.White,
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 0.sp
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                Row(
-                    modifier = Modifier
-                        .clickable {
-                            val chosenLanguage = selectedLanguage ?: "English"
-                            saveSelectedLanguage(context, chosenLanguage)
-                            onContinue()
-                        }
-                        .padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Box(
+                    modifier = Modifier.size(26.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "\u2713",
                         color = Color.White,
-                        fontSize = 28.sp,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.SemiBold,
                         letterSpacing = 0.sp
                     )
-                    if (showDoneText) {
-                        Spacer(modifier = Modifier.width(22.dp))
-                        Text(
-                            text = "DONE",
-                            color = Color.White,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            letterSpacing = 0.sp
-                        )
-                    }
                 }
-            }
-
-            Spacer(modifier = Modifier.height(2.dp))
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                items(languages) { language ->
-                    LanguageItem(
-                        name = language,
-                        selected = selectedLanguage == language,
-                        onClick = {
-                            selectedLanguage = language
-                        }
+                if (showDoneText) {
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text(
+                        text = "DONE",
+                        color = Color.White,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.sp
                     )
                 }
             }
@@ -152,8 +164,8 @@ private fun LanguageItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
-            .background(Color(0xFF2D2D30), RoundedCornerShape(50))
+            .height(48.dp)
+            .background(Color(0xFF3A3A3C), RoundedCornerShape(50))
             .then(
                 if (selected) {
                     Modifier.border(0.6.dp, Color.White, RoundedCornerShape(50))
@@ -162,16 +174,16 @@ private fun LanguageItem(
                 }
             )
             .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = 13.dp, vertical = 10.5.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         SelectionRing(selected = selected)
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(5.dp))
         Text(
             text = name,
             color = Color.White,
-            fontSize = 25.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
             letterSpacing = 0.sp
         )
     }
@@ -181,11 +193,11 @@ private fun LanguageItem(
 private fun SelectionRing(selected: Boolean) {
     Box(
         modifier = Modifier
-            .size(44.dp)
+            .size(28.dp)
             .aspectRatio(1f)
             .border(
-                width = if (selected) 3.4.dp else 3.dp,
-                color = if (selected) Color.White else Color(0xFF48B6B8),
+                width = 1.dp,
+                color = if (selected) Color.White else Color(0xFF4D7C3C),
                 shape = CircleShape
             ),
         contentAlignment = Alignment.Center
@@ -193,38 +205,10 @@ private fun SelectionRing(selected: Boolean) {
         if (selected) {
             Box(
                 modifier = Modifier
-                    .size(23.dp)
+                    .size(14.dp)
                     .background(Color.White, CircleShape)
             )
         }
-    }
-}
-
-@Composable
-private fun GlobeIcon() {
-    Canvas(modifier = Modifier.size(32.dp)) {
-        val stroke = Stroke(width = 3.dp.toPx())
-        drawCircle(Color.White, radius = size.minDimension / 2f - 1.dp.toPx(), style = stroke)
-        drawLine(
-            color = Color.White,
-            start = Offset(size.width * 0.18f, size.height * 0.5f),
-            end = Offset(size.width * 0.82f, size.height * 0.5f),
-            strokeWidth = 3.dp.toPx(),
-            cap = StrokeCap.Round
-        )
-        drawLine(
-            color = Color.White,
-            start = Offset(size.width * 0.5f, size.height * 0.1f),
-            end = Offset(size.width * 0.5f, size.height * 0.9f),
-            strokeWidth = 2.5.dp.toPx(),
-            cap = StrokeCap.Round
-        )
-        drawOval(
-            color = Color.White,
-            topLeft = Offset(size.width * 0.28f, 1.dp.toPx()),
-            size = Size(size.width * 0.44f, size.height - 2.dp.toPx()),
-            style = Stroke(width = 2.5.dp.toPx())
-        )
     }
 }
 
