@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<defaultsMap>
+    <entry>
+        <key>delay_button_done_language</key>
+        <value>false</value>
+    </entry>
+    <entry>
+        <key>onesignal_app_id</key>
+        <value></value>
+    </entry>
+</defaultsMap>
