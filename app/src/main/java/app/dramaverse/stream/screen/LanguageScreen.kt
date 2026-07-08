@@ -1,6 +1,5 @@
-package app.dramaverse.stream
+package app.dramaverse.stream.screen
 
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,46 +23,26 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-private const val PREFS_NAME = "dramaverse_onboarding"
-private const val KEY_SELECTED_LANGUAGE = "selected_language"
+import androidx.lifecycle.viewmodel.compose.viewModel
+import app.dramaverse.stream.model.LanguageViewModel
 
 @Composable
 fun LanguageScreen(
     delayDoneAfterSelection: Boolean,
-    onContinue: () -> Unit
+    onContinue: (String) -> Unit,
+    viewModel: LanguageViewModel = viewModel()
 ) {
-    val context = LocalContext.current
-    var selectedLanguage by remember { mutableStateOf<String?>(null) }
+    val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
-    val languages = remember {
-        listOf(
-            "English",
-            "Ti\u1ebfng Vi\u1ec7t",
-            "Espa\u00f1ol",
-            "Fran\u00e7ais",
-            "Deutsch",
-            "Italiano",
-            "Portugu\u00eas",
-            "T\u00fcrk\u00e7e",
-            "\u0627\u0644\u0639\u0631\u0628\u064a\u0629",
-            "\u0939\u093f\u0928\u094d\u0926\u0940",
-            "\ud55c\uad6d\uc5b4",
-            "\u4e2d\u6587"
-        )
-    }
-    val showActionButton = !delayDoneAfterSelection || selectedLanguage != null
+    val showActionButton = !delayDoneAfterSelection || uiState.selectedLanguage != null
     val showDoneText = !delayDoneAfterSelection
 
     Column(
@@ -75,9 +54,7 @@ fun LanguageScreen(
             showActionButton = showActionButton,
             showDoneText = showDoneText,
             onActionClick = {
-                val chosenLanguage = selectedLanguage ?: "English"
-                saveSelectedLanguage(context, chosenLanguage)
-                onContinue()
+                onContinue(viewModel.confirmLanguage())
             }
         )
 
@@ -89,12 +66,12 @@ fun LanguageScreen(
             contentPadding = PaddingValues(top = 7.5.dp, bottom = 7.5.dp),
             verticalArrangement = Arrangement.spacedBy(7.5.dp)
         ) {
-            items(languages) { language ->
+            items(uiState.languages) { language ->
                 LanguageItem(
                     name = language,
-                    selected = selectedLanguage == language,
+                    selected = uiState.selectedLanguage == language,
                     onClick = {
-                        selectedLanguage = language
+                        viewModel.selectLanguage(language)
                     }
                 )
             }
@@ -210,12 +187,4 @@ private fun SelectionRing(selected: Boolean) {
             )
         }
     }
-}
-
-private fun saveSelectedLanguage(context: Context, language: String) {
-    context
-        .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        .edit()
-        .putString(KEY_SELECTED_LANGUAGE, language)
-        .apply()
 }

@@ -1,4 +1,4 @@
-package app.dramaverse.stream
+package app.dramaverse.stream.screen
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -37,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.dramaverse.stream.R
 import kotlinx.coroutines.delay
 
 @Composable
