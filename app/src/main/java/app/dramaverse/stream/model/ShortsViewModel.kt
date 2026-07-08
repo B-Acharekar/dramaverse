@@ -34,6 +34,15 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
         nextPage = 1
         viewModelScope.launch {
             _uiState.update { ShortsUiState(isLoading = true) }
+            if (initialFilmId != null && initialFilmId != 0) {
+                withContext(Dispatchers.IO) {
+                    repository.loadPlayback(backendBaseUrl, initialFilmId)
+                }.onSuccess { selectedItem ->
+                    _uiState.update {
+                        it.copy(isLoading = false, items = listOf(selectedItem), errorMessage = null)
+                    }
+                }
+            }
             loadPage(backendBaseUrl, initialFilmId)
             ensurePlayback(0, backendBaseUrl)
         }
@@ -67,6 +76,78 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun setEpisodeLike(
+        backendBaseUrl: String,
+        filmId: Int,
+        episodeNumber: Int,
+        liked: Boolean
+    ) {
+        if (filmId == 0) return
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                repository.setEpisodeLike(
+                    backendBaseUrl = backendBaseUrl,
+                    filmId = filmId,
+                    episodeNumber = episodeNumber,
+                    liked = liked
+                )
+            }
+        }
+    }
+
+    fun setReminder(
+        backendBaseUrl: String,
+        filmId: Int,
+        enabled: Boolean
+    ) {
+        if (filmId == 0) return
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                repository.setReminder(
+                    backendBaseUrl = backendBaseUrl,
+                    filmId = filmId,
+                    enabled = enabled
+                )
+            }
+        }
+    }
+
+    fun unlockEpisode(
+        backendBaseUrl: String,
+        filmId: Int,
+        episodeNumber: Int
+    ) {
+        if (filmId == 0) return
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                repository.unlockEpisode(
+                    backendBaseUrl = backendBaseUrl,
+                    filmId = filmId,
+                    episodeNumber = episodeNumber
+                )
+            }
+        }
+    }
+
+    fun sendFeedback(
+        backendBaseUrl: String,
+        filmId: Int,
+        episodeNumber: Int,
+        message: String
+    ) {
+        if (filmId == 0 || message.isBlank()) return
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                repository.sendFeedback(
+                    backendBaseUrl = backendBaseUrl,
+                    filmId = filmId,
+                    episodeNumber = episodeNumber,
+                    message = message.trim()
+                )
+            }
+        }
+    }
+
     private suspend fun loadPage(backendBaseUrl: String, initialFilmId: Int?) {
         val page = nextPage
         val items = withContext(Dispatchers.IO) {
@@ -88,9 +169,14 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
             items
         }
         _uiState.update { state ->
-            val merged = (state.items + sortedItems)
+            val merged = if (initialFilmId != null) {
+                state.items + sortedItems.filterNot { it.film.id == initialFilmId }
+            } else {
+                state.items + sortedItems
+            }
+            val distinct = merged
                 .distinctBy { it.film.id.takeIf { id -> id != 0 } ?: it.film.title }
-            state.copy(isLoading = false, items = merged, errorMessage = null)
+            state.copy(isLoading = false, items = distinct, errorMessage = null)
         }
     }
 }

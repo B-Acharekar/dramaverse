@@ -4,12 +4,20 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
+data class SubtitleTrack(
+    val label: String,
+    val language: String,
+    val url: String
+)
+
 data class ShortsItem(
     val film: DramaItem,
     val episodeNumber: Int = 1,
     val playUrl: String = "",
     val subtitleUrl: String = "",
-    val isLocked: Boolean = false
+    val subtitleTracks: List<SubtitleTrack> = emptyList(),
+    val isLocked: Boolean = false,
+    val likeCount: Int = 0
 )
 
 class ShortsRepository(
@@ -49,6 +57,10 @@ class ShortsRepository(
         val filmJson = json.optJSONObject("film") ?: JSONObject()
         val episodeJson = json.optJSONObject("episode") ?: JSONObject()
         val playback = episodeJson.optJSONObject("playback") ?: JSONObject()
+        val subtitleTracks = playback.opt("subtitles").subtitleTracks(backendBaseUrl)
+        val likeCount = episodeJson.firstInt("like_count", "likes", "likes_count", "likeCount", "favorite_count")
+            .takeIf { it > 0 }
+            ?: filmJson.firstInt("like_count", "likes", "likes_count", "likeCount", "favorite_count")
         val film = DramaItem(
             id = filmJson.optInt("id", filmId),
             title = filmJson.optString("title", "Drama"),
@@ -56,16 +68,116 @@ class ShortsRepository(
             imageUrl = filmJson.optString("thumb"),
             rating = filmJson.optString("rating", "4.8"),
             episodeTotal = filmJson.optInt("episode_total", 1),
-            genre = filmJson.optString("genre", "Drama")
+            genre = filmJson.optString("genre", "Drama"),
+            likeCount = likeCount
         )
         ShortsItem(
             film = film,
             episodeNumber = episodeJson.optInt("episode", episodeNumber),
             playUrl = playback.optString("hls_url").ifBlank { playback.optString("backup_hls_url") },
-            subtitleUrl = playback.optJSONObject("subtitles")?.firstValue().orEmpty(),
-            isLocked = json.optBoolean("unlock_required", false)
+            subtitleUrl = subtitleTracks.firstOrNull()?.url.orEmpty(),
+            subtitleTracks = subtitleTracks,
+            isLocked = json.optBoolean("unlock_required", false),
+            likeCount = likeCount
         )
     }
+
+    suspend fun setEpisodeLike(
+        backendBaseUrl: String,
+        filmId: Int,
+        episodeNumber: Int,
+        liked: Boolean,
+        language: String = "en"
+    ): Result<Unit> = postClientAction(
+        backendBaseUrl = backendBaseUrl,
+        path = "client/films/$filmId/episodes/$episodeNumber/${if (liked) "like" else "unlike"}",
+        language = language
+    )
+
+    suspend fun setReminder(
+        backendBaseUrl: String,
+        filmId: Int,
+        enabled: Boolean,
+        language: String = "en"
+    ): Result<Unit> = postClientAction(
+        backendBaseUrl = backendBaseUrl,
+        path = "client/films/$filmId/${if (enabled) "reminder" else "unreminder"}",
+        language = language
+    )
+
+    suspend fun unlockEpisode(
+        backendBaseUrl: String,
+        filmId: Int,
+        episodeNumber: Int,
+        language: String = "en"
+    ): Result<Unit> = postClientAction(
+        backendBaseUrl = backendBaseUrl,
+        path = "client/films/$filmId/episodes/$episodeNumber/unlock",
+        language = language
+    )
+
+    suspend fun sendFeedback(
+        backendBaseUrl: String,
+        filmId: Int,
+        episodeNumber: Int,
+        message: String,
+        language: String = "en"
+    ): Result<Unit> = runCatching {
+        val token = authRepository.authToken()
+            ?: authRepository.registerDevice(backendBaseUrl, language).getOrThrow().token
+            ?: throw IllegalStateException("Device auth did not return a bearer token.")
+        postJson(
+            backendBaseUrl = backendBaseUrl,
+            path = "client/feedback",
+            language = language,
+            token = token,
+            body = JSONObject()
+                .put("film_id", filmId)
+                .put("episode_number", episodeNumber)
+                .put("message", message)
+                .put("source", "shorts")
+        )
+        Unit
+    }
+
+    private suspend fun postClientAction(
+        backendBaseUrl: String,
+        path: String,
+        language: String
+    ): Result<Unit> = runCatching {
+        val token = authRepository.authToken()
+            ?: authRepository.registerDevice(backendBaseUrl, language).getOrThrow().token
+            ?: throw IllegalStateException("Device auth did not return a bearer token.")
+        postJson(backendBaseUrl, path, language, token)
+        Unit
+    }
+}
+
+private fun postJson(
+    backendBaseUrl: String,
+    path: String,
+    language: String,
+    token: String,
+    body: JSONObject? = null
+): JSONObject {
+    val url = URL("${backendBaseUrl.trimEndSlash()}/$path?language=$language")
+    val connection = (url.openConnection() as HttpURLConnection).apply {
+        requestMethod = "POST"
+        connectTimeout = 6500
+        readTimeout = 6500
+        doOutput = true
+        setRequestProperty("Accept", "application/json")
+        setRequestProperty("Content-Type", "application/json")
+        setRequestProperty("Authorization", "Bearer $token")
+        outputStream.use { it.write(body?.toString()?.toByteArray() ?: ByteArray(0)) }
+    }
+    val responseText = if (connection.responseCode in 200..299) {
+        connection.inputStream.bufferedReader().use { it.readText() }
+    } else {
+        val error = connection.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
+        throw IllegalStateException("$path failed: ${connection.responseCode} $error")
+    }
+    return JSONObject(responseText)
 }
 
 private fun getJson(
@@ -128,7 +240,8 @@ private fun JSONObject.toShortDramaItemOrNull(): DramaItem? {
         episodeTotal = firstInt("episode_total", "episodes_count", "total_episodes", "eps").takeIf { it > 0 } ?: 1,
         genre = firstString("genre", "category", "tag").ifBlank { "Drama" },
         isPremium = firstBoolean("is_vip", "isVip", "vip", "is_premium", "premium") ||
-            firstInt("price", "coin_price", "unlock_price") > 0
+            firstInt("price", "coin_price", "unlock_price") > 0,
+        likeCount = firstInt("like_count", "likes", "likes_count", "likeCount", "favorite_count")
     )
 }
 
@@ -165,14 +278,130 @@ private fun JSONObject.firstBoolean(vararg keys: String): Boolean {
     return false
 }
 
-private fun JSONObject.firstValue(): String? {
-    val keys = keys()
-    while (keys.hasNext()) {
-        val value = opt(keys.next())
-        if (value is String && value.isNotBlank()) return value
-    }
-    return null
+private fun Any?.subtitleTracks(backendBaseUrl: String): List<SubtitleTrack> {
+    return when (this) {
+        is String -> takeIf { it.isNotBlank() }
+            ?.let { listOf(SubtitleTrack("English", "en", it.normalizeMediaUrl(backendBaseUrl))) }
+            .orEmpty()
+
+        is JSONObject -> buildList {
+            val direct = firstString("url", "src", "file", "vtt", "default")
+            if (direct.isNotBlank()) {
+                val label = firstString("label", "name", "language", "lang")
+                val language = firstString("language", "lang").ifBlank { label.toSubtitleLanguageCode() }
+                add(
+                    SubtitleTrack(
+                        label = label.toSubtitleLabel(),
+                        language = language,
+                        url = direct.normalizeMediaUrl(backendBaseUrl)
+                    )
+                )
+                return@buildList
+            }
+
+            val keys = keys()
+            while (keys.hasNext()) {
+                val key = keys.next()
+                val nested = opt(key).subtitleTracks(backendBaseUrl)
+                addAll(
+                    nested.map { track ->
+                        if (key.isSubtitleContainerKey() || (track.label.isNotBlank() && track.label != "English")) {
+                            track
+                        } else {
+                            track.copy(label = key.toSubtitleLabel(), language = key)
+                        }
+                    }
+                )
+            }
+        }
+
+        is org.json.JSONArray -> buildList {
+            for (index in 0 until length()) {
+                addAll(opt(index).subtitleTracks(backendBaseUrl))
+            }
+        }
+
+        else -> emptyList()
+    }.distinctBy { it.url }
+        .sortedWith(compareBy<SubtitleTrack> { it.language.subtitleSortRank() }.thenBy { it.label })
 }
+
+private fun String.toSubtitleLabel(): String = when (lowercase()) {
+    "", "en", "eng", "english" -> "English"
+    "hi", "hin", "hindi" -> "Hindi"
+    "ms", "msa", "may", "malay" -> "Malay"
+    "vi", "vie", "vietnamese" -> "Vietnamese"
+    "ko", "kor", "korean" -> "Korean"
+    "ja", "jpn", "japanese" -> "Japanese"
+    "zh", "zho", "chi", "chinese", "cn" -> "Chinese"
+    "th", "tha", "thai" -> "Thai"
+    "ar", "ara", "arabic" -> "Arabic"
+    "de", "ger", "deu", "german" -> "German"
+    "it", "ita", "italian" -> "Italian"
+    "ru", "rus", "russian" -> "Russian"
+    "tr", "tur", "turkish" -> "Turkish"
+    "bn", "ben", "bengali" -> "Bengali"
+    "ta", "tam", "tamil" -> "Tamil"
+    "te", "tel", "telugu" -> "Telugu"
+    "mr", "mar", "marathi" -> "Marathi"
+    "es", "spa", "spanish" -> "Spanish"
+    "fr", "fra", "fre", "french" -> "French"
+    "pt", "por", "portuguese" -> "Portuguese"
+    "id", "indonesian" -> "Indonesian"
+    else -> replace('_', ' ')
+        .replace('-', ' ')
+        .split(' ')
+        .filter { it.isNotBlank() }
+        .joinToString(" ") { word -> word.replaceFirstChar { it.uppercase() } }
+}
+
+private fun String.toSubtitleLanguageCode(): String = when (lowercase()) {
+    "english", "eng", "en" -> "en"
+    "hindi", "hin", "hi" -> "hi"
+    "malay", "msa", "may", "ms" -> "ms"
+    "vietnamese", "vie", "vi" -> "vi"
+    "korean", "kor", "ko" -> "ko"
+    "japanese", "jpn", "ja" -> "ja"
+    "chinese", "zho", "chi", "zh", "cn" -> "zh"
+    "thai", "tha", "th" -> "th"
+    "arabic", "ara", "ar" -> "ar"
+    "german", "deu", "ger", "de" -> "de"
+    "italian", "ita", "it" -> "it"
+    "russian", "rus", "ru" -> "ru"
+    "turkish", "tur", "tr" -> "tr"
+    "bengali", "ben", "bn" -> "bn"
+    "tamil", "tam", "ta" -> "ta"
+    "telugu", "tel", "te" -> "te"
+    "marathi", "mar", "mr" -> "mr"
+    "spanish", "spa", "es" -> "es"
+    "french", "fra", "fre", "fr" -> "fr"
+    "portuguese", "por", "pt" -> "pt"
+    "indonesian", "id" -> "id"
+    else -> "en"
+}
+
+private fun String.subtitleSortRank(): Int = when (lowercase()) {
+    "en", "eng", "english" -> 0
+    "hi", "hin", "hindi" -> 1
+    "ms", "msa", "may", "malay" -> 2
+    "vi", "vie", "vietnamese" -> 3
+    "ko", "kor", "korean" -> 4
+    "ja", "jpn", "japanese" -> 5
+    "zh", "zho", "chi", "chinese", "cn" -> 6
+    "th", "tha", "thai" -> 7
+    "es", "spa", "spanish" -> 8
+    "fr", "fra", "fre", "french" -> 9
+    "pt", "por", "portuguese" -> 10
+    else -> 99
+}
+
+private fun String.isSubtitleContainerKey(): Boolean =
+    lowercase() in setOf("subtitles", "subtitle", "tracks", "captions", "items", "data")
 
 private fun String.trimEndSlash(): String =
     trim().trimEnd('/').ifBlank { "https://dramaverse-backend-lbq5.onrender.com" }
+
+private fun String.normalizeMediaUrl(backendBaseUrl: String): String {
+    if (isBlank()) return ""
+    return if (startsWith("/")) "${backendBaseUrl.trimEndSlash()}$this" else this
+}

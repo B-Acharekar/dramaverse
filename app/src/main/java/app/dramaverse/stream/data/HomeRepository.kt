@@ -29,7 +29,8 @@ data class DramaItem(
     val rating: String,
     val episodeTotal: Int,
     val genre: String,
-    val isPremium: Boolean = false
+    val isPremium: Boolean = false,
+    val likeCount: Int = 0
 )
 
 data class HomeFeed(
@@ -450,6 +451,7 @@ private fun DramaItem.toJson(): JSONObject = JSONObject()
     .put("episodeTotal", episodeTotal)
     .put("genre", genre)
     .put("isPremium", isPremium)
+    .put("likeCount", likeCount)
 
 private fun HomeFeed.toJson(): JSONObject = JSONObject()
     .put("hero", hero.toJson())
@@ -480,7 +482,8 @@ private fun JSONObject.toDramaItem(): DramaItem = DramaItem(
     rating = optString("rating"),
     episodeTotal = optInt("episodeTotal"),
     genre = optString("genre"),
-    isPremium = optBoolean("isPremium", false)
+    isPremium = optBoolean("isPremium", false),
+    likeCount = optInt("likeCount", 0)
 )
 
 private fun JSONArray?.toDramaItems(): List<DramaItem> {
@@ -510,7 +513,8 @@ private fun JSONObject.toDramaItemOrNull(): DramaItem? {
         episodeTotal = firstInt("episode_total", "episodes_count", "total_episodes", "eps").takeIf { it > 0 } ?: 45,
         genre = firstString("genre", "category", "tag").ifBlank { "Romance" },
         isPremium = firstBoolean("is_vip", "isVip", "vip", "is_premium", "premium") ||
-            firstInt("price", "coin_price", "unlock_price") > 0
+            firstInt("price", "coin_price", "unlock_price") > 0,
+        likeCount = firstInt("like_count", "likes", "likes_count", "likeCount", "favorite_count")
     )
 }
 

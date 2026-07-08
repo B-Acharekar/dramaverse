@@ -1,9 +1,13 @@
 package app.dramaverse.stream.screen
 
 import android.net.Uri
+import android.view.LayoutInflater
 import android.view.View
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.widget.Toast
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,7 +23,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -28,6 +35,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ClosedCaption
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.MoreVert
@@ -36,8 +44,11 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,6 +59,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,20 +67,29 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.dramaverse.stream.R
 import app.dramaverse.stream.data.ShortsItem
+import app.dramaverse.stream.data.SubtitleTrack
 import app.dramaverse.stream.model.ShortsViewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.PlaybackParameters
+import androidx.media3.common.text.CueGroup
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.ui.PlayerView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -91,8 +112,11 @@ fun ShortsScreen(
     val pagerState = rememberPagerState { uiState.items.size.coerceAtLeast(1) }
     var controlsVisible by remember { mutableStateOf(true) }
     var isPlaying by remember { mutableStateOf(true) }
-    var showFeedbackOptions by remember { mutableStateOf(false) }
+    var showPlaybackOptions by remember { mutableStateOf(false) }
+    var showFeedbackForm by remember { mutableStateOf(false) }
     var autoUnlock by remember { mutableStateOf(false) }
+    var ccEnabled by remember { mutableStateOf(true) }
+    var playbackSpeed by remember { mutableStateOf(1f) }
 
     LaunchedEffect(backendBaseUrl, initialFilmId) {
         viewModel.loadInitial(backendBaseUrl, initialFilmId)
@@ -101,16 +125,18 @@ fun ShortsScreen(
     LaunchedEffect(pagerState.currentPage, uiState.items.size) {
         controlsVisible = true
         isPlaying = true
-        showFeedbackOptions = false
+        showPlaybackOptions = false
+        showFeedbackForm = false
         viewModel.ensurePlayback(pagerState.currentPage, backendBaseUrl)
         viewModel.loadMoreIfNeeded(pagerState.currentPage, backendBaseUrl)
     }
 
     LaunchedEffect(controlsVisible, isPlaying, pagerState.currentPage) {
         if (controlsVisible && isPlaying) {
-            delay(4500)
+            delay(8000)
             controlsVisible = false
-            showFeedbackOptions = false
+            showPlaybackOptions = false
+            showFeedbackForm = false
         }
     }
 
@@ -132,22 +158,73 @@ fun ShortsScreen(
                     isActive = page == pagerState.currentPage,
                     controlsVisible = controlsVisible,
                     isPlaying = isPlaying,
-                    showFeedbackOptions = showFeedbackOptions,
+                    showPlaybackOptions = showPlaybackOptions,
+                    showFeedbackForm = showFeedbackForm,
                     autoUnlock = autoUnlock,
+                    ccEnabled = ccEnabled,
+                    playbackSpeed = playbackSpeed,
                     onBack = onBack,
                     onTogglePlay = {
-                        if (controlsVisible) {
-                            isPlaying = !isPlaying
-                        } else {
-                            controlsVisible = true
-                        }
+                        controlsVisible = true
+                        isPlaying = !isPlaying
                     },
-                    onToggleControls = { controlsVisible = !controlsVisible },
                     onFeedbackClick = {
                         controlsVisible = true
-                        showFeedbackOptions = !showFeedbackOptions
+                        showFeedbackForm = !showFeedbackForm
+                        showPlaybackOptions = false
                     },
-                    onAutoUnlockChange = { autoUnlock = it }
+                    onOptionsClick = {
+                        controlsVisible = true
+                        showPlaybackOptions = !showPlaybackOptions
+                        showFeedbackForm = false
+                    },
+                    onClosePopups = {
+                        showPlaybackOptions = false
+                        showFeedbackForm = false
+                    },
+                    onAutoUnlockChange = { enabled ->
+                        autoUnlock = enabled
+                        showPlaybackOptions = false
+                        uiState.items.getOrNull(pagerState.currentPage)?.let { item ->
+                            if (enabled) viewModel.unlockEpisode(
+                                backendBaseUrl = backendBaseUrl,
+                                filmId = item.film.id,
+                                episodeNumber = item.episodeNumber
+                            )
+                        }
+                    },
+                    onSubmitFeedback = { item, message ->
+                        viewModel.sendFeedback(
+                            backendBaseUrl = backendBaseUrl,
+                            filmId = item.film.id,
+                            episodeNumber = item.episodeNumber,
+                            message = message
+                        )
+                    },
+                    onLikeClick = { item, liked ->
+                        viewModel.setEpisodeLike(
+                            backendBaseUrl = backendBaseUrl,
+                            filmId = item.film.id,
+                            episodeNumber = item.episodeNumber,
+                            liked = liked
+                        )
+                    },
+                    onReminderClick = { item, enabled ->
+                        viewModel.setReminder(
+                            backendBaseUrl = backendBaseUrl,
+                            filmId = item.film.id,
+                            enabled = enabled
+                        )
+                    },
+                    onToggleCc = { ccEnabled = !ccEnabled },
+                    onCycleSpeed = {
+                        playbackSpeed = when (playbackSpeed) {
+                            1f -> 1.25f
+                            1.25f -> 1.5f
+                            1.5f -> 2f
+                            else -> 1f
+                        }
+                    }
                 )
             }
         }
@@ -168,16 +245,36 @@ private fun ShortsPage(
     isActive: Boolean,
     controlsVisible: Boolean,
     isPlaying: Boolean,
-    showFeedbackOptions: Boolean,
+    showPlaybackOptions: Boolean,
+    showFeedbackForm: Boolean,
     autoUnlock: Boolean,
+    ccEnabled: Boolean,
+    playbackSpeed: Float,
     onBack: () -> Unit,
     onTogglePlay: () -> Unit,
-    onToggleControls: () -> Unit,
     onFeedbackClick: () -> Unit,
-    onAutoUnlockChange: (Boolean) -> Unit
+    onOptionsClick: () -> Unit,
+    onClosePopups: () -> Unit,
+    onAutoUnlockChange: (Boolean) -> Unit,
+    onSubmitFeedback: (ShortsItem, String) -> Unit,
+    onLikeClick: (ShortsItem, Boolean) -> Unit,
+    onReminderClick: (ShortsItem, Boolean) -> Unit,
+    onToggleCc: () -> Unit,
+    onCycleSpeed: () -> Unit
 ) {
     var videoReady by remember(item.playUrl) { mutableStateOf(false) }
     var reminderOn by remember(item.film.id) { mutableStateOf(false) }
+    var liked by remember(item.film.id, item.episodeNumber) { mutableStateOf(false) }
+    var positionMs by remember(item.playUrl) { mutableStateOf(0L) }
+    var durationMs by remember(item.playUrl) { mutableStateOf(0L) }
+    var pendingSeekMs by remember(item.playUrl) { mutableStateOf<Long?>(null) }
+    var subtitleText by remember(item.playUrl) { mutableStateOf("") }
+    var feedbackText by remember(item.playUrl) { mutableStateOf("") }
+    var selectedSubtitleUrl by remember(item.playUrl, item.subtitleUrl) { mutableStateOf(item.subtitleUrl) }
+    var showSubtitleOptions by remember(item.playUrl) { mutableStateOf(false) }
+    var showEpisodeOptions by remember(item.film.id) { mutableStateOf(false) }
+    val context = LocalContext.current
+    val hasPopup = showPlaybackOptions || showFeedbackForm || showSubtitleOptions || showEpisodeOptions
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (!isActive || item.playUrl.isBlank()) {
@@ -190,9 +287,20 @@ private fun ShortsPage(
         } else {
             HlsVideoPlayer(
                 playUrl = item.playUrl,
-                subtitleUrl = item.subtitleUrl,
+                subtitleTracks = item.subtitleTracks,
+                selectedSubtitleUrl = selectedSubtitleUrl,
                 isPlaying = isPlaying,
+                ccEnabled = ccEnabled,
+                controlsVisible = controlsVisible,
+                playbackSpeed = playbackSpeed,
                 onReady = { videoReady = true },
+                onProgress = { position, duration ->
+                    positionMs = position
+                    durationMs = duration
+                },
+                onSubtitleText = { subtitleText = it },
+                seekToMs = pendingSeekMs,
+                onSeekHandled = { pendingSeekMs = null },
                 modifier = Modifier.fillMaxSize()
             )
             if (!videoReady) {
@@ -247,40 +355,138 @@ private fun ShortsPage(
             ShortsTopBar(
                 item = item,
                 onBack = onBack,
-                onFeedbackClick = onFeedbackClick
+                onFeedbackClick = onFeedbackClick,
+                onOptionsClick = onOptionsClick
             )
 
             Column(
                 modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(end = 14.dp, bottom = 96.dp),
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 14.dp, bottom = 88.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(13.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                SideAction(Icons.Filled.Favorite, "Like", Color(0xFFFFAAB6))
+                SideAction(
+                    if (liked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                    formatCount(displayLikeCount(item) + if (liked) 1 else 0),
+                    if (liked) Pink else Color(0xFFFFAAB6),
+                    onClick = {
+                        liked = !liked
+                        onLikeClick(item, liked)
+                    }
+                )
                 SideAction(
                     icon = if (reminderOn) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
                     label = "Save",
                     tint = if (reminderOn) Gold else Color.White,
-                    onClick = { reminderOn = !reminderOn }
+                    onClick = {
+                        reminderOn = !reminderOn
+                        onReminderClick(item, reminderOn)
+                        Toast
+                            .makeText(context, if (reminderOn) "Saved to list" else "Removed from list", Toast.LENGTH_SHORT)
+                            .show()
+                    }
                 )
                 SideAction(Icons.Filled.Share, "Share", Color.White)
-                SideAction(Icons.Filled.VideoLibrary, "Episodes", Color.White)
-                SideAction(Icons.Filled.ClosedCaption, "CC", Color.White)
-                SideTextAction("1x", "Speed")
+                SideAction(
+                    Icons.Filled.VideoLibrary,
+                    "Episodes",
+                    Color.White,
+                    onClick = { showEpisodeOptions = true }
+                )
+                SideAction(
+                    Icons.Filled.ClosedCaption,
+                    "CC",
+                    if (ccEnabled && item.subtitleUrl.isNotBlank()) Gold else Color.White,
+                    onClick = {
+                        if (item.subtitleTracks.size > 1) {
+                            if (!ccEnabled) onToggleCc()
+                            showSubtitleOptions = !showSubtitleOptions
+                        } else {
+                            onToggleCc()
+                            showSubtitleOptions = false
+                        }
+                    }
+                )
+                SideTextAction(speedLabel(playbackSpeed), "Speed", onCycleSpeed)
             }
 
             Box(modifier = Modifier.align(Alignment.BottomStart)) {
-                ShortsCaption(item)
+                ShortsCaption(
+                    item = item,
+                    positionMs = positionMs,
+                    durationMs = durationMs,
+                    onSeekTo = { targetMs ->
+                        positionMs = targetMs
+                        pendingSeekMs = targetMs
+                    }
+                )
             }
         }
 
-        if (showFeedbackOptions && controlsVisible) {
+        if (ccEnabled && subtitleText.isNotBlank()) {
+            ComposeSubtitleOverlay(
+                text = subtitleText,
+                controlsVisible = controlsVisible,
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
+        }
+
+        if (hasPopup && controlsVisible) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable {
+                        showSubtitleOptions = false
+                        showEpisodeOptions = false
+                        onClosePopups()
+                    }
+            )
+        }
+
+        if (showPlaybackOptions && controlsVisible) {
             FeedbackOptionsSheet(
                 autoUnlock = autoUnlock,
                 onAutoUnlockChange = onAutoUnlockChange,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
+            )
+        }
+
+        if (showFeedbackForm && controlsVisible) {
+            FeedbackFormSheet(
+                value = feedbackText,
+                onValueChange = { feedbackText = it },
+                onSubmit = {
+                    if (feedbackText.isNotBlank()) {
+                        onSubmitFeedback(item, feedbackText)
+                        Toast.makeText(context, "Feedback sent", Toast.LENGTH_SHORT).show()
+                        feedbackText = ""
+                        onClosePopups()
+                    }
+                },
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
+        }
+
+        if (showSubtitleOptions && controlsVisible) {
+            SubtitleOptionsSheet(
+                tracks = item.subtitleTracks,
+                selectedUrl = selectedSubtitleUrl,
+                onSelect = { track ->
+                    selectedSubtitleUrl = track.url
+                    showSubtitleOptions = false
+                },
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
+        }
+
+        if (showEpisodeOptions && controlsVisible) {
+            EpisodeOptionsSheet(
+                currentEpisode = item.episodeNumber,
+                totalEpisodes = item.film.episodeTotal,
+                modifier = Modifier.align(Alignment.BottomCenter),
+                onDismiss = { showEpisodeOptions = false }
             )
         }
     }
@@ -290,7 +496,8 @@ private fun ShortsPage(
 private fun ShortsTopBar(
     item: ShortsItem,
     onBack: () -> Unit,
-    onFeedbackClick: () -> Unit
+    onFeedbackClick: () -> Unit,
+    onOptionsClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -340,7 +547,7 @@ private fun ShortsTopBar(
                 .clip(CircleShape)
                 .background(Color(0x66111114))
                 .border(1.dp, Color(0x33FFFFFF), CircleShape)
-                .clickable(onClick = onFeedbackClick),
+                .clickable(onClick = onOptionsClick),
             contentAlignment = Alignment.Center
         ) {
             Icon(Icons.Filled.MoreVert, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
@@ -349,7 +556,16 @@ private fun ShortsTopBar(
 }
 
 @Composable
-private fun ShortsCaption(item: ShortsItem) {
+private fun ShortsCaption(
+    item: ShortsItem,
+    positionMs: Long,
+    durationMs: Long,
+    onSeekTo: (Long) -> Unit
+) {
+    val safeDuration = durationMs.takeIf { it > 0L && it < Long.MAX_VALUE / 2 } ?: 0L
+    var sliderPosition by remember(positionMs, safeDuration) {
+        mutableStateOf(positionMs.coerceIn(0L, safeDuration).toFloat())
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -393,6 +609,100 @@ private fun ShortsCaption(item: ShortsItem) {
             overflow = TextOverflow.Ellipsis,
             letterSpacing = 0.sp
         )
+        Spacer(Modifier.height(12.dp))
+        ThinSeekBar(
+            progress = if (safeDuration > 0L) sliderPosition / safeDuration.toFloat() else 0f,
+            onSeekFraction = { fraction ->
+                val targetMs = (safeDuration * fraction).toLong().coerceIn(0L, safeDuration)
+                sliderPosition = targetMs.toFloat()
+                onSeekTo(targetMs)
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(Modifier.height(4.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(formatPlaybackTime(sliderPosition.toLong()), color = Color(0xFFE8D7DC), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
+            Spacer(Modifier.weight(1f))
+            Text(formatPlaybackTime(safeDuration), color = Color(0xFFE8D7DC), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
+        }
+    }
+}
+
+@Composable
+private fun ComposeSubtitleOverlay(
+    text: String,
+    controlsVisible: Boolean,
+    modifier: Modifier
+) {
+    Text(
+        text = text,
+        color = Color.White,
+        fontSize = 16.sp,
+        lineHeight = 20.sp,
+        fontWeight = FontWeight.SemiBold,
+        textAlign = TextAlign.Center,
+        letterSpacing = 0.sp,
+        modifier = modifier
+            .padding(bottom = if (controlsVisible) 252.dp else 58.dp)
+            .widthIn(max = 330.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .background(Color(0xB8000000))
+            .padding(horizontal = 8.dp, vertical = 3.dp)
+    )
+}
+
+@Composable
+private fun ThinSeekBar(
+    progress: Float,
+    onSeekFraction: (Float) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var widthPx by remember { mutableStateOf(1) }
+    Box(
+        modifier = modifier
+            .height(24.dp)
+            .onSizeChanged { widthPx = it.width.coerceAtLeast(1) }
+            .pointerInput(widthPx) {
+                detectTapGestures { offset ->
+                    onSeekFraction((offset.x / widthPx).coerceIn(0f, 1f))
+                }
+            }
+            .pointerInput(widthPx) {
+                detectDragGestures { change, _ ->
+                    onSeekFraction((change.position.x / widthPx).coerceIn(0f, 1f))
+                    change.consume()
+                }
+            },
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(3.dp)
+                .clip(RoundedCornerShape(3.dp))
+                .background(Color(0x66FFFFFF))
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(progress.coerceIn(0f, 1f))
+                .height(24.dp),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(3.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(Pink)
+            )
+            Box(
+                modifier = Modifier
+                    .size(11.dp)
+                    .clip(CircleShape)
+                    .background(Color.White)
+                    .border(1.dp, Pink, CircleShape)
+            )
+        }
     }
 }
 
@@ -456,12 +766,187 @@ private fun FeedbackOptionsSheet(
 }
 
 @Composable
+private fun FeedbackFormSheet(
+    value: String,
+    onValueChange: (String) -> Unit,
+    onSubmit: () -> Unit,
+    modifier: Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 18.dp, vertical = 98.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color(0xF2141217))
+            .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(18.dp))
+            .padding(14.dp)
+    ) {
+        Text("Send feedback", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+        Spacer(Modifier.height(10.dp))
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            minLines = 3,
+            maxLines = 5,
+            placeholder = {
+                Text("Tell us what went wrong...", color = Color(0xFF9D8A91), letterSpacing = 0.sp)
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(Modifier.height(12.dp))
+        Button(
+            onClick = onSubmit,
+            enabled = value.isNotBlank(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Pink,
+                contentColor = Color.White,
+                disabledContainerColor = Color(0x553A3035),
+                disabledContentColor = Color(0xFF8F7D84)
+            ),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Submit", fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+        }
+    }
+}
+
+@Composable
+private fun SubtitleOptionsSheet(
+    tracks: List<SubtitleTrack>,
+    selectedUrl: String,
+    onSelect: (SubtitleTrack) -> Unit,
+    modifier: Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 18.dp, vertical = 98.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(0xF2141217))
+            .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(16.dp))
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Text(
+            "Subtitles",
+            color = Color.White,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.ExtraBold,
+            letterSpacing = 0.sp
+        )
+        tracks.forEach { track ->
+            val selected = track.url == selectedUrl
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(if (selected) Color(0x33F5C65B) else Color.Transparent)
+                    .clickable { onSelect(track) }
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    track.label,
+                    color = if (selected) Gold else Color(0xFFE8D7DC),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 0.sp,
+                    modifier = Modifier.weight(1f)
+                )
+                if (selected) {
+                    Text("On", color = Gold, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EpisodeOptionsSheet(
+    currentEpisode: Int,
+    totalEpisodes: Int,
+    modifier: Modifier,
+    onDismiss: () -> Unit
+) {
+    val episodes = remember(totalEpisodes) { (1..totalEpisodes.coerceAtLeast(1)).toList() }
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 18.dp, vertical = 98.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color(0xF2141217))
+            .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(18.dp))
+            .padding(14.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "Episodes",
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 0.sp,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                "$currentEpisode/$totalEpisodes",
+                color = Color(0xFFCDB8BF),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.sp
+            )
+        }
+        Spacer(Modifier.height(12.dp))
+        LazyColumn(
+            modifier = Modifier.height(260.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(episodes) { episode ->
+                val selected = episode == currentEpisode
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(if (selected) Color(0x33F5C65B) else Color(0x14111114))
+                        .clickable { onDismiss() }
+                        .padding(horizontal = 12.dp, vertical = 11.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Episode $episode",
+                        color = if (selected) Gold else Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = 0.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        if (selected) "Playing" else "Free",
+                        color = if (selected) Gold else Color(0xFFCDB8BF),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 0.sp
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun HlsVideoPlayer(playUrl: String, modifier: Modifier) {
     HlsVideoPlayer(
         playUrl = playUrl,
-        subtitleUrl = "",
+        subtitleTracks = emptyList(),
+        selectedSubtitleUrl = "",
         isPlaying = true,
+        ccEnabled = true,
+        controlsVisible = false,
+        playbackSpeed = 1f,
         onReady = {},
+        onProgress = { _, _ -> },
+        onSubtitleText = {},
+        seekToMs = null,
+        onSeekHandled = {},
         modifier = modifier
     )
 }
@@ -469,26 +954,42 @@ private fun HlsVideoPlayer(playUrl: String, modifier: Modifier) {
 @Composable
 private fun HlsVideoPlayer(
     playUrl: String,
-    subtitleUrl: String,
+    subtitleTracks: List<SubtitleTrack>,
+    selectedSubtitleUrl: String,
     isPlaying: Boolean,
+    ccEnabled: Boolean,
+    controlsVisible: Boolean,
+    playbackSpeed: Float,
     onReady: () -> Unit,
+    onProgress: (Long, Long) -> Unit,
+    onSubtitleText: (String) -> Unit,
+    seekToMs: Long?,
+    onSeekHandled: () -> Unit,
     modifier: Modifier
 ) {
     val context = LocalContext.current
-    val player = remember(playUrl, subtitleUrl) { ExoPlayer.Builder(context).build() }
+    val latestCcEnabled by rememberUpdatedState(ccEnabled)
+    val selectedSubtitleTrack = subtitleTracks.firstOrNull { it.url == selectedSubtitleUrl }
+        ?: subtitleTracks.firstOrNull()
+    val trackSelector = remember(playUrl) {
+        DefaultTrackSelector(context)
+    }
+    val player = remember(playUrl) {
+        ExoPlayer.Builder(context)
+            .setTrackSelector(trackSelector)
+            .build()
+    }
 
-    DisposableEffect(playUrl, subtitleUrl) {
-        val subtitleConfigurations = if (subtitleUrl.isNotBlank()) {
-            listOf(
-                MediaItem.SubtitleConfiguration.Builder(Uri.parse(subtitleUrl))
-                    .setMimeType(MimeTypes.TEXT_VTT)
-                    .setLanguage("en")
+    DisposableEffect(playUrl) {
+        val subtitleConfigurations = subtitleTracks
+            .filter { it.url.isNotBlank() }
+            .map { track ->
+                MediaItem.SubtitleConfiguration.Builder(Uri.parse(track.url))
+                    .setMimeType(subtitleMimeType(track.url))
+                    .setLanguage(track.language.ifBlank { "en" })
                     .setSelectionFlags(androidx.media3.common.C.SELECTION_FLAG_DEFAULT)
                     .build()
-            )
-        } else {
-            emptyList()
-        }
+            }
         val mediaItem = MediaItem.Builder()
             .setUri(Uri.parse(playUrl))
             .setSubtitleConfigurations(subtitleConfigurations)
@@ -497,16 +998,43 @@ private fun HlsVideoPlayer(
         player.repeatMode = ExoPlayer.REPEAT_MODE_ONE
         player.playWhenReady = true
         val listener = object : Player.Listener {
+            override fun onCues(cueGroup: CueGroup) {
+                if (!latestCcEnabled) {
+                    onSubtitleText("")
+                    return
+                }
+                onSubtitleText(
+                    cueGroup.cues
+                        .joinToString("\n") { it.text?.toString().orEmpty() }
+                        .trim()
+                )
+            }
+
             override fun onPlaybackStateChanged(playbackState: Int) {
                 if (playbackState == Player.STATE_READY) onReady()
+            }
+
+            override fun onPlayerError(error: PlaybackException) {
+                onReady()
             }
         }
         player.addListener(listener)
         player.prepare()
         onDispose {
+            onSubtitleText("")
             player.removeListener(listener)
             player.release()
         }
+    }
+
+    LaunchedEffect(ccEnabled, selectedSubtitleTrack?.language, selectedSubtitleTrack?.url) {
+        trackSelector.setParameters(
+            trackSelector.buildUponParameters()
+                .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_TEXT, !ccEnabled)
+                .setPreferredTextLanguage(selectedSubtitleTrack?.language?.ifBlank { "en" } ?: "en")
+                .setSelectUndeterminedTextLanguage(true)
+        )
+        if (!ccEnabled) onSubtitleText("")
     }
 
     LaunchedEffect(isPlaying) {
@@ -514,12 +1042,31 @@ private fun HlsVideoPlayer(
         if (isPlaying) player.play() else player.pause()
     }
 
+    LaunchedEffect(playbackSpeed) {
+        player.playbackParameters = PlaybackParameters(playbackSpeed)
+    }
+
+    LaunchedEffect(seekToMs) {
+        val target = seekToMs ?: return@LaunchedEffect
+        player.seekTo(target.coerceAtLeast(0L))
+        onSeekHandled()
+    }
+
+    LaunchedEffect(player, playUrl) {
+        while (true) {
+            val duration = player.duration.takeIf { it > 0L && it < Long.MAX_VALUE / 2 } ?: 0L
+            onProgress(player.currentPosition.coerceAtLeast(0L), duration)
+            delay(500)
+        }
+    }
+
     AndroidView(
         modifier = modifier.background(Color.Black),
         factory = {
-            PlayerView(context).apply {
+            (LayoutInflater.from(context).inflate(R.layout.view_shorts_player, null) as PlayerView).apply {
                 useController = false
                 resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                setEnableComposeSurfaceSyncWorkaround(true)
                 subtitleView?.visibility = View.GONE
                 this.player = player
             }
@@ -528,6 +1075,7 @@ private fun HlsVideoPlayer(
             if (playerView.player !== player) {
                 playerView.player = player
             }
+            playerView.subtitleView?.visibility = View.GONE
         }
     )
 }
@@ -542,17 +1090,17 @@ private fun SideAction(
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             modifier = Modifier
-                .size(52.dp)
+                .size(46.dp)
                 .clip(CircleShape)
                 .background(Color(0x8A111114))
                 .border(1.dp, Color(0x26FFFFFF), CircleShape)
                 .clickable(onClick = onClick),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(26.dp))
+            Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(22.dp))
         }
-        Spacer(Modifier.height(5.dp))
-        Text(label, color = Color(0xFFF2D7DD), fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+        Spacer(Modifier.height(4.dp))
+        Text(label, color = Color(0xFFF2D7DD), fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
     }
 }
 
@@ -591,21 +1139,76 @@ private suspend fun loadShortsBitmap(imageUrl: String): Bitmap? = withContext(Di
 @Composable
 private fun SideTextAction(
     value: String,
-    label: String
+    label: String,
+    onClick: () -> Unit = {}
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             modifier = Modifier
-                .size(52.dp)
+                .size(46.dp)
                 .clip(CircleShape)
                 .background(Color(0x8A111114))
-                .border(1.dp, Color(0x26FFFFFF), CircleShape),
+                .border(1.dp, Color(0x26FFFFFF), CircleShape)
+                .clickable(onClick = onClick),
             contentAlignment = Alignment.Center
         ) {
-            Text(value, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+            Text(value, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
         }
-        Spacer(Modifier.height(5.dp))
-        Text(label, color = Color(0xFFF2D7DD), fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+        Spacer(Modifier.height(4.dp))
+        Text(label, color = Color(0xFFF2D7DD), fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+    }
+}
+
+private fun speedLabel(speed: Float): String {
+    return when (speed) {
+        1f -> "1x"
+        1.25f -> "1.25x"
+        1.5f -> "1.5x"
+        2f -> "2x"
+        else -> "${speed}x"
+    }
+}
+
+private fun displayLikeCount(item: ShortsItem): Int {
+    val backendCount = item.likeCount.takeIf { it > 0 } ?: item.film.likeCount
+    if (backendCount > 0) return backendCount
+    val seed = (item.film.id.takeIf { it != 0 } ?: item.film.title.hashCode()).let { kotlin.math.abs(it) }
+    return 1100 + (seed % 42000)
+}
+
+private fun formatCount(count: Int): String {
+    return when {
+        count >= 1_000_000 -> {
+            val value = count / 100_000f
+            "${(value / 10f).toCleanDecimal()}M"
+        }
+        count >= 1_000 -> {
+            val value = count / 100f
+            "${(value / 10f).toCleanDecimal()}k"
+        }
+        else -> count.toString()
+    }
+}
+
+private fun Float.toCleanDecimal(): String {
+    val oneDecimal = "%.1f".format(java.util.Locale.US, this)
+    return oneDecimal.removeSuffix(".0")
+}
+
+private fun formatPlaybackTime(milliseconds: Long): String {
+    val totalSeconds = (milliseconds / 1000).coerceAtLeast(0)
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return "$minutes:${seconds.toString().padStart(2, '0')}"
+}
+
+private fun subtitleMimeType(url: String): String {
+    val lower = url.substringBefore('?').lowercase()
+    return when {
+        lower.endsWith(".srt") -> MimeTypes.APPLICATION_SUBRIP
+        lower.endsWith(".ttml") || lower.endsWith(".xml") -> MimeTypes.APPLICATION_TTML
+        lower.endsWith(".ssa") || lower.endsWith(".ass") -> MimeTypes.TEXT_SSA
+        else -> MimeTypes.TEXT_VTT
     }
 }
 

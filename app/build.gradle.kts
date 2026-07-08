@@ -49,6 +49,7 @@ dependencies {
     implementation(libs.firebase.config)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.exoplayer.hls)
+    implementation(libs.androidx.media3.extractor)
     implementation(libs.androidx.media3.ui)
     implementation(libs.onesignal)
     testImplementation(libs.junit)
