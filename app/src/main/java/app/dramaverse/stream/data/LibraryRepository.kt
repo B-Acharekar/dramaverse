@@ -1,6 +1,9 @@
 package app.dramaverse.stream.data
 
+import android.content.ContentValues
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteOpenHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -14,15 +17,29 @@ import java.net.URL
 data class LibraryFeed(
     val watchList: List<DramaItem>,
     val watchHistory: List<ContinueWatchingItem>,
-    val followedFilms: List<DramaItem>,
+    val topStars: List<TopStar>,
     val recommended: List<DramaItem>,
     val similarFilms: List<DramaItem>
+) {
+    companion object
+}
+
+data class TopStar(
+    val name: String,
+    val imageUrl: String,
+    val filmId: Int
 )
 
 class LibraryRepository(
     context: Context,
     private val authRepository: AuthRepository
 ) {
+    private val cacheStore = LibraryCacheStore(context.applicationContext)
+
+    suspend fun loadCachedLibrary(): LibraryFeed? = withContext(Dispatchers.IO) {
+        cacheStore.readFeed()
+    }
+
     suspend fun loadLibrary(
         backendBaseUrl: String,
         language: String = "en"
@@ -43,14 +60,14 @@ class LibraryRepository(
                         getClientJson(backendBaseUrl, "client/history/watch", language, token, 7000)
                     }.getOrNull()
                 }
-                val followed = async {
-                    runCatching {
-                        getClientJson(backendBaseUrl, "client/history/follow", language, token, 7000)
-                    }.getOrNull()
-                }
                 val recommended = async {
                     runCatching {
                         getClientJson(backendBaseUrl, "client/for-you", language, token, 7000)
+                    }.getOrNull()
+                }
+                val films = async {
+                    runCatching {
+                        getClientJson(backendBaseUrl, "client/films", language, token, 7000)
                     }.getOrNull()
                 }
 
@@ -64,20 +81,80 @@ class LibraryRepository(
                     getClientJson(backendBaseUrl, "client/search", language, token, 7000, "query=$query")
                 }.getOrNull()
                 val watchedIds = historyItems.map { it.film.id }.toSet()
+                val watchListItems = collectDramaItems(watchList.await()).distinctFilms()
+                val watchListIds = watchListItems.map { it.id }.toSet()
+                val recommendedItems = recommendItems.distinctFilms()
+                val filmItems = collectDramaItems(films.await()).distinctFilms()
+                val recommendedIds = recommendedItems.map { it.id }.toSet()
+                val excludedIds = watchedIds + watchListIds + recommendedIds
+                val excludedTitles = (historyItems.map { it.film.title } + watchListItems.map { it.title } + recommendedItems.map { it.title })
+                    .map { it.trim().lowercase() }
+                    .filter { it.isNotBlank() }
+                    .toSet()
+                val similarItems = (
+                    collectDramaItems(similarJson) +
+                        filmItems
+                    )
+                    .filterNot { it.id != 0 && it.id in excludedIds }
+                    .filterNot { it.title.trim().lowercase() in excludedTitles }
+                    .distinctFilms()
 
                 LibraryFeed(
-                    watchList = collectDramaItems(watchList.await()).distinctFilms(),
+                    watchList = watchListItems,
                     watchHistory = historyItems,
-                    followedFilms = collectDramaItems(followed.await()).distinctFilms(),
-                    recommended = recommendItems.distinctFilms().take(12),
-                    similarFilms = collectDramaItems(similarJson)
-                        .filterNot { it.id != 0 && it.id in watchedIds }
-                        .distinctFilms()
-                        .ifEmpty { recommendItems.distinctFilms() }
-                        .take(12)
-                )
+                    topStars = collectTopStars(listOf(watchList.await(), recommended.await(), films.await(), similarJson)).take(12),
+                    recommended = recommendedItems.take(12),
+                    similarFilms = similarItems.take(12)
+                ).also { cacheStore.writeFeed(it) }
             }
         }
+    }
+}
+
+private class LibraryCacheStore(context: Context) :
+    SQLiteOpenHelper(context, "dramaverse_library.db", null, 1) {
+    override fun onCreate(db: SQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE library_cache (" +
+                "cache_key TEXT PRIMARY KEY, " +
+                "cache_value TEXT NOT NULL, " +
+                "updated_at INTEGER NOT NULL" +
+                ")"
+        )
+    }
+
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        db.execSQL("DROP TABLE IF EXISTS library_cache")
+        onCreate(db)
+    }
+
+    fun readFeed(): LibraryFeed? {
+        readableDatabase.query(
+            "library_cache",
+            arrayOf("cache_value"),
+            "cache_key = ?",
+            arrayOf("library_feed"),
+            null,
+            null,
+            null,
+            "1"
+        ).use { cursor ->
+            return if (cursor.moveToFirst()) LibraryFeed.fromJson(JSONObject(cursor.getString(0))) else null
+        }
+    }
+
+    fun writeFeed(feed: LibraryFeed) {
+        val values = ContentValues().apply {
+            put("cache_key", "library_feed")
+            put("cache_value", feed.toJson().toString())
+            put("updated_at", System.currentTimeMillis())
+        }
+        writableDatabase.insertWithOnConflict(
+            "library_cache",
+            null,
+            values,
+            SQLiteDatabase.CONFLICT_REPLACE
+        )
     }
 }
 
@@ -158,13 +235,48 @@ private fun collectDramaItems(value: Any?): List<DramaItem> {
     }
 }
 
+private fun collectTopStars(values: List<Any?>): List<TopStar> =
+    values.flatMap { collectTopStars(it) }
+        .filter { it.name.isNotBlank() }
+        .distinctBy { it.name.lowercase() }
+
+private fun collectTopStars(value: Any?): List<TopStar> {
+    return when (value) {
+        is JSONObject -> {
+            val film = value.optJSONObject("film") ?: value
+            val filmId = film.firstInt("id", "film_id", "movie_id")
+            val direct = buildList {
+                val name = film.firstString("actor", "actors", "cast", "star", "stars", "performer", "artist")
+                if (name.isNotBlank()) {
+                    name.split(",", "/", "|")
+                        .map { it.trim() }
+                        .filter { it.isNotBlank() }
+                        .forEach {
+                            add(TopStar(it, film.firstString("actor_thumb", "actor_image", "avatar", "photo"), filmId))
+                        }
+                }
+            }
+            val children = value.keys().asSequence().flatMap { key ->
+                collectTopStars(value.opt(key)).asSequence()
+            }.toList()
+            direct + children
+        }
+        is JSONArray -> buildList {
+            for (index in 0 until value.length()) {
+                addAll(collectTopStars(value.opt(index)))
+            }
+        }
+        else -> emptyList()
+    }
+}
+
 private fun JSONObject.toDramaItem(): DramaItem {
     val film = optJSONObject("film") ?: this
     return DramaItem(
         id = film.firstInt("id", "film_id", "movie_id"),
         title = film.firstString("title", "name", "film_name", "movie_name", "filmTitle"),
         description = film.firstString("description", "desc", "summary", "content"),
-        imageUrl = film.firstString("thumb", "thumbnail", "image", "poster", "cover", "vertical_poster", "banner", "imageUrl"),
+        imageUrl = film.firstString("thumb", "thumb_url", "thumbnail", "thumbnail_url", "image", "image_url", "poster", "poster_url", "cover", "cover_url", "vertical_poster", "vertical_cover", "banner", "banner_url", "photo", "img", "imageUrl"),
         rating = film.firstString("rating", "rate", "score").ifBlank { "4.8" },
         episodeTotal = film.firstInt("episode_total", "episodes_count", "total_episodes", "eps", "episodeTotal")
             .takeIf { it > 0 } ?: 1,
@@ -179,8 +291,20 @@ private fun List<DramaItem>.distinctFilms(): List<DramaItem> =
 
 private fun JSONObject.firstString(vararg keys: String): String {
     for (key in keys) {
-        val value = optString(key).trim()
-        if (value.isNotBlank() && value != "null") return value
+        when (val raw = opt(key)) {
+            is String -> {
+                val value = raw.trim()
+                if (value.isNotBlank() && value != "null") return value
+            }
+            is Number -> return raw.toString()
+            is JSONObject -> raw.firstString("url", "src", "path", "thumb", "image", "poster", "cover").takeIf { it.isNotBlank() }?.let { return it }
+            is JSONArray -> if (raw.length() > 0) {
+                when (val first = raw.opt(0)) {
+                    is String -> if (first.isNotBlank()) return first
+                    is JSONObject -> first.firstString("url", "src", "path", "thumb", "image", "poster", "cover").takeIf { it.isNotBlank() }?.let { return it }
+                }
+            }
+        }
     }
     return ""
 }
@@ -211,3 +335,117 @@ private fun JSONObject.firstBoolean(vararg keys: String): Boolean {
 }
 
 private fun String.trimEndSlash(): String = trim().trimEnd('/').ifBlank { "https://dramaverse-backend-lbq5.onrender.com" }
+
+private fun LibraryFeed.toJson(): JSONObject = JSONObject()
+    .put("watchList", watchList.toDramaJsonArray())
+    .put("watchHistory", watchHistory.toContinueJsonArray())
+    .put("topStars", topStars.toTopStarJsonArray())
+    .put("recommended", recommended.toDramaJsonArray())
+    .put("similarFilms", similarFilms.toDramaJsonArray())
+
+private fun LibraryFeed.Companion.fromJson(json: JSONObject): LibraryFeed = LibraryFeed(
+    watchList = json.optJSONArray("watchList").toDramaItems(),
+    watchHistory = json.optJSONArray("watchHistory").toContinueItems(),
+    topStars = json.optJSONArray("topStars").toTopStars(),
+    recommended = json.optJSONArray("recommended").toDramaItems(),
+    similarFilms = json.optJSONArray("similarFilms").toDramaItems()
+)
+
+private fun List<DramaItem>.toDramaJsonArray(): JSONArray = JSONArray().also { array ->
+    forEach { item ->
+        array.put(
+            JSONObject()
+                .put("id", item.id)
+                .put("title", item.title)
+                .put("description", item.description)
+                .put("imageUrl", item.imageUrl)
+                .put("rating", item.rating)
+                .put("episodeTotal", item.episodeTotal)
+                .put("genre", item.genre)
+                .put("isPremium", item.isPremium)
+                .put("likeCount", item.likeCount)
+        )
+    }
+}
+
+private fun List<ContinueWatchingItem>.toContinueJsonArray(): JSONArray = JSONArray().also { array ->
+    forEach { item ->
+        array.put(
+            JSONObject()
+                .put("film", listOf(item.film).toDramaJsonArray().getJSONObject(0))
+                .put("episodeNumber", item.episodeNumber)
+                .put("progressSeconds", item.progressSeconds)
+                .put("durationSeconds", item.durationSeconds)
+                .put("completed", item.completed)
+        )
+    }
+}
+
+private fun List<TopStar>.toTopStarJsonArray(): JSONArray = JSONArray().also { array ->
+    forEach { item ->
+        array.put(
+            JSONObject()
+                .put("name", item.name)
+                .put("imageUrl", item.imageUrl)
+                .put("filmId", item.filmId)
+        )
+    }
+}
+
+private fun JSONArray?.toDramaItems(): List<DramaItem> {
+    if (this == null) return emptyList()
+    return buildList {
+        for (index in 0 until length()) {
+            val item = optJSONObject(index) ?: continue
+            add(item.toCachedDramaItem())
+        }
+    }
+}
+
+private fun JSONArray?.toContinueItems(): List<ContinueWatchingItem> {
+    if (this == null) return emptyList()
+    return buildList {
+        for (index in 0 until length()) {
+            val item = optJSONObject(index) ?: continue
+            val film = item.optJSONObject("film") ?: continue
+            val drama = film.toCachedDramaItem()
+            add(
+                ContinueWatchingItem(
+                    film = drama,
+                    episodeNumber = item.optInt("episodeNumber", 1),
+                    progressSeconds = item.optInt("progressSeconds", 0),
+                    durationSeconds = item.optInt("durationSeconds", 0),
+                    completed = item.optBoolean("completed", false)
+                )
+            )
+        }
+    }
+}
+
+private fun JSONObject.toCachedDramaItem(): DramaItem = DramaItem(
+    id = optInt("id"),
+    title = optString("title"),
+    description = optString("description"),
+    imageUrl = optString("imageUrl"),
+    rating = optString("rating"),
+    episodeTotal = optInt("episodeTotal", 1),
+    genre = optString("genre", "Drama"),
+    isPremium = optBoolean("isPremium", false),
+    likeCount = optInt("likeCount", 0)
+)
+
+private fun JSONArray?.toTopStars(): List<TopStar> {
+    if (this == null) return emptyList()
+    return buildList {
+        for (index in 0 until length()) {
+            val item = optJSONObject(index) ?: continue
+            add(
+                TopStar(
+                    name = item.optString("name"),
+                    imageUrl = item.optString("imageUrl"),
+                    filmId = item.optInt("filmId")
+                )
+            )
+        }
+    }
+}

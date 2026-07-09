@@ -132,6 +132,25 @@ class HomeRepository(
         }
     }
 
+    suspend fun setReminder(
+        backendBaseUrl: String,
+        filmId: Int,
+        enabled: Boolean,
+        language: String = "en"
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val token = authRepository.authToken()
+                ?: authRepository.registerDevice(backendBaseUrl, language).getOrThrow().token
+                ?: throw IllegalStateException("Device auth did not return a bearer token.")
+            postClientAction(
+                backendBaseUrl = backendBaseUrl,
+                path = "client/films/$filmId/${if (enabled) "reminder" else "unreminder"}",
+                language = language,
+                token = token
+            )
+        }
+    }
+
     suspend fun searchMood(
         backendBaseUrl: String,
         mood: String,
@@ -273,6 +292,30 @@ private fun getClientJson(
         throw IllegalStateException("$path failed: ${connection.responseCode} $error")
     }
     return JSONObject(responseText)
+}
+
+private fun postClientAction(
+    backendBaseUrl: String,
+    path: String,
+    language: String,
+    token: String
+) {
+    val url = URL("${backendBaseUrl.trimEndSlash()}/$path?language=$language")
+    val connection = (url.openConnection() as HttpURLConnection).apply {
+        requestMethod = "POST"
+        connectTimeout = 6500
+        readTimeout = 6500
+        doOutput = true
+        setRequestProperty("Accept", "application/json")
+        setRequestProperty("Content-Type", "application/json")
+        setRequestProperty("Authorization", "Bearer $token")
+        outputStream.use { it.write(ByteArray(0)) }
+    }
+    if (connection.responseCode !in 200..299) {
+        val error = connection.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
+        throw IllegalStateException("$path failed: ${connection.responseCode} $error")
+    }
+    connection.inputStream?.close()
 }
 
 private fun parseHomeFeed(
@@ -569,7 +612,7 @@ private fun JSONObject.toDramaItemFromBackend(): DramaItem = DramaItem(
     id = firstInt("id", "film_id", "movie_id"),
     title = firstString("title", "name", "film_name", "movie_name", "filmTitle"),
     description = firstString("description", "desc", "summary", "content"),
-    imageUrl = firstString("thumb", "thumbnail", "image", "poster", "cover", "vertical_poster", "banner", "imageUrl"),
+    imageUrl = firstString("thumb", "thumb_url", "thumbnail", "thumbnail_url", "image", "image_url", "poster", "poster_url", "cover", "cover_url", "vertical_poster", "vertical_cover", "banner", "banner_url", "photo", "img", "imageUrl"),
     rating = firstString("rating", "rate", "score").ifBlank { "4.8" },
     episodeTotal = firstInt("episode_total", "episodes_count", "total_episodes", "eps", "episodeTotal")
         .takeIf { it > 0 } ?: 1,
@@ -623,7 +666,7 @@ private fun DramaItem.stableKey(): String = id.takeIf { it != 0 }?.toString()
 
 private fun JSONObject.toDramaItemOrNull(): DramaItem? {
     val title = firstString("title", "name", "film_name", "movie_name", "filmTitle")
-    val image = firstString("thumb", "thumbnail", "image", "poster", "cover", "vertical_poster", "banner")
+    val image = firstString("thumb", "thumb_url", "thumbnail", "thumbnail_url", "image", "image_url", "poster", "poster_url", "cover", "cover_url", "vertical_poster", "vertical_cover", "banner", "banner_url", "photo", "img", "imageUrl")
     if (title.isBlank() || image.isBlank()) return null
 
     return DramaItem(
@@ -646,6 +689,15 @@ private fun JSONObject.firstString(vararg keys: String): String {
         val value = opt(key)
         if (value is String && value.isNotBlank()) return value
         if (value is Number) return value.toString()
+        if (value is JSONObject) {
+            value.firstString("url", "src", "path", "thumb", "image", "poster", "cover").takeIf { it.isNotBlank() }?.let { return it }
+        }
+        if (value is JSONArray && value.length() > 0) {
+            when (val first = value.opt(0)) {
+                is String -> if (first.isNotBlank()) return first
+                is JSONObject -> first.firstString("url", "src", "path", "thumb", "image", "poster", "cover").takeIf { it.isNotBlank() }?.let { return it }
+            }
+        }
     }
     return ""
 }

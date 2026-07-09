@@ -32,7 +32,8 @@ enum class AppStep {
     Onboarding,
     Home,
     Shorts,
-    Library
+    Library,
+    Search
 }
 
 data class AppUiState(
@@ -40,7 +41,8 @@ data class AppUiState(
     val delayDoneLanguage: Boolean = false,
     val backendBaseUrl: String = DEFAULT_BACKEND_URL,
     val selectedLanguage: String? = null,
-    val selectedShortFilmId: Int? = null
+    val selectedShortFilmId: Int? = null,
+    val searchQuery: String = ""
 )
 
 class AppViewModel(application: Application) : AndroidViewModel(application) {
@@ -94,6 +96,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun openLibrary() {
         _uiState.update { it.copy(currentStep = AppStep.Library, selectedShortFilmId = null) }
+    }
+
+    fun openSearch(query: String) {
+        val trimmed = query.trim()
+        if (trimmed.isBlank()) return
+        _uiState.update { it.copy(currentStep = AppStep.Search, selectedShortFilmId = null, searchQuery = trimmed) }
     }
 
     private fun loadRemoteConfig() {

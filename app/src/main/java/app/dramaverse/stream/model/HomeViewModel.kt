@@ -123,6 +123,51 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun search(backendBaseUrl: String, query: String) {
+        val trimmed = query.trim()
+        if (trimmed.isBlank()) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(selectedMood = trimmed, isMoodLoading = true, errorMessage = null) }
+            repository.searchMood(
+                backendBaseUrl = backendBaseUrl,
+                mood = trimmed,
+                language = "en"
+            ).onSuccess { feed ->
+                _uiState.update {
+                    HomeUiState(
+                        isLoading = false,
+                        feed = feed,
+                        selectedMood = trimmed,
+                        isMoodLoading = false
+                    )
+                }
+            }.onFailure { error ->
+                _uiState.update {
+                    it.copy(
+                        isMoodLoading = false,
+                        errorMessage = error.message ?: "Unable to search films."
+                    )
+                }
+            }
+        }
+    }
+
+    fun setReminder(backendBaseUrl: String, filmId: Int, enabled: Boolean = true) {
+        if (filmId == 0) return
+        viewModelScope.launch {
+            repository.setReminder(
+                backendBaseUrl = backendBaseUrl,
+                filmId = filmId,
+                enabled = enabled,
+                language = "en"
+            ).onFailure { error ->
+                _uiState.update {
+                    it.copy(errorMessage = error.message ?: "Unable to update watch list.")
+                }
+            }
+        }
+    }
+
     fun openHotSearch(backendBaseUrl: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(selectedMood = "hot", isMoodLoading = true, errorMessage = null) }

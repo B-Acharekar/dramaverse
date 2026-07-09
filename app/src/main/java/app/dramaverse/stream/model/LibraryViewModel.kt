@@ -29,6 +29,9 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     fun loadLibrary(backendBaseUrl: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = it.feed == null, errorMessage = null) }
+            repository.loadCachedLibrary()?.let { cached ->
+                _uiState.update { it.copy(isLoading = false, feed = cached, errorMessage = null) }
+            }
             repository.loadLibrary(backendBaseUrl = backendBaseUrl)
                 .onSuccess { feed ->
                     _uiState.update { LibraryUiState(isLoading = false, feed = feed) }

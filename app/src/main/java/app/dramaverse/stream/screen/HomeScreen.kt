@@ -2,6 +2,7 @@ package app.dramaverse.stream.screen
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.widget.Toast
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -29,8 +30,14 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.CardGiftcard
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
@@ -44,7 +51,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,7 +64,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -79,6 +92,7 @@ fun HomeScreen(
     backendBaseUrl: String,
     onOpenShorts: (Int?) -> Unit,
     onLibrary: () -> Unit,
+    onSearch: (String) -> Unit,
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -100,8 +114,10 @@ fun HomeScreen(
                 feed = feed,
                 selectedMood = uiState.selectedMood,
                 isMoodLoading = uiState.isMoodLoading,
-                onMoodSelected = { mood -> viewModel.selectMood(backendBaseUrl, mood) },
-                onSearchClick = { viewModel.openHotSearch(backendBaseUrl) },
+                onMoodSelected = onSearch,
+                onSearchClick = { onSearch("hot") },
+                onSearchSubmit = onSearch,
+                onSaveToWatchList = { filmId -> viewModel.setReminder(backendBaseUrl, filmId, true) },
                 onOpenShorts = onOpenShorts
             )
         }
@@ -122,6 +138,8 @@ private fun HomeContent(
     isMoodLoading: Boolean,
     onMoodSelected: (String) -> Unit,
     onSearchClick: () -> Unit,
+    onSearchSubmit: (String) -> Unit,
+    onSaveToWatchList: (Int) -> Unit,
     onOpenShorts: (Int?) -> Unit
 ) {
     val heroItems = feed.heroItems()
@@ -143,6 +161,8 @@ private fun HomeContent(
                 isMoodLoading = isMoodLoading,
                 onMoodSelected = onMoodSelected,
                 onSearchClick = onSearchClick,
+                onSearchSubmit = onSearchSubmit,
+                onSaveToWatchList = onSaveToWatchList,
                 onOpenShorts = onOpenShorts
             )
         }
@@ -163,6 +183,8 @@ private fun HeroCarousel(
     isMoodLoading: Boolean,
     onMoodSelected: (String) -> Unit,
     onSearchClick: () -> Unit,
+    onSearchSubmit: (String) -> Unit,
+    onSaveToWatchList: (Int) -> Unit,
     onOpenShorts: (Int?) -> Unit
 ) {
     val pageCount = 10_000
@@ -192,6 +214,7 @@ private fun HeroCarousel(
                 item = items[page.floorMod(items.size)],
                 selectedIndex = pagerState.currentPage.floorMod(items.size),
                 itemCount = items.size,
+                onSaveToWatchList = onSaveToWatchList,
                 onOpenShorts = onOpenShorts
             )
         }
@@ -200,6 +223,7 @@ private fun HeroCarousel(
             isMoodLoading = isMoodLoading,
             onMoodSelected = onMoodSelected,
             onSearchClick = onSearchClick,
+            onSearchSubmit = onSearchSubmit,
             modifier = Modifier.align(Alignment.TopCenter)
         )
     }
@@ -210,12 +234,16 @@ private fun HeroSection(
     item: DramaItem,
     selectedIndex: Int,
     itemCount: Int,
+    onSaveToWatchList: (Int) -> Unit,
     onOpenShorts: (Int?) -> Unit
 ) {
+    val context = LocalContext.current
+    var saved by remember(item.id) { mutableStateOf(false) }
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(620.dp)
+            .clickable { onOpenShorts(item.id.takeIf { it != 0 }) }
     ) {
         NetworkDramaImage(item.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, item.title)
         Box(
@@ -275,7 +303,16 @@ private fun HeroSection(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 WatchButton(width = 152, onClick = { onOpenShorts(item.id.takeIf { it != 0 }) })
                 Spacer(modifier = Modifier.width(12.dp))
-                PlusButton()
+                PlusButton(
+                    saved = saved,
+                    onClick = {
+                        if (item.id != 0) {
+                            saved = true
+                            onSaveToWatchList(item.id)
+                            Toast.makeText(context, "Saved to watch list", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
                 Spacer(modifier = Modifier.weight(1f))
                 HeroIndicators(selectedIndex = selectedIndex, count = itemCount)
                 Spacer(modifier = Modifier.width(16.dp))
@@ -307,12 +344,24 @@ private fun HomeTopBar(
     isMoodLoading: Boolean = false,
     onMoodSelected: (String) -> Unit = {},
     onSearchClick: () -> Unit = {},
+    onSearchSubmit: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    var searchExpanded by remember { mutableStateOf(false) }
+    var searchText by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
+    fun submitSearch() {
+        val query = searchText.trim()
+        if (query.isNotBlank()) {
+            focusManager.clearFocus()
+            onSearchSubmit(query)
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .height(120.dp)
+            .height(if (searchExpanded) 132.dp else 120.dp)
             .background(
                 Brush.verticalGradient(
                     listOf(
@@ -329,21 +378,82 @@ private fun HomeTopBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(40.dp)
+                .height(42.dp)
                 .padding(horizontal = 18.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Spacer(modifier = Modifier.weight(1f))
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(Color(0x6618171C))
-                    .border(1.dp, Color(0x33FFFFFF), CircleShape)
-                    .clickable(onClick = onSearchClick),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Filled.Search, contentDescription = null, tint = Color(0xFFF2E3E7), modifier = Modifier.size(20.dp))
+            if (searchExpanded) {
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(42.dp)
+                        .clip(RoundedCornerShape(21.dp))
+                        .background(Color(0xD017151A))
+                        .border(1.dp, Color(0x44FFFFFF), RoundedCornerShape(21.dp))
+                        .padding(horizontal = 13.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Filled.Search, contentDescription = null, tint = Color(0xFFF2E3E7), modifier = Modifier.size(19.dp))
+                    Spacer(modifier = Modifier.width(9.dp))
+                    BasicTextField(
+                        value = searchText,
+                        onValueChange = { searchText = it },
+                        singleLine = true,
+                        textStyle = androidx.compose.ui.text.TextStyle(
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.sp
+                        ),
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = { submitSearch() }),
+                        modifier = Modifier.weight(1f),
+                        decorationBox = { innerTextField ->
+                            if (searchText.isBlank()) {
+                                Text("Search films...", color = Color(0xFF9B858E), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+                            }
+                            innerTextField()
+                        }
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .clickable(onClick = { submitSearch() }),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Filled.Search, contentDescription = null, tint = SoftPink, modifier = Modifier.size(18.dp))
+                    }
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Color(0x6618171C))
+                        .border(1.dp, Color(0x33FFFFFF), CircleShape)
+                        .clickable {
+                            searchText = ""
+                            searchExpanded = false
+                            focusManager.clearFocus()
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Filled.Close, contentDescription = null, tint = Color(0xFFF2E3E7), modifier = Modifier.size(19.dp))
+                }
+            } else {
+                Spacer(modifier = Modifier.weight(1f))
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Color(0x6618171C))
+                        .border(1.dp, Color(0x33FFFFFF), CircleShape)
+                        .clickable { searchExpanded = true },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Filled.Search, contentDescription = null, tint = Color(0xFFF2E3E7), modifier = Modifier.size(20.dp))
+                }
             }
             Spacer(modifier = Modifier.width(18.dp))
             Box(
@@ -755,16 +865,26 @@ private fun PremiumBadge(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun PlusButton(size: Int = 44) {
+private fun PlusButton(size: Int = 44, saved: Boolean, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .size(size.dp)
             .clip(RoundedCornerShape(9.dp))
             .background(Color(0xCC17171B))
-            .border(1.dp, Color(0xFF343139), RoundedCornerShape(9.dp)),
+            .border(1.dp, if (saved) Gold else Color(0xFF343139), RoundedCornerShape(9.dp))
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        Text("+", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Light, letterSpacing = 0.sp)
+        if (saved) {
+            Icon(
+                Icons.Filled.Bookmark,
+                contentDescription = null,
+                tint = Gold,
+                modifier = Modifier.size(22.dp)
+            )
+        } else {
+            Text("+", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Light, letterSpacing = 0.sp)
+        }
     }
 }
 
@@ -904,8 +1024,18 @@ private fun SkeletonBlock(width: Int, height: Int) {
 
 private suspend fun loadBitmap(imageUrl: String): Bitmap? = withContext(Dispatchers.IO) {
     runCatching {
-        URL(imageUrl).openStream().use { BitmapFactory.decodeStream(it) }
+        URL(imageUrl.normalizedImageUrl()).openStream().use { BitmapFactory.decodeStream(it) }
     }.getOrNull()
+}
+
+private fun String.normalizedImageUrl(): String {
+    val value = trim()
+    return when {
+        value.startsWith("//") -> "https:$value"
+        value.startsWith("http://") || value.startsWith("https://") -> value
+        value.startsWith("/") -> "https://dramaverse-backend-lbq5.onrender.com$value"
+        else -> value
+    }
 }
 
 private fun posterColors(seed: String): List<Color> {

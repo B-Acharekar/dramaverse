@@ -22,10 +22,11 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
@@ -34,13 +35,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,6 +55,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import app.dramaverse.stream.data.ContinueWatchingItem
 import app.dramaverse.stream.data.DramaItem
 import app.dramaverse.stream.data.LibraryFeed
+import app.dramaverse.stream.data.TopStar
 import app.dramaverse.stream.model.LibraryViewModel
 
 private val HomeBackground = Color(0xFF09090B)
@@ -62,6 +70,7 @@ fun LibraryScreen(
     onHome: () -> Unit,
     onShorts: () -> Unit,
     onOpenShorts: (Int?) -> Unit,
+    onSearch: (String) -> Unit,
     viewModel: LibraryViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -82,6 +91,7 @@ fun LibraryScreen(
             LibraryContent(
                 feed = feed ?: LibraryFeed(emptyList(), emptyList(), emptyList(), emptyList(), emptyList()),
                 errorMessage = uiState.errorMessage,
+                onSearch = onSearch,
                 onOpenShorts = onOpenShorts
             )
         }
@@ -99,17 +109,25 @@ fun LibraryScreen(
 private fun LibraryContent(
     feed: LibraryFeed,
     errorMessage: String?,
+    onSearch: (String) -> Unit,
     onOpenShorts: (Int?) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 18.dp, end = 18.dp, top = 48.dp, bottom = 104.dp),
+        contentPadding = PaddingValues(bottom = 104.dp),
         verticalArrangement = Arrangement.spacedBy(22.dp)
     ) {
-        item { LibrarySearchBar() }
-        item { LibraryChips() }
+        item { LibraryTopHeader(onSearch) }
         if (errorMessage != null) {
-            item { Text(errorMessage, color = SoftPink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold) }
+            item {
+                Text(
+                    errorMessage,
+                    color = SoftPink,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = 18.dp)
+                )
+            }
         }
         item {
             LibraryFilmRail(
@@ -122,23 +140,8 @@ private fun LibraryContent(
         }
         item {
             WatchHistorySection(
+                title = "Continue Watching",
                 items = feed.watchHistory,
-                onOpenShorts = onOpenShorts
-            )
-        }
-        item {
-            LibraryFilmRail(
-                title = "Followed Films",
-                subtitle = "Films you follow",
-                items = feed.followedFilms,
-                emptyText = "Followed films will appear here.",
-                onOpenShorts = onOpenShorts
-            )
-        }
-        item {
-            LibraryGridSection(
-                title = "Recommended for You",
-                items = feed.recommended,
                 onOpenShorts = onOpenShorts
             )
         }
@@ -149,54 +152,98 @@ private fun LibraryContent(
                 onOpenShorts = onOpenShorts
             )
         }
+        if (feed.topStars.isNotEmpty()) {
+            item { TopStarsSection(feed.topStars, onOpenShorts) }
+        }
+        item {
+            LibraryGridSection(
+                title = "Recommended for You",
+                items = feed.recommended,
+                onOpenShorts = onOpenShorts
+            )
+        }
     }
 }
 
 @Composable
-private fun LibrarySearchBar() {
-    Row(
+private fun LibraryTopHeader(onSearch: (String) -> Unit) {
+    var searchText by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
+    fun submitSearch() {
+        val query = searchText.trim()
+        if (query.isNotBlank()) {
+            focusManager.clearFocus()
+            onSearch(query)
+        }
+    }
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(58.dp)
-            .clip(RoundedCornerShape(15.dp))
-            .background(Color(0xFF17161A))
-            .padding(horizontal = 18.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .height(142.dp)
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xF5000000), Color(0xB8000000), Color.Transparent)
+                )
+            )
     ) {
-        Icon(Icons.Filled.Search, contentDescription = null, tint = Color(0xFFB89BA5), modifier = Modifier.size(25.dp))
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            "Find your next obsession...",
-            color = Color(0xFF8F767F),
-            fontSize = 18.sp,
-            fontWeight = FontWeight.SemiBold,
-            letterSpacing = 0.sp,
-            modifier = Modifier.weight(1f)
-        )
-        Icon(Icons.Filled.Mic, contentDescription = null, tint = Color(0xFFB89BA5), modifier = Modifier.size(25.dp))
-    }
-}
-
-@Composable
-private fun LibraryChips() {
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        items(listOf("All", "Romance", "CEO", "Mafia")) { chip ->
-            val selected = chip == "All"
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.TopCenter)
+                .padding(start = 18.dp, end = 18.dp, top = 28.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text("Library", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+                Text("Saved, watched, and picked for you", color = Color(0xFFCDB5BC), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+            }
             Box(
                 modifier = Modifier
-                    .height(40.dp)
-                    .clip(RoundedCornerShape(22.dp))
-                    .background(if (selected) Color(0xFFFFA6B3) else Color(0xFF1E1D21))
-                    .padding(horizontal = 26.dp),
+                    .size(38.dp)
+                    .clip(RoundedCornerShape(19.dp))
+                    .background(Color(0x6618171C))
+                    .clickable { submitSearch() },
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    chip,
-                    color = if (selected) Color(0xFF4A1A26) else Color(0xFFE6BDC6),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 0.sp
-                )
+                Icon(Icons.Filled.Search, contentDescription = null, tint = Color(0xFFF2E3E7), modifier = Modifier.size(20.dp))
+            }
+        }
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(horizontal = 18.dp, vertical = 16.dp)
+                .fillMaxWidth()
+                .height(42.dp)
+                .clip(RoundedCornerShape(21.dp))
+                .background(Color(0xD017151A))
+                .padding(horizontal = 13.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Filled.Search, contentDescription = null, tint = Color(0xFFF2E3E7), modifier = Modifier.size(19.dp))
+            Spacer(modifier = Modifier.width(9.dp))
+            BasicTextField(
+                value = searchText,
+                onValueChange = { searchText = it },
+                singleLine = true,
+                textStyle = TextStyle(color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { submitSearch() }),
+                modifier = Modifier.weight(1f),
+                decorationBox = { innerTextField ->
+                    if (searchText.isBlank()) {
+                        Text("Search films...", color = Color(0xFF9B858E), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+                    }
+                    innerTextField()
+                }
+            )
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .clickable(onClick = { submitSearch() }),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Filled.Search, contentDescription = null, tint = SoftPink, modifier = Modifier.size(18.dp))
             }
         }
     }
@@ -210,12 +257,19 @@ private fun LibraryFilmRail(
     emptyText: String,
     onOpenShorts: (Int?) -> Unit
 ) {
-    LibraryHeader(title, subtitle)
+    Box(Modifier.padding(horizontal = 18.dp)) {
+        Column {
+            LibraryHeader(title, subtitle)
+        }
+    }
     if (items.isEmpty()) {
-        EmptyLibraryBlock(emptyText)
+        Box(Modifier.padding(horizontal = 18.dp)) { EmptyLibraryBlock(emptyText) }
         return
     }
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 18.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
         items(items) { film ->
             CompactLibraryCard(film = film, onOpenShorts = onOpenShorts)
         }
@@ -224,15 +278,23 @@ private fun LibraryFilmRail(
 
 @Composable
 private fun WatchHistorySection(
+    title: String,
     items: List<ContinueWatchingItem>,
     onOpenShorts: (Int?) -> Unit
 ) {
-    LibraryHeader("Watch History", "Continue from your latest episode")
+    Box(Modifier.padding(horizontal = 18.dp)) {
+        Column { LibraryHeader(title, "Continue from your latest episode") }
+    }
     if (items.isEmpty()) {
-        EmptyLibraryBlock("Films watched for 10 seconds or more will appear here.")
+        Box(Modifier.padding(horizontal = 18.dp)) {
+            EmptyLibraryBlock("Films watched for 10 seconds or more will appear here.")
+        }
         return
     }
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 18.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
         items(items) { item ->
             HistoryCard(item = item, onOpenShorts = onOpenShorts)
         }
@@ -245,20 +307,55 @@ private fun LibraryGridSection(
     items: List<DramaItem>,
     onOpenShorts: (Int?) -> Unit
 ) {
-    LibraryHeader(title, null)
+    Box(Modifier.padding(horizontal = 18.dp)) {
+        Column { LibraryHeader(title, null) }
+    }
     if (items.isEmpty()) {
-        EmptyLibraryBlock("No films yet.")
+        Box(Modifier.padding(horizontal = 18.dp)) { EmptyLibraryBlock("No films yet.") }
         return
     }
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        userScrollEnabled = false,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
-        modifier = Modifier.height(((items.take(6).size + 1) / 2 * 250).dp)
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 18.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(items.take(6)) { film ->
-            LargeLibraryCard(film = film, onOpenShorts = onOpenShorts)
+        items(items.take(12)) { film ->
+            CompactLibraryCard(film = film, onOpenShorts = onOpenShorts)
+        }
+    }
+}
+
+@Composable
+private fun TopStarsSection(stars: List<TopStar>, onOpenShorts: (Int?) -> Unit) {
+    Box(Modifier.padding(horizontal = 18.dp)) {
+        Column { LibraryHeader("Top Stars", "Pulled from available film cast data") }
+    }
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 18.dp),
+        horizontalArrangement = Arrangement.spacedBy(18.dp)
+    ) {
+        items(stars) { star ->
+            Column(
+                modifier = Modifier
+                    .width(82.dp)
+                    .clickable { onOpenShorts(star.filmId.takeIf { it != 0 }) },
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .clip(RoundedCornerShape(35.dp))
+                        .background(Brush.radialGradient(listOf(Color(0xFFF0B18B), Color(0xFF351B1F)))),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (star.imageUrl.isNotBlank()) {
+                        NetworkDramaImage(star.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, star.name)
+                    } else {
+                        Text(star.name.take(1).uppercase(), color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+                    }
+                }
+                Spacer(modifier = Modifier.height(7.dp))
+                Text(star.name, color = Color(0xFFE8D5DA), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
+            }
         }
     }
 }
@@ -272,7 +369,6 @@ private fun LibraryHeader(title: String, subtitle: String?) {
                 Text(subtitle, color = Color(0xFFBBA3AB), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
             }
         }
-        Text("Refresh", color = SoftPink, fontSize = 13.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
     }
     Spacer(modifier = Modifier.height(12.dp))
 }
