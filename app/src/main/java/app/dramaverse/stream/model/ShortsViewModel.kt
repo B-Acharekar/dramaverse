@@ -27,10 +27,16 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
     val uiState: StateFlow<ShortsUiState> = _uiState.asStateFlow()
     private var nextPage = 1
     private var currentBackendBaseUrl = ""
+    private var currentInitialFilmId: Int? = null
 
     fun loadInitial(backendBaseUrl: String, initialFilmId: Int?) {
-        if (_uiState.value.items.isNotEmpty() && currentBackendBaseUrl == backendBaseUrl) return
+        if (
+            _uiState.value.items.isNotEmpty() &&
+            currentBackendBaseUrl == backendBaseUrl &&
+            currentInitialFilmId == initialFilmId
+        ) return
         currentBackendBaseUrl = backendBaseUrl
+        currentInitialFilmId = initialFilmId
         nextPage = 1
         viewModelScope.launch {
             _uiState.update { ShortsUiState(isLoading = true) }
@@ -124,6 +130,66 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                     backendBaseUrl = backendBaseUrl,
                     filmId = filmId,
                     episodeNumber = episodeNumber
+                )
+            }
+        }
+    }
+
+    fun completeEpisodeAndMaybePlayNext(
+        backendBaseUrl: String,
+        itemIndex: Int,
+        item: ShortsItem,
+        progressSeconds: Int,
+        durationSeconds: Int?,
+        autoNext: Boolean,
+        autoUnlock: Boolean
+    ) {
+        if (item.film.id == 0) return
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                repository.saveWatchProgress(
+                    backendBaseUrl = backendBaseUrl,
+                    filmId = item.film.id,
+                    episodeNumber = item.episodeNumber,
+                    progressSeconds = progressSeconds,
+                    durationSeconds = durationSeconds,
+                    completed = true
+                )
+            }
+            if (!autoNext) return@launch
+
+            val nextEpisode = item.episodeNumber + 1
+            if (nextEpisode > item.film.episodeTotal) return@launch
+
+            if (autoUnlock) {
+                withContext(Dispatchers.IO) {
+                    repository.unlockEpisode(
+                        backendBaseUrl = backendBaseUrl,
+                        filmId = item.film.id,
+                        episodeNumber = nextEpisode
+                    )
+                }
+            }
+
+            val nextItem = withContext(Dispatchers.IO) {
+                repository.loadPlayback(
+                    backendBaseUrl = backendBaseUrl,
+                    filmId = item.film.id,
+                    episodeNumber = nextEpisode
+                )
+            }.getOrNull() ?: return@launch
+
+            if (nextItem.isLocked || nextItem.playUrl.isBlank()) return@launch
+
+            _uiState.update { state ->
+                state.copy(
+                    items = state.items.mapIndexed { index, existing ->
+                        if (index == itemIndex) {
+                            nextItem.copy(film = nextItem.film.mergeFallback(existing.film))
+                        } else {
+                            existing
+                        }
+                    }
                 )
             }
         }

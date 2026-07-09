@@ -116,6 +116,7 @@ fun ShortsScreen(
     var isPlaying by remember { mutableStateOf(true) }
     var showPlaybackOptions by remember { mutableStateOf(false) }
     var showFeedbackForm by remember { mutableStateOf(false) }
+    var autoNext by remember { mutableStateOf(false) }
     var autoUnlock by remember { mutableStateOf(false) }
     var ccEnabled by remember { mutableStateOf(true) }
     var playbackSpeed by remember { mutableStateOf(1f) }
@@ -157,11 +158,14 @@ fun ShortsScreen(
             ) { page ->
                 ShortsPage(
                     item = uiState.items[page],
+                    itemIndex = page,
                     isActive = page == pagerState.currentPage,
+                    backendBaseUrl = backendBaseUrl,
                     controlsVisible = controlsVisible,
                     isPlaying = isPlaying,
                     showPlaybackOptions = showPlaybackOptions,
                     showFeedbackForm = showFeedbackForm,
+                    autoNext = autoNext,
                     autoUnlock = autoUnlock,
                     ccEnabled = ccEnabled,
                     playbackSpeed = playbackSpeed,
@@ -187,13 +191,10 @@ fun ShortsScreen(
                     onAutoUnlockChange = { enabled ->
                         autoUnlock = enabled
                         showPlaybackOptions = false
-                        uiState.items.getOrNull(pagerState.currentPage)?.let { item ->
-                            if (enabled) viewModel.unlockEpisode(
-                                backendBaseUrl = backendBaseUrl,
-                                filmId = item.film.id,
-                                episodeNumber = item.episodeNumber
-                            )
-                        }
+                    },
+                    onAutoNextChange = { enabled ->
+                        autoNext = enabled
+                        showPlaybackOptions = false
                     },
                     onSubmitFeedback = { item, message ->
                         viewModel.sendFeedback(
@@ -216,6 +217,17 @@ fun ShortsScreen(
                             backendBaseUrl = backendBaseUrl,
                             filmId = item.film.id,
                             enabled = enabled
+                        )
+                    },
+                    onEpisodeFinished = { index, item, position, duration ->
+                        viewModel.completeEpisodeAndMaybePlayNext(
+                            backendBaseUrl = backendBaseUrl,
+                            itemIndex = index,
+                            item = item,
+                            progressSeconds = (position / 1000).toInt(),
+                            durationSeconds = duration.takeIf { it > 0L }?.let { (it / 1000).toInt() },
+                            autoNext = autoNext,
+                            autoUnlock = autoUnlock
                         )
                     },
                     onToggleCc = { ccEnabled = !ccEnabled },
@@ -244,11 +256,14 @@ fun ShortsScreen(
 @Composable
 private fun ShortsPage(
     item: ShortsItem,
+    itemIndex: Int,
     isActive: Boolean,
+    backendBaseUrl: String,
     controlsVisible: Boolean,
     isPlaying: Boolean,
     showPlaybackOptions: Boolean,
     showFeedbackForm: Boolean,
+    autoNext: Boolean,
     autoUnlock: Boolean,
     ccEnabled: Boolean,
     playbackSpeed: Float,
@@ -257,10 +272,12 @@ private fun ShortsPage(
     onFeedbackClick: () -> Unit,
     onOptionsClick: () -> Unit,
     onClosePopups: () -> Unit,
+    onAutoNextChange: (Boolean) -> Unit,
     onAutoUnlockChange: (Boolean) -> Unit,
     onSubmitFeedback: (ShortsItem, String) -> Unit,
     onLikeClick: (ShortsItem, Boolean) -> Unit,
     onReminderClick: (ShortsItem, Boolean) -> Unit,
+    onEpisodeFinished: (Int, ShortsItem, Long, Long) -> Unit,
     onToggleCc: () -> Unit,
     onCycleSpeed: () -> Unit
 ) {
@@ -269,6 +286,7 @@ private fun ShortsPage(
     var liked by remember(item.film.id, item.episodeNumber) { mutableStateOf(false) }
     var positionMs by remember(item.playUrl) { mutableStateOf(0L) }
     var durationMs by remember(item.playUrl) { mutableStateOf(0L) }
+    var finishHandled by remember(item.playUrl) { mutableStateOf(false) }
     var pendingSeekMs by remember(item.playUrl) { mutableStateOf<Long?>(null) }
     var subtitleText by remember(item.playUrl) { mutableStateOf("") }
     var feedbackText by remember(item.playUrl) { mutableStateOf("") }
@@ -295,10 +313,17 @@ private fun ShortsPage(
                 ccEnabled = ccEnabled,
                 controlsVisible = controlsVisible,
                 playbackSpeed = playbackSpeed,
+                repeatCurrent = !autoNext,
                 onReady = { videoReady = true },
                 onProgress = { position, duration ->
                     positionMs = position
                     durationMs = duration
+                },
+                onEnded = {
+                    if (!finishHandled) {
+                        finishHandled = true
+                        onEpisodeFinished(itemIndex, item, positionMs, durationMs)
+                    }
                 },
                 onSubtitleText = { subtitleText = it },
                 seekToMs = pendingSeekMs,
@@ -448,7 +473,9 @@ private fun ShortsPage(
 
         if (showPlaybackOptions && controlsVisible) {
             FeedbackOptionsSheet(
+                autoNext = autoNext,
                 autoUnlock = autoUnlock,
+                onAutoNextChange = onAutoNextChange,
                 onAutoUnlockChange = onAutoUnlockChange,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -567,7 +594,7 @@ private fun ShortsCaption(
     val safeDuration = durationMs.takeIf { it > 0L && it < Long.MAX_VALUE / 2 } ?: 0L
     var descriptionExpanded by remember(item.film.id, item.episodeNumber) { mutableStateOf(false) }
     val description = item.film.description.ifBlank { "A short drama packed with secrets, romance, and revenge." }
-    val showDescriptionToggle = description.length > 90
+    val showDescriptionToggle = description.length > 42
     var sliderPosition by remember(positionMs, safeDuration) {
         mutableStateOf(positionMs.coerceIn(0L, safeDuration).toFloat())
     }
@@ -596,10 +623,10 @@ private fun ShortsCaption(
         Text(
             item.film.title,
             color = Color.White,
-            fontSize = 22.sp,
-            lineHeight = 26.sp,
+            fontSize = 20.sp,
+            lineHeight = 23.sp,
             fontWeight = FontWeight.ExtraBold,
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             letterSpacing = 0.sp
         )
@@ -757,7 +784,9 @@ private fun LoadingBackdrop(
 
 @Composable
 private fun FeedbackOptionsSheet(
+    autoNext: Boolean,
     autoUnlock: Boolean,
+    onAutoNextChange: (Boolean) -> Unit,
     onAutoUnlockChange: (Boolean) -> Unit,
     modifier: Modifier
 ) {
@@ -773,8 +802,16 @@ private fun FeedbackOptionsSheet(
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
+                Text("Auto next episode", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+                Text("Play the next episode automatically when this one ends.", color = Color(0xFFC8B6BC), fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+            }
+            Switch(checked = autoNext, onCheckedChange = onAutoNextChange)
+        }
+        Spacer(Modifier.height(14.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text("Auto unlock episodes", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
-                Text("Unlock the next paid episode automatically when available.", color = Color(0xFFC8B6BC), fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+                Text("Unlock only the next locked episode after the current one finishes.", color = Color(0xFFC8B6BC), fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
             }
             Switch(checked = autoUnlock, onCheckedChange = onAutoUnlockChange)
         }
@@ -961,8 +998,10 @@ private fun HlsVideoPlayer(playUrl: String, modifier: Modifier) {
         ccEnabled = true,
         controlsVisible = false,
         playbackSpeed = 1f,
+        repeatCurrent = true,
         onReady = {},
         onProgress = { _, _ -> },
+        onEnded = {},
         onSubtitleText = {},
         seekToMs = null,
         onSeekHandled = {},
@@ -979,8 +1018,10 @@ private fun HlsVideoPlayer(
     ccEnabled: Boolean,
     controlsVisible: Boolean,
     playbackSpeed: Float,
+    repeatCurrent: Boolean,
     onReady: () -> Unit,
     onProgress: (Long, Long) -> Unit,
+    onEnded: () -> Unit,
     onSubtitleText: (String) -> Unit,
     seekToMs: Long?,
     onSeekHandled: () -> Unit,
@@ -1014,7 +1055,7 @@ private fun HlsVideoPlayer(
             .setSubtitleConfigurations(subtitleConfigurations)
             .build()
         player.setMediaItem(mediaItem)
-        player.repeatMode = ExoPlayer.REPEAT_MODE_ONE
+        player.repeatMode = if (repeatCurrent) ExoPlayer.REPEAT_MODE_ONE else ExoPlayer.REPEAT_MODE_OFF
         player.playWhenReady = true
         val listener = object : Player.Listener {
             override fun onCues(cueGroup: CueGroup) {
@@ -1031,6 +1072,7 @@ private fun HlsVideoPlayer(
 
             override fun onPlaybackStateChanged(playbackState: Int) {
                 if (playbackState == Player.STATE_READY) onReady()
+                if (playbackState == Player.STATE_ENDED) onEnded()
             }
 
             override fun onPlayerError(error: PlaybackException) {
@@ -1063,6 +1105,10 @@ private fun HlsVideoPlayer(
 
     LaunchedEffect(playbackSpeed) {
         player.playbackParameters = PlaybackParameters(playbackSpeed)
+    }
+
+    LaunchedEffect(repeatCurrent) {
+        player.repeatMode = if (repeatCurrent) ExoPlayer.REPEAT_MODE_ONE else ExoPlayer.REPEAT_MODE_OFF
     }
 
     LaunchedEffect(seekToMs) {

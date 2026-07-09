@@ -64,11 +64,11 @@ class ShortsRepository(
         val film = DramaItem(
             id = filmJson.optInt("id", filmId),
             title = filmJson.optString("title", "Drama"),
-            description = filmJson.optString("description", ""),
+            description = filmJson.firstString("description", "desc", "summary", "content"),
             imageUrl = filmJson.optString("thumb"),
-            rating = filmJson.optString("rating", "4.8"),
+            rating = filmJson.firstString("rating", "rate", "score").ifBlank { "4.8" },
             episodeTotal = filmJson.optInt("episode_total", 1),
-            genre = filmJson.optString("genre", "Drama"),
+            genre = filmJson.firstString("genre", "category", "tag").ifBlank { "Drama" },
             likeCount = likeCount
         )
         ShortsItem(
@@ -115,6 +115,31 @@ class ShortsRepository(
         path = "client/films/$filmId/episodes/$episodeNumber/unlock",
         language = language
     )
+
+    suspend fun saveWatchProgress(
+        backendBaseUrl: String,
+        filmId: Int,
+        episodeNumber: Int,
+        progressSeconds: Int,
+        durationSeconds: Int?,
+        completed: Boolean,
+        language: String = "en"
+    ): Result<Unit> = runCatching {
+        val token = authRepository.authToken()
+            ?: authRepository.registerDevice(backendBaseUrl, language).getOrThrow().token
+            ?: throw IllegalStateException("Device auth did not return a bearer token.")
+        postJson(
+            backendBaseUrl = backendBaseUrl,
+            path = "client/films/$filmId/episodes/$episodeNumber/watch",
+            language = language,
+            token = token,
+            body = JSONObject()
+                .put("progress_seconds", progressSeconds)
+                .put("duration_seconds", durationSeconds)
+                .put("completed", completed)
+        )
+        Unit
+    }
 
     suspend fun sendFeedback(
         backendBaseUrl: String,
