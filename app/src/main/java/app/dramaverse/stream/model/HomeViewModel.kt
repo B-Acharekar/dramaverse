@@ -40,35 +40,56 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun loadHome(backendBaseUrl: String) {
-        if (_uiState.value.feed != null) return
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            repository.loadHome(
-                backendBaseUrl = backendBaseUrl,
-                language = "en"
-            ).onSuccess { feed ->
-                if (feed != null) {
-                    _uiState.update { HomeUiState(isLoading = false, feed = feed) }
-                }
-            }.onFailure { error ->
-                _uiState.update {
-                    it.copy(
-                        errorMessage = error.message ?: "Unable to load home."
-                    )
+        val hasFeed = _uiState.value.feed != null
+        if (!hasFeed) {
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                repository.loadHome(
+                    backendBaseUrl = backendBaseUrl,
+                    language = "en"
+                ).onSuccess { feed ->
+                    if (feed != null) {
+                        _uiState.update { HomeUiState(isLoading = false, feed = feed) }
+                    }
+                }.onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            errorMessage = error.message ?: "Unable to load home."
+                        )
+                    }
                 }
             }
+            viewModelScope.launch {
+                repository.refreshHome(
+                    backendBaseUrl = backendBaseUrl,
+                    language = "en"
+                ).onSuccess { feed ->
+                    _uiState.update { HomeUiState(isLoading = false, feed = feed) }
+                }.onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = it.feed == null,
+                            errorMessage = error.message ?: "Unable to load home."
+                        )
+                    }
+                }
+            }
+            return
         }
+
         viewModelScope.launch {
-            repository.refreshHome(
+            repository.refreshContinueWatching(
                 backendBaseUrl = backendBaseUrl,
                 language = "en"
-            ).onSuccess { feed ->
-                _uiState.update { HomeUiState(isLoading = false, feed = feed) }
+            ).onSuccess { continueWatching ->
+                _uiState.update { state ->
+                    val currentFeed = state.feed ?: return@update state
+                    state.copy(feed = currentFeed.copy(continueWatching = continueWatching), errorMessage = null)
+                }
             }.onFailure { error ->
                 _uiState.update {
                     it.copy(
-                        isLoading = it.feed == null,
-                        errorMessage = error.message ?: "Unable to load home."
+                        errorMessage = error.message ?: "Unable to refresh progress."
                     )
                 }
             }
@@ -97,6 +118,51 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                         isMoodLoading = false,
                         errorMessage = error.message ?: "Unable to search mood."
                     )
+                }
+            }
+        }
+    }
+
+    fun search(backendBaseUrl: String, query: String) {
+        val trimmed = query.trim()
+        if (trimmed.isBlank()) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(selectedMood = trimmed, isMoodLoading = true, errorMessage = null) }
+            repository.searchMood(
+                backendBaseUrl = backendBaseUrl,
+                mood = trimmed,
+                language = "en"
+            ).onSuccess { feed ->
+                _uiState.update {
+                    HomeUiState(
+                        isLoading = false,
+                        feed = feed,
+                        selectedMood = trimmed,
+                        isMoodLoading = false
+                    )
+                }
+            }.onFailure { error ->
+                _uiState.update {
+                    it.copy(
+                        isMoodLoading = false,
+                        errorMessage = error.message ?: "Unable to search films."
+                    )
+                }
+            }
+        }
+    }
+
+    fun setReminder(backendBaseUrl: String, filmId: Int, enabled: Boolean = true) {
+        if (filmId == 0) return
+        viewModelScope.launch {
+            repository.setReminder(
+                backendBaseUrl = backendBaseUrl,
+                filmId = filmId,
+                enabled = enabled,
+                language = "en"
+            ).onFailure { error ->
+                _uiState.update {
+                    it.copy(errorMessage = error.message ?: "Unable to update watch list.")
                 }
             }
         }

@@ -20,6 +20,13 @@ data class ShortsItem(
     val likeCount: Int = 0
 )
 
+data class EpisodeInfo(
+    val episodeNumber: Int,
+    val title: String = "",
+    val isLocked: Boolean = false,
+    val isWatched: Boolean = false
+)
+
 class ShortsRepository(
     private val authRepository: AuthRepository
 ) {
@@ -80,6 +87,43 @@ class ShortsRepository(
             isLocked = json.optBoolean("unlock_required", false),
             likeCount = likeCount
         )
+    }
+
+    suspend fun loadEpisodes(
+        backendBaseUrl: String,
+        filmId: Int,
+        language: String = "en"
+    ): Result<List<EpisodeInfo>> = runCatching {
+        val token = authRepository.authToken()
+            ?: authRepository.registerDevice(backendBaseUrl, language).getOrThrow().token
+            ?: throw IllegalStateException("Device auth did not return a bearer token.")
+        val json = getJson(
+            backendBaseUrl = backendBaseUrl,
+            path = "client/films/$filmId/episodes",
+            language = language,
+            token = token,
+            page = null
+        )
+        val episodes = json.optJSONArray("episodes") ?: org.json.JSONArray()
+        buildList {
+            for (index in 0 until episodes.length()) {
+                val episode = episodes.optJSONObject(index) ?: continue
+                val number = episode.firstInt("episode", "episode_number", "number").takeIf { it > 0 }
+                    ?: (index + 1)
+                add(
+                    EpisodeInfo(
+                        episodeNumber = number,
+                        title = episode.firstString("title", "name"),
+                        isLocked = episode.optBoolean("unlock_required", false) ||
+                            episode.firstInt("is_unlocked", "unlocked") == 0 && number > 1,
+                        isWatched = episode.optBoolean("watched", false) ||
+                            episode.optBoolean("is_watched", false) ||
+                            episode.optBoolean("completed", false) ||
+                            episode.firstInt("is_watched", "watched", "completed") == 1
+                    )
+                )
+            }
+        }
     }
 
     suspend fun setEpisodeLike(

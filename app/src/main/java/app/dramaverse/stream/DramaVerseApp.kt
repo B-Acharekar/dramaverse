@@ -18,7 +18,9 @@ import app.dramaverse.stream.model.AppViewModel
 import app.dramaverse.stream.screen.CustomSplashScreen
 import app.dramaverse.stream.screen.HomeScreen
 import app.dramaverse.stream.screen.LanguageScreen
+import app.dramaverse.stream.screen.LibraryScreen
 import app.dramaverse.stream.screen.OnboardingScreen
+import app.dramaverse.stream.screen.SearchResultsScreen
 import app.dramaverse.stream.screen.ShortsScreen
 
 @Composable
@@ -57,14 +59,36 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
 
         AppStep.Home -> HomeScreen(
             backendBaseUrl = uiState.backendBaseUrl,
-            onOpenShorts = viewModel::openShorts
+            onOpenShorts = viewModel::openShorts,
+            onLibrary = viewModel::openLibrary,
+            onSearch = viewModel::openSearch
         )
 
         AppStep.Shorts -> ShortsScreen(
             backendBaseUrl = uiState.backendBaseUrl,
             initialFilmId = uiState.selectedShortFilmId,
             onBack = viewModel::openHome,
-            onHome = viewModel::openHome
+            onHome = viewModel::openHome,
+            onLibrary = viewModel::openLibrary
+        )
+
+        AppStep.Library -> LibraryScreen(
+            backendBaseUrl = uiState.backendBaseUrl,
+            onHome = viewModel::openHome,
+            onShorts = { viewModel.openShorts(null) },
+            onOpenShorts = viewModel::openShorts,
+            onSearch = viewModel::openSearch
+        )
+
+        AppStep.Search -> SearchResultsScreen(
+            backendBaseUrl = uiState.backendBaseUrl,
+            query = uiState.searchQuery,
+            onBack = viewModel::openHome,
+            onHome = viewModel::openHome,
+            onShorts = { viewModel.openShorts(null) },
+            onLibrary = viewModel::openLibrary,
+            onOpenShorts = viewModel::openShorts,
+            onSearch = viewModel::openSearch
         )
     }
 }

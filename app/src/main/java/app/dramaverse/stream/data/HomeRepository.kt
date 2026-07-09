@@ -33,9 +33,24 @@ data class DramaItem(
     val likeCount: Int = 0
 )
 
+data class ContinueWatchingItem(
+    val film: DramaItem,
+    val episodeNumber: Int,
+    val progressSeconds: Int,
+    val durationSeconds: Int,
+    val completed: Boolean = false
+) {
+    val progressFraction: Float
+        get() = if (durationSeconds > 0) {
+            (progressSeconds.toFloat() / durationSeconds.toFloat()).coerceIn(0f, 1f)
+        } else {
+            0f
+        }
+}
+
 data class HomeFeed(
     val hero: DramaItem,
-    val continueWatching: List<DramaItem>,
+    val continueWatching: List<ContinueWatchingItem>,
     val trending: List<DramaItem>,
     val topRated: DramaItem,
     val moreLikeThis: List<DramaItem>
@@ -93,6 +108,46 @@ class HomeRepository(
             val displayFeed = cacheStore.displayFeedForToday(rawFeed)
             cacheStore.writeDisplayFeed(displayFeed)
             displayFeed.also { _prefetchedFeed.value = it }
+        }
+    }
+
+    suspend fun refreshContinueWatching(
+        backendBaseUrl: String,
+        language: String = "en"
+    ): Result<List<ContinueWatchingItem>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val token = authRepository.authToken()
+                ?: authRepository.registerDevice(backendBaseUrl, language).getOrThrow().token
+                ?: throw IllegalStateException("Device auth did not return a bearer token.")
+
+            val historyJson = getClientJson(
+                backendBaseUrl = backendBaseUrl,
+                path = "client/history/watch",
+                language = language,
+                token = token,
+                timeoutMillis = 5000,
+                page = 1
+            )
+            parseContinueWatching(historyJson)
+        }
+    }
+
+    suspend fun setReminder(
+        backendBaseUrl: String,
+        filmId: Int,
+        enabled: Boolean,
+        language: String = "en"
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val token = authRepository.authToken()
+                ?: authRepository.registerDevice(backendBaseUrl, language).getOrThrow().token
+                ?: throw IllegalStateException("Device auth did not return a bearer token.")
+            postClientAction(
+                backendBaseUrl = backendBaseUrl,
+                path = "client/films/$filmId/${if (enabled) "reminder" else "unreminder"}",
+                language = language,
+                token = token
+            )
         }
     }
 
@@ -191,11 +246,17 @@ private suspend fun fetchHomeFeed(
             }.getOrNull()
         }
     }
+    val watchHistory = async {
+        runCatching {
+            getClientJson(backendBaseUrl, "client/history/watch", language, token, timeoutMillis, page = 1)
+        }.getOrNull()
+    }
 
     parseHomeFeed(
         homeJson = home.await().getOrNull(),
         filmsJsons = filmPages.mapNotNull { it.await() },
-        forYouJsons = forYouPages.mapNotNull { it.await() }
+        forYouJsons = forYouPages.mapNotNull { it.await() },
+        watchHistoryJson = watchHistory.await()
     )
 }
 
@@ -233,10 +294,35 @@ private fun getClientJson(
     return JSONObject(responseText)
 }
 
+private fun postClientAction(
+    backendBaseUrl: String,
+    path: String,
+    language: String,
+    token: String
+) {
+    val url = URL("${backendBaseUrl.trimEndSlash()}/$path?language=$language")
+    val connection = (url.openConnection() as HttpURLConnection).apply {
+        requestMethod = "POST"
+        connectTimeout = 6500
+        readTimeout = 6500
+        doOutput = true
+        setRequestProperty("Accept", "application/json")
+        setRequestProperty("Content-Type", "application/json")
+        setRequestProperty("Authorization", "Bearer $token")
+        outputStream.use { it.write(ByteArray(0)) }
+    }
+    if (connection.responseCode !in 200..299) {
+        val error = connection.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
+        throw IllegalStateException("$path failed: ${connection.responseCode} $error")
+    }
+    connection.inputStream?.close()
+}
+
 private fun parseHomeFeed(
     homeJson: JSONObject?,
     filmsJsons: List<JSONObject>,
-    forYouJsons: List<JSONObject>
+    forYouJsons: List<JSONObject>,
+    watchHistoryJson: JSONObject? = null
 ): HomeFeed {
     val homeItems = collectDramaItems(homeJson)
         .distinctBy { it.id.takeIf { id -> id != 0 } ?: it.title }
@@ -255,10 +341,21 @@ private fun parseHomeFeed(
         "history_watching",
         "watch_history"
     )
-    val continueItems = (
-        collectDramaItemsFromKeys(homeJson, continueKeys) +
-            filmsJsons.flatMap { collectDramaItemsFromKeys(it, continueKeys) }
-        ).distinctBy { it.id.takeIf { id -> id != 0 } ?: it.title }
+    val continueItems = parseContinueWatching(watchHistoryJson).ifEmpty {
+        (
+            collectDramaItemsFromKeys(homeJson, continueKeys) +
+                filmsJsons.flatMap { collectDramaItemsFromKeys(it, continueKeys) }
+            )
+            .distinctBy { it.id.takeIf { id -> id != 0 } ?: it.title }
+            .map { film ->
+                ContinueWatchingItem(
+                    film = film,
+                    episodeNumber = 1,
+                    progressSeconds = 0,
+                    durationSeconds = 0
+                )
+            }
+    }
 
     val items = (homeItems + forYouItems + filmItems)
         .distinctBy { it.id.takeIf { id -> id != 0 } ?: it.title }
@@ -442,6 +539,32 @@ private fun collectDramaItems(value: Any?): List<DramaItem> {
     }
 }
 
+private fun parseContinueWatching(json: JSONObject?): List<ContinueWatchingItem> {
+    val data = json?.opt("data") ?: return emptyList()
+    val array = when (data) {
+        is JSONArray -> data
+        is JSONObject -> data.optJSONArray("items") ?: data.optJSONArray("data") ?: JSONArray()
+        else -> JSONArray()
+    }
+    return buildList {
+        for (index in 0 until array.length()) {
+            val item = array.optJSONObject(index) ?: continue
+            val filmJson = item.optJSONObject("film") ?: item
+            val film = filmJson.toDramaItemFromBackend()
+            if (film.title.isBlank()) continue
+            add(
+                ContinueWatchingItem(
+                    film = film,
+                    episodeNumber = item.firstInt("episode", "episode_number", "episodeNumber").takeIf { it > 0 } ?: 1,
+                    progressSeconds = item.firstInt("progress_seconds", "progressSeconds", "current_time", "time_watching"),
+                    durationSeconds = item.firstInt("duration_seconds", "durationSeconds", "episode_duration"),
+                    completed = item.firstBoolean("completed", "is_completed")
+                )
+            )
+        }
+    }.distinctBy { it.film.id.takeIf { id -> id != 0 } ?: it.film.title }
+}
+
 private fun DramaItem.toJson(): JSONObject = JSONObject()
     .put("id", id)
     .put("title", title)
@@ -453,9 +576,16 @@ private fun DramaItem.toJson(): JSONObject = JSONObject()
     .put("isPremium", isPremium)
     .put("likeCount", likeCount)
 
+private fun ContinueWatchingItem.toJson(): JSONObject = JSONObject()
+    .put("film", film.toJson())
+    .put("episodeNumber", episodeNumber)
+    .put("progressSeconds", progressSeconds)
+    .put("durationSeconds", durationSeconds)
+    .put("completed", completed)
+
 private fun HomeFeed.toJson(): JSONObject = JSONObject()
     .put("hero", hero.toJson())
-    .put("continueWatching", continueWatching.toJsonArray())
+    .put("continueWatching", continueWatching.toContinueJsonArray())
     .put("trending", trending.toJsonArray())
     .put("topRated", topRated.toJson())
     .put("moreLikeThis", moreLikeThis.toJsonArray())
@@ -464,15 +594,32 @@ private fun List<DramaItem>.toJsonArray(): JSONArray = JSONArray().also { array 
     forEach { array.put(it.toJson()) }
 }
 
+private fun List<ContinueWatchingItem>.toContinueJsonArray(): JSONArray = JSONArray().also { array ->
+    forEach { array.put(it.toJson()) }
+}
+
 private fun HomeFeed.Companion.fromJson(json: JSONObject): HomeFeed {
     return HomeFeed(
         hero = json.getJSONObject("hero").toDramaItem(),
-        continueWatching = json.optJSONArray("continueWatching").toDramaItems(),
+        continueWatching = json.optJSONArray("continueWatching").toContinueWatchingItems(),
         trending = json.optJSONArray("trending").toDramaItems(),
         topRated = json.getJSONObject("topRated").toDramaItem(),
         moreLikeThis = json.optJSONArray("moreLikeThis").toDramaItems()
     )
 }
+
+private fun JSONObject.toDramaItemFromBackend(): DramaItem = DramaItem(
+    id = firstInt("id", "film_id", "movie_id"),
+    title = firstString("title", "name", "film_name", "movie_name", "filmTitle"),
+    description = firstString("description", "desc", "summary", "content"),
+    imageUrl = firstString("thumb", "thumb_url", "thumbnail", "thumbnail_url", "image", "image_url", "poster", "poster_url", "cover", "cover_url", "vertical_poster", "vertical_cover", "banner", "banner_url", "photo", "img", "imageUrl"),
+    rating = firstString("rating", "rate", "score").ifBlank { "4.8" },
+    episodeTotal = firstInt("episode_total", "episodes_count", "total_episodes", "eps", "episodeTotal")
+        .takeIf { it > 0 } ?: 1,
+    genre = firstString("genre", "category", "tag").ifBlank { "Drama" },
+    isPremium = firstBoolean("is_vip", "isVip", "vip", "is_premium", "premium"),
+    likeCount = firstInt("like_count", "likes", "likes_count", "likeCount", "favorite_count")
+)
 
 private fun JSONObject.toDramaItem(): DramaItem = DramaItem(
     id = optInt("id"),
@@ -485,6 +632,25 @@ private fun JSONObject.toDramaItem(): DramaItem = DramaItem(
     isPremium = optBoolean("isPremium", false),
     likeCount = optInt("likeCount", 0)
 )
+
+private fun JSONArray?.toContinueWatchingItems(): List<ContinueWatchingItem> {
+    if (this == null) return emptyList()
+    return buildList {
+        for (index in 0 until length()) {
+            val item = optJSONObject(index) ?: continue
+            val film = item.optJSONObject("film")?.toDramaItem() ?: continue
+            add(
+                ContinueWatchingItem(
+                    film = film,
+                    episodeNumber = item.optInt("episodeNumber", 1),
+                    progressSeconds = item.optInt("progressSeconds", 0),
+                    durationSeconds = item.optInt("durationSeconds", 0),
+                    completed = item.optBoolean("completed", false)
+                )
+            )
+        }
+    }
+}
 
 private fun JSONArray?.toDramaItems(): List<DramaItem> {
     if (this == null) return emptyList()
@@ -500,7 +666,7 @@ private fun DramaItem.stableKey(): String = id.takeIf { it != 0 }?.toString()
 
 private fun JSONObject.toDramaItemOrNull(): DramaItem? {
     val title = firstString("title", "name", "film_name", "movie_name", "filmTitle")
-    val image = firstString("thumb", "thumbnail", "image", "poster", "cover", "vertical_poster", "banner")
+    val image = firstString("thumb", "thumb_url", "thumbnail", "thumbnail_url", "image", "image_url", "poster", "poster_url", "cover", "cover_url", "vertical_poster", "vertical_cover", "banner", "banner_url", "photo", "img", "imageUrl")
     if (title.isBlank() || image.isBlank()) return null
 
     return DramaItem(
@@ -523,6 +689,15 @@ private fun JSONObject.firstString(vararg keys: String): String {
         val value = opt(key)
         if (value is String && value.isNotBlank()) return value
         if (value is Number) return value.toString()
+        if (value is JSONObject) {
+            value.firstString("url", "src", "path", "thumb", "image", "poster", "cover").takeIf { it.isNotBlank() }?.let { return it }
+        }
+        if (value is JSONArray && value.length() > 0) {
+            when (val first = value.opt(0)) {
+                is String -> if (first.isNotBlank()) return first
+                is JSONObject -> first.firstString("url", "src", "path", "thumb", "image", "poster", "cover").takeIf { it.isNotBlank() }?.let { return it }
+            }
+        }
     }
     return ""
 }
