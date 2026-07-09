@@ -76,6 +76,23 @@
     <string name="nav_rewards">Ödüller</string>
     <string name="nav_profile">Profil</string>
 
+    <!-- Library / Search -->
+    <string name="continue_watching_subtitle">Son bölümünden devam et</string>
+    <string name="continue_watching_empty">10 saniye veya daha uzun izlenen filmler burada görünür.</string>
+    <string name="library_subtitle">Kaydedilenler, izlenenler ve senin için seçilenler</string>
+    <string name="watch_list">İzleme listesi</string>
+    <string name="library_watch_list_subtitle">Kaydedilen ve işaretlenen filmler</string>
+    <string name="library_watch_list_empty">Kaydedilen filmler burada görünür.</string>
+    <string name="similar_films">Benzer filmler</string>
+    <string name="top_stars">En iyi yıldızlar</string>
+    <string name="top_stars_subtitle">Mevcut oyuncu verilerinden alındı</string>
+    <string name="search_films_hint">Film ara...</string>
+    <string name="search_results_count">%1$d sonuç</string>
+    <string name="no_films_found">Film bulunamadı.</string>
+    <string name="no_films_yet">Henüz film yok.</string>
+    <string name="library_load_error">Kitaplığın şu anda yenilenemedi.</string>
+    <string name="search_error">Arama sonuçları şu anda yüklenemedi.</string>
+
     <!-- Shorts Screen -->
 
     <!-- Toasts -->

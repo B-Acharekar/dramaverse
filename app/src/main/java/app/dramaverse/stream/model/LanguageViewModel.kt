@@ -14,17 +14,15 @@ private const val KEY_SELECTED_LANGUAGE = "selected_language"
 data class LanguageUiState(
     val languages: List<String> = listOf(
         "English",
-        "Tiếng Việt",
-        "Español",
-        "Français",
+        "Spanish",
         "Deutsch",
-        "Italiano",
-        "Português",
-        "Türkçe",
-        "العربية",
-        "हिन्दी",
-        "한국어",
-        "中文"
+        "Portuguese",
+        "Turkish",
+        "Arabic",
+        "Hindi",
+        "Japanese",
+        "Korean",
+        "Chinese"
     ),
     val selectedLanguage: String? = null
 )

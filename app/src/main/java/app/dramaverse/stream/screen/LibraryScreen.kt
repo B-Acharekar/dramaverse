@@ -1,5 +1,9 @@
 package app.dramaverse.stream.screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +31,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
@@ -45,6 +50,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -52,6 +58,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.dramaverse.stream.R
 import app.dramaverse.stream.data.ContinueWatchingItem
 import app.dramaverse.stream.data.DramaItem
 import app.dramaverse.stream.data.LibraryFeed
@@ -115,13 +122,13 @@ private fun LibraryContent(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 104.dp),
-        verticalArrangement = Arrangement.spacedBy(22.dp)
+        verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         item { LibraryTopHeader(onSearch) }
         if (errorMessage != null) {
             item {
                 Text(
-                    errorMessage,
+                    stringResource(R.string.library_load_error),
                     color = SoftPink,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -129,38 +136,51 @@ private fun LibraryContent(
                 )
             }
         }
-        item {
-            LibraryFilmRail(
-                title = "Watch List",
-                subtitle = "Saved and bookmarked films",
-                items = feed.watchList,
-                emptyText = "Saved films will appear here.",
-                onOpenShorts = onOpenShorts
-            )
+        feed.watchHistory.firstOrNull()?.let { continueItem ->
+            item { FeaturedContinueCard(continueItem, onOpenShorts) }
         }
         item {
-            WatchHistorySection(
-                title = "Continue Watching",
-                items = feed.watchHistory,
-                onOpenShorts = onOpenShorts
-            )
+            AnimatedLibrarySection {
+                LibraryFilmRail(
+                    title = stringResource(R.string.watch_list),
+                    subtitle = stringResource(R.string.library_watch_list_subtitle),
+                    items = feed.watchList,
+                    emptyText = stringResource(R.string.library_watch_list_empty),
+                    onOpenShorts = onOpenShorts
+                )
+            }
+        }
+        if (feed.watchHistory.size > 1) {
+            item {
+                AnimatedLibrarySection {
+                    WatchHistorySection(
+                        title = stringResource(R.string.continue_watching),
+                        items = feed.watchHistory.drop(1),
+                        onOpenShorts = onOpenShorts
+                    )
+                }
+            }
         }
         item {
-            LibraryGridSection(
-                title = "Similar Films",
-                items = feed.similarFilms,
-                onOpenShorts = onOpenShorts
-            )
+            AnimatedLibrarySection {
+                LibraryGridSection(
+                    title = stringResource(R.string.similar_films),
+                    items = feed.similarFilms,
+                    onOpenShorts = onOpenShorts
+                )
+            }
         }
         if (feed.topStars.isNotEmpty()) {
-            item { TopStarsSection(feed.topStars, onOpenShorts) }
+            item { AnimatedLibrarySection { TopStarsSection(feed.topStars, onOpenShorts) } }
         }
         item {
-            LibraryGridSection(
-                title = "Recommended for You",
-                items = feed.recommended,
-                onOpenShorts = onOpenShorts
-            )
+            AnimatedLibrarySection {
+                LibraryGridSection(
+                    title = stringResource(R.string.recommended_for_you),
+                    items = feed.recommended,
+                    onOpenShorts = onOpenShorts
+                )
+            }
         }
     }
 }
@@ -179,10 +199,10 @@ private fun LibraryTopHeader(onSearch: (String) -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(142.dp)
+            .height(154.dp)
             .background(
                 Brush.verticalGradient(
-                    listOf(Color(0xF5000000), Color(0xB8000000), Color.Transparent)
+                    listOf(Color(0xFF050506), Color(0xF309090B), Color(0x8809090B), Color.Transparent)
                 )
             )
     ) {
@@ -194,18 +214,8 @@ private fun LibraryTopHeader(onSearch: (String) -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("Library", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
-                Text("Saved, watched, and picked for you", color = Color(0xFFCDB5BC), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
-            }
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(RoundedCornerShape(19.dp))
-                    .background(Color(0x6618171C))
-                    .clickable { submitSearch() },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Filled.Search, contentDescription = null, tint = Color(0xFFF2E3E7), modifier = Modifier.size(20.dp))
+                Text(stringResource(R.string.nav_library), color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+                Text(stringResource(R.string.library_subtitle), color = Color(0xFFCDB5BC), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
             }
         }
         Row(
@@ -213,9 +223,10 @@ private fun LibraryTopHeader(onSearch: (String) -> Unit) {
                 .align(Alignment.BottomCenter)
                 .padding(horizontal = 18.dp, vertical = 16.dp)
                 .fillMaxWidth()
-                .height(42.dp)
-                .clip(RoundedCornerShape(21.dp))
+                .height(46.dp)
+                .clip(RoundedCornerShape(14.dp))
                 .background(Color(0xD017151A))
+                .border(1.dp, Color(0x35FFFFFF), RoundedCornerShape(14.dp))
                 .padding(horizontal = 13.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -231,19 +242,95 @@ private fun LibraryTopHeader(onSearch: (String) -> Unit) {
                 modifier = Modifier.weight(1f),
                 decorationBox = { innerTextField ->
                     if (searchText.isBlank()) {
-                        Text("Search films...", color = Color(0xFF9B858E), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+                        Text(stringResource(R.string.search_films_hint), color = Color(0xFF9B858E), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
                     }
                     innerTextField()
                 }
             )
+        }
+    }
+}
+
+@Composable
+private fun AnimatedLibrarySection(content: @Composable () -> Unit) {
+    AnimatedVisibility(
+        visible = true,
+        enter = fadeIn() + slideInVertically(initialOffsetY = { it / 5 })
+    ) {
+        Column { content() }
+    }
+}
+
+@Composable
+private fun FeaturedContinueCard(item: ContinueWatchingItem, onOpenShorts: (Int?) -> Unit) {
+    val film = item.film
+    Box(
+        modifier = Modifier
+            .padding(horizontal = 18.dp)
+            .fillMaxWidth()
+            .height(188.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Panel)
+            .border(1.dp, Color(0x28FFFFFF), RoundedCornerShape(16.dp))
+            .clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
+    ) {
+        NetworkDramaImage(film.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, film.title)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(Color(0x22000000), Color(0x66000000), Color(0xE809090B))
+                    )
+                )
+        )
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(14.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xAA000000))
+                    .padding(horizontal = 9.dp, vertical = 5.dp)
+            ) {
+                Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = Gold, modifier = Modifier.size(15.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    stringResource(R.string.episode_progress, item.episodeNumber, film.episodeTotal.coerceAtLeast(item.episodeNumber)),
+                    color = Color.White,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 0.sp
+                )
+            }
+            Spacer(modifier = Modifier.height(9.dp))
+            Text(
+                film.title,
+                color = Color.White,
+                fontSize = 20.sp,
+                lineHeight = 23.sp,
+                fontWeight = FontWeight.ExtraBold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                letterSpacing = 0.sp
+            )
+            Spacer(modifier = Modifier.height(9.dp))
             Box(
                 modifier = Modifier
-                    .size(28.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .clickable(onClick = { submitSearch() }),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth(0.86f)
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0x55FFFFFF))
             ) {
-                Icon(Icons.Filled.Search, contentDescription = null, tint = SoftPink, modifier = Modifier.size(18.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(item.progressFraction.takeIf { it > 0f } ?: 0.05f)
+                        .height(4.dp)
+                        .background(Pink, RoundedCornerShape(8.dp))
+                )
             }
         }
     }
@@ -283,11 +370,11 @@ private fun WatchHistorySection(
     onOpenShorts: (Int?) -> Unit
 ) {
     Box(Modifier.padding(horizontal = 18.dp)) {
-        Column { LibraryHeader(title, "Continue from your latest episode") }
+        Column { LibraryHeader(title, stringResource(R.string.continue_watching_subtitle)) }
     }
     if (items.isEmpty()) {
         Box(Modifier.padding(horizontal = 18.dp)) {
-            EmptyLibraryBlock("Films watched for 10 seconds or more will appear here.")
+            EmptyLibraryBlock(stringResource(R.string.continue_watching_empty))
         }
         return
     }
@@ -311,7 +398,7 @@ private fun LibraryGridSection(
         Column { LibraryHeader(title, null) }
     }
     if (items.isEmpty()) {
-        Box(Modifier.padding(horizontal = 18.dp)) { EmptyLibraryBlock("No films yet.") }
+        Box(Modifier.padding(horizontal = 18.dp)) { EmptyLibraryBlock(stringResource(R.string.no_films_yet)) }
         return
     }
     LazyRow(
@@ -327,7 +414,7 @@ private fun LibraryGridSection(
 @Composable
 private fun TopStarsSection(stars: List<TopStar>, onOpenShorts: (Int?) -> Unit) {
     Box(Modifier.padding(horizontal = 18.dp)) {
-        Column { LibraryHeader("Top Stars", "Pulled from available film cast data") }
+        Column { LibraryHeader(stringResource(R.string.top_stars), stringResource(R.string.top_stars_subtitle)) }
     }
     LazyRow(
         contentPadding = PaddingValues(horizontal = 18.dp),
@@ -377,7 +464,7 @@ private fun LibraryHeader(title: String, subtitle: String?) {
 private fun CompactLibraryCard(film: DramaItem, onOpenShorts: (Int?) -> Unit) {
     Column(
         modifier = Modifier
-            .width(132.dp)
+            .width(138.dp)
             .clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
     ) {
         PosterBox(film, Modifier.fillMaxWidth().aspectRatio(0.72f))
@@ -397,7 +484,7 @@ private fun HistoryCard(item: ContinueWatchingItem, onOpenShorts: (Int?) -> Unit
         Box {
             PosterBox(film, Modifier.fillMaxWidth().height(118.dp))
             Text(
-                "Ep ${item.episodeNumber}/${film.episodeTotal.coerceAtLeast(item.episodeNumber)}",
+                stringResource(R.string.episode_progress, item.episodeNumber, film.episodeTotal.coerceAtLeast(item.episodeNumber)),
                 color = Color.White,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Black,
@@ -467,7 +554,12 @@ private fun LargeLibraryCard(film: DramaItem, onOpenShorts: (Int?) -> Unit) {
 
 @Composable
 private fun PosterBox(film: DramaItem, modifier: Modifier) {
-    Box(modifier = modifier.clip(RoundedCornerShape(10.dp)).background(Panel)) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(Panel)
+            .border(1.dp, Color(0x1FFFFFFF), RoundedCornerShape(12.dp))
+    ) {
         NetworkDramaImage(film.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, film.title)
         Box(
             modifier = Modifier

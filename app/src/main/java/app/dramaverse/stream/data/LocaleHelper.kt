@@ -12,19 +12,18 @@ private const val KEY_PENDING_STEP = "pending_step_after_recreate"
 
 object LocaleHelper {
 
+    // These labels are persisted from the language screen; keep them stable across releases.
     private val languageCodes = mapOf(
         "English" to "en",
-        "Tiếng Việt" to "vi",
-        "Español" to "es",
-        "Français" to "fr",
+        "Spanish" to "es",
         "Deutsch" to "de",
-        "Italiano" to "it",
-        "Português" to "pt",
-        "Türkçe" to "tr",
-        "العربية" to "ar",
-        "हिन्दी" to "hi",
-        "한국어" to "ko",
-        "中文" to "zh"
+        "Portuguese" to "pt",
+        "Turkish" to "tr",
+        "Arabic" to "ar",
+        "Hindi" to "hi",
+        "Japanese" to "ja",
+        "Korean" to "ko",
+        "Chinese" to "zh"
     )
 
     fun codeFor(languageName: String): String = languageCodes[languageName] ?: "en"
@@ -60,15 +59,15 @@ object LocaleHelper {
     }
 
     private fun applyLocale(context: Context, languageCode: String): Context {
-        val locale = Locale(languageCode)
+        // Wrapping the base context makes Compose resource lookups use the persisted locale.
+        val locale = Locale.forLanguageTag(languageCode)
         Locale.setDefault(locale)
 
         val config = Configuration(context.resources.configuration)
         config.setLocale(locale)
         config.setLayoutDirection(locale)
 
-        val newContext = context.createConfigurationContext(config)
-        return ContextWrapper(newContext)
+        return ContextWrapper(context.createConfigurationContext(config))
     }
 
     private fun prefs(context: Context) =

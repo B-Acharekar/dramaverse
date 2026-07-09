@@ -76,6 +76,23 @@
     <string name="nav_rewards">المكافآت</string>
     <string name="nav_profile">الملف الشخصي</string>
 
+    <!-- Library / Search -->
+    <string name="continue_watching_subtitle">تابع من أحدث حلقة لديك</string>
+    <string name="continue_watching_empty">ستظهر هنا الأفلام التي شاهدتها لمدة 10 ثوان أو أكثر.</string>
+    <string name="library_subtitle">محفوظة ومشاهدة ومختارة لك</string>
+    <string name="watch_list">قائمة المشاهدة</string>
+    <string name="library_watch_list_subtitle">الأفلام المحفوظة والمعلّمة</string>
+    <string name="library_watch_list_empty">ستظهر الأفلام المحفوظة هنا.</string>
+    <string name="similar_films">أفلام مشابهة</string>
+    <string name="top_stars">أبرز النجوم</string>
+    <string name="top_stars_subtitle">مستخرجة من بيانات فريق التمثيل المتاحة</string>
+    <string name="search_films_hint">ابحث عن أفلام...</string>
+    <string name="search_results_count">%1$d نتيجة</string>
+    <string name="no_films_found">لم يتم العثور على أفلام.</string>
+    <string name="no_films_yet">لا توجد أفلام بعد.</string>
+    <string name="library_load_error">تعذر تحديث مكتبتك الآن.</string>
+    <string name="search_error">تعذر تحميل نتائج البحث الآن.</string>
+
     <!-- Shorts Screen -->
 
     <!-- Toasts -->

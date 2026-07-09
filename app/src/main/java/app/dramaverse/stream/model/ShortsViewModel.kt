@@ -1,10 +1,12 @@
 package app.dramaverse.stream.model
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.dramaverse.stream.data.AuthRepository
 import app.dramaverse.stream.data.EpisodeInfo
+import app.dramaverse.stream.data.LocaleHelper
 import app.dramaverse.stream.data.ShortsItem
 import app.dramaverse.stream.data.ShortsRepository
 import kotlinx.coroutines.Dispatchers
@@ -26,27 +28,37 @@ data class ShortsUiState(
 )
 
 class ShortsViewModel(application: Application) : AndroidViewModel(application) {
+    private val appContext = application.applicationContext
     private val repository = ShortsRepository(AuthRepository(application.applicationContext))
     private val _uiState = MutableStateFlow(ShortsUiState())
     val uiState: StateFlow<ShortsUiState> = _uiState.asStateFlow()
     private var nextPage = 1
     private var currentBackendBaseUrl = ""
     private var currentInitialFilmId: Int? = null
+    private var genericFeedOpenNonce = 0
 
     fun loadInitial(backendBaseUrl: String, initialFilmId: Int?) {
+        val isGenericFeed = initialFilmId == null || initialFilmId == 0
         if (
             _uiState.value.items.isNotEmpty() &&
             currentBackendBaseUrl == backendBaseUrl &&
-            currentInitialFilmId == initialFilmId
+            currentInitialFilmId == initialFilmId &&
+            !isGenericFeed
         ) return
         currentBackendBaseUrl = backendBaseUrl
         currentInitialFilmId = initialFilmId
+        // Generic Shorts should feel fresh on each open, while film-specific opens remain stable.
+        genericFeedOpenNonce = if (isGenericFeed) nextGenericFeedOpenNonce() else 0
         nextPage = 1
         viewModelScope.launch {
             _uiState.update { ShortsUiState(isLoading = true) }
             if (initialFilmId != null && initialFilmId != 0) {
                 withContext(Dispatchers.IO) {
-                    repository.loadPlayback(backendBaseUrl, initialFilmId)
+                    repository.loadPlayback(
+                        backendBaseUrl = backendBaseUrl,
+                        filmId = initialFilmId,
+                        language = selectedLanguageCode()
+                    )
                 }.onSuccess { selectedItem ->
                     if (selectedItem.playUrl.isBlank()) return@onSuccess
                     _uiState.update {
@@ -54,7 +66,7 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                     }
                 }
             }
-            loadPage(backendBaseUrl, initialFilmId)
+            loadPage(backendBaseUrl, initialFilmId, genericFeedOpenNonce)
             ensurePlayback(0, backendBaseUrl)
         }
     }
@@ -65,7 +77,7 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
         if (currentIndex < state.items.lastIndex - 2) return
         viewModelScope.launch {
             _uiState.update { it.copy(isLoadingMore = true) }
-            loadPage(backendBaseUrl, null)
+            loadPage(backendBaseUrl, null, genericFeedOpenNonce)
             _uiState.update { it.copy(isLoadingMore = false) }
         }
     }
@@ -75,7 +87,11 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
         if (item.playUrl.isNotBlank() || item.film.id == 0) return
         viewModelScope.launch {
             val playback = withContext(Dispatchers.IO) {
-                repository.loadPlayback(backendBaseUrl, item.film.id)
+                repository.loadPlayback(
+                    backendBaseUrl = backendBaseUrl,
+                    filmId = item.film.id,
+                    language = selectedLanguageCode()
+                )
             }.getOrNull() ?: return@launch
             _uiState.update { state ->
                 state.copy(
@@ -91,7 +107,11 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
         if (filmId == 0 || _uiState.value.episodesByFilm.containsKey(filmId)) return
         viewModelScope.launch {
             val episodes = withContext(Dispatchers.IO) {
-                repository.loadEpisodes(backendBaseUrl, filmId)
+                repository.loadEpisodes(
+                    backendBaseUrl = backendBaseUrl,
+                    filmId = filmId,
+                    language = selectedLanguageCode()
+                )
             }.getOrNull() ?: return@launch
             _uiState.update { state ->
                 val watched = state.watchedEpisodesByFilm[filmId].orEmpty()
@@ -113,7 +133,8 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                     backendBaseUrl = backendBaseUrl,
                     filmId = filmId,
                     episodeNumber = episodeNumber,
-                    liked = liked
+                    liked = liked,
+                    language = selectedLanguageCode()
                 )
             }
         }
@@ -130,7 +151,8 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                 repository.setReminder(
                     backendBaseUrl = backendBaseUrl,
                     filmId = filmId,
-                    enabled = enabled
+                    enabled = enabled,
+                    language = selectedLanguageCode()
                 )
             }
         }
@@ -147,7 +169,8 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                 repository.unlockEpisode(
                     backendBaseUrl = backendBaseUrl,
                     filmId = filmId,
-                    episodeNumber = episodeNumber
+                    episodeNumber = episodeNumber,
+                    language = selectedLanguageCode()
                 )
             }
         }
@@ -171,7 +194,8 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                     episodeNumber = item.episodeNumber,
                     progressSeconds = progressSeconds,
                     durationSeconds = durationSeconds,
-                    completed = true
+                    completed = true,
+                    language = selectedLanguageCode()
                 )
             }
             markEpisodeWatched(item.film.id, item.episodeNumber)
@@ -186,7 +210,8 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                     repository.unlockEpisode(
                         backendBaseUrl = backendBaseUrl,
                         filmId = item.film.id,
-                        episodeNumber = nextEpisode
+                        episodeNumber = nextEpisode,
+                        language = selectedLanguageCode()
                     )
                 }
                 refreshEpisodeList(backendBaseUrl, item.film.id)
@@ -196,7 +221,8 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                 repository.loadPlayback(
                     backendBaseUrl = backendBaseUrl,
                     filmId = item.film.id,
-                    episodeNumber = nextEpisode
+                    episodeNumber = nextEpisode,
+                    language = selectedLanguageCode()
                 )
             }.getOrNull()
 
@@ -235,7 +261,8 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                     episodeNumber = item.episodeNumber,
                     progressSeconds = progressSeconds,
                     durationSeconds = durationSeconds,
-                    completed = false
+                    completed = false,
+                    language = selectedLanguageCode()
                 )
             }
         }
@@ -266,7 +293,8 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                 repository.loadPlayback(
                     backendBaseUrl = backendBaseUrl,
                     filmId = currentItem.film.id,
-                    episodeNumber = episodeNumber
+                    episodeNumber = episodeNumber,
+                    language = selectedLanguageCode()
                 )
             }.getOrNull()
 
@@ -315,16 +343,21 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                     backendBaseUrl = backendBaseUrl,
                     filmId = filmId,
                     episodeNumber = episodeNumber,
-                    message = message.trim()
+                    message = message.trim(),
+                    language = selectedLanguageCode()
                 )
             }
         }
     }
 
-    private suspend fun loadPage(backendBaseUrl: String, initialFilmId: Int?) {
+    private suspend fun loadPage(backendBaseUrl: String, initialFilmId: Int?, feedNonce: Int) {
         val page = nextPage
         val items = withContext(Dispatchers.IO) {
-            repository.loadFilms(backendBaseUrl, page = page)
+            repository.loadFilms(
+                backendBaseUrl = backendBaseUrl,
+                page = page,
+                language = selectedLanguageCode()
+            )
         }.getOrElse { error ->
             _uiState.update {
                 it.copy(
@@ -339,7 +372,7 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
         val sortedItems = if (initialFilmId != null) {
             items.sortedBy { if (it.film.id == initialFilmId) 0 else 1 }
         } else {
-            items
+            items.rotated(feedNonce)
         }
         _uiState.update { state ->
             val merged = if (initialFilmId != null) {
@@ -355,13 +388,39 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
 
     private suspend fun refreshEpisodeList(backendBaseUrl: String, filmId: Int) {
         val episodes = withContext(Dispatchers.IO) {
-            repository.loadEpisodes(backendBaseUrl, filmId)
+            repository.loadEpisodes(
+                backendBaseUrl = backendBaseUrl,
+                filmId = filmId,
+                language = selectedLanguageCode()
+            )
         }.getOrNull() ?: return
         _uiState.update { state ->
             val watched = state.watchedEpisodesByFilm[filmId].orEmpty()
             state.copy(episodesByFilm = state.episodesByFilm + (filmId to episodes.markWatched(watched)))
         }
     }
+
+    private fun nextGenericFeedOpenNonce(): Int {
+        val prefs = getApplication<Application>()
+            .applicationContext
+            .getSharedPreferences(SHORTS_PREFS_NAME, Context.MODE_PRIVATE)
+        val next = prefs.getInt(KEY_GENERIC_OPEN_COUNT, 0) + 1
+        prefs.edit().putInt(KEY_GENERIC_OPEN_COUNT, next).apply()
+        // Time bucket prevents reopening the app from pinning the same first video all day.
+        val timeBucket = (System.currentTimeMillis() / 10_000L).toInt()
+        return next + timeBucket
+    }
+
+    private fun selectedLanguageCode(): String = LocaleHelper.persistedLanguageCode(appContext)
+}
+
+private const val SHORTS_PREFS_NAME = "dramaverse_shorts"
+private const val KEY_GENERIC_OPEN_COUNT = "generic_open_count"
+
+private fun List<ShortsItem>.rotated(seed: Int): List<ShortsItem> {
+    if (size <= 1) return this
+    val offset = Math.floorMod(seed, size)
+    return drop(offset) + take(offset)
 }
 
 private fun List<EpisodeInfo>.markWatched(episodeNumber: Int): List<EpisodeInfo> {

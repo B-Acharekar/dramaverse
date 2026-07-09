@@ -111,6 +111,7 @@ fun ShortsScreen(
     initialFilmId: Int?,
     onBack: () -> Unit,
     onHome: () -> Unit,
+    onLibrary: () -> Unit,
     viewModel: ShortsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -126,6 +127,18 @@ fun ShortsScreen(
 
     LaunchedEffect(backendBaseUrl, initialFilmId) {
         viewModel.loadInitial(backendBaseUrl, initialFilmId)
+    }
+
+    LaunchedEffect(initialFilmId, uiState.items.size) {
+        val isGenericFeed = initialFilmId == null || initialFilmId == 0
+        if (!isGenericFeed || uiState.items.size <= 1) return@LaunchedEffect
+        while (true) {
+            delay(10_000)
+            val nextPage = (pagerState.currentPage + 1).coerceAtMost(uiState.items.lastIndex)
+            if (nextPage != pagerState.currentPage) {
+                pagerState.animateScrollToPage(nextPage)
+            }
+        }
     }
 
     LaunchedEffect(pagerState.currentPage, uiState.items.size) {
@@ -250,6 +263,7 @@ fun ShortsScreen(
                 selected = "Shorts",
                 onHome = onHome,
                 onShorts = {},
+                onLibrary = onLibrary,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
@@ -298,6 +312,9 @@ private fun ShortsPage(
     var showSubtitleOptions by remember(item.playUrl) { mutableStateOf(false) }
     var showEpisodeOptions by remember(item.film.id) { mutableStateOf(false) }
     val context = LocalContext.current
+    val savedToListText = stringResource(R.string.saved_to_list)
+    val removedFromListText = stringResource(R.string.removed_from_list)
+    val feedbackSentText = stringResource(R.string.feedback_sent)
     val hasPopup = showPlaybackOptions || showFeedbackForm || showSubtitleOptions || showEpisodeOptions
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -414,7 +431,7 @@ private fun ShortsPage(
                         reminderOn = !reminderOn
                         onReminderClick(item, reminderOn)
                         Toast
-                            .makeText(context, if (reminderOn) "Saved to list" else "Removed from list", Toast.LENGTH_SHORT)
+                            .makeText(context, if (reminderOn) savedToListText else removedFromListText, Toast.LENGTH_SHORT)
                             .show()
                     }
                 )
@@ -493,7 +510,7 @@ private fun ShortsPage(
                 onSubmit = {
                     if (feedbackText.isNotBlank()) {
                         onSubmitFeedback(item, feedbackText)
-                        Toast.makeText(context, "Feedback sent", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, feedbackSentText, Toast.LENGTH_SHORT).show()
                         feedbackText = ""
                         onClosePopups()
                     }

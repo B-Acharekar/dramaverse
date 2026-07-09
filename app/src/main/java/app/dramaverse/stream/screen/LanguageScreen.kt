@@ -32,7 +32,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.dramaverse.stream.R
 import app.dramaverse.stream.model.LanguageViewModel
 
 @Composable
@@ -95,7 +97,7 @@ private fun LanguageHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Language",
+            text = stringResource(R.string.language_title),
             color = Color.White,
             fontSize = 17.sp,
             fontWeight = FontWeight.Bold,
@@ -122,7 +124,7 @@ private fun LanguageHeader(
                 if (showDoneText) {
                     Spacer(modifier = Modifier.width(3.dp))
                     Text(
-                        text = "DONE",
+                        text = stringResource(R.string.done),
                         color = Color.White,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,

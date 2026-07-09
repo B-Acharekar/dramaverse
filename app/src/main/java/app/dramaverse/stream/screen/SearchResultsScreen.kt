@@ -1,5 +1,8 @@
 package app.dramaverse.stream.screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -43,6 +46,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -50,6 +54,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.dramaverse.stream.R
 import app.dramaverse.stream.data.DramaItem
 import app.dramaverse.stream.model.SearchViewModel
 
@@ -91,17 +96,22 @@ fun SearchResultsScreen(
                     }
                 }
             )
-            Text(
-                "${uiState.results.size} results",
-                color = Color(0xFFCDB5BC),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp),
-                letterSpacing = 0.sp
-            )
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn() + slideInVertically(initialOffsetY = { it / 4 })
+            ) {
+                Text(
+                    stringResource(R.string.search_results_count, uiState.results.size),
+                    color = Color(0xFFCDB5BC),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp),
+                    letterSpacing = 0.sp
+                )
+            }
             if (uiState.errorMessage != null) {
                 Text(
-                    uiState.errorMessage.orEmpty(),
+                    stringResource(R.string.search_error),
                     color = Color(0xFFFFC0C9),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -115,7 +125,7 @@ fun SearchResultsScreen(
                 }
             } else if (uiState.results.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No films found.", color = Color(0xFFCDB5BC), fontSize = 15.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
+                    Text(stringResource(R.string.no_films_found), color = Color(0xFFCDB5BC), fontSize = 15.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
                 }
             } else {
                 LazyVerticalGrid(
@@ -125,7 +135,12 @@ fun SearchResultsScreen(
                     verticalArrangement = Arrangement.spacedBy(18.dp)
                 ) {
                     items(uiState.results) { film ->
-                        SearchFilmCard(film, onOpenShorts)
+                        AnimatedVisibility(
+                            visible = true,
+                            enter = fadeIn() + slideInVertically(initialOffsetY = { it / 6 })
+                        ) {
+                            SearchFilmCard(film, onOpenShorts)
+                        }
                     }
                 }
             }
@@ -150,8 +165,8 @@ private fun SearchHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(86.dp)
-            .background(Brush.verticalGradient(listOf(Color(0xF5000000), Color(0x99000000), Color.Transparent)))
+            .height(92.dp)
+            .background(Brush.verticalGradient(listOf(Color(0xFF050506), Color(0xE909090B), Color.Transparent)))
             .padding(start = 14.dp, end = 18.dp, top = 24.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -169,14 +184,21 @@ private fun SearchHeader(
         Row(
             modifier = Modifier
                 .weight(1f)
-                .height(42.dp)
-                .clip(RoundedCornerShape(21.dp))
+                .height(46.dp)
+                .clip(RoundedCornerShape(14.dp))
                 .background(Color(0xD017151A))
-                .border(1.dp, Color(0x44FFFFFF), RoundedCornerShape(21.dp))
+                .border(1.dp, Color(0x44FFFFFF), RoundedCornerShape(14.dp))
                 .padding(horizontal = 13.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Filled.Search, contentDescription = null, tint = Color(0xFFF2E3E7), modifier = Modifier.size(19.dp))
+            Icon(
+                Icons.Filled.Search,
+                contentDescription = null,
+                tint = Color(0xFFF2E3E7),
+                modifier = Modifier
+                    .size(19.dp)
+                    .clickable(onClick = onSubmit)
+            )
             Spacer(modifier = Modifier.width(9.dp))
             BasicTextField(
                 value = query,
@@ -188,20 +210,11 @@ private fun SearchHeader(
                 modifier = Modifier.weight(1f),
                 decorationBox = { innerTextField ->
                     if (query.isBlank()) {
-                        Text("Search films...", color = Color(0xFF9B858E), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+                        Text(stringResource(R.string.search_films_hint), color = Color(0xFF9B858E), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
                     }
                     innerTextField()
                 }
             )
-            Box(
-                modifier = Modifier
-                    .size(28.dp)
-                    .clip(CircleShape)
-                    .clickable(onClick = onSubmit),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Filled.Search, contentDescription = null, tint = Color(0xFFFFC0C9), modifier = Modifier.size(18.dp))
-            }
         }
     }
 }
@@ -216,9 +229,10 @@ private fun SearchFilmCard(film: DramaItem, onOpenShorts: (Int?) -> Unit) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(224.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .height(232.dp)
+                .clip(RoundedCornerShape(14.dp))
                 .background(Color(0xFF151318))
+                .border(1.dp, Color(0x24FFFFFF), RoundedCornerShape(14.dp))
         ) {
             NetworkDramaImage(film.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, film.title)
             Box(

@@ -76,6 +76,23 @@
     <string name="nav_rewards">पुरस्कार</string>
     <string name="nav_profile">प्रोफ़ाइल</string>
 
+    <!-- Library / Search -->
+    <string name="continue_watching_subtitle">अपने नए एपिसोड से आगे देखें</string>
+    <string name="continue_watching_empty">10 सेकंड या उससे अधिक देखी गई फिल्में यहां दिखेंगी.</string>
+    <string name="library_subtitle">आपके लिए सहेजा, देखा और चुना गया</string>
+    <string name="watch_list">वॉच लिस्ट</string>
+    <string name="library_watch_list_subtitle">सहेजी और बुकमार्क की गई फिल्में</string>
+    <string name="library_watch_list_empty">सहेजी गई फिल्में यहां दिखेंगी.</string>
+    <string name="similar_films">मिलती-जुलती फिल्में</string>
+    <string name="top_stars">टॉप स्टार्स</string>
+    <string name="top_stars_subtitle">उपलब्ध कलाकार डेटा से लिया गया</string>
+    <string name="search_films_hint">फिल्में खोजें...</string>
+    <string name="search_results_count">%1$d परिणाम</string>
+    <string name="no_films_found">कोई फिल्म नहीं मिली.</string>
+    <string name="no_films_yet">अभी कोई फिल्म नहीं.</string>
+    <string name="library_load_error">अभी आपकी लाइब्रेरी रिफ्रेश नहीं हो सकी.</string>
+    <string name="search_error">अभी खोज परिणाम लोड नहीं हो सके.</string>
+
     <!-- Shorts Screen -->
 
     <!-- Toasts -->

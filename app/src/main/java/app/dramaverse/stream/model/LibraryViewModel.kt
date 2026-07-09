@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import app.dramaverse.stream.data.AuthRepository
 import app.dramaverse.stream.data.LibraryFeed
 import app.dramaverse.stream.data.LibraryRepository
+import app.dramaverse.stream.data.LocaleHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,6 +20,7 @@ data class LibraryUiState(
 )
 
 class LibraryViewModel(application: Application) : AndroidViewModel(application) {
+    private val appContext = application.applicationContext
     private val repository = LibraryRepository(
         context = application.applicationContext,
         authRepository = AuthRepository(application.applicationContext)
@@ -32,7 +34,10 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             repository.loadCachedLibrary()?.let { cached ->
                 _uiState.update { it.copy(isLoading = false, feed = cached, errorMessage = null) }
             }
-            repository.loadLibrary(backendBaseUrl = backendBaseUrl)
+            repository.loadLibrary(
+                backendBaseUrl = backendBaseUrl,
+                language = LocaleHelper.persistedLanguageCode(appContext)
+            )
                 .onSuccess { feed ->
                     _uiState.update { LibraryUiState(isLoading = false, feed = feed) }
                 }

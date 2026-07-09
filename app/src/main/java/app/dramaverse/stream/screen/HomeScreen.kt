@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -31,6 +32,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CardGiftcard
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
@@ -45,6 +47,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,11 +57,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.dramaverse.stream.R
+import app.dramaverse.stream.data.ContinueWatchingItem
 import app.dramaverse.stream.data.DramaItem
 import app.dramaverse.stream.data.HomeFeed
 import app.dramaverse.stream.model.HomeViewModel
@@ -77,6 +83,8 @@ private val Gold = Color(0xFFF5C65B)
 fun HomeScreen(
     backendBaseUrl: String,
     onOpenShorts: (Int?) -> Unit,
+    onLibrary: () -> Unit,
+    onSearch: (String) -> Unit,
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -98,15 +106,20 @@ fun HomeScreen(
                 feed = feed,
                 selectedMood = uiState.selectedMood,
                 isMoodLoading = uiState.isMoodLoading,
-                onMoodSelected = { mood -> viewModel.selectMood(backendBaseUrl, mood) },
-                onSearchClick = { viewModel.openHotSearch(backendBaseUrl) },
-                onOpenShorts = onOpenShorts
+                savedFilmIds = uiState.savedFilmIds,
+                onMoodSelected = onSearch,
+                onSearchClick = { onSearch("hot") },
+                onOpenShorts = onOpenShorts,
+                onToggleWatchList = { filmId, enabled ->
+                    viewModel.setReminder(backendBaseUrl, filmId, enabled)
+                }
             )
         }
         BottomNavigationBar(
             selected = "Home",
             onHome = {},
             onShorts = { onOpenShorts(null) },
+            onLibrary = onLibrary,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
@@ -117,9 +130,11 @@ private fun HomeContent(
     feed: HomeFeed,
     selectedMood: String?,
     isMoodLoading: Boolean,
+    savedFilmIds: Set<Int>,
     onMoodSelected: (String) -> Unit,
     onSearchClick: () -> Unit,
-    onOpenShorts: (Int?) -> Unit
+    onOpenShorts: (Int?) -> Unit,
+    onToggleWatchList: (Int, Boolean) -> Unit
 ) {
     val heroItems = feed.heroItems()
     val heroKeys = heroItems.map { it.uniqueKey() }.toSet()
@@ -138,15 +153,17 @@ private fun HomeContent(
                 items = heroItems,
                 selectedMood = selectedMood,
                 isMoodLoading = isMoodLoading,
+                savedFilmIds = savedFilmIds,
                 onMoodSelected = onMoodSelected,
                 onSearchClick = onSearchClick,
-                onOpenShorts = onOpenShorts
+                onOpenShorts = onOpenShorts,
+                onToggleWatchList = onToggleWatchList
             )
         }
         if (feed.continueWatching.isNotEmpty()) {
-            item { ContinueWatching(feed.continueWatching) }
+            item { ContinueWatching(feed.continueWatching, onOpenShorts) }
         }
-        item { PosterRail(title = "Trending Now", items = trendingItems, showTrend = true, onOpenShorts = onOpenShorts) }
+        item { PosterRail(title = stringResource(R.string.trending_now), items = trendingItems, showTrend = true, onOpenShorts = onOpenShorts) }
         item { TopRatedCard(feed.topRated, onOpenShorts) }
         item { ActionCards() }
         item { Spacer(modifier = Modifier.height(18.dp)) }
@@ -158,9 +175,11 @@ private fun HeroCarousel(
     items: List<DramaItem>,
     selectedMood: String?,
     isMoodLoading: Boolean,
+    savedFilmIds: Set<Int>,
     onMoodSelected: (String) -> Unit,
     onSearchClick: () -> Unit,
-    onOpenShorts: (Int?) -> Unit
+    onOpenShorts: (Int?) -> Unit,
+    onToggleWatchList: (Int, Boolean) -> Unit
 ) {
     val pageCount = 10_000
     val startPage = pageCount / 2
@@ -189,7 +208,9 @@ private fun HeroCarousel(
                 item = items[page.floorMod(items.size)],
                 selectedIndex = pagerState.currentPage.floorMod(items.size),
                 itemCount = items.size,
-                onOpenShorts = onOpenShorts
+                saved = items[page.floorMod(items.size)].id in savedFilmIds,
+                onOpenShorts = onOpenShorts,
+                onToggleWatchList = onToggleWatchList
             )
         }
         HomeTopBar(
@@ -207,12 +228,16 @@ private fun HeroSection(
     item: DramaItem,
     selectedIndex: Int,
     itemCount: Int,
-    onOpenShorts: (Int?) -> Unit
+    saved: Boolean,
+    onOpenShorts: (Int?) -> Unit,
+    onToggleWatchList: (Int, Boolean) -> Unit
 ) {
+    val filmId = item.id.takeIf { it != 0 }
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(620.dp)
+            .clickable { onOpenShorts(filmId) }
     ) {
         NetworkDramaImage(item.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, item.title)
         Box(
@@ -244,7 +269,7 @@ private fun HeroSection(
                 .align(Alignment.BottomStart)
                 .padding(start = 18.dp, end = 18.dp, bottom = 28.dp)
         ) {
-            TagPill("FEATURED", Gold, Color(0x663B2F13))
+            TagPill(stringResource(R.string.featured), Gold, Color(0x663B2F13))
             Spacer(modifier = Modifier.height(9.dp))
             Text(
                 text = item.title,
@@ -270,9 +295,15 @@ private fun HeroSection(
             )
             Spacer(modifier = Modifier.height(20.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                WatchButton(width = 152, onClick = { onOpenShorts(item.id.takeIf { it != 0 }) })
+                WatchButton(width = 152, onClick = { onOpenShorts(filmId) })
                 Spacer(modifier = Modifier.width(12.dp))
-                PlusButton()
+                PlusButton(
+                    saved = saved,
+                    onClick = {
+                        // Mirrors Shorts bookmark behavior: plus -> filled bookmark after save.
+                        filmId?.let { onToggleWatchList(it, !saved) }
+                    }
+                )
                 Spacer(modifier = Modifier.weight(1f))
                 HeroIndicators(selectedIndex = selectedIndex, count = itemCount)
                 Spacer(modifier = Modifier.width(16.dp))
@@ -368,7 +399,7 @@ private fun HomeTopBar(
         ) {
             item {
                 MoodChip(
-                    label = "Hot",
+                    label = stringResource(R.string.mood_hot),
                     selected = selectedMood == "hot",
                     loading = isMoodLoading && selectedMood == "hot",
                     onClick = onSearchClick
@@ -376,7 +407,7 @@ private fun HomeTopBar(
             }
             items(moodLabels) { label ->
                 MoodChip(
-                    label = label.display,
+                    label = stringResource(label.display),
                     selected = selectedMood == label.query,
                     loading = isMoodLoading && selectedMood == label.query,
                     onClick = { onMoodSelected(label.query) }
@@ -387,18 +418,18 @@ private fun HomeTopBar(
 }
 
 private data class MoodLabel(
-    val display: String,
+    val display: Int,
     val query: String
 )
 
 private val moodLabels = listOf(
-    MoodLabel("Happy", "happy"),
-    MoodLabel("Emotional", "emotional"),
-    MoodLabel("Action", "action"),
-    MoodLabel("Romance", "romance"),
-    MoodLabel("Horror", "horror"),
-    MoodLabel("Mind-blowing", "mind blowing"),
-    MoodLabel("Relax", "relax")
+    MoodLabel(R.string.mood_happy, "happy"),
+    MoodLabel(R.string.mood_emotional, "emotional"),
+    MoodLabel(R.string.mood_action, "action"),
+    MoodLabel(R.string.mood_romance, "romance"),
+    MoodLabel(R.string.mood_horror, "horror"),
+    MoodLabel(R.string.mood_mind_blowing, "mind blowing"),
+    MoodLabel(R.string.mood_relax, "relax")
 )
 
 @Composable
@@ -433,19 +464,24 @@ private fun MoodChip(
 }
 
 @Composable
-private fun ContinueWatching(items: List<DramaItem>) {
-    SectionHeader(title = "Continue Watching", action = "SEE ALL")
+private fun ContinueWatching(items: List<ContinueWatchingItem>, onOpenShorts: (Int?) -> Unit) {
+    SectionHeader(title = stringResource(R.string.continue_watching), action = stringResource(R.string.see_all))
     LazyRow(
         contentPadding = PaddingValues(horizontal = 18.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(items) { item -> ContinueCard(item) }
+        items(items) { item -> ContinueCard(item, onOpenShorts) }
     }
 }
 
 @Composable
-private fun ContinueCard(item: DramaItem) {
-    Column(modifier = Modifier.width(210.dp)) {
+private fun ContinueCard(item: ContinueWatchingItem, onOpenShorts: (Int?) -> Unit) {
+    val film = item.film
+    Column(
+        modifier = Modifier
+            .width(210.dp)
+            .clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -453,18 +489,18 @@ private fun ContinueCard(item: DramaItem) {
                 .clip(RoundedCornerShape(7.dp))
                 .background(Panel)
         ) {
-            NetworkDramaImage(item.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, item.title)
+            NetworkDramaImage(film.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, film.title)
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .fillMaxWidth(0.68f)
+                    .fillMaxWidth(item.progressFraction.takeIf { it > 0f } ?: 0.04f)
                     .height(4.dp)
                     .background(Pink, RoundedCornerShape(4.dp))
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
-        Text(item.title, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
-        Text("Ep 42 of ${item.episodeTotal} - 12m left", color = Color(0xFFC7B6BC), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, letterSpacing = 0.sp)
+        Text(film.title, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
+        Text(stringResource(R.string.episode_progress, item.episodeNumber, film.episodeTotal.coerceAtLeast(item.episodeNumber)), color = Color(0xFFC7B6BC), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, letterSpacing = 0.sp)
     }
 }
 
@@ -475,7 +511,7 @@ private fun PosterRail(
     showTrend: Boolean,
     onOpenShorts: (Int?) -> Unit
 ) {
-    SectionHeader(title = title, action = if (showTrend) "TRENDING" else null)
+    SectionHeader(title = title, action = if (showTrend) stringResource(R.string.trending_tag) else null)
     LazyRow(
         contentPadding = PaddingValues(horizontal = 18.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -513,7 +549,7 @@ private fun PosterCard(item: DramaItem, onOpenShorts: (Int?) -> Unit) {
                 )
             }
             Text(
-                "${item.episodeTotal} Eps",
+                stringResource(R.string.episodes_count, item.episodeTotal),
                 color = Color.White,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Black,
@@ -526,14 +562,14 @@ private fun PosterCard(item: DramaItem, onOpenShorts: (Int?) -> Unit) {
             )
         }
         Spacer(modifier = Modifier.height(9.dp))
-        Text("* ${item.rating}", color = Gold, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
+        Text(stringResource(R.string.rating_value, item.rating), color = Gold, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
         Text(item.title, color = Color.White, fontSize = 13.sp, lineHeight = 16.sp, fontWeight = FontWeight.ExtraBold, maxLines = 2, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
     }
 }
 
 @Composable
 private fun TopRatedCard(item: DramaItem, onOpenShorts: (Int?) -> Unit) {
-    SectionHeader("Top Rated This Week")
+    SectionHeader(stringResource(R.string.top_rated_this_week))
     Box(
         modifier = Modifier
             .padding(horizontal = 18.dp)
@@ -561,11 +597,11 @@ private fun TopRatedCard(item: DramaItem, onOpenShorts: (Int?) -> Unit) {
                 .fillMaxWidth()
                 .padding(18.dp)
         ) {
-            Text("WEEKLY TOP #1", color = Gold, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+            Text(stringResource(R.string.weekly_top_1), color = Gold, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
             Spacer(Modifier.height(7.dp))
             Text(item.title, color = Color.White, fontSize = 24.sp, lineHeight = 28.sp, fontWeight = FontWeight.ExtraBold, maxLines = 2, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
             Spacer(Modifier.height(7.dp))
-            Text("* ${item.rating}    ${item.genre}    ${item.episodeTotal} Eps", color = Color(0xFFEBD3AF), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
+            Text(stringResource(R.string.rating_genre_episodes, item.rating, item.genre, item.episodeTotal), color = Color(0xFFEBD3AF), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
         }
     }
 }
@@ -578,8 +614,8 @@ private fun ActionCards() {
             .padding(horizontal = 18.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        SmallActionCard("VIP", "Join VIP Club", "Unlock all episodes\ntoday", Modifier.weight(1f))
-        SmallActionCard("50", "Daily Rewards", "Claim your 50 coins", Modifier.weight(1f))
+        SmallActionCard(stringResource(R.string.vip_short), stringResource(R.string.join_vip_club), stringResource(R.string.unlock_all_episodes), Modifier.weight(1f))
+        SmallActionCard(stringResource(R.string.daily_reward_short), stringResource(R.string.daily_rewards), stringResource(R.string.claim_daily_coins), Modifier.weight(1f))
     }
 }
 
@@ -605,6 +641,7 @@ fun BottomNavigationBar(
     selected: String,
     onHome: () -> Unit,
     onShorts: () -> Unit,
+    onLibrary: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -617,11 +654,11 @@ fun BottomNavigationBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        NavItem(Icons.Filled.Home, "Home", selected == "Home", onHome)
-        NavItem(Icons.Filled.Explore, "Shorts", selected == "Shorts", onShorts)
-        NavItem(Icons.Filled.VideoLibrary, "Library", selected == "Library", {})
-        NavItem(Icons.Filled.CardGiftcard, "Rewards", selected == "Rewards", {})
-        NavItem(Icons.Filled.Person, "Profile", selected == "Profile", {})
+        NavItem(Icons.Filled.Home, stringResource(R.string.nav_home), selected == "Home", onHome)
+        NavItem(Icons.Filled.Explore, stringResource(R.string.nav_shorts), selected == "Shorts", onShorts)
+        NavItem(Icons.Filled.VideoLibrary, stringResource(R.string.nav_library), selected == "Library", onLibrary)
+        NavItem(Icons.Filled.CardGiftcard, stringResource(R.string.nav_rewards), selected == "Rewards", {})
+        NavItem(Icons.Filled.Person, stringResource(R.string.nav_profile), selected == "Profile", {})
     }
 }
 
@@ -674,7 +711,7 @@ private fun WatchButton(fullWidth: Boolean = false, width: Int = 140, onClick: (
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = Color(0xFF2A0D16), modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(4.dp))
-            Text("Watch Now", color = Color(0xFF2A0D16), fontSize = 13.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+            Text(stringResource(R.string.watch_now), color = Color(0xFF2A0D16), fontSize = 13.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
         }
     }
 }
@@ -682,7 +719,7 @@ private fun WatchButton(fullWidth: Boolean = false, width: Int = 140, onClick: (
 @Composable
 private fun PremiumBadge(modifier: Modifier = Modifier) {
     Text(
-        text = "PREMIUM",
+        text = stringResource(R.string.premium),
         color = Gold,
         fontSize = 9.sp,
         fontWeight = FontWeight.Black,
@@ -696,16 +733,26 @@ private fun PremiumBadge(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun PlusButton(size: Int = 44) {
+private fun PlusButton(size: Int = 44, saved: Boolean, onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
             .size(size.dp)
             .clip(RoundedCornerShape(9.dp))
-            .background(Color(0xCC17171B))
-            .border(1.dp, Color(0xFF343139), RoundedCornerShape(9.dp)),
+            .background(if (saved) Color(0x33F5C65B) else Color(0xCC17171B))
+            .border(1.dp, if (saved) Gold else Color(0xFF343139), RoundedCornerShape(9.dp))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            ),
         contentAlignment = Alignment.Center
     ) {
-        Text("+", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Light, letterSpacing = 0.sp)
+        if (saved) {
+            Icon(Icons.Filled.Bookmark, contentDescription = null, tint = Gold, modifier = Modifier.size(22.dp))
+        } else {
+            Text("+", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Light, letterSpacing = 0.sp)
+        }
     }
 }
 
@@ -725,7 +772,7 @@ private fun TagPill(text: String, color: Color, background: Color, modifier: Mod
 }
 
 @Composable
-private fun NetworkDramaImage(
+fun NetworkDramaImage(
     imageUrl: String,
     modifier: Modifier,
     contentScale: ContentScale,

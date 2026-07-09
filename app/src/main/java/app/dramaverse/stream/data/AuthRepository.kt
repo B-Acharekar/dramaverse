@@ -93,17 +93,15 @@ private fun String?.toBackendLanguage(): String {
     val normalized = this?.trim().orEmpty()
     return when (normalized.lowercase(Locale.US)) {
         "english" -> "en"
-        "tiếng việt" -> "vi"
-        "español" -> "es"
-        "français" -> "fr"
+        "spanish" -> "es"
         "deutsch" -> "de"
-        "italiano" -> "it"
-        "português" -> "pt"
-        "türkçe" -> "tr"
-        "العربية" -> "ar"
-        "हिन्दी" -> "hi"
-        "한국어" -> "ko"
-        "中文" -> "zh"
+        "portuguese" -> "pt"
+        "turkish" -> "tr"
+        "arabic" -> "ar"
+        "hindi" -> "hi"
+        "japanese" -> "ja"
+        "korean" -> "ko"
+        "chinese" -> "zh"
         else -> normalized.ifBlank { "en" }.take(8)
     }
 }

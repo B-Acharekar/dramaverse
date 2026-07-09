@@ -76,6 +76,23 @@
     <string name="nav_rewards">奖励</string>
     <string name="nav_profile">我的</string>
 
+    <!-- Library / Search -->
+    <string name="continue_watching_subtitle">从最新一集继续观看</string>
+    <string name="continue_watching_empty">观看 10 秒或更久的影片会显示在这里。</string>
+    <string name="library_subtitle">已保存、已观看和为你精选</string>
+    <string name="watch_list">观看列表</string>
+    <string name="library_watch_list_subtitle">已保存和已收藏的影片</string>
+    <string name="library_watch_list_empty">已保存的影片会显示在这里。</string>
+    <string name="similar_films">相似影片</string>
+    <string name="top_stars">热门明星</string>
+    <string name="top_stars_subtitle">来自可用演员数据</string>
+    <string name="search_films_hint">搜索影片...</string>
+    <string name="search_results_count">%1$d 个结果</string>
+    <string name="no_films_found">未找到影片。</string>
+    <string name="no_films_yet">暂无影片。</string>
+    <string name="library_load_error">现在无法刷新你的片库。</string>
+    <string name="search_error">现在无法加载搜索结果。</string>
+
     <!-- Shorts Screen -->
 
     <!-- Toasts -->

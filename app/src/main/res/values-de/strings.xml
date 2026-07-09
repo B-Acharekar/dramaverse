@@ -76,6 +76,23 @@
     <string name="nav_rewards">Belohnungen</string>
     <string name="nav_profile">Profil</string>
 
+    <!-- Library / Search -->
+    <string name="continue_watching_subtitle">Mach mit deiner neuesten Folge weiter</string>
+    <string name="continue_watching_empty">Filme, die du 10 Sekunden oder länger angesehen hast, erscheinen hier.</string>
+    <string name="library_subtitle">Gespeichert, angesehen und für dich ausgewählt</string>
+    <string name="watch_list">Merkliste</string>
+    <string name="library_watch_list_subtitle">Gespeicherte und markierte Filme</string>
+    <string name="library_watch_list_empty">Gespeicherte Filme erscheinen hier.</string>
+    <string name="similar_films">Ähnliche Filme</string>
+    <string name="top_stars">Topstars</string>
+    <string name="top_stars_subtitle">Aus verfügbaren Besetzungsdaten gezogen</string>
+    <string name="search_films_hint">Filme suchen...</string>
+    <string name="search_results_count">%1$d Ergebnisse</string>
+    <string name="no_films_found">Keine Filme gefunden.</string>
+    <string name="no_films_yet">Noch keine Filme.</string>
+    <string name="library_load_error">Deine Bibliothek konnte gerade nicht aktualisiert werden.</string>
+    <string name="search_error">Suchergebnisse konnten gerade nicht geladen werden.</string>
+
     <!-- Shorts Screen -->
 
     <!-- Toasts -->

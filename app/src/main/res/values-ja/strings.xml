@@ -76,6 +76,23 @@
     <string name="nav_rewards">報酬</string>
     <string name="nav_profile">プロフィール</string>
 
+    <!-- Library / Search -->
+    <string name="continue_watching_subtitle">最新のエピソードから続ける</string>
+    <string name="continue_watching_empty">10秒以上視聴した作品がここに表示されます。</string>
+    <string name="library_subtitle">保存済み、視聴済み、あなた向けの作品</string>
+    <string name="watch_list">ウォッチリスト</string>
+    <string name="library_watch_list_subtitle">保存またはブックマークした作品</string>
+    <string name="library_watch_list_empty">保存した作品がここに表示されます。</string>
+    <string name="similar_films">似ている作品</string>
+    <string name="top_stars">注目スター</string>
+    <string name="top_stars_subtitle">利用可能なキャスト情報から取得</string>
+    <string name="search_films_hint">作品を検索...</string>
+    <string name="search_results_count">%1$d 件の結果</string>
+    <string name="no_films_found">作品が見つかりません。</string>
+    <string name="no_films_yet">まだ作品がありません。</string>
+    <string name="library_load_error">現在ライブラリを更新できません。</string>
+    <string name="search_error">現在検索結果を読み込めません。</string>
+
     <!-- Shorts Screen -->
 
     <!-- Toasts -->

@@ -2,6 +2,8 @@ package app.dramaverse.stream
 
 import android.Manifest
 import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -31,7 +33,8 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
     LaunchedEffect(uiState.recreateRequested) {
         if (uiState.recreateRequested) {
             viewModel.onRecreateHandled()
-            (context as? Activity)?.recreate()
+            // Recreate only after persisting locale so stringResource() resolves in the selected language.
+            context.findActivity()?.recreateWithoutTransition()
         }
     }
 
@@ -91,6 +94,19 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
             onSearch = viewModel::openSearch
         )
     }
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
+
+@Suppress("DEPRECATION")
+private fun Activity.recreateWithoutTransition() {
+    overridePendingTransition(0, 0)
+    recreate()
+    overridePendingTransition(0, 0)
 }
 
 @Composable

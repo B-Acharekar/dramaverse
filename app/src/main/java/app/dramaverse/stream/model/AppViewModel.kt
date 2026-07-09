@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.dramaverse.stream.data.AuthRepository
 import app.dramaverse.stream.data.HomeRepository
+import app.dramaverse.stream.data.LocaleHelper
 import app.dramaverse.stream.R
 import com.google.firebase.FirebaseApp
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
@@ -31,7 +32,9 @@ enum class AppStep {
     Language,
     Onboarding,
     Home,
-    Shorts
+    Shorts,
+    Library,
+    Search
 }
 
 data class AppUiState(
@@ -39,10 +42,13 @@ data class AppUiState(
     val delayDoneLanguage: Boolean = false,
     val backendBaseUrl: String = DEFAULT_BACKEND_URL,
     val selectedLanguage: String? = null,
-    val selectedShortFilmId: Int? = null
+    val selectedShortFilmId: Int? = null,
+    val searchQuery: String = "",
+    val recreateRequested: Boolean = false
 )
 
 class AppViewModel(application: Application) : AndroidViewModel(application) {
+    private val appContext = application.applicationContext
     private val authRepository = AuthRepository(application.applicationContext)
     private val homeRepository = HomeRepository(application.applicationContext, authRepository)
     private val prefs = application.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -56,22 +62,42 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun onSplashFinished() {
+        // Language selection triggers Activity recreation; this pending step restores the intended screen.
+        LocaleHelper.consumePendingStep(appContext)?.let { pending ->
+            val pendingStep = runCatching { AppStep.valueOf(pending) }.getOrNull()
+            if (pendingStep == AppStep.Onboarding || pendingStep == AppStep.Home) {
+                val language = LocaleHelper.persistedLanguageName(appContext) ?: _uiState.value.selectedLanguage ?: "English"
+                _uiState.update { it.copy(currentStep = pendingStep, selectedLanguage = language) }
+                registerDevice(language)
+                return
+            }
+        }
         if (prefs.getBoolean(KEY_ONBOARDING_DONE, false)) {
-            _uiState.update { it.copy(currentStep = AppStep.Home, selectedLanguage = "English") }
-            registerDevice("en")
+            val language = LocaleHelper.persistedLanguageName(appContext) ?: "English"
+            _uiState.update { it.copy(currentStep = AppStep.Home, selectedLanguage = language) }
+            registerDevice(language)
         } else {
             _uiState.update { it.copy(currentStep = AppStep.Language) }
         }
     }
 
     fun onLanguageFinished(language: String) {
+        val nextStep = if (prefs.getBoolean(KEY_ONBOARDING_DONE, false)) AppStep.Home else AppStep.Onboarding
+        LocaleHelper.persistLanguage(appContext, language)
+        LocaleHelper.persistPendingStep(appContext, nextStep.name)
         _uiState.update {
             it.copy(
                 selectedLanguage = language,
-                currentStep = AppStep.Onboarding
+                // Advance immediately so a slow/missed recreate cannot trap the user on Language.
+                currentStep = nextStep,
+                recreateRequested = true
             )
         }
         registerDevice(language)
+    }
+
+    fun onRecreateHandled() {
+        _uiState.update { it.copy(recreateRequested = false) }
     }
 
     fun onOnboardingEntered() {
@@ -89,6 +115,22 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun openShorts(filmId: Int? = null) {
         _uiState.update { it.copy(currentStep = AppStep.Shorts, selectedShortFilmId = filmId) }
+    }
+
+    fun openLibrary() {
+        _uiState.update { it.copy(currentStep = AppStep.Library, selectedShortFilmId = null) }
+    }
+
+    fun openSearch(query: String) {
+        val trimmed = query.trim()
+        if (trimmed.isBlank()) return
+        _uiState.update {
+            it.copy(
+                currentStep = AppStep.Search,
+                selectedShortFilmId = null,
+                searchQuery = trimmed
+            )
+        }
     }
 
     private fun loadRemoteConfig() {
@@ -136,7 +178,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             homeRepository.refreshHome(
                 backendBaseUrl = _uiState.value.backendBaseUrl,
-                language = "en"
+                language = LocaleHelper.persistedLanguageCode(appContext)
             ).onFailure {
                 Log.w(TAG, "Home prefetch failed.", it)
             }

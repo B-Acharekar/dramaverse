@@ -60,51 +60,59 @@ class LibraryRepository(
                         getClientJson(backendBaseUrl, "client/history/watch", language, token, 7000)
                     }.getOrNull()
                 }
-                val recommended = async {
-                    runCatching {
-                        getClientJson(backendBaseUrl, "client/for-you", language, token, 7000)
-                    }.getOrNull()
-                }
-                val films = async {
-                    runCatching {
-                        getClientJson(backendBaseUrl, "client/films", language, token, 7000)
-                    }.getOrNull()
+                val recommendedPages = (1..4).map { page ->
+                    async {
+                        runCatching {
+                            getClientJson(backendBaseUrl, "client/for-you", language, token, 7000, page = page)
+                        }.getOrNull()
+                    }
                 }
 
                 val historyItems = parseContinueWatching(history.await())
-                val recommendItems = collectDramaItems(recommended.await())
-                val similarQuery = historyItems.firstOrNull()?.film?.genre?.takeIf { it.isNotBlank() }
-                    ?: historyItems.firstOrNull()?.film?.title
-                    ?: "romance"
+                val watchListJson = watchList.await()
+                val watchListItems = collectDramaItems(watchListJson)
+                    .filterNot { it.looksLikePlaceholder() }
+                    .distinctFilms()
+                val recommendedJsons = recommendedPages.mapNotNull { it.await() }
+                val recommendedItems = recommendedJsons
+                    .flatMap { collectDramaItems(it) }
+                    .filterNot { it.looksLikePlaceholder() }
+                    .distinctFilms()
+                val displayedRecommendedItems = recommendedItems.take(12)
+                val similarQuery = historyItems.firstOrNull()?.film?.title?.takeIf { it.isUsefulSimilarQuery() }
+                    ?: historyItems.firstOrNull()?.film?.genre?.takeIf { it.isUsefulSimilarQuery() }
+                    ?: watchListItems.firstOrNull()?.title?.takeIf { it.isUsefulSimilarQuery() }
+                    ?: watchListItems.firstOrNull()?.genre?.takeIf { it.isUsefulSimilarQuery() }
                 val similarJson = runCatching {
-                    val query = URLEncoder.encode(similarQuery, "UTF-8")
+                    val querySeed = similarQuery ?: return@runCatching null
+                    val query = URLEncoder.encode(querySeed, "UTF-8")
                     getClientJson(backendBaseUrl, "client/search", language, token, 7000, "query=$query")
                 }.getOrNull()
                 val watchedIds = historyItems.map { it.film.id }.toSet()
-                val watchListItems = collectDramaItems(watchList.await()).distinctFilms()
                 val watchListIds = watchListItems.map { it.id }.toSet()
-                val recommendedItems = recommendItems.distinctFilms()
-                val filmItems = collectDramaItems(films.await()).distinctFilms()
-                val recommendedIds = recommendedItems.map { it.id }.toSet()
-                val excludedIds = watchedIds + watchListIds + recommendedIds
-                val excludedTitles = (historyItems.map { it.film.title } + watchListItems.map { it.title } + recommendedItems.map { it.title })
+                val displayedRecommendedIds = displayedRecommendedItems.map { it.id }.toSet()
+                val excludedIds = watchedIds + watchListIds + displayedRecommendedIds
+                val excludedTitles = (historyItems.map { it.film.title } + watchListItems.map { it.title } + displayedRecommendedItems.map { it.title })
                     .map { it.trim().lowercase() }
                     .filter { it.isNotBlank() }
                     .toSet()
-                val similarItems = (
-                    collectDramaItems(similarJson) +
-                        filmItems
-                    )
+                val similarItems = collectDramaItems(similarJson)
                     .filterNot { it.id != 0 && it.id in excludedIds }
                     .filterNot { it.title.trim().lowercase() in excludedTitles }
+                    .filterNot { it.looksLikePlaceholder() }
                     .distinctFilms()
+                // If search returns nothing, use real backend recommendations after the displayed slice.
+                val similarFallbackItems = recommendedItems
+                    .drop(displayedRecommendedItems.size)
+                    .filterNot { it.id != 0 && it.id in (watchedIds + watchListIds) }
+                    .filterNot { it.title.trim().lowercase() in excludedTitles }
 
                 LibraryFeed(
                     watchList = watchListItems,
                     watchHistory = historyItems,
-                    topStars = collectTopStars(listOf(watchList.await(), recommended.await(), films.await(), similarJson)).take(12),
-                    recommended = recommendedItems.take(12),
-                    similarFilms = similarItems.take(12)
+                    topStars = collectTopStars(listOf(watchListJson, similarJson) + recommendedJsons).take(12),
+                    recommended = displayedRecommendedItems,
+                    similarFilms = similarItems.ifEmpty { similarFallbackItems }.take(12)
                 ).also { cacheStore.writeFeed(it) }
             }
         }
@@ -164,14 +172,15 @@ private fun getClientJson(
     language: String,
     token: String,
     timeoutMillis: Int,
-    extraQuery: String? = null
+    extraQuery: String? = null,
+    page: Int = 1
 ): JSONObject {
     val query = buildString {
         if (extraQuery != null) {
             append(extraQuery)
             append("&")
         }
-        append("language=$language&page=1")
+        append("language=$language&page=$page")
     }
     val url = URL("${backendBaseUrl.trimEndSlash()}/$path?$query")
     val connection = (url.openConnection() as HttpURLConnection).apply {
@@ -288,6 +297,27 @@ private fun JSONObject.toDramaItem(): DramaItem {
 
 private fun List<DramaItem>.distinctFilms(): List<DramaItem> =
     filter { it.title.isNotBlank() }.distinctBy { it.id.takeIf { id -> id != 0 } ?: it.title }
+
+private fun DramaItem.looksLikePlaceholder(): Boolean {
+    val normalizedTitle = title.trim().lowercase()
+    val normalizedGenre = genre.trim().lowercase()
+    val blockedTitles = setOf(
+        "love after marriage",
+        "historical drama",
+        "drama",
+        "romance"
+    )
+    return title.isBlank() ||
+        normalizedTitle in blockedTitles ||
+        (id == 0 && imageUrl.isBlank()) ||
+        (id == 0 && normalizedGenre in setOf("drama", "romance") && imageUrl.isBlank())
+}
+
+private fun String.isUsefulSimilarQuery(): Boolean {
+    val normalized = trim().lowercase()
+    return normalized.isNotBlank() &&
+        normalized !in setOf("drama", "romance", "movie", "film", "short", "series")
+}
 
 private fun JSONObject.firstString(vararg keys: String): String {
     for (key in keys) {

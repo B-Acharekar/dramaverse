@@ -76,6 +76,23 @@
     <string name="nav_rewards">보상</string>
     <string name="nav_profile">프로필</string>
 
+    <!-- Library / Search -->
+    <string name="continue_watching_subtitle">최근 에피소드부터 이어서 보기</string>
+    <string name="continue_watching_empty">10초 이상 시청한 작품이 여기에 표시됩니다.</string>
+    <string name="library_subtitle">저장, 시청, 추천 작품</string>
+    <string name="watch_list">시청 목록</string>
+    <string name="library_watch_list_subtitle">저장하거나 북마크한 작품</string>
+    <string name="library_watch_list_empty">저장한 작품이 여기에 표시됩니다.</string>
+    <string name="similar_films">비슷한 작품</string>
+    <string name="top_stars">인기 스타</string>
+    <string name="top_stars_subtitle">사용 가능한 출연진 데이터에서 가져옴</string>
+    <string name="search_films_hint">작품 검색...</string>
+    <string name="search_results_count">%1$d개 결과</string>
+    <string name="no_films_found">작품을 찾을 수 없습니다.</string>
+    <string name="no_films_yet">아직 작품이 없습니다.</string>
+    <string name="library_load_error">지금은 라이브러리를 새로고침할 수 없습니다.</string>
+    <string name="search_error">지금은 검색 결과를 불러올 수 없습니다.</string>
+
     <!-- Shorts Screen -->
 
     <!-- Toasts -->
