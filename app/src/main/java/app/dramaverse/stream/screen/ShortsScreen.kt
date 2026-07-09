@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -72,6 +73,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -377,7 +379,7 @@ private fun ShortsPage(
                 )
                 SideAction(
                     icon = if (reminderOn) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
-                    label = "Save",
+                    label = formatCount(displaySaveCount(item) + if (reminderOn) 1 else 0),
                     tint = if (reminderOn) Gold else Color.White,
                     onClick = {
                         reminderOn = !reminderOn
@@ -563,6 +565,9 @@ private fun ShortsCaption(
     onSeekTo: (Long) -> Unit
 ) {
     val safeDuration = durationMs.takeIf { it > 0L && it < Long.MAX_VALUE / 2 } ?: 0L
+    var descriptionExpanded by remember(item.film.id, item.episodeNumber) { mutableStateOf(false) }
+    val description = item.film.description.ifBlank { "A short drama packed with secrets, romance, and revenge." }
+    val showDescriptionToggle = description.length > 90
     var sliderPosition by remember(positionMs, safeDuration) {
         mutableStateOf(positionMs.coerceIn(0L, safeDuration).toFloat())
     }
@@ -591,24 +596,35 @@ private fun ShortsCaption(
         Text(
             item.film.title,
             color = Color.White,
-            fontSize = 25.sp,
-            lineHeight = 29.sp,
+            fontSize = 22.sp,
+            lineHeight = 26.sp,
             fontWeight = FontWeight.ExtraBold,
-            maxLines = 2,
+            maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             letterSpacing = 0.sp
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(6.dp))
         Text(
-            item.film.description,
+            description,
             color = Color(0xFFE5D2D7),
             fontSize = 14.sp,
             lineHeight = 19.sp,
             fontWeight = FontWeight.SemiBold,
-            maxLines = 2,
+            maxLines = if (descriptionExpanded) 8 else 2,
             overflow = TextOverflow.Ellipsis,
             letterSpacing = 0.sp
         )
+        if (showDescriptionToggle) {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                if (descriptionExpanded) "View less" else "View more",
+                color = Gold,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 0.sp,
+                modifier = Modifier.clickable { descriptionExpanded = !descriptionExpanded }
+            )
+        }
         Spacer(Modifier.height(12.dp))
         ThinSeekBar(
             progress = if (safeDuration > 0L) sliderPosition / safeDuration.toFloat() else 0f,
@@ -643,7 +659,7 @@ private fun ComposeSubtitleOverlay(
         textAlign = TextAlign.Center,
         letterSpacing = 0.sp,
         modifier = modifier
-            .padding(bottom = if (controlsVisible) 252.dp else 58.dp)
+            .padding(bottom = if (controlsVisible) 356.dp else 58.dp)
             .widthIn(max = 330.dp)
             .clip(RoundedCornerShape(4.dp))
             .background(Color(0xB8000000))
@@ -775,7 +791,9 @@ private fun FeedbackFormSheet(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 18.dp, vertical = 98.dp)
+            .padding(horizontal = 18.dp)
+            .imePadding()
+            .padding(top = 18.dp, bottom = 98.dp)
             .clip(RoundedCornerShape(18.dp))
             .background(Color(0xF2141217))
             .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(18.dp))
@@ -788,6 +806,7 @@ private fun FeedbackFormSheet(
             onValueChange = onValueChange,
             minLines = 3,
             maxLines = 5,
+            textStyle = TextStyle(color = Color.White, letterSpacing = 0.sp),
             placeholder = {
                 Text("Tell us what went wrong...", color = Color(0xFF9D8A91), letterSpacing = 0.sp)
             },
@@ -1174,6 +1193,12 @@ private fun displayLikeCount(item: ShortsItem): Int {
     if (backendCount > 0) return backendCount
     val seed = (item.film.id.takeIf { it != 0 } ?: item.film.title.hashCode()).let { kotlin.math.abs(it) }
     return 1100 + (seed % 42000)
+}
+
+private fun displaySaveCount(item: ShortsItem): Int {
+    val seedSource = item.film.id.takeIf { it != 0 } ?: item.film.title.hashCode()
+    val seed = kotlin.math.abs(seedSource * 31 + item.film.episodeTotal)
+    return 700 + (seed % 26000)
 }
 
 private fun formatCount(count: Int): String {
