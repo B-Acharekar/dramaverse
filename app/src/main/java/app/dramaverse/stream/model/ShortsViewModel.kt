@@ -44,6 +44,7 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                 withContext(Dispatchers.IO) {
                     repository.loadPlayback(backendBaseUrl, initialFilmId)
                 }.onSuccess { selectedItem ->
+                    if (selectedItem.playUrl.isBlank()) return@onSuccess
                     _uiState.update {
                         it.copy(isLoading = false, items = listOf(selectedItem), errorMessage = null)
                     }
