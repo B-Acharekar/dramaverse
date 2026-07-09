@@ -220,6 +220,27 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun saveWatchProgress(
+        backendBaseUrl: String,
+        item: ShortsItem,
+        progressSeconds: Int,
+        durationSeconds: Int?
+    ) {
+        if (item.film.id == 0 || progressSeconds < 10) return
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                repository.saveWatchProgress(
+                    backendBaseUrl = backendBaseUrl,
+                    filmId = item.film.id,
+                    episodeNumber = item.episodeNumber,
+                    progressSeconds = progressSeconds,
+                    durationSeconds = durationSeconds,
+                    completed = false
+                )
+            }
+        }
+    }
+
     private fun markEpisodeWatched(filmId: Int, episodeNumber: Int) {
         _uiState.update { state ->
             val watched = state.watchedEpisodesByFilm[filmId].orEmpty() + episodeNumber

@@ -111,6 +111,27 @@ class HomeRepository(
         }
     }
 
+    suspend fun refreshContinueWatching(
+        backendBaseUrl: String,
+        language: String = "en"
+    ): Result<List<ContinueWatchingItem>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val token = authRepository.authToken()
+                ?: authRepository.registerDevice(backendBaseUrl, language).getOrThrow().token
+                ?: throw IllegalStateException("Device auth did not return a bearer token.")
+
+            val historyJson = getClientJson(
+                backendBaseUrl = backendBaseUrl,
+                path = "client/history/watch",
+                language = language,
+                token = token,
+                timeoutMillis = 5000,
+                page = 1
+            )
+            parseContinueWatching(historyJson)
+        }
+    }
+
     suspend fun searchMood(
         backendBaseUrl: String,
         mood: String,

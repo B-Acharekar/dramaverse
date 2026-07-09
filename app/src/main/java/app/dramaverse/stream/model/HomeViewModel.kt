@@ -40,7 +40,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun loadHome(backendBaseUrl: String) {
-        if (_uiState.value.feed == null) {
+        val hasFeed = _uiState.value.feed != null
+        if (!hasFeed) {
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
                 repository.loadHome(
@@ -58,18 +59,37 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }
             }
+            viewModelScope.launch {
+                repository.refreshHome(
+                    backendBaseUrl = backendBaseUrl,
+                    language = "en"
+                ).onSuccess { feed ->
+                    _uiState.update { HomeUiState(isLoading = false, feed = feed) }
+                }.onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = it.feed == null,
+                            errorMessage = error.message ?: "Unable to load home."
+                        )
+                    }
+                }
+            }
+            return
         }
+
         viewModelScope.launch {
-            repository.refreshHome(
+            repository.refreshContinueWatching(
                 backendBaseUrl = backendBaseUrl,
                 language = "en"
-            ).onSuccess { feed ->
-                _uiState.update { HomeUiState(isLoading = false, feed = feed) }
+            ).onSuccess { continueWatching ->
+                _uiState.update { state ->
+                    val currentFeed = state.feed ?: return@update state
+                    state.copy(feed = currentFeed.copy(continueWatching = continueWatching), errorMessage = null)
+                }
             }.onFailure { error ->
                 _uiState.update {
                     it.copy(
-                        isLoading = it.feed == null,
-                        errorMessage = error.message ?: "Unable to load home."
+                        errorMessage = error.message ?: "Unable to refresh progress."
                     )
                 }
             }

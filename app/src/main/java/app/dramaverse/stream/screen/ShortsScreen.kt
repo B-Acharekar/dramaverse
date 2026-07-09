@@ -238,6 +238,14 @@ fun ShortsScreen(
                             autoUnlock = autoUnlock
                         )
                     },
+                    onWatchProgress = { item, position, duration ->
+                        viewModel.saveWatchProgress(
+                            backendBaseUrl = backendBaseUrl,
+                            item = item,
+                            progressSeconds = (position / 1000).toInt(),
+                            durationSeconds = duration.takeIf { it > 0L }?.let { (it / 1000).toInt() }
+                        )
+                    },
                     onEpisodeSelected = { index, item, episodeNumber ->
                         viewModel.playEpisode(
                             backendBaseUrl = backendBaseUrl,
@@ -297,6 +305,7 @@ private fun ShortsPage(
     onLikeClick: (ShortsItem, Boolean) -> Unit,
     onReminderClick: (ShortsItem, Boolean) -> Unit,
     onEpisodeFinished: (Int, ShortsItem, Long, Long) -> Unit,
+    onWatchProgress: (ShortsItem, Long, Long) -> Unit,
     onEpisodeSelected: (Int, ShortsItem, Int) -> Unit,
     onToggleCc: () -> Unit,
     onCycleSpeed: () -> Unit
@@ -307,6 +316,7 @@ private fun ShortsPage(
     var positionMs by remember(item.playUrl) { mutableStateOf(0L) }
     var durationMs by remember(item.playUrl) { mutableStateOf(0L) }
     var finishHandled by remember(item.playUrl) { mutableStateOf(false) }
+    var lastSavedProgressSecond by remember(item.playUrl) { mutableStateOf(0) }
     var pendingSeekMs by remember(item.playUrl) { mutableStateOf<Long?>(null) }
     var subtitleText by remember(item.playUrl) { mutableStateOf("") }
     var feedbackText by remember(item.playUrl) { mutableStateOf("") }
@@ -316,6 +326,16 @@ private fun ShortsPage(
     val context = LocalContext.current
     val hasPopup = showPlaybackOptions || showFeedbackForm || showSubtitleOptions || showEpisodeOptions
     val isSwitchingEpisode = switchingEpisodeNumber != null
+
+    LaunchedEffect(isActive, item.playUrl, positionMs, durationMs) {
+        if (!isActive || item.playUrl.isBlank() || finishHandled) return@LaunchedEffect
+        val progressSecond = (positionMs / 1000).toInt()
+        if (progressSecond < 10) return@LaunchedEffect
+        if (lastSavedProgressSecond == 0 || progressSecond - lastSavedProgressSecond >= 10) {
+            lastSavedProgressSecond = progressSecond
+            onWatchProgress(item, positionMs, durationMs)
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (!isActive || item.playUrl.isBlank()) {
