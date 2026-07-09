@@ -1,0 +1,129 @@
+<resources>
+    <string name="app_name">DramaVerse</string>
+
+    <!-- Splash Screen -->
+    <string name="app_name_display">DramaVerse</string>
+
+    <string name="splash_tagline">असीमित शॉर्ट ड्रामा</string>
+    <string name="splash_description">रोमांचक कहानियों का आनंद लें, जो आपके हर छोटे पल के लिए बनाई गई हैं।</string>
+
+    <!-- Language screen -->
+    <string name="language_title">भाषा</string>
+    <string name="done">पूर्ण</string>
+
+    <!-- Onboarding screen -->
+    <string name="start_btn">शुरू करें</string>
+    <string name="next_btn">अगला</string>
+
+    <string name="onboarding_title_1">खोजें रोमांचक</string>
+    <string name="onboarding_accent_title_1">शॉर्ट ड्रामा</string>
+    <string name="onboarding_description_1">छोटी-छोटी कहानियाँ जो आपकी व्यस्त दिनचर्या में आसानी से फिट हो जाएँ। कहीं भी प्रीमियम कहानी का आनंद लें।</string>
+
+    <string name="onboarding_title_2">खोजें चुने हुए</string>
+    <string name="onboarding_accent_title_2">संग्रह</string>
+    <string name="onboarding_description_2">विभिन्न श्रेणियों और शैलियों के बेहतरीन ड्रामा संग्रह देखें।</string>
+
+    <string name="onboarding_title_3">खोजें चुने हुए</string>
+    <string name="onboarding_accent_title_3">संग्रह</string>
+    <string name="onboarding_description_3">विभिन्न श्रेणियों में चुने गए ड्रामा संग्रहों का आनंद लें।</string>
+
+    <string name="onboarding_title_4">दैनिक पुरस्कार और मिशन</string>
+    <string name="onboarding_description_4">सिर्फ देखकर हर दिन मुफ्त सिक्के कमाएँ। मिशन पूरे करें और प्रीमियम एपिसोड अनलॉक करें।</string>
+
+    <!-- Home screen — top bar / moods -->
+    <string name="mood_hot">लोकप्रिय</string>
+    <string name="mood_happy">खुश</string>
+    <string name="mood_emotional">भावनात्मक</string>
+    <string name="mood_action">एक्शन</string>
+    <string name="mood_romance">रोमांस</string>
+    <string name="mood_horror">हॉरर</string>
+    <string name="mood_mind_blowing">हैरान कर देने वाला</string>
+    <string name="mood_relax">आरामदायक</string>
+
+    <!-- Hero section -->
+    <string name="featured">विशेष</string>
+    <string name="watch_now">अभी देखें</string>
+
+    <!-- Continue watching -->
+    <string name="continue_watching">देखना जारी रखें</string>
+    <string name="see_all">सभी देखें</string>
+
+    <!-- Trending / poster rails -->
+    <string name="trending_now">ट्रेंडिंग</string>
+    <string name="recommended_for_you">आपके लिए सुझाया गया</string>
+    <string name="trending_tag">ट्रेंडिंग</string>
+    <string name="episodes_count">%1$d एपिसोड</string>
+    <string name="premium">प्रीमियम</string>
+    <string name="rating_value">★ %1$s</string>
+
+    <!-- Top rated -->
+    <string name="top_rated_this_week">इस सप्ताह के सर्वश्रेष्ठ</string>
+    <string name="weekly_top_1">साप्ताहिक शीर्ष #1</string>
+    <string name="rating_genre_episodes">★ %1$s    %2$s    %3$d एपिसोड</string>
+
+    <!-- Action cards -->
+    <string name="vip_short">VIP</string>
+    <string name="join_vip_club">VIP क्लब से जुड़ें</string>
+    <string name="unlock_all_episodes">आज ही सभी\nएपिसोड अनलॉक करें</string>
+    <string name="daily_reward_short">50</string>
+    <string name="daily_rewards">दैनिक पुरस्कार</string>
+    <string name="claim_daily_coins">अपने 50 दैनिक सिक्के प्राप्त करें</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">होम</string>
+    <string name="nav_shorts">शॉर्ट्स</string>
+    <string name="nav_library">लाइब्रेरी</string>
+    <string name="nav_rewards">पुरस्कार</string>
+    <string name="nav_profile">प्रोफ़ाइल</string>
+
+    <!-- Shorts Screen -->
+
+    <!-- Toasts -->
+    <string name="saved_to_list">सूची में सहेजा गया</string>
+    <string name="removed_from_list">सूची से हटाया गया</string>
+    <string name="feedback_sent">प्रतिक्रिया भेज दी गई</string>
+
+    <!-- Actions -->
+    <string name="share">साझा करें</string>
+    <string name="episodes">एपिसोड</string>
+    <string name="cc">उपशीर्षक</string>
+    <string name="speed">गति</string>
+
+    <!-- Episode -->
+    <string name="episode_progress">एपिसोड %1$d/%2$d</string>
+    <string name="episode_title">एपिसोड %1$d</string>
+    <string name="playing">चल रहा है</string>
+    <string name="free">मुफ्त</string>
+    <string name="trending_number">ट्रेंडिंग #1</string>
+
+    <!-- Description -->
+    <string name="default_short_description">रहस्य, रोमांस और बदले से भरपूर एक रोमांचक शॉर्ट ड्रामा।</string>
+
+    <string name="view_more">और देखें</string>
+    <string name="view_less">कम देखें</string>
+
+    <!-- Playback Options -->
+    <string name="playback_options">प्लेबैक विकल्प</string>
+
+    <string name="auto_next_episode">अगला एपिसोड स्वतः चलाएँ</string>
+    <string name="auto_next_episode_desc">वर्तमान एपिसोड समाप्त होने पर अगला एपिसोड अपने आप चलाएँ।</string>
+
+    <string name="auto_unlock_episodes">एपिसोड स्वतः अनलॉक करें</string>
+    <string name="auto_unlock_episodes_desc">वर्तमान एपिसोड समाप्त होने के बाद केवल अगला लॉक किया गया एपिसोड अनलॉक करें।</string>
+
+    <!-- Feedback -->
+    <string name="send_feedback">प्रतिक्रिया भेजें</string>
+    <string name="feedback_hint">हमें बताइए कि क्या समस्या हुई...</string>
+    <string name="submit">भेजें</string>
+
+    <!-- Subtitle -->
+    <string name="subtitles">उपशीर्षक</string>
+    <string name="subtitle_on">चालू</string>
+
+    <!-- Speed -->
+    <string name="speed_1x">1x</string>
+    <string name="speed_125x">1.25x</string>
+    <string name="speed_15x">1.5x</string>
+    <string name="speed_2x">2x</string>
+    <string name="speed_custom">%1$sx</string>
+</resources>

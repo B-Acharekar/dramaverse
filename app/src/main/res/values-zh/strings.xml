@@ -1,0 +1,129 @@
+<resources>
+    <string name="app_name">DramaVerse</string>
+
+    <!-- Splash Screen -->
+    <string name="app_name_display">DramaVerse</string>
+
+    <string name="splash_tagline">无限精彩短剧</string>
+    <string name="splash_description">随时随地体验精心打造的精彩剧情，充分利用您的碎片时间。</string>
+
+    <!-- Language screen -->
+    <string name="language_title">语言</string>
+    <string name="done">完成</string>
+
+    <!-- Onboarding screen -->
+    <string name="start_btn">开始</string>
+    <string name="next_btn">下一步</string>
+
+    <string name="onboarding_title_1">发现令人上瘾的</string>
+    <string name="onboarding_accent_title_1">短剧</string>
+    <string name="onboarding_description_1">适合忙碌生活的精彩短篇故事，随时随地享受高品质剧情。</string>
+
+    <string name="onboarding_title_2">探索精选</string>
+    <string name="onboarding_accent_title_2">合集</string>
+    <string name="onboarding_description_2">探索涵盖各种类型与题材的精选短剧合集。</string>
+
+    <string name="onboarding_title_3">探索精选</string>
+    <string name="onboarding_accent_title_3">合集</string>
+    <string name="onboarding_description_3">浏览精心策划的不同类别短剧合集。</string>
+
+    <string name="onboarding_title_4">每日奖励与任务</string>
+    <string name="onboarding_description_4">每天观看即可获得免费金币，完成任务即可解锁高级剧集。</string>
+
+    <!-- Home screen — top bar / moods -->
+    <string name="mood_hot">热门</string>
+    <string name="mood_happy">开心</string>
+    <string name="mood_emotional">感人</string>
+    <string name="mood_action">动作</string>
+    <string name="mood_romance">爱情</string>
+    <string name="mood_horror">恐怖</string>
+    <string name="mood_mind_blowing">震撼</string>
+    <string name="mood_relax">放松</string>
+
+    <!-- Hero section -->
+    <string name="featured">精选推荐</string>
+    <string name="watch_now">立即观看</string>
+
+    <!-- Continue watching -->
+    <string name="continue_watching">继续观看</string>
+    <string name="see_all">查看全部</string>
+
+    <!-- Trending / poster rails -->
+    <string name="trending_now">热门推荐</string>
+    <string name="recommended_for_you">为你推荐</string>
+    <string name="trending_tag">热门</string>
+    <string name="episodes_count">%1$d 集</string>
+    <string name="premium">高级</string>
+    <string name="rating_value">★ %1$s</string>
+
+    <!-- Top rated -->
+    <string name="top_rated_this_week">本周高评分</string>
+    <string name="weekly_top_1">本周第一</string>
+    <string name="rating_genre_episodes">★ %1$s    %2$s    %3$d 集</string>
+
+    <!-- Action cards -->
+    <string name="vip_short">VIP</string>
+    <string name="join_vip_club">加入 VIP 会员</string>
+    <string name="unlock_all_episodes">立即解锁\n全部剧集</string>
+    <string name="daily_reward_short">50</string>
+    <string name="daily_rewards">每日奖励</string>
+    <string name="claim_daily_coins">领取每日 50 金币</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">首页</string>
+    <string name="nav_shorts">短剧</string>
+    <string name="nav_library">片库</string>
+    <string name="nav_rewards">奖励</string>
+    <string name="nav_profile">我的</string>
+
+    <!-- Shorts Screen -->
+
+    <!-- Toasts -->
+    <string name="saved_to_list">已保存到列表</string>
+    <string name="removed_from_list">已从列表中移除</string>
+    <string name="feedback_sent">反馈已发送</string>
+
+    <!-- Actions -->
+    <string name="share">分享</string>
+    <string name="episodes">剧集</string>
+    <string name="cc">字幕</string>
+    <string name="speed">速度</string>
+
+    <!-- Episode -->
+    <string name="episode_progress">第 %1$d/%2$d 集</string>
+    <string name="episode_title">第 %1$d 集</string>
+    <string name="playing">播放中</string>
+    <string name="free">免费</string>
+    <string name="trending_number">热门 #1</string>
+
+    <!-- Description -->
+    <string name="default_short_description">一部充满秘密、爱情与复仇的精彩短剧。</string>
+
+    <string name="view_more">查看更多</string>
+    <string name="view_less">收起</string>
+
+    <!-- Playback Options -->
+    <string name="playback_options">播放设置</string>
+
+    <string name="auto_next_episode">自动播放下一集</string>
+    <string name="auto_next_episode_desc">当前剧集结束后自动播放下一集。</string>
+
+    <string name="auto_unlock_episodes">自动解锁剧集</string>
+    <string name="auto_unlock_episodes_desc">当前剧集结束后，仅自动解锁下一集已锁定内容。</string>
+
+    <!-- Feedback -->
+    <string name="send_feedback">发送反馈</string>
+    <string name="feedback_hint">请告诉我们遇到了什么问题……</string>
+    <string name="submit">提交</string>
+
+    <!-- Subtitle -->
+    <string name="subtitles">字幕</string>
+    <string name="subtitle_on">开启</string>
+
+    <!-- Speed -->
+    <string name="speed_1x">1x</string>
+    <string name="speed_125x">1.25x</string>
+    <string name="speed_15x">1.5x</string>
+    <string name="speed_2x">2x</string>
+    <string name="speed_custom">%1$sx</string>
+</resources>

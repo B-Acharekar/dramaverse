@@ -6,6 +6,7 @@ import android.view.View
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.widget.Toast
+import androidx.annotation.OptIn
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.Image
@@ -72,6 +73,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -90,6 +92,7 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.text.CueGroup
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.ui.PlayerView
@@ -118,7 +121,7 @@ fun ShortsScreen(
     var showFeedbackForm by remember { mutableStateOf(false) }
     var autoNext by remember { mutableStateOf(false) }
     var autoUnlock by remember { mutableStateOf(false) }
-    var ccEnabled by remember { mutableStateOf(true) }
+    var ccEnabled by remember { mutableStateOf(false) }
     var playbackSpeed by remember { mutableStateOf(1f) }
 
     LaunchedEffect(backendBaseUrl, initialFilmId) {
@@ -253,6 +256,7 @@ fun ShortsScreen(
     }
 }
 
+@OptIn(UnstableApi::class)
 @Composable
 private fun ShortsPage(
     item: ShortsItem,
@@ -414,16 +418,16 @@ private fun ShortsPage(
                             .show()
                     }
                 )
-                SideAction(Icons.Filled.Share, "Share", Color.White)
+                SideAction(Icons.Filled.Share, R.string.share, Color.White)
                 SideAction(
                     Icons.Filled.VideoLibrary,
-                    "Episodes",
+                    R.string.episodes,
                     Color.White,
                     onClick = { showEpisodeOptions = true }
                 )
                 SideAction(
                     Icons.Filled.ClosedCaption,
-                    "CC",
+                    R.string.cc,
                     if (ccEnabled && item.subtitleUrl.isNotBlank()) Gold else Color.White,
                     onClick = {
                         if (item.subtitleTracks.size > 1) {
@@ -435,7 +439,7 @@ private fun ShortsPage(
                         }
                     }
                 )
-                SideTextAction(speedLabel(playbackSpeed), "Speed", onCycleSpeed)
+                SideTextAction(speedLabel(playbackSpeed), R.string.speed, onCycleSpeed)
             }
 
             Box(modifier = Modifier.align(Alignment.BottomStart)) {
@@ -549,7 +553,11 @@ private fun ShortsTopBar(
         }
         Spacer(Modifier.width(12.dp))
         Text(
-            "Episode ${item.episodeNumber}/${item.film.episodeTotal}",
+            text = stringResource(
+                R.string.episode_progress,
+                item.episodeNumber,
+                item.film.episodeTotal
+            ),
             color = Color.White,
             fontSize = 18.sp,
             fontWeight = FontWeight.ExtraBold,
@@ -593,7 +601,7 @@ private fun ShortsCaption(
 ) {
     val safeDuration = durationMs.takeIf { it > 0L && it < Long.MAX_VALUE / 2 } ?: 0L
     var descriptionExpanded by remember(item.film.id, item.episodeNumber) { mutableStateOf(false) }
-    val description = item.film.description.ifBlank { "A short drama packed with secrets, romance, and revenge." }
+    val description = item.film.description.ifBlank { stringResource(R.string.default_short_description) }
     val showDescriptionToggle = description.length > 42
     var sliderPosition by remember(positionMs, safeDuration) {
         mutableStateOf(positionMs.coerceIn(0L, safeDuration).toFloat())
@@ -605,7 +613,11 @@ private fun ShortsCaption(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                "Episode ${item.episodeNumber}/${item.film.episodeTotal}",
+                text = stringResource(
+                    R.string.episode_progress,
+                    item.episodeNumber,
+                    item.film.episodeTotal
+                ),
                 color = Gold,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Black,
@@ -617,7 +629,7 @@ private fun ShortsCaption(
                     .padding(horizontal = 9.dp, vertical = 5.dp)
             )
             Spacer(Modifier.width(10.dp))
-            Text("Trending #1", color = Color(0xFFFFC3CA), fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+            Text(stringResource(R.string.trending_number), color = Color(0xFFFFC3CA), fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
         }
         Spacer(Modifier.height(10.dp))
         Text(
@@ -644,7 +656,7 @@ private fun ShortsCaption(
         if (showDescriptionToggle) {
             Spacer(Modifier.height(4.dp))
             Text(
-                if (descriptionExpanded) "View less" else "View more",
+                if (descriptionExpanded) stringResource(R.string.view_less) else stringResource(R.string.view_more),
                 color = Gold,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.ExtraBold,
@@ -798,20 +810,20 @@ private fun FeedbackOptionsSheet(
             .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp))
             .padding(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 98.dp)
     ) {
-        Text("Playback options", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+        Text(stringResource(R.string.playback_options), color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("Auto next episode", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
-                Text("Play the next episode automatically when this one ends.", color = Color(0xFFC8B6BC), fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+                Text(stringResource(R.string.auto_next_episode), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+                Text(stringResource(R.string.auto_next_episode_desc), color = Color(0xFFC8B6BC), fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
             }
             Switch(checked = autoNext, onCheckedChange = onAutoNextChange)
         }
         Spacer(Modifier.height(14.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("Auto unlock episodes", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
-                Text("Unlock only the next locked episode after the current one finishes.", color = Color(0xFFC8B6BC), fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+                Text(stringResource(R.string.auto_unlock_episodes), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+                Text(stringResource(R.string.auto_unlock_episodes_desc), color = Color(0xFFC8B6BC), fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
             }
             Switch(checked = autoUnlock, onCheckedChange = onAutoUnlockChange)
         }
@@ -836,7 +848,7 @@ private fun FeedbackFormSheet(
             .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(18.dp))
             .padding(14.dp)
     ) {
-        Text("Send feedback", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+        Text(stringResource(R.string.send_feedback), color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
         Spacer(Modifier.height(10.dp))
         OutlinedTextField(
             value = value,
@@ -845,7 +857,7 @@ private fun FeedbackFormSheet(
             maxLines = 5,
             textStyle = TextStyle(color = Color.White, letterSpacing = 0.sp),
             placeholder = {
-                Text("Tell us what went wrong...", color = Color(0xFF9D8A91), letterSpacing = 0.sp)
+                Text(stringResource(R.string.feedback_hint), color = Color(0xFF9D8A91), letterSpacing = 0.sp)
             },
             modifier = Modifier.fillMaxWidth()
         )
@@ -861,7 +873,7 @@ private fun FeedbackFormSheet(
             ),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Submit", fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+            Text(stringResource(R.string.submit), fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
         }
     }
 }
@@ -884,7 +896,7 @@ private fun SubtitleOptionsSheet(
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Text(
-            "Subtitles",
+            stringResource(R.string.subtitles),
             color = Color.White,
             fontSize = 15.sp,
             fontWeight = FontWeight.ExtraBold,
@@ -910,7 +922,7 @@ private fun SubtitleOptionsSheet(
                     modifier = Modifier.weight(1f)
                 )
                 if (selected) {
-                    Text("On", color = Gold, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+                    Text(stringResource(R.string.subtitle_on), color = Gold, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
                 }
             }
         }
@@ -936,7 +948,7 @@ private fun EpisodeOptionsSheet(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                "Episodes",
+                stringResource(R.string.episodes),
                 color = Color.White,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.ExtraBold,
@@ -968,7 +980,7 @@ private fun EpisodeOptionsSheet(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "Episode $episode",
+                        stringResource(R.string.episode_title,episode),
                         color = if (selected) Gold else Color.White,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.ExtraBold,
@@ -976,7 +988,7 @@ private fun EpisodeOptionsSheet(
                         modifier = Modifier.weight(1f)
                     )
                     Text(
-                        if (selected) "Playing" else "Free",
+                        if (selected) stringResource(R.string.playing) else stringResource(R.string.free),
                         color = if (selected) Gold else Color(0xFFCDB8BF),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Black,
@@ -988,6 +1000,7 @@ private fun EpisodeOptionsSheet(
     }
 }
 
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
 private fun HlsVideoPlayer(playUrl: String, modifier: Modifier) {
     HlsVideoPlayer(
@@ -1009,6 +1022,9 @@ private fun HlsVideoPlayer(playUrl: String, modifier: Modifier) {
     )
 }
 
+
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+@androidx.media3.common.util.UnstableApi
 @Composable
 private fun HlsVideoPlayer(
     playUrl: String,
@@ -1148,6 +1164,16 @@ private fun HlsVideoPlayer(
 @Composable
 private fun SideAction(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: Int,
+    tint: Color,
+    onClick: () -> Unit = {}
+) {
+    SideAction(icon = icon, label = stringResource(label), tint = tint, onClick = onClick)
+}
+
+@Composable
+private fun SideAction(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     tint: Color,
     onClick: () -> Unit = {}
@@ -1204,7 +1230,7 @@ private suspend fun loadShortsBitmap(imageUrl: String): Bitmap? = withContext(Di
 @Composable
 private fun SideTextAction(
     value: String,
-    label: String,
+    label: Int,
     onClick: () -> Unit = {}
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -1220,7 +1246,7 @@ private fun SideTextAction(
             Text(value, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
         }
         Spacer(Modifier.height(4.dp))
-        Text(label, color = Color(0xFFF2D7DD), fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+        Text(stringResource(label), color = Color(0xFFF2D7DD), fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
     }
 }
 

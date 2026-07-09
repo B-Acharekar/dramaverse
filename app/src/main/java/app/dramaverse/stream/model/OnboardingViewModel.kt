@@ -1,15 +1,17 @@
 package app.dramaverse.stream.model
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import app.dramaverse.stream.R
 
 data class OnboardingPage(
-    val title: String,
-    val accentTitle: String,
-    val description: String,
+    @StringRes val title: Int,
+    @StringRes val accentTitle: Int,
+    @StringRes val description: Int,
     val visual: OnboardingVisual
 )
 
@@ -23,27 +25,27 @@ enum class OnboardingVisual {
 data class OnboardingUiState(
     val pages: List<OnboardingPage> = listOf(
         OnboardingPage(
-            title = "Discover addictive",
-            accentTitle = "short dramas",
-            description = "Bite-sized stories that fit into your busy life. Experience premium storytelling anywhere.",
+            title = R.string.onboarding_title_1,
+            accentTitle = R.string.onboarding_accent_title_1,
+            description = R.string.onboarding_description_1,
             visual = OnboardingVisual.DramaPhone
         ),
         OnboardingPage(
-            title = "Explore Curated",
-            accentTitle = "Collections",
-            description = "Explore curated collections of dramas in various categories and genres.",
+            title = R.string.onboarding_title_2,
+            accentTitle = R.string.onboarding_accent_title_2,
+            description = R.string.onboarding_description_2,
             visual = OnboardingVisual.Collections
         ),
         OnboardingPage(
-            title = "Explore Curated",
-            accentTitle = "Collections",
-            description = "Explore the curated collections of dramas in various categories.",
+            title = R.string.onboarding_title_3,
+            accentTitle = R.string.onboarding_accent_title_3,
+            description = R.string.onboarding_description_3,
             visual = OnboardingVisual.RomancePhone
         ),
         OnboardingPage(
-            title = "Daily Rewards & Missions",
-            accentTitle = "",
-            description = "Earn free coins every day just by watching. Complete missions to unlock premium episodes.",
+            title = R.string.onboarding_title_4,
+            accentTitle = 0, // No accent title
+            description = R.string.onboarding_description_4,
             visual = OnboardingVisual.Rewards
         )
     ),

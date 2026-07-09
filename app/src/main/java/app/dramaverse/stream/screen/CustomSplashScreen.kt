@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -100,7 +101,7 @@ fun CustomSplashScreen(onFinished: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(20.dp))
             Text(
-                text = "DramaVerse",
+                text = stringResource(R.string.app_name_display),
                 color = Color(0xFFFFA8AE),
                 fontSize = 36.sp,
                 fontWeight = FontWeight.ExtraBold,
@@ -109,7 +110,7 @@ fun CustomSplashScreen(onFinished: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(30.dp))
             Text(
-                text = "U N L I M I T E D   S H O R T\nD R A M A S",
+                text = stringResource(R.string.splash_tagline),
                 color = Color(0xFFE8E2E7),
                 fontSize = 17.sp,
                 lineHeight = 26.sp,
@@ -119,7 +120,7 @@ fun CustomSplashScreen(onFinished: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(26.dp))
             Text(
-                text = "Experience high-octane storytelling, curated for\nyour fastest moments.",
+                text = stringResource(R.string.splash_description),
                 color = Color(0xFFB6959B),
                 fontSize = 12.sp,
                 lineHeight = 17.sp,

@@ -3,6 +3,7 @@ package app.dramaverse.stream.screen
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -40,6 +41,9 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -50,6 +54,8 @@ import app.dramaverse.stream.model.OnboardingPage
 import app.dramaverse.stream.model.OnboardingViewModel
 import app.dramaverse.stream.model.OnboardingVisual
 import kotlinx.coroutines.launch
+import app.dramaverse.stream.R
+
 
 @Composable
 fun OnboardingScreen(
@@ -123,9 +129,9 @@ private fun OnboardingPageContent(
             contentAlignment = Alignment.Center
         ) {
             when (page.visual) {
-                OnboardingVisual.DramaPhone -> DramaPhoneVisual(romance = false)
+                OnboardingVisual.DramaPhone -> DramaPhoneVisual(painterResource(R.drawable.onboarding1image))
                 OnboardingVisual.Collections -> CollectionsVisual()
-                OnboardingVisual.RomancePhone -> DramaPhoneVisual(romance = true)
+                OnboardingVisual.RomancePhone -> DramaPhoneVisual(painterResource(R.drawable.onboarding3image))
                 OnboardingVisual.Rewards -> RewardsVisual()
             }
         }
@@ -133,7 +139,7 @@ private fun OnboardingPageContent(
         OnboardingTitle(page)
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = page.description,
+            text = stringResource(page.description),
             color = Color(0xFFC1A4A9),
             fontSize = 14.sp,
             lineHeight = 20.sp,
@@ -155,7 +161,7 @@ private fun OnboardingPageContent(
                 modifier = Modifier.weight(1f)
             )
             OnboardingActionButton(
-                label = if (pageIndex == pageCount - 1) "Start" else "Next",
+                label = if (pageIndex == pageCount - 1) R.string.start_btn else R.string.next_btn,
                 onClick = onNext
             )
         }
@@ -165,9 +171,9 @@ private fun OnboardingPageContent(
 
 @Composable
 private fun OnboardingTitle(page: OnboardingPage) {
-    if (page.accentTitle.isBlank()) {
+    if (page.accentTitle==0) {
         Text(
-            text = page.title,
+            text = stringResource(page.title),
             color = Color.White,
             fontSize = 22.sp,
             lineHeight = 26.sp,
@@ -178,7 +184,7 @@ private fun OnboardingTitle(page: OnboardingPage) {
     } else {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = page.title,
+                text = stringResource(page.title),
                 color = Color.White,
                 fontSize = 22.sp,
                 lineHeight = 26.sp,
@@ -187,7 +193,7 @@ private fun OnboardingTitle(page: OnboardingPage) {
                 letterSpacing = 0.sp
             )
             Text(
-                text = page.accentTitle,
+                text = stringResource(page.accentTitle),
                 color = Color(0xFFFFB2B9),
                 fontSize = 22.sp,
                 lineHeight = 26.sp,
@@ -227,7 +233,7 @@ private fun PageIndicator(
 
 @Composable
 private fun OnboardingActionButton(
-    label: String,
+    label: Int,
     onClick: () -> Unit
 ) {
     Box(
@@ -240,7 +246,7 @@ private fun OnboardingActionButton(
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = label,
+            text = stringResource(label),
             color = Color.White,
             fontSize = 17.sp,
             fontWeight = FontWeight.ExtraBold,
@@ -276,24 +282,40 @@ private fun OnboardingGlowBackground() {
     }
 }
 
+//@Composable
+//private fun DramaPhoneVisual(romance: Boolean) {
+//    Box(
+//        modifier = Modifier
+//            .fillMaxWidth(0.66f)
+//            .aspectRatio(0.52f)
+//            .background(Color(0xFF222225), RoundedCornerShape(32.dp))
+//            .padding(7.dp)
+//    ) {
+//        Canvas(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .clip(RoundedCornerShape(26.dp))
+//        ) {
+//            drawPhoneScene(romance)
+//        }
+//        PhoneSideActions(modifier = Modifier.align(Alignment.CenterEnd))
+//        PhoneBottomMeta(modifier = Modifier.align(Alignment.BottomStart))
+//    }
+//}
 @Composable
-private fun DramaPhoneVisual(romance: Boolean) {
+private fun DramaPhoneVisual(painter: Painter) {
     Box(
         modifier = Modifier
-            .fillMaxWidth(0.66f)
-            .aspectRatio(0.52f)
-            .background(Color(0xFF222225), RoundedCornerShape(32.dp))
-            .padding(7.dp)
+            .fillMaxSize()
     ) {
-        Canvas(
+
+        Image(
+            painter = painter,
+            contentDescription = null,
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(26.dp))
-        ) {
-            drawPhoneScene(romance)
-        }
-        PhoneSideActions(modifier = Modifier.align(Alignment.CenterEnd))
-        PhoneBottomMeta(modifier = Modifier.align(Alignment.BottomStart))
+        )
     }
 }
 
@@ -301,25 +323,15 @@ private fun DramaPhoneVisual(romance: Boolean) {
 private fun CollectionsVisual() {
     Box(
         modifier = Modifier
-            .fillMaxWidth(0.67f)
-            .aspectRatio(0.52f)
-            .background(Color(0xFF343438), RoundedCornerShape(31.dp))
-            .padding(8.dp)
+
     ) {
-        Canvas(
+        Image(
+            painter = painterResource(R.drawable.onboarding2image),
+            contentDescription = null,
             modifier = Modifier
                 .fillMaxSize()
-                .clip(RoundedCornerShape(25.dp))
-        ) {
-            drawPosterGrid()
-            drawRect(
-                brush = Brush.verticalGradient(
-                    listOf(Color.Transparent, Color(0x10111113), Color(0xDD111113)),
-                    startY = size.height * 0.56f,
-                    endY = size.height
-                )
-            )
-        }
+                .clip(RoundedCornerShape(26.dp))
+        )
     }
 }
 

@@ -1,0 +1,129 @@
+<resources>
+    <string name="app_name">DramaVerse</string>
+
+    <!-- Splash Screen -->
+    <string name="app_name_display">DramaVerse</string>
+
+    <string name="splash_tagline">SINIRSIZ KISA DİZİLER</string>
+    <string name="splash_description">En kısa anlarınız için hazırlanmış sürükleyici hikâyelerin keyfini çıkarın.</string>
+
+    <!-- Language screen -->
+    <string name="language_title">Dil</string>
+    <string name="done">TAMAM</string>
+
+    <!-- Onboarding screen -->
+    <string name="start_btn">Başla</string>
+    <string name="next_btn">İleri</string>
+
+    <string name="onboarding_title_1">Bağımlılık yapan</string>
+    <string name="onboarding_accent_title_1">kısa dizileri keşfedin</string>
+    <string name="onboarding_description_1">Yoğun yaşamınıza uyum sağlayan kısa hikâyeler. Her yerde premium hikâye anlatımının tadını çıkarın.</string>
+
+    <string name="onboarding_title_2">Özenle seçilmiş</string>
+    <string name="onboarding_accent_title_2">koleksiyonları keşfedin</string>
+    <string name="onboarding_description_2">Farklı kategoriler ve türlerde özenle seçilmiş dizi koleksiyonlarını keşfedin.</string>
+
+    <string name="onboarding_title_3">Özenle seçilmiş</string>
+    <string name="onboarding_accent_title_3">koleksiyonları keşfedin</string>
+    <string name="onboarding_description_3">Farklı kategorilerde özenle hazırlanmış dizi koleksiyonlarını keşfedin.</string>
+
+    <string name="onboarding_title_4">Günlük Ödüller ve Görevler</string>
+    <string name="onboarding_description_4">Sadece izleyerek her gün ücretsiz jeton kazanın. Premium bölümlerin kilidini açmak için görevleri tamamlayın.</string>
+
+    <!-- Home screen — top bar / moods -->
+    <string name="mood_hot">Popüler</string>
+    <string name="mood_happy">Mutlu</string>
+    <string name="mood_emotional">Duygusal</string>
+    <string name="mood_action">Aksiyon</string>
+    <string name="mood_romance">Romantik</string>
+    <string name="mood_horror">Korku</string>
+    <string name="mood_mind_blowing">Şaşırtıcı</string>
+    <string name="mood_relax">Rahatlatıcı</string>
+
+    <!-- Hero section -->
+    <string name="featured">ÖNE ÇIKAN</string>
+    <string name="watch_now">Şimdi İzle</string>
+
+    <!-- Continue watching -->
+    <string name="continue_watching">İzlemeye Devam Et</string>
+    <string name="see_all">TÜMÜNÜ GÖR</string>
+
+    <!-- Trending / poster rails -->
+    <string name="trending_now">Trend Olanlar</string>
+    <string name="recommended_for_you">Size Özel</string>
+    <string name="trending_tag">TREND</string>
+    <string name="episodes_count">%1$d Bölüm</string>
+    <string name="premium">PREMIUM</string>
+    <string name="rating_value">★ %1$s</string>
+
+    <!-- Top rated -->
+    <string name="top_rated_this_week">Bu Haftanın En Beğenilenleri</string>
+    <string name="weekly_top_1">HAFTANIN 1 NUMARASI</string>
+    <string name="rating_genre_episodes">★ %1$s    %2$s    %3$d Bölüm</string>
+
+    <!-- Action cards -->
+    <string name="vip_short">VIP</string>
+    <string name="join_vip_club">VIP Kulübüne Katıl</string>
+    <string name="unlock_all_episodes">Bugün tüm\nbölümlerin kilidini aç</string>
+    <string name="daily_reward_short">50</string>
+    <string name="daily_rewards">Günlük Ödüller</string>
+    <string name="claim_daily_coins">Günlük 50 jetonunu al</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Ana Sayfa</string>
+    <string name="nav_shorts">Shorts</string>
+    <string name="nav_library">Kütüphane</string>
+    <string name="nav_rewards">Ödüller</string>
+    <string name="nav_profile">Profil</string>
+
+    <!-- Shorts Screen -->
+
+    <!-- Toasts -->
+    <string name="saved_to_list">Listeye kaydedildi</string>
+    <string name="removed_from_list">Listeden kaldırıldı</string>
+    <string name="feedback_sent">Geri bildirim gönderildi</string>
+
+    <!-- Actions -->
+    <string name="share">Paylaş</string>
+    <string name="episodes">Bölümler</string>
+    <string name="cc">Altyazılar</string>
+    <string name="speed">Hız</string>
+
+    <!-- Episode -->
+    <string name="episode_progress">Bölüm %1$d/%2$d</string>
+    <string name="episode_title">Bölüm %1$d</string>
+    <string name="playing">Oynatılıyor</string>
+    <string name="free">Ücretsiz</string>
+    <string name="trending_number">Trend #1</string>
+
+    <!-- Description -->
+    <string name="default_short_description">Sırlar, romantizm ve intikamla dolu kısa bir dizi.</string>
+
+    <string name="view_more">Daha Fazla Göster</string>
+    <string name="view_less">Daha Az Göster</string>
+
+    <!-- Playback Options -->
+    <string name="playback_options">Oynatma Seçenekleri</string>
+
+    <string name="auto_next_episode">Sonraki bölümü otomatik oynat</string>
+    <string name="auto_next_episode_desc">Mevcut bölüm bittiğinde sonraki bölümü otomatik olarak oynat.</string>
+
+    <string name="auto_unlock_episodes">Bölümlerin kilidini otomatik aç</string>
+    <string name="auto_unlock_episodes_desc">Mevcut bölüm bittikten sonra yalnızca bir sonraki kilitli bölümün kilidini aç.</string>
+
+    <!-- Feedback -->
+    <string name="send_feedback">Geri Bildirim Gönder</string>
+    <string name="feedback_hint">Bize neyin yanlış gittiğini söyleyin...</string>
+    <string name="submit">Gönder</string>
+
+    <!-- Subtitle -->
+    <string name="subtitles">Altyazılar</string>
+    <string name="subtitle_on">Açık</string>
+
+    <!-- Speed -->
+    <string name="speed_1x">1x</string>
+    <string name="speed_125x">1.25x</string>
+    <string name="speed_15x">1.5x</string>
+    <string name="speed_2x">2x</string>
+    <string name="speed_custom">%1$sx</string>
+</resources>

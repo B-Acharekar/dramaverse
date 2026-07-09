@@ -2,6 +2,7 @@ package app.dramaverse.stream.screen
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import androidx.annotation.StringRes
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -54,6 +55,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -66,6 +68,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.net.URL
+import app.dramaverse.stream.R
 
 private val HomeBackground = Color(0xFF09090B)
 private val Panel = Color(0xFF151318)
@@ -146,7 +149,7 @@ private fun HomeContent(
         if (feed.continueWatching.isNotEmpty()) {
             item { ContinueWatching(feed.continueWatching) }
         }
-        item { PosterRail(title = "Trending Now", items = trendingItems, showTrend = true, onOpenShorts = onOpenShorts) }
+        item { PosterRail(title = R.string.trending_now, items = trendingItems, showTrend = true, onOpenShorts = onOpenShorts) }
         item { TopRatedCard(feed.topRated, onOpenShorts) }
         item { ActionCards() }
         item { Spacer(modifier = Modifier.height(18.dp)) }
@@ -244,7 +247,7 @@ private fun HeroSection(
                 .align(Alignment.BottomStart)
                 .padding(start = 18.dp, end = 18.dp, bottom = 28.dp)
         ) {
-            TagPill("FEATURED", Gold, Color(0x663B2F13))
+            TagPill(R.string.featured, Gold, Color(0x663B2F13))
             Spacer(modifier = Modifier.height(9.dp))
             Text(
                 text = item.title,
@@ -368,7 +371,7 @@ private fun HomeTopBar(
         ) {
             item {
                 MoodChip(
-                    label = "Hot",
+                    label = R.string.mood_hot,
                     selected = selectedMood == "hot",
                     loading = isMoodLoading && selectedMood == "hot",
                     onClick = onSearchClick
@@ -387,27 +390,29 @@ private fun HomeTopBar(
 }
 
 private data class MoodLabel(
-    val display: String,
+    @StringRes val display: Int,
     val query: String
 )
 
 private val moodLabels = listOf(
-    MoodLabel("Happy", "happy"),
-    MoodLabel("Emotional", "emotional"),
-    MoodLabel("Action", "action"),
-    MoodLabel("Romance", "romance"),
-    MoodLabel("Horror", "horror"),
-    MoodLabel("Mind-blowing", "mind blowing"),
-    MoodLabel("Relax", "relax")
+    MoodLabel(R.string.mood_happy, "happy"),
+    MoodLabel(R.string.mood_emotional, "emotional"),
+    MoodLabel(R.string.mood_action, "action"),
+    MoodLabel(R.string.mood_romance, "romance"),
+    MoodLabel(R.string.mood_horror, "horror"),
+    MoodLabel(R.string.mood_mind_blowing, "mind blowing"),
+    MoodLabel(R.string.mood_relax, "relax")
 )
 
 @Composable
 private fun MoodChip(
-    label: String,
+    @StringRes label: Int,
     selected: Boolean,
     loading: Boolean,
     onClick: () -> Unit
 ) {
+    val text = stringResource(label)
+
     Box(
         modifier = Modifier
             .height(38.dp)
@@ -423,7 +428,7 @@ private fun MoodChip(
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = if (loading) "$label..." else label,
+            text = if (loading) "$text..." else text,
             color = if (selected) Color(0xFF180C10) else Color(0xFFEEDFE4),
             fontSize = 13.sp,
             fontWeight = FontWeight.ExtraBold,
@@ -434,7 +439,7 @@ private fun MoodChip(
 
 @Composable
 private fun ContinueWatching(items: List<DramaItem>) {
-    SectionHeader(title = "Continue Watching", action = "SEE ALL")
+    SectionHeader(title = R.string.continue_watching, action = R.string.see_all)
     LazyRow(
         contentPadding = PaddingValues(horizontal = 18.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -470,12 +475,12 @@ private fun ContinueCard(item: DramaItem) {
 
 @Composable
 private fun PosterRail(
-    title: String,
+    title: Int,
     items: List<DramaItem>,
     showTrend: Boolean,
     onOpenShorts: (Int?) -> Unit
 ) {
-    SectionHeader(title = title, action = if (showTrend) "TRENDING" else null)
+    SectionHeader(title = title, action = if (showTrend) R.string.trending_tag else null)
     LazyRow(
         contentPadding = PaddingValues(horizontal = 18.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -533,7 +538,7 @@ private fun PosterCard(item: DramaItem, onOpenShorts: (Int?) -> Unit) {
 
 @Composable
 private fun TopRatedCard(item: DramaItem, onOpenShorts: (Int?) -> Unit) {
-    SectionHeader("Top Rated This Week")
+    SectionHeader(R.string.top_rated_this_week)
     Box(
         modifier = Modifier
             .padding(horizontal = 18.dp)
@@ -578,13 +583,13 @@ private fun ActionCards() {
             .padding(horizontal = 18.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        SmallActionCard("VIP", "Join VIP Club", "Unlock all episodes\ntoday", Modifier.weight(1f))
-        SmallActionCard("50", "Daily Rewards", "Claim your 50 coins", Modifier.weight(1f))
+        SmallActionCard("VIP", R.string.join_vip_club, R.string.unlock_all_episodes, Modifier.weight(1f))
+        SmallActionCard("50", R.string.daily_rewards, R.string.claim_daily_coins, Modifier.weight(1f))
     }
 }
 
 @Composable
-private fun SmallActionCard(icon: String, title: String, body: String, modifier: Modifier) {
+private fun SmallActionCard(icon: String, title: Int, body: Int, modifier: Modifier) {
     Column(
         modifier = modifier
             .height(108.dp)
@@ -595,8 +600,8 @@ private fun SmallActionCard(icon: String, title: String, body: String, modifier:
     ) {
         Text(icon, color = SoftPink, fontSize = 18.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
         Spacer(modifier = Modifier.height(8.dp))
-        Text(title, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
-        Text(body, color = Color(0xFFCDB5BC), fontSize = 10.sp, lineHeight = 13.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+        Text(stringResource(title), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+        Text(stringResource(body), color = Color(0xFFCDB5BC), fontSize = 10.sp, lineHeight = 13.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
     }
 }
 
@@ -617,16 +622,16 @@ fun BottomNavigationBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        NavItem(Icons.Filled.Home, "Home", selected == "Home", onHome)
-        NavItem(Icons.Filled.Explore, "Shorts", selected == "Shorts", onShorts)
-        NavItem(Icons.Filled.VideoLibrary, "Library", selected == "Library", {})
-        NavItem(Icons.Filled.CardGiftcard, "Rewards", selected == "Rewards", {})
-        NavItem(Icons.Filled.Person, "Profile", selected == "Profile", {})
+        NavItem(Icons.Filled.Home, R.string.nav_home, selected == "Home", onHome)
+        NavItem(Icons.Filled.Explore, R.string.nav_shorts, selected == "Shorts", onShorts)
+        NavItem(Icons.Filled.VideoLibrary, R.string.nav_library, selected == "Library", {})
+        NavItem(Icons.Filled.CardGiftcard, R.string.nav_rewards, selected == "Rewards", {})
+        NavItem(Icons.Filled.Person, R.string.nav_profile, selected == "Profile", {})
     }
 }
 
 @Composable
-private fun NavItem(icon: ImageVector, label: String, selected: Boolean, onClick: () -> Unit) {
+private fun NavItem(icon: ImageVector, label: Int, selected: Boolean, onClick: () -> Unit) {
     val tint = if (selected) Gold else Color(0xFF9B858E)
     val background = if (selected) Color(0x1FF5C65B) else Color.Transparent
     Column(
@@ -640,22 +645,22 @@ private fun NavItem(icon: ImageVector, label: String, selected: Boolean, onClick
             .padding(vertical = 4.dp)
     ) {
         Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(if (selected) 25.dp else 22.dp))
-        Text(label, color = tint, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+        Text(stringResource(label), color = tint, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
     }
 }
 
 @Composable
-private fun SectionHeader(title: String, action: String? = null) {
+private fun SectionHeader(title: Int, action: Int? = null) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 18.dp, end = 18.dp, top = 24.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+        Text(stringResource(title), color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
         Spacer(modifier = Modifier.weight(1f))
         if (action != null) {
-            Text(action, color = SoftPink, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+            Text(stringResource(action), color = SoftPink, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
         }
     }
 }
@@ -674,7 +679,7 @@ private fun WatchButton(fullWidth: Boolean = false, width: Int = 140, onClick: (
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = Color(0xFF2A0D16), modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(4.dp))
-            Text("Watch Now", color = Color(0xFF2A0D16), fontSize = 13.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+            Text(stringResource(R.string.watch_now), color = Color(0xFF2A0D16), fontSize = 13.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
         }
     }
 }
@@ -682,7 +687,7 @@ private fun WatchButton(fullWidth: Boolean = false, width: Int = 140, onClick: (
 @Composable
 private fun PremiumBadge(modifier: Modifier = Modifier) {
     Text(
-        text = "PREMIUM",
+        text = stringResource(R.string.premium),
         color = Gold,
         fontSize = 9.sp,
         fontWeight = FontWeight.Black,
@@ -710,9 +715,9 @@ private fun PlusButton(size: Int = 44) {
 }
 
 @Composable
-private fun TagPill(text: String, color: Color, background: Color, modifier: Modifier = Modifier) {
+private fun TagPill(text: Int, color: Color, background: Color, modifier: Modifier = Modifier) {
     Text(
-        text = text,
+        text = stringResource(text),
         color = color,
         fontSize = 10.sp,
         fontWeight = FontWeight.Black,

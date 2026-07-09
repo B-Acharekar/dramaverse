@@ -1,0 +1,129 @@
+<resources>
+    <string name="app_name">DramaVerse</string>
+
+    <!-- Splash Screen -->
+    <string name="app_name_display">DramaVerse</string>
+
+    <string name="splash_tagline">د ر ا م ا ه ا ت   ق ص ي ر ة   ب ل ا   ح د و د\n</string>
+    <string name="splash_description">استمتع بقصص مشوقة وسريعة، مصممة لتناسب لحظاتك اليومية.</string>
+
+    <!-- Language screen -->
+    <string name="language_title">اللغة</string>
+    <string name="done">تم</string>
+
+    <!-- Onboarding screen -->
+    <string name="start_btn">ابدأ</string>
+    <string name="next_btn">التالي</string>
+
+    <string name="onboarding_title_1">اكتشف</string>
+    <string name="onboarding_accent_title_1">الدراما القصيرة</string>
+    <string name="onboarding_description_1">قصص قصيرة تناسب يومك المزدحم. استمتع بسرد قصصي مميز في أي وقت.</string>
+
+    <string name="onboarding_title_2">استكشف</string>
+    <string name="onboarding_accent_title_2">المجموعات المختارة</string>
+    <string name="onboarding_description_2">استكشف مجموعات مختارة من الدراما في مختلف الفئات والأنواع.</string>
+
+    <string name="onboarding_title_3">استكشف</string>
+    <string name="onboarding_accent_title_3">المجموعات المختارة</string>
+    <string name="onboarding_description_3">تصفح مجموعات مختارة من الأعمال الدرامية ضمن تصنيفات متنوعة.</string>
+
+    <string name="onboarding_title_4">المكافآت اليومية والمهام</string>
+    <string name="onboarding_description_4">احصل على عملات مجانية كل يوم بمجرد المشاهدة. أكمل المهام لفتح الحلقات المميزة.</string>
+
+    <!-- Home screen — top bar / moods -->
+    <string name="mood_hot">رائج</string>
+    <string name="mood_happy">سعيد</string>
+    <string name="mood_emotional">عاطفي</string>
+    <string name="mood_action">أكشن</string>
+    <string name="mood_romance">رومانسي</string>
+    <string name="mood_horror">رعب</string>
+    <string name="mood_mind_blowing">مذهل</string>
+    <string name="mood_relax">استرخاء</string>
+
+    <!-- Hero section -->
+    <string name="featured">مميز</string>
+    <string name="watch_now">شاهد الآن</string>
+
+    <!-- Continue watching -->
+    <string name="continue_watching">متابعة المشاهدة</string>
+    <string name="see_all">عرض الكل</string>
+
+    <!-- Trending / poster rails -->
+    <string name="trending_now">الرائج الآن</string>
+    <string name="recommended_for_you">موصى به لك</string>
+    <string name="trending_tag">رائج</string>
+    <string name="episodes_count">%1$d حلقة</string>
+    <string name="premium">مميز</string>
+    <string name="rating_value">★ %1$s</string>
+
+    <!-- Top rated -->
+    <string name="top_rated_this_week">الأعلى تقييماً هذا الأسبوع</string>
+    <string name="weekly_top_1">الأول هذا الأسبوع</string>
+    <string name="rating_genre_episodes">★ %1$s    %2$s    %3$d حلقة</string>
+
+    <!-- Action cards -->
+    <string name="vip_short">VIP</string>
+    <string name="join_vip_club">انضم إلى نادي VIP</string>
+    <string name="unlock_all_episodes">افتح جميع الحلقات\nاليوم</string>
+    <string name="daily_reward_short">50</string>
+    <string name="daily_rewards">المكافآت اليومية</string>
+    <string name="claim_daily_coins">احصل على 50 عملة يومياً</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_shorts">المقاطع</string>
+    <string name="nav_library">المكتبة</string>
+    <string name="nav_rewards">المكافآت</string>
+    <string name="nav_profile">الملف الشخصي</string>
+
+    <!-- Shorts Screen -->
+
+    <!-- Toasts -->
+    <string name="saved_to_list">تمت الإضافة إلى القائمة</string>
+    <string name="removed_from_list">تمت الإزالة من القائمة</string>
+    <string name="feedback_sent">تم إرسال الملاحظات</string>
+
+    <!-- Actions -->
+    <string name="share">مشاركة</string>
+    <string name="episodes">الحلقات</string>
+    <string name="cc">الترجمة</string>
+    <string name="speed">السرعة</string>
+
+    <!-- Episode -->
+    <string name="episode_progress">الحلقة %1$d/%2$d</string>
+    <string name="episode_title">الحلقة %1$d</string>
+    <string name="playing">قيد التشغيل</string>
+    <string name="free">مجاني</string>
+    <string name="trending_number">الأكثر رواجاً #1</string>
+
+    <!-- Description -->
+    <string name="default_short_description">دراما قصيرة مليئة بالأسرار والرومانسية والانتقام.</string>
+
+    <string name="view_more">عرض المزيد</string>
+    <string name="view_less">عرض أقل</string>
+
+    <!-- Playback Options -->
+    <string name="playback_options">خيارات التشغيل</string>
+
+    <string name="auto_next_episode">التشغيل التلقائي للحلقة التالية</string>
+    <string name="auto_next_episode_desc">شغّل الحلقة التالية تلقائياً عند انتهاء الحالية.</string>
+
+    <string name="auto_unlock_episodes">فتح الحلقات تلقائياً</string>
+    <string name="auto_unlock_episodes_desc">افتح الحلقة المقفلة التالية فقط بعد انتهاء الحلقة الحالية.</string>
+
+    <!-- Feedback -->
+    <string name="send_feedback">إرسال الملاحظات</string>
+    <string name="feedback_hint">أخبرنا بالمشكلة التي واجهتك...</string>
+    <string name="submit">إرسال</string>
+
+    <!-- Subtitle -->
+    <string name="subtitles">الترجمة</string>
+    <string name="subtitle_on">مفعّل</string>
+
+    <!-- Speed -->
+    <string name="speed_1x">1×</string>
+    <string name="speed_125x">1.25×</string>
+    <string name="speed_15x">1.5×</string>
+    <string name="speed_2x">2×</string>
+    <string name="speed_custom">%1$s×</string>
+</resources>

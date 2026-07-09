@@ -1,0 +1,129 @@
+<resources>
+    <string name="app_name">DramaVerse</string>
+
+    <!-- Splash Screen -->
+    <string name="app_name_display">DramaVerse</string>
+
+    <string name="splash_tagline">U N B E G R E N Z T E   K U R Z D R A M E N</string>
+    <string name="splash_description">Erlebe mitreißende Geschichten – perfekt für deine kurzen Momente.</string>
+
+    <!-- Language screen -->
+    <string name="language_title">Sprache</string>
+    <string name="done">FERTIG</string>
+
+    <!-- Onboarding screen -->
+    <string name="start_btn">Start</string>
+    <string name="next_btn">Weiter</string>
+
+    <string name="onboarding_title_1">Entdecke fesselnde</string>
+    <string name="onboarding_accent_title_1">Kurzdramen</string>
+    <string name="onboarding_description_1">Kurze Geschichten für deinen hektischen Alltag. Genieße erstklassiges Storytelling – jederzeit und überall.</string>
+
+    <string name="onboarding_title_2">Entdecke kuratierte</string>
+    <string name="onboarding_accent_title_2">Sammlungen</string>
+    <string name="onboarding_description_2">Entdecke sorgfältig ausgewählte Dramen aus verschiedenen Kategorien und Genres.</string>
+
+    <string name="onboarding_title_3">Entdecke kuratierte</string>
+    <string name="onboarding_accent_title_3">Sammlungen</string>
+    <string name="onboarding_description_3">Durchstöbere ausgewählte Dramenkollektionen aus unterschiedlichen Kategorien.</string>
+
+    <string name="onboarding_title_4">Tägliche Belohnungen &amp; Missionen</string>
+    <string name="onboarding_description_4">Verdiene täglich kostenlose Münzen durchs Zuschauen. Schließe Missionen ab und schalte Premium-Folgen frei.</string>
+
+    <!-- Home screen — top bar / moods -->
+    <string name="mood_hot">Beliebt</string>
+    <string name="mood_happy">Fröhlich</string>
+    <string name="mood_emotional">Emotional</string>
+    <string name="mood_action">Action</string>
+    <string name="mood_romance">Romantik</string>
+    <string name="mood_horror">Horror</string>
+    <string name="mood_mind_blowing">Atemberaubend</string>
+    <string name="mood_relax">Entspannen</string>
+
+    <!-- Hero section -->
+    <string name="featured">EMPFOHLEN</string>
+    <string name="watch_now">Jetzt ansehen</string>
+
+    <!-- Continue watching -->
+    <string name="continue_watching">Weiterschauen</string>
+    <string name="see_all">ALLE ANZEIGEN</string>
+
+    <!-- Trending / poster rails -->
+    <string name="trending_now">Aktuell im Trend</string>
+    <string name="recommended_for_you">Für dich empfohlen</string>
+    <string name="trending_tag">TREND</string>
+    <string name="episodes_count">%1$d Folgen</string>
+    <string name="premium">PREMIUM</string>
+    <string name="rating_value">★ %1$s</string>
+
+    <!-- Top rated -->
+    <string name="top_rated_this_week">Top bewertet diese Woche</string>
+    <string name="weekly_top_1">WOCHEN-HIT #1</string>
+    <string name="rating_genre_episodes">★ %1$s    %2$s    %3$d Folgen</string>
+
+    <!-- Action cards -->
+    <string name="vip_short">VIP</string>
+    <string name="join_vip_club">VIP-Club beitreten</string>
+    <string name="unlock_all_episodes">Schalte heute\nalle Folgen frei</string>
+    <string name="daily_reward_short">50</string>
+    <string name="daily_rewards">Tägliche Belohnungen</string>
+    <string name="claim_daily_coins">Hole dir täglich 50 Münzen</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Start</string>
+    <string name="nav_shorts">Shorts</string>
+    <string name="nav_library">Bibliothek</string>
+    <string name="nav_rewards">Belohnungen</string>
+    <string name="nav_profile">Profil</string>
+
+    <!-- Shorts Screen -->
+
+    <!-- Toasts -->
+    <string name="saved_to_list">Zur Liste hinzugefügt</string>
+    <string name="removed_from_list">Aus der Liste entfernt</string>
+    <string name="feedback_sent">Feedback gesendet</string>
+
+    <!-- Actions -->
+    <string name="share">Teilen</string>
+    <string name="episodes">Folgen</string>
+    <string name="cc">Untertitel</string>
+    <string name="speed">Geschwindigkeit</string>
+
+    <!-- Episode -->
+    <string name="episode_progress">Folge %1$d/%2$d</string>
+    <string name="episode_title">Folge %1$d</string>
+    <string name="playing">Wird abgespielt</string>
+    <string name="free">Kostenlos</string>
+    <string name="trending_number">Trend #1</string>
+
+    <!-- Description -->
+    <string name="default_short_description">Ein Kurzdrama voller Geheimnisse, Romantik und Rache.</string>
+
+    <string name="view_more">Mehr anzeigen</string>
+    <string name="view_less">Weniger anzeigen</string>
+
+    <!-- Playback Options -->
+    <string name="playback_options">Wiedergabeoptionen</string>
+
+    <string name="auto_next_episode">Nächste Folge automatisch abspielen</string>
+    <string name="auto_next_episode_desc">Spiele die nächste Folge automatisch ab, sobald die aktuelle endet.</string>
+
+    <string name="auto_unlock_episodes">Folgen automatisch freischalten</string>
+    <string name="auto_unlock_episodes_desc">Schalte nach dem Ende der aktuellen Folge nur die nächste gesperrte Folge frei.</string>
+
+    <!-- Feedback -->
+    <string name="send_feedback">Feedback senden</string>
+    <string name="feedback_hint">Teile uns mit, was schiefgelaufen ist ...</string>
+    <string name="submit">Senden</string>
+
+    <!-- Subtitle -->
+    <string name="subtitles">Untertitel</string>
+    <string name="subtitle_on">Ein</string>
+
+    <!-- Speed -->
+    <string name="speed_1x">1×</string>
+    <string name="speed_125x">1,25×</string>
+    <string name="speed_15x">1,5×</string>
+    <string name="speed_2x">2×</string>
+    <string name="speed_custom">%1$s×</string>
+</resources>

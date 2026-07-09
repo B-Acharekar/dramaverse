@@ -1,0 +1,129 @@
+<resources>
+    <string name="app_name">DramaVerse</string>
+
+    <!-- Splash Screen -->
+    <string name="app_name_display">DramaVerse</string>
+
+    <string name="splash_tagline">無制限ショートドラマ</string>
+    <string name="splash_description">あなたのちょっとした時間にぴったりの、魅力あふれるストーリーをお楽しみください。</string>
+
+    <!-- Language screen -->
+    <string name="language_title">言語</string>
+    <string name="done">完了</string>
+
+    <!-- Onboarding screen -->
+    <string name="start_btn">開始</string>
+    <string name="next_btn">次へ</string>
+
+    <string name="onboarding_title_1">夢中になれる</string>
+    <string name="onboarding_accent_title_1">ショートドラマ</string>
+    <string name="onboarding_description_1">忙しい毎日にぴったりの短編ストーリー。いつでもどこでも高品質な物語を楽しめます。</string>
+
+    <string name="onboarding_title_2">厳選された</string>
+    <string name="onboarding_accent_title_2">コレクション</string>
+    <string name="onboarding_description_2">さまざまなカテゴリーやジャンルの厳選されたドラマコレクションをご覧ください。</string>
+
+    <string name="onboarding_title_3">厳選された</string>
+    <string name="onboarding_accent_title_3">コレクション</string>
+    <string name="onboarding_description_3">さまざまなカテゴリーの厳選ドラマコレクションをお楽しみください。</string>
+
+    <string name="onboarding_title_4">デイリー報酬＆ミッション</string>
+    <string name="onboarding_description_4">視聴するだけで毎日無料コインを獲得。ミッションを達成してプレミアムエピソードを解放しましょう。</string>
+
+    <!-- Home screen — top bar / moods -->
+    <string name="mood_hot">人気</string>
+    <string name="mood_happy">ハッピー</string>
+    <string name="mood_emotional">感動</string>
+    <string name="mood_action">アクション</string>
+    <string name="mood_romance">ロマンス</string>
+    <string name="mood_horror">ホラー</string>
+    <string name="mood_mind_blowing">衝撃</string>
+    <string name="mood_relax">リラックス</string>
+
+    <!-- Hero section -->
+    <string name="featured">おすすめ</string>
+    <string name="watch_now">今すぐ見る</string>
+
+    <!-- Continue watching -->
+    <string name="continue_watching">視聴を続ける</string>
+    <string name="see_all">すべて見る</string>
+
+    <!-- Trending / poster rails -->
+    <string name="trending_now">トレンド</string>
+    <string name="recommended_for_you">あなたへのおすすめ</string>
+    <string name="trending_tag">トレンド</string>
+    <string name="episodes_count">%1$d話</string>
+    <string name="premium">プレミアム</string>
+    <string name="rating_value">★ %1$s</string>
+
+    <!-- Top rated -->
+    <string name="top_rated_this_week">今週の高評価</string>
+    <string name="weekly_top_1">週間ランキング #1</string>
+    <string name="rating_genre_episodes">★ %1$s    %2$s    %3$d話</string>
+
+    <!-- Action cards -->
+    <string name="vip_short">VIP</string>
+    <string name="join_vip_club">VIPクラブに参加</string>
+    <string name="unlock_all_episodes">今日すべての\nエピソードを解放</string>
+    <string name="daily_reward_short">50</string>
+    <string name="daily_rewards">デイリー報酬</string>
+    <string name="claim_daily_coins">毎日50コインを受け取る</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">ホーム</string>
+    <string name="nav_shorts">ショート</string>
+    <string name="nav_library">ライブラリ</string>
+    <string name="nav_rewards">報酬</string>
+    <string name="nav_profile">プロフィール</string>
+
+    <!-- Shorts Screen -->
+
+    <!-- Toasts -->
+    <string name="saved_to_list">リストに保存しました</string>
+    <string name="removed_from_list">リストから削除しました</string>
+    <string name="feedback_sent">フィードバックを送信しました</string>
+
+    <!-- Actions -->
+    <string name="share">共有</string>
+    <string name="episodes">エピソード</string>
+    <string name="cc">字幕</string>
+    <string name="speed">速度</string>
+
+    <!-- Episode -->
+    <string name="episode_progress">エピソード %1$d/%2$d</string>
+    <string name="episode_title">エピソード %1$d</string>
+    <string name="playing">再生中</string>
+    <string name="free">無料</string>
+    <string name="trending_number">トレンド #1</string>
+
+    <!-- Description -->
+    <string name="default_short_description">秘密、ロマンス、復讐が詰まった魅力的なショートドラマです。</string>
+
+    <string name="view_more">もっと見る</string>
+    <string name="view_less">表示を減らす</string>
+
+    <!-- Playback Options -->
+    <string name="playback_options">再生オプション</string>
+
+    <string name="auto_next_episode">次のエピソードを自動再生</string>
+    <string name="auto_next_episode_desc">現在のエピソードが終了すると、自動的に次のエピソードを再生します。</string>
+
+    <string name="auto_unlock_episodes">エピソードを自動解放</string>
+    <string name="auto_unlock_episodes_desc">現在のエピソード終了後、次のロックされたエピソードのみを解放します。</string>
+
+    <!-- Feedback -->
+    <string name="send_feedback">フィードバックを送信</string>
+    <string name="feedback_hint">問題点を教えてください...</string>
+    <string name="submit">送信</string>
+
+    <!-- Subtitle -->
+    <string name="subtitles">字幕</string>
+    <string name="subtitle_on">オン</string>
+
+    <!-- Speed -->
+    <string name="speed_1x">1x</string>
+    <string name="speed_125x">1.25x</string>
+    <string name="speed_15x">1.5x</string>
+    <string name="speed_2x">2x</string>
+    <string name="speed_custom">%1$sx</string>
+</resources>

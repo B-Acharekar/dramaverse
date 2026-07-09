@@ -1,6 +1,7 @@
 package app.dramaverse.stream
 
 import android.Manifest
+import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -23,6 +24,14 @@ import app.dramaverse.stream.screen.ShortsScreen
 @Composable
 fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(uiState.recreateRequested) {
+        if (uiState.recreateRequested) {
+            viewModel.onRecreateHandled()
+            (context as? Activity)?.recreate()
+        }
+    }
 
     when (uiState.currentStep) {
         AppStep.Splash -> CustomSplashScreen(

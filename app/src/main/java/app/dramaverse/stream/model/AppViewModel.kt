@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import app.dramaverse.stream.data.AuthRepository
 import app.dramaverse.stream.data.HomeRepository
 import app.dramaverse.stream.R
+import app.dramaverse.stream.data.LocaleHelper
 import com.google.firebase.FirebaseApp
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
@@ -39,8 +40,111 @@ data class AppUiState(
     val delayDoneLanguage: Boolean = false,
     val backendBaseUrl: String = DEFAULT_BACKEND_URL,
     val selectedLanguage: String? = null,
-    val selectedShortFilmId: Int? = null
+    val selectedShortFilmId: Int? = null,
+    val recreateRequested: Boolean = false
 )
+
+//class AppViewModel(application: Application) : AndroidViewModel(application) {
+//    private val authRepository = AuthRepository(application.applicationContext)
+//    private val homeRepository = HomeRepository(application.applicationContext, authRepository)
+//    private val prefs = application.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+//    private val remoteConfig = configureRemoteConfig(application.applicationContext)
+//    private val _uiState = MutableStateFlow(AppUiState())
+//    val uiState: StateFlow<AppUiState> = _uiState.asStateFlow()
+//    private var oneSignalInitializedAppId: String? = null
+//
+//    init {
+//        loadRemoteConfig()
+//    }
+//
+//    fun onSplashFinished() {
+//        if (prefs.getBoolean(KEY_ONBOARDING_DONE, false)) {
+//            _uiState.update { it.copy(currentStep = AppStep.Home, selectedLanguage = "English") }
+//            registerDevice("en")
+//        } else {
+//            _uiState.update { it.copy(currentStep = AppStep.Language) }
+//        }
+//    }
+//
+//    fun onLanguageFinished(language: String) {
+//        _uiState.update {
+//            it.copy(
+//                selectedLanguage = language,
+//                currentStep = AppStep.Onboarding
+//            )
+//        }
+//        registerDevice(language)
+//    }
+//
+//    fun onOnboardingEntered() {
+//        registerDevice(_uiState.value.selectedLanguage)
+//    }
+//
+//    fun onOnboardingFinished() {
+//        prefs.edit().putBoolean(KEY_ONBOARDING_DONE, true).apply()
+//        _uiState.update { it.copy(currentStep = AppStep.Home) }
+//    }
+//
+//    fun openHome() {
+//        _uiState.update { it.copy(currentStep = AppStep.Home, selectedShortFilmId = null) }
+//    }
+//
+//    fun openShorts(filmId: Int? = null) {
+//        _uiState.update { it.copy(currentStep = AppStep.Shorts, selectedShortFilmId = filmId) }
+//    }
+//
+//    private fun loadRemoteConfig() {
+//        val config = remoteConfig ?: return
+//        applyRemoteValues(config)
+//        config.fetchAndActivate().addOnCompleteListener {
+//            applyRemoteValues(config)
+//        }
+//    }
+//
+//    private fun applyRemoteValues(config: FirebaseRemoteConfig) {
+//        val backendUrl = config.getString(RC_BACKEND_BASE_URL).ifBlank { DEFAULT_BACKEND_URL }
+//        _uiState.update {
+//            it.copy(
+//                delayDoneLanguage = config.getBoolean(RC_DELAY_DONE_LANGUAGE),
+//                backendBaseUrl = backendUrl
+//            )
+//        }
+//
+//        val oneSignalAppId = config.getString(RC_ONESIGNAL_APP_ID)
+//        if (oneSignalAppId.isNotBlank() && oneSignalInitializedAppId != oneSignalAppId) {
+//            runCatching {
+//                OneSignal.initWithContext(getApplication(), oneSignalAppId)
+//                oneSignalInitializedAppId = oneSignalAppId
+//            }.onFailure {
+//                Log.w(TAG, "OneSignal initialization skipped.", it)
+//            }
+//        }
+//    }
+//
+//    private fun registerDevice(language: String?) {
+//        viewModelScope.launch {
+//            authRepository.registerDevice(
+//                backendBaseUrl = _uiState.value.backendBaseUrl,
+//                language = language ?: "en"
+//            ).onSuccess {
+//                prefetchHome()
+//            }.onFailure {
+//                Log.w(TAG, "Device auth call failed.", it)
+//            }
+//        }
+//    }
+//
+//    private fun prefetchHome() {
+//        viewModelScope.launch {
+//            homeRepository.refreshHome(
+//                backendBaseUrl = _uiState.value.backendBaseUrl,
+//                language = "en"
+//            ).onFailure {
+//                Log.w(TAG, "Home prefetch failed.", it)
+//            }
+//        }
+//    }
+//}
 
 class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val authRepository = AuthRepository(application.applicationContext)
@@ -65,13 +169,23 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun onLanguageFinished(language: String) {
+        val context = getApplication<Application>().applicationContext
+        val previousCode = LocaleHelper.persistedLanguageCode(context)
+        val newCode = LocaleHelper.codeFor(language)
+        LocaleHelper.persistLanguage(context, language)
+
         _uiState.update {
             it.copy(
                 selectedLanguage = language,
-                currentStep = AppStep.Onboarding
+                currentStep = AppStep.Onboarding,
+                recreateRequested = newCode != previousCode
             )
         }
         registerDevice(language)
+    }
+
+    fun onRecreateHandled() {
+        _uiState.update { it.copy(recreateRequested = false) }
     }
 
     fun onOnboardingEntered() {
