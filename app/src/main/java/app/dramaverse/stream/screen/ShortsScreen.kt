@@ -110,6 +110,7 @@ fun ShortsScreen(
     initialFilmId: Int?,
     onBack: () -> Unit,
     onHome: () -> Unit,
+    onLibrary: () -> Unit,
     viewModel: ShortsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -271,6 +272,7 @@ fun ShortsScreen(
                 selected = "Shorts",
                 onHome = onHome,
                 onShorts = {},
+                onLibrary = onLibrary,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
         }

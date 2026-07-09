@@ -78,6 +78,7 @@ private val Gold = Color(0xFFF5C65B)
 fun HomeScreen(
     backendBaseUrl: String,
     onOpenShorts: (Int?) -> Unit,
+    onLibrary: () -> Unit,
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -108,6 +109,7 @@ fun HomeScreen(
             selected = "Home",
             onHome = {},
             onShorts = { onOpenShorts(null) },
+            onLibrary = onLibrary,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
@@ -661,6 +663,7 @@ fun BottomNavigationBar(
     selected: String,
     onHome: () -> Unit,
     onShorts: () -> Unit,
+    onLibrary: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -675,7 +678,7 @@ fun BottomNavigationBar(
     ) {
         NavItem(Icons.Filled.Home, "Home", selected == "Home", onHome)
         NavItem(Icons.Filled.Explore, "Shorts", selected == "Shorts", onShorts)
-        NavItem(Icons.Filled.VideoLibrary, "Library", selected == "Library", {})
+        NavItem(Icons.Filled.VideoLibrary, "Library", selected == "Library", onLibrary)
         NavItem(Icons.Filled.CardGiftcard, "Rewards", selected == "Rewards", {})
         NavItem(Icons.Filled.Person, "Profile", selected == "Profile", {})
     }
@@ -781,7 +784,7 @@ private fun TagPill(text: String, color: Color, background: Color, modifier: Mod
 }
 
 @Composable
-private fun NetworkDramaImage(
+fun NetworkDramaImage(
     imageUrl: String,
     modifier: Modifier,
     contentScale: ContentScale,

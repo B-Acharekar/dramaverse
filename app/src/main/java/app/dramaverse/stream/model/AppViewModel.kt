@@ -31,7 +31,8 @@ enum class AppStep {
     Language,
     Onboarding,
     Home,
-    Shorts
+    Shorts,
+    Library
 }
 
 data class AppUiState(
@@ -89,6 +90,10 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun openShorts(filmId: Int? = null) {
         _uiState.update { it.copy(currentStep = AppStep.Shorts, selectedShortFilmId = filmId) }
+    }
+
+    fun openLibrary() {
+        _uiState.update { it.copy(currentStep = AppStep.Library, selectedShortFilmId = null) }
     }
 
     private fun loadRemoteConfig() {
