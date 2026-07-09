@@ -8,4 +8,8 @@
         <key>onesignal_app_id</key>
         <value>7e24cec6-1e9a-468c-acc5-23ca9e7baa46</value>
     </entry>
+    <entry>
+        <key>backend_base_url</key>
+        <value>https://dramaverse-backend-lbq5.onrender.com</value>
+    </entry>
 </defaultsMap>
