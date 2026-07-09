@@ -59,6 +59,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.dramaverse.stream.data.ContinueWatchingItem
 import app.dramaverse.stream.data.DramaItem
 import app.dramaverse.stream.data.HomeFeed
 import app.dramaverse.stream.model.HomeViewModel
@@ -144,7 +145,7 @@ private fun HomeContent(
             )
         }
         if (feed.continueWatching.isNotEmpty()) {
-            item { ContinueWatching(feed.continueWatching) }
+            item { ContinueWatching(feed.continueWatching, onOpenShorts) }
         }
         item { PosterRail(title = "Trending Now", items = trendingItems, showTrend = true, onOpenShorts = onOpenShorts) }
         item { TopRatedCard(feed.topRated, onOpenShorts) }
@@ -433,38 +434,93 @@ private fun MoodChip(
 }
 
 @Composable
-private fun ContinueWatching(items: List<DramaItem>) {
+private fun ContinueWatching(
+    items: List<ContinueWatchingItem>,
+    onOpenShorts: (Int?) -> Unit
+) {
     SectionHeader(title = "Continue Watching", action = "SEE ALL")
     LazyRow(
         contentPadding = PaddingValues(horizontal = 18.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(items) { item -> ContinueCard(item) }
+        items(items) { item -> ContinueCard(item, onOpenShorts) }
     }
 }
 
 @Composable
-private fun ContinueCard(item: DramaItem) {
-    Column(modifier = Modifier.width(210.dp)) {
+private fun ContinueCard(
+    item: ContinueWatchingItem,
+    onOpenShorts: (Int?) -> Unit
+) {
+    val film = item.film
+    Column(
+        modifier = Modifier
+            .width(218.dp)
+            .clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(112.dp)
+                .height(122.dp)
                 .clip(RoundedCornerShape(7.dp))
                 .background(Panel)
         ) {
-            NetworkDramaImage(item.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, item.title)
+            NetworkDramaImage(film.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, film.title)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xA8000000))))
+            )
+            Text(
+                "Ep ${item.episodeNumber}/${film.episodeTotal.coerceAtLeast(item.episodeNumber)}",
+                color = Color.White,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Black,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(7.dp)
+                    .background(Color(0x99000000), RoundedCornerShape(10.dp))
+                    .padding(horizontal = 7.dp, vertical = 3.dp),
+                letterSpacing = 0.sp
+            )
+            Text(
+                formatContinueTime(item.progressSeconds),
+                color = Color.White,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Black,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(7.dp)
+                    .background(Color(0x99000000), RoundedCornerShape(10.dp))
+                    .padding(horizontal = 7.dp, vertical = 3.dp),
+                letterSpacing = 0.sp
+            )
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .fillMaxWidth(0.68f)
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .background(Color(0x66FFFFFF))
+            )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth(item.progressFraction.takeIf { it > 0f } ?: 0.04f)
                     .height(4.dp)
                     .background(Pink, RoundedCornerShape(4.dp))
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
-        Text(item.title, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
-        Text("Ep 42 of ${item.episodeTotal} - 12m left", color = Color(0xFFC7B6BC), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, letterSpacing = 0.sp)
+        Text(film.title, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
+        Text(
+            "Ep ${item.episodeNumber}/${film.episodeTotal.coerceAtLeast(item.episodeNumber)}  •  ${formatContinueTime(item.progressSeconds)} / ${formatContinueTime(item.durationSeconds)}",
+            color = Color(0xFFC7B6BC),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            letterSpacing = 0.sp
+        )
     }
 }
 
@@ -868,5 +924,12 @@ private fun HomeFeed.heroItems(): List<DramaItem> {
 }
 
 private fun DramaItem.uniqueKey(): Any = id.takeIf { it != 0 } ?: title
+
+private fun formatContinueTime(seconds: Int): String {
+    val safeSeconds = seconds.coerceAtLeast(0)
+    val minutes = safeSeconds / 60
+    val remainingSeconds = safeSeconds % 60
+    return "$minutes:${remainingSeconds.toString().padStart(2, '0')}"
+}
 
 private fun Int.floorMod(other: Int): Int = ((this % other) + other) % other

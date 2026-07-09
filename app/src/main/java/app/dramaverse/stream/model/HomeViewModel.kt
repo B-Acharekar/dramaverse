@@ -40,21 +40,22 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun loadHome(backendBaseUrl: String) {
-        if (_uiState.value.feed != null) return
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            repository.loadHome(
-                backendBaseUrl = backendBaseUrl,
-                language = "en"
-            ).onSuccess { feed ->
-                if (feed != null) {
-                    _uiState.update { HomeUiState(isLoading = false, feed = feed) }
-                }
-            }.onFailure { error ->
-                _uiState.update {
-                    it.copy(
-                        errorMessage = error.message ?: "Unable to load home."
-                    )
+        if (_uiState.value.feed == null) {
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                repository.loadHome(
+                    backendBaseUrl = backendBaseUrl,
+                    language = "en"
+                ).onSuccess { feed ->
+                    if (feed != null) {
+                        _uiState.update { HomeUiState(isLoading = false, feed = feed) }
+                    }
+                }.onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            errorMessage = error.message ?: "Unable to load home."
+                        )
+                    }
                 }
             }
         }

@@ -57,6 +57,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -81,6 +82,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.dramaverse.stream.R
+import app.dramaverse.stream.data.EpisodeInfo
 import app.dramaverse.stream.data.ShortsItem
 import app.dramaverse.stream.data.SubtitleTrack
 import app.dramaverse.stream.model.ShortsViewModel
@@ -131,6 +133,9 @@ fun ShortsScreen(
         showPlaybackOptions = false
         showFeedbackForm = false
         viewModel.ensurePlayback(pagerState.currentPage, backendBaseUrl)
+        uiState.items.getOrNull(pagerState.currentPage)?.let { item ->
+            viewModel.loadEpisodeList(backendBaseUrl, item.film.id)
+        }
         viewModel.loadMoreIfNeeded(pagerState.currentPage, backendBaseUrl)
     }
 
@@ -165,6 +170,9 @@ fun ShortsScreen(
                     isPlaying = isPlaying,
                     showPlaybackOptions = showPlaybackOptions,
                     showFeedbackForm = showFeedbackForm,
+                    episodes = uiState.episodesByFilm[uiState.items[page].film.id].orEmpty(),
+                    watchedEpisodes = uiState.watchedEpisodesByFilm[uiState.items[page].film.id].orEmpty(),
+                    switchingEpisodeNumber = uiState.switchingEpisodes[page],
                     autoNext = autoNext,
                     autoUnlock = autoUnlock,
                     ccEnabled = ccEnabled,
@@ -230,6 +238,14 @@ fun ShortsScreen(
                             autoUnlock = autoUnlock
                         )
                     },
+                    onEpisodeSelected = { index, item, episodeNumber ->
+                        viewModel.playEpisode(
+                            backendBaseUrl = backendBaseUrl,
+                            itemIndex = index,
+                            currentItem = item,
+                            episodeNumber = episodeNumber
+                        )
+                    },
                     onToggleCc = { ccEnabled = !ccEnabled },
                     onCycleSpeed = {
                         playbackSpeed = when (playbackSpeed) {
@@ -263,6 +279,9 @@ private fun ShortsPage(
     isPlaying: Boolean,
     showPlaybackOptions: Boolean,
     showFeedbackForm: Boolean,
+    episodes: List<EpisodeInfo>,
+    watchedEpisodes: Set<Int>,
+    switchingEpisodeNumber: Int?,
     autoNext: Boolean,
     autoUnlock: Boolean,
     ccEnabled: Boolean,
@@ -278,6 +297,7 @@ private fun ShortsPage(
     onLikeClick: (ShortsItem, Boolean) -> Unit,
     onReminderClick: (ShortsItem, Boolean) -> Unit,
     onEpisodeFinished: (Int, ShortsItem, Long, Long) -> Unit,
+    onEpisodeSelected: (Int, ShortsItem, Int) -> Unit,
     onToggleCc: () -> Unit,
     onCycleSpeed: () -> Unit
 ) {
@@ -295,6 +315,7 @@ private fun ShortsPage(
     var showEpisodeOptions by remember(item.film.id) { mutableStateOf(false) }
     val context = LocalContext.current
     val hasPopup = showPlaybackOptions || showFeedbackForm || showSubtitleOptions || showEpisodeOptions
+    val isSwitchingEpisode = switchingEpisodeNumber != null
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (!isActive || item.playUrl.isBlank()) {
@@ -309,7 +330,7 @@ private fun ShortsPage(
                 playUrl = item.playUrl,
                 subtitleTracks = item.subtitleTracks,
                 selectedSubtitleUrl = selectedSubtitleUrl,
-                isPlaying = isPlaying,
+                isPlaying = isPlaying && !isSwitchingEpisode,
                 ccEnabled = ccEnabled,
                 controlsVisible = controlsVisible,
                 playbackSpeed = playbackSpeed,
@@ -375,6 +396,13 @@ private fun ShortsPage(
                     .clip(CircleShape)
                     .background(Color(0x66000000))
                     .padding(18.dp)
+            )
+        }
+
+        if (isSwitchingEpisode) {
+            EpisodeSwitchingOverlay(
+                episodeNumber = switchingEpisodeNumber ?: item.episodeNumber,
+                modifier = Modifier.fillMaxSize()
             )
         }
 
@@ -514,7 +542,13 @@ private fun ShortsPage(
             EpisodeOptionsSheet(
                 currentEpisode = item.episodeNumber,
                 totalEpisodes = item.film.episodeTotal,
+                episodes = episodes,
+                watchedEpisodes = watchedEpisodes,
                 modifier = Modifier.align(Alignment.BottomCenter),
+                onSelect = { episodeNumber ->
+                    showEpisodeOptions = false
+                    onEpisodeSelected(itemIndex, item, episodeNumber)
+                },
                 onDismiss = { showEpisodeOptions = false }
             )
         }
@@ -783,6 +817,33 @@ private fun LoadingBackdrop(
 }
 
 @Composable
+private fun EpisodeSwitchingOverlay(
+    episodeNumber: Int,
+    modifier: Modifier
+) {
+    Box(
+        modifier = modifier.background(Color(0xCC050507)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            CircularProgressIndicator(
+                color = Pink,
+                strokeWidth = 3.dp,
+                modifier = Modifier.size(42.dp)
+            )
+            Spacer(Modifier.height(14.dp))
+            Text(
+                "Loading Episode $episodeNumber",
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 0.sp
+            )
+        }
+    }
+}
+
+@Composable
 private fun FeedbackOptionsSheet(
     autoNext: Boolean,
     autoUnlock: Boolean,
@@ -921,10 +982,18 @@ private fun SubtitleOptionsSheet(
 private fun EpisodeOptionsSheet(
     currentEpisode: Int,
     totalEpisodes: Int,
+    episodes: List<EpisodeInfo>,
+    watchedEpisodes: Set<Int>,
     modifier: Modifier,
+    onSelect: (Int) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val episodes = remember(totalEpisodes) { (1..totalEpisodes.coerceAtLeast(1)).toList() }
+    val episodeNumbers = remember(totalEpisodes, episodes) {
+        val knownNumbers = episodes.map { it.episodeNumber }.filter { it > 0 }.toSet()
+        val allNumbers = (1..totalEpisodes.coerceAtLeast(1)).toSet()
+        (allNumbers + knownNumbers).sorted()
+    }
+    val episodeMap = remember(episodes) { episodes.associateBy { it.episodeNumber } }
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -956,14 +1025,24 @@ private fun EpisodeOptionsSheet(
             modifier = Modifier.height(260.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(episodes) { episode ->
+            items(episodeNumbers) { episode ->
                 val selected = episode == currentEpisode
+                val isLocked = episodeMap[episode]?.isLocked ?: (episode > 1)
+                val isWatched = episodeMap[episode]?.isWatched == true || episode in watchedEpisodes
+                val status = when {
+                    selected -> "Playing"
+                    isWatched -> "Watched"
+                    isLocked -> "Locked"
+                    else -> "Unlocked"
+                }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(10.dp))
                         .background(if (selected) Color(0x33F5C65B) else Color(0x14111114))
-                        .clickable { onDismiss() }
+                        .clickable {
+                            if (selected) onDismiss() else onSelect(episode)
+                        }
                         .padding(horizontal = 12.dp, vertical = 11.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -976,8 +1055,13 @@ private fun EpisodeOptionsSheet(
                         modifier = Modifier.weight(1f)
                     )
                     Text(
-                        if (selected) "Playing" else "Free",
-                        color = if (selected) Gold else Color(0xFFCDB8BF),
+                        status,
+                        color = when {
+                            selected -> Gold
+                            isWatched -> Color(0xFF7BE0A7)
+                            isLocked -> Pink
+                            else -> Color(0xFFCDB8BF)
+                        },
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Black,
                         letterSpacing = 0.sp
@@ -1125,24 +1209,28 @@ private fun HlsVideoPlayer(
         }
     }
 
-    AndroidView(
-        modifier = modifier.background(Color.Black),
-        factory = {
-            (LayoutInflater.from(context).inflate(R.layout.view_shorts_player, null) as PlayerView).apply {
-                useController = false
-                resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                setEnableComposeSurfaceSyncWorkaround(true)
-                subtitleView?.visibility = View.GONE
-                this.player = player
+    key(playUrl) {
+        AndroidView(
+            modifier = modifier.background(Color.Black),
+            factory = {
+                (LayoutInflater.from(context).inflate(R.layout.view_shorts_player, null) as PlayerView).apply {
+                    useController = false
+                    resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                    setKeepContentOnPlayerReset(false)
+                    setShutterBackgroundColor(android.graphics.Color.BLACK)
+                    setEnableComposeSurfaceSyncWorkaround(true)
+                    subtitleView?.visibility = View.GONE
+                    this.player = player
+                }
+            },
+            update = { playerView ->
+                if (playerView.player !== player) {
+                    playerView.player = player
+                }
+                playerView.subtitleView?.visibility = View.GONE
             }
-        },
-        update = { playerView ->
-            if (playerView.player !== player) {
-                playerView.player = player
-            }
-            playerView.subtitleView?.visibility = View.GONE
-        }
-    )
+        )
+    }
 }
 
 @Composable

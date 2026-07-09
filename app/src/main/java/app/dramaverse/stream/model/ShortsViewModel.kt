@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.dramaverse.stream.data.AuthRepository
+import app.dramaverse.stream.data.EpisodeInfo
 import app.dramaverse.stream.data.ShortsItem
 import app.dramaverse.stream.data.ShortsRepository
 import kotlinx.coroutines.Dispatchers
@@ -18,6 +19,9 @@ data class ShortsUiState(
     val isLoading: Boolean = true,
     val isLoadingMore: Boolean = false,
     val items: List<ShortsItem> = emptyList(),
+    val episodesByFilm: Map<Int, List<EpisodeInfo>> = emptyMap(),
+    val watchedEpisodesByFilm: Map<Int, Set<Int>> = emptyMap(),
+    val switchingEpisodes: Map<Int, Int> = emptyMap(),
     val errorMessage: String? = null
 )
 
@@ -79,6 +83,19 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                         if (itemIndex == index) playback.copy(film = playback.film.mergeFallback(existing.film)) else existing
                     }
                 )
+            }
+        }
+    }
+
+    fun loadEpisodeList(backendBaseUrl: String, filmId: Int) {
+        if (filmId == 0 || _uiState.value.episodesByFilm.containsKey(filmId)) return
+        viewModelScope.launch {
+            val episodes = withContext(Dispatchers.IO) {
+                repository.loadEpisodes(backendBaseUrl, filmId)
+            }.getOrNull() ?: return@launch
+            _uiState.update { state ->
+                val watched = state.watchedEpisodesByFilm[filmId].orEmpty()
+                state.copy(episodesByFilm = state.episodesByFilm + (filmId to episodes.markWatched(watched)))
             }
         }
     }
@@ -157,10 +174,12 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                     completed = true
                 )
             }
+            markEpisodeWatched(item.film.id, item.episodeNumber)
             if (!autoNext) return@launch
 
             val nextEpisode = item.episodeNumber + 1
             if (nextEpisode > item.film.episodeTotal) return@launch
+            setEpisodeSwitching(itemIndex, nextEpisode)
 
             if (autoUnlock) {
                 withContext(Dispatchers.IO) {
@@ -170,6 +189,7 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                         episodeNumber = nextEpisode
                     )
                 }
+                refreshEpisodeList(backendBaseUrl, item.film.id)
             }
 
             val nextItem = withContext(Dispatchers.IO) {
@@ -178,12 +198,16 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                     filmId = item.film.id,
                     episodeNumber = nextEpisode
                 )
-            }.getOrNull() ?: return@launch
+            }.getOrNull()
 
-            if (nextItem.isLocked || nextItem.playUrl.isBlank()) return@launch
+            if (nextItem == null || nextItem.playUrl.isBlank()) {
+                clearEpisodeSwitching(itemIndex)
+                return@launch
+            }
 
             _uiState.update { state ->
                 state.copy(
+                    switchingEpisodes = state.switchingEpisodes - itemIndex,
                     items = state.items.mapIndexed { index, existing ->
                         if (index == itemIndex) {
                             nextItem.copy(film = nextItem.film.mergeFallback(existing.film))
@@ -193,6 +217,67 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                     }
                 )
             }
+        }
+    }
+
+    private fun markEpisodeWatched(filmId: Int, episodeNumber: Int) {
+        _uiState.update { state ->
+            val watched = state.watchedEpisodesByFilm[filmId].orEmpty() + episodeNumber
+            state.copy(
+                watchedEpisodesByFilm = state.watchedEpisodesByFilm + (filmId to watched),
+                episodesByFilm = state.episodesByFilm + (
+                    filmId to state.episodesByFilm[filmId].orEmpty().markWatched(episodeNumber)
+                )
+            )
+        }
+    }
+
+    fun playEpisode(
+        backendBaseUrl: String,
+        itemIndex: Int,
+        currentItem: ShortsItem,
+        episodeNumber: Int
+    ) {
+        if (currentItem.film.id == 0) return
+        viewModelScope.launch {
+            setEpisodeSwitching(itemIndex, episodeNumber)
+            val selectedItem = withContext(Dispatchers.IO) {
+                repository.loadPlayback(
+                    backendBaseUrl = backendBaseUrl,
+                    filmId = currentItem.film.id,
+                    episodeNumber = episodeNumber
+                )
+            }.getOrNull()
+
+            if (selectedItem == null || selectedItem.playUrl.isBlank()) {
+                clearEpisodeSwitching(itemIndex)
+                return@launch
+            }
+
+            _uiState.update { state ->
+                state.copy(
+                    switchingEpisodes = state.switchingEpisodes - itemIndex,
+                    items = state.items.mapIndexed { index, existing ->
+                        if (index == itemIndex) {
+                            selectedItem.copy(film = selectedItem.film.mergeFallback(existing.film))
+                        } else {
+                            existing
+                        }
+                    }
+                )
+            }
+        }
+    }
+
+    private fun setEpisodeSwitching(itemIndex: Int, episodeNumber: Int) {
+        _uiState.update { state ->
+            state.copy(switchingEpisodes = state.switchingEpisodes + (itemIndex to episodeNumber))
+        }
+    }
+
+    private fun clearEpisodeSwitching(itemIndex: Int) {
+        _uiState.update { state ->
+            state.copy(switchingEpisodes = state.switchingEpisodes - itemIndex)
         }
     }
 
@@ -245,6 +330,30 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                 .distinctBy { it.film.id.takeIf { id -> id != 0 } ?: it.film.title }
             state.copy(isLoading = false, items = distinct, errorMessage = null)
         }
+    }
+
+    private suspend fun refreshEpisodeList(backendBaseUrl: String, filmId: Int) {
+        val episodes = withContext(Dispatchers.IO) {
+            repository.loadEpisodes(backendBaseUrl, filmId)
+        }.getOrNull() ?: return
+        _uiState.update { state ->
+            val watched = state.watchedEpisodesByFilm[filmId].orEmpty()
+            state.copy(episodesByFilm = state.episodesByFilm + (filmId to episodes.markWatched(watched)))
+        }
+    }
+}
+
+private fun List<EpisodeInfo>.markWatched(episodeNumber: Int): List<EpisodeInfo> {
+    if (isEmpty()) return this
+    return map { episode ->
+        if (episode.episodeNumber == episodeNumber) episode.copy(isWatched = true) else episode
+    }
+}
+
+private fun List<EpisodeInfo>.markWatched(episodeNumbers: Set<Int>): List<EpisodeInfo> {
+    if (isEmpty() || episodeNumbers.isEmpty()) return this
+    return map { episode ->
+        if (episode.episodeNumber in episodeNumbers) episode.copy(isWatched = true) else episode
     }
 }
 
