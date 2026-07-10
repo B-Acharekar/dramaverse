@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Hd
@@ -53,9 +54,11 @@ import app.dramaverse.stream.model.RewardViewModel
 
 private val Background = Color(0xFF08080A)
 private val Panel = Color(0xFF17171A)
+private val GlassPanel = Color(0xD91A1624)
 private val Gold = Color(0xFFF6C54F)
 private val Pink = Color(0xFFFF3E68)
 private val SoftPink = Color(0xFFFFB5C1)
+private val MutedText = Color(0xFFAFA3B6)
 
 @Composable
 fun RewardScreen(
@@ -111,17 +114,170 @@ private fun RewardContent(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 18.dp, end = 18.dp, top = 28.dp, bottom = 104.dp),
+        contentPadding = PaddingValues(start = 18.dp, end = 18.dp, top = 22.dp, bottom = 104.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
+        item { PricingHero(feed.subscriptionPackages, selectedPlanIndex, onPlanSelected) }
         item { BalanceHero(feed.coins) }
-        item { VipClub(feed.subscriptionPackages, selectedPlanIndex, onPlanSelected) }
         item { DailyCheckIn(feed.checkInDay, onClaimDaily) }
         item { LuckySpin(feed.spinAvailable, onSpin) }
         item { WatchEarn(feed.watchMinutesToday) }
         item { CoinPacks(feed.coinPackages) }
         item { Achievements(feed.achievements) }
     }
+}
+
+@Composable
+private fun PricingHero(plans: List<RewardPackage>, selectedPlanIndex: Int, onPlanSelected: (Int) -> Unit) {
+    val pricingPlans = pricingPlans(plans)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(26.dp))
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        Color(0xFF151E35),
+                        Color(0xFF25152F),
+                        Color(0xFF08080A)
+                    )
+                )
+            )
+            .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(26.dp))
+            .padding(start = 18.dp, end = 18.dp, top = 22.dp, bottom = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("Pricing", color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+        Spacer(Modifier.height(20.dp))
+        Text(
+            "Get unlimited\naccess to all features",
+            color = Color.White,
+            fontSize = 25.sp,
+            lineHeight = 31.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            letterSpacing = 0.sp
+        )
+        Spacer(Modifier.height(26.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(20.dp))
+                .background(GlassPanel)
+                .border(1.dp, Color(0x24FFFFFF), RoundedCornerShape(20.dp))
+        ) {
+            pricingPlans.forEachIndexed { index, plan ->
+                PricingPlanRow(
+                    plan = plan,
+                    selected = index == selectedPlanIndex.coerceIn(0, pricingPlans.lastIndex),
+                    onClick = { onPlanSelected(index) }
+                )
+                if (index != pricingPlans.lastIndex) {
+                    Box(Modifier.fillMaxWidth().height(1.dp).background(Color(0x16FFFFFF)))
+                }
+            }
+        }
+        Spacer(Modifier.height(24.dp))
+        Column(Modifier.fillMaxWidth()) {
+            Text("What's included", color = MutedText, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+            Spacer(Modifier.height(14.dp))
+            IncludedRow("Unlimited watching for every episode")
+            IncludedRow("No ads during drama playback")
+            IncludedRow("Early access to premium episodes")
+            IncludedRow("HD streaming and reward boosts")
+        }
+        Spacer(Modifier.height(24.dp))
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(58.dp)
+                .clip(RoundedCornerShape(30.dp))
+                .background(Color.White)
+                .clickable { },
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Get Full Access", color = Color(0xFF131014), fontSize = 17.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+        }
+        Spacer(Modifier.height(18.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FooterLink("Terms of Use")
+            FooterDot()
+            FooterLink("Privacy Policy")
+            FooterDot()
+            FooterLink("Restore")
+        }
+    }
+}
+
+@Composable
+private fun PricingPlanRow(plan: PricingPlan, selected: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(78.dp)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 18.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(31.dp)
+                .clip(RoundedCornerShape(9.dp))
+                .background(if (selected) Color.White else Color.Transparent)
+                .border(2.dp, if (selected) Color.White else Color(0xFFC9C7D2), RoundedCornerShape(9.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            if (selected) {
+                Icon(Icons.Filled.Check, contentDescription = null, tint = Color(0xFF17121C), modifier = Modifier.size(21.dp))
+            }
+        }
+        Spacer(Modifier.width(16.dp))
+        Column(Modifier.weight(1f)) {
+            Text(plan.title, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
+            Text("${plan.price} / ${plan.period}", color = MutedText, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+        }
+        if (plan.bestValue) {
+            Text(
+                "BEST VALUE",
+                color = Color.White,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Black,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Pink)
+                    .padding(horizontal = 12.dp, vertical = 7.dp),
+                letterSpacing = 0.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun IncludedRow(text: String) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(Icons.Filled.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(23.dp))
+        Spacer(Modifier.width(14.dp))
+        Text(text, color = Color(0xFFEDE8F0), fontSize = 15.sp, lineHeight = 20.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+    }
+}
+
+@Composable
+private fun FooterLink(text: String) {
+    Text(text, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+}
+
+@Composable
+private fun FooterDot() {
+    Text("  -  ", color = Color(0x88FFFFFF), fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
 }
 
 @Composable
@@ -437,3 +593,49 @@ private fun fallbackRewardFeed(): RewardFeed = RewardFeed(
         RewardAchievement("Socialite", "Invite 3 friends", false)
     )
 )
+
+private data class PricingPlan(
+    val title: String,
+    val price: String,
+    val period: String,
+    val bestValue: Boolean = false
+)
+
+private fun pricingPlans(packages: List<RewardPackage>): List<PricingPlan> {
+    val byTitle = packages.associateBy { it.title.lowercase() }
+    return listOf(
+        PricingPlan(
+            title = "Monthly",
+            price = byTitle.firstPrice("monthly") ?: "$9.99",
+            period = "month"
+        ),
+        PricingPlan(
+            title = "Yearly",
+            price = byTitle.firstPrice("yearly", "annual") ?: "$100.99",
+            period = "year",
+            bestValue = true
+        ),
+        PricingPlan(
+            title = "Weekly",
+            price = byTitle.firstPrice("weekly") ?: "$4.99",
+            period = "week"
+        )
+    )
+}
+
+private fun Map<String, RewardPackage>.firstPrice(vararg titleParts: String): String? {
+    val match = entries.firstOrNull { (title, _) ->
+        titleParts.any { part -> title.contains(part) }
+    }?.value ?: return null
+    return match.price.withDollarSign()
+}
+
+private fun String.withDollarSign(): String {
+    val clean = trim()
+    if (clean.isBlank()) return "$0.99"
+    return when {
+        clean.startsWith("$") -> clean
+        clean.firstOrNull()?.isDigit() == true -> "$$clean"
+        else -> clean
+    }
+}
