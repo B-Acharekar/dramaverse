@@ -6,53 +6,51 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 
-data class RewardPackage(
-    val title: String,
-    val amount: Int,
-    val price: String,
-    val bestValue: Boolean = false
+data class CheckInReward(
+    val day: Int,
+    val reward: Int,
+    val current: Boolean,
+    val claimed: Boolean
 )
 
-data class RewardAchievement(
+data class DailyRewardTask(
+    val id: String,
     val title: String,
-    val subtitle: String,
-    val unlocked: Boolean
+    val targetMinutes: Int,
+    val reward: Int,
+    val progressMinutes: Int,
+    val completed: Boolean,
+    val claimed: Boolean
+)
+
+data class SpinReward(
+    val available: Boolean,
+    val weekKey: String,
+    val segments: List<Int>
 )
 
 data class RewardFeed(
     val coins: Int,
-    val vip: Boolean,
     val checkInDay: Int,
-    val spinAvailable: Int,
-    val watchMinutesToday: Int,
-    val coinPackages: List<RewardPackage>,
-    val subscriptionPackages: List<RewardPackage>,
-    val achievements: List<RewardAchievement>
+    val canCheckIn: Boolean,
+    val checkInRewards: List<CheckInReward>,
+    val dailyTasks: List<DailyRewardTask>,
+    val spin: SpinReward,
+    val rules: List<String>
 )
 
 fun fallbackRewardFeed(): RewardFeed = RewardFeed(
-    coins = 1240,
-    vip = false,
-    checkInDay = 4,
-    spinAvailable = 1,
-    watchMinutesToday = 22,
-    coinPackages = listOf(
-        RewardPackage("50 Coins", 50, "$0.99"),
-        RewardPackage("100 Coins", 100, "$1.99"),
-        RewardPackage("250 Coins", 250, "$4.99"),
-        RewardPackage("500 Coins", 500, "$8.99"),
-        RewardPackage("1000 Coins Pack", 1000, "$14.99", true)
-    ),
-    subscriptionPackages = listOf(
-        RewardPackage("Monthly", 0, "$10.99"),
-        RewardPackage("Yearly", 0, "$100.99", true),
-        RewardPackage("Weekly", 0, "$4.99")
-    ),
-    achievements = listOf(
-        RewardAchievement("Drama King", "Watch 100 episodes", true),
-        RewardAchievement("Night Owl", "Watch after 12 AM", false),
-        RewardAchievement("Top Fan", "Favorite 5 series", true),
-        RewardAchievement("Socialite", "Invite 3 friends", false)
+    coins = 0,
+    checkInDay = 1,
+    canCheckIn = true,
+    checkInRewards = defaultCheckIns(),
+    dailyTasks = defaultTasks(),
+    spin = SpinReward(available = true, weekKey = "", segments = listOf(10, 15, 20, 30, 40, 60, 100, 150)),
+    rules = listOf(
+        "Balance starts at 0 coins.",
+        "Daily check-in starts at +20 and resets after day 7.",
+        "Daily tasks unlock after real watch time.",
+        "Spin wheel can be used once per week."
     )
 )
 
@@ -74,7 +72,7 @@ class RewardRepository(
     suspend fun claimAction(
         backendBaseUrl: String,
         action: String,
-        amount: Int
+        metadata: JSONObject = JSONObject()
     ): Result<RewardFeed> = withContext(Dispatchers.IO) {
         runCatching {
             val language = LocaleHelper.persistedLanguageCode(appContext)
@@ -86,100 +84,91 @@ class RewardRepository(
                 token = token,
                 body = JSONObject()
                     .put("action", action)
-                    .put("amount", amount)
-                    .put("metadata", JSONObject().put("checked_at", System.currentTimeMillis()))
+                    .put("amount", 0)
+                    .put("metadata", metadata)
             )
             parseRewardFeed(json.optJSONObject("data") ?: json)
         }
     }
 }
 
-private fun parseRewardFeed(data: JSONObject): RewardFeed {
-    val unlocked = data.optJSONArray("achievements").stringSet()
-    return RewardFeed(
-        coins = data.optInt("coins", 1240),
-        vip = data.optBoolean("vip", false),
-        checkInDay = data.optInt("check_in_day", 4).coerceIn(1, 7),
-        spinAvailable = data.optInt("spin_available", 1),
-        watchMinutesToday = data.optInt("watch_minutes_today", 22).coerceAtLeast(0),
-        coinPackages = data.opt("coin_packages").toRewardPackages(
-            fallback = listOf(
-                RewardPackage("50 Coins", 50, "$0.99"),
-                RewardPackage("100 Coins", 100, "$1.99"),
-                RewardPackage("250 Coins", 250, "$4.99"),
-                RewardPackage("500 Coins", 500, "$8.99"),
-                RewardPackage("1000 Coins Pack", 1000, "$14.99", true)
+private fun parseRewardFeed(data: JSONObject): RewardFeed = RewardFeed(
+    coins = data.optInt("coins", 0),
+    checkInDay = data.optInt("check_in_day", 1).coerceIn(1, 7),
+    canCheckIn = data.optBoolean("can_check_in", true),
+    checkInRewards = data.optJSONArray("check_in_rewards").toCheckIns(),
+    dailyTasks = data.optJSONArray("daily_tasks").toDailyTasks(),
+    spin = data.optJSONObject("spin").toSpinReward(),
+    rules = data.optJSONArray("rules").toStringList()
+)
+
+private fun JSONArray?.toCheckIns(): List<CheckInReward> {
+    if (this == null) return defaultCheckIns()
+    return buildList {
+        for (index in 0 until length()) {
+            val item = optJSONObject(index) ?: continue
+            add(
+                CheckInReward(
+                    day = item.optInt("day", index + 1),
+                    reward = item.optInt("reward", 20 + index * 5),
+                    current = item.optBoolean("current", index == 0),
+                    claimed = item.optBoolean("claimed", false)
+                )
             )
-        ),
-        subscriptionPackages = data.opt("subscription_packages").toRewardPackages(
-            fallback = listOf(
-                RewardPackage("Monthly", 0, "$10.99"),
-                RewardPackage("Yearly", 0, "$100.99", true),
-                RewardPackage("Weekly", 0, "$4.99")
+        }
+    }.ifEmpty { defaultCheckIns() }
+}
+
+private fun JSONArray?.toDailyTasks(): List<DailyRewardTask> {
+    if (this == null) return defaultTasks()
+    return buildList {
+        for (index in 0 until length()) {
+            val item = optJSONObject(index) ?: continue
+            add(
+                DailyRewardTask(
+                    id = item.optString("id"),
+                    title = item.optString("title"),
+                    targetMinutes = item.optInt("target_minutes", 5),
+                    reward = item.optInt("reward", 15),
+                    progressMinutes = item.optInt("progress_minutes", 0),
+                    completed = item.optBoolean("completed", false),
+                    claimed = item.optBoolean("claimed", false)
+                )
             )
-        ),
-        achievements = listOf(
-            RewardAchievement("Drama King", "Watch 100 episodes", "drama_king" in unlocked),
-            RewardAchievement("Night Owl", "Watch after 12 AM", "night_owl" in unlocked),
-            RewardAchievement("Top Fan", "Favorite 5 series", "top_fan" in unlocked),
-            RewardAchievement("Socialite", "Invite 3 friends", "socialite" in unlocked)
-        )
+        }
+    }.ifEmpty { defaultTasks() }
+}
+
+private fun JSONObject?.toSpinReward(): SpinReward {
+    if (this == null) return fallbackRewardFeed().spin
+    return SpinReward(
+        available = optBoolean("available", true),
+        weekKey = optString("week_key"),
+        segments = optJSONArray("segments").toIntList().ifEmpty { fallbackRewardFeed().spin.segments }
     )
 }
 
-private fun Any?.toRewardPackages(fallback: List<RewardPackage>): List<RewardPackage> {
-    val items = when (this) {
-        is JSONArray -> collectPackages(this)
-        is JSONObject -> collectPackages(this.optJSONArray("items") ?: this.optJSONArray("data") ?: JSONArray().put(this))
-        else -> emptyList()
-    }
-    return items.ifEmpty { fallback }
-}
-
-private fun collectPackages(array: JSONArray): List<RewardPackage> = buildList {
-    for (index in 0 until array.length()) {
-        val item = array.optJSONObject(index) ?: continue
-        val amount = item.firstInt("coins", "coin", "amount", "value")
-        val title = item.firstString("title", "name", "label").ifBlank {
-            if (amount > 0) "$amount Coins" else "VIP Plan"
-        }
-        val price = item.firstString("price", "amount_text", "display_price", "currency_price").ifBlank {
-            item.firstInt("price_cents", "cents").takeIf { it > 0 }?.let { "$${"%.2f".format(it / 100f)}" }.orEmpty()
-        }.ifBlank { "$0.99" }
-        add(
-            RewardPackage(
-                title = title,
-                amount = amount,
-                price = price,
-                bestValue = item.optBoolean("best_value", false) || index == array.length() - 1
-            )
-        )
-    }
-}
-
-private fun JSONArray?.stringSet(): Set<String> {
-    if (this == null) return emptySet()
-    return buildSet {
+private fun JSONArray?.toStringList(): List<String> {
+    if (this == null) return fallbackRewardFeed().rules
+    return buildList {
         for (index in 0 until length()) optString(index).takeIf { it.isNotBlank() }?.let(::add)
-    }
+    }.ifEmpty { fallbackRewardFeed().rules }
 }
 
-private fun JSONObject.firstString(vararg keys: String): String {
-    for (key in keys) {
-        when (val value = opt(key)) {
-            is String -> if (value.isNotBlank()) return value
-            is Number -> return value.toString()
-        }
-    }
-    return ""
+private fun JSONArray?.toIntList(): List<Int> {
+    if (this == null) return emptyList()
+    return buildList {
+        for (index in 0 until length()) add(optInt(index))
+    }.filter { it > 0 }
 }
 
-private fun JSONObject.firstInt(vararg keys: String): Int {
-    for (key in keys) {
-        when (val value = opt(key)) {
-            is Number -> return value.toInt()
-            is String -> value.toIntOrNull()?.let { return it }
-        }
+private fun defaultCheckIns(): List<CheckInReward> =
+    listOf(20, 25, 30, 35, 40, 45, 60).mapIndexed { index, reward ->
+        CheckInReward(day = index + 1, reward = reward, current = index == 0, claimed = false)
     }
-    return 0
-}
+
+private fun defaultTasks(): List<DailyRewardTask> = listOf(
+    DailyRewardTask("watch_5", "Watch 5 minutes", 5, 15, 0, false, false),
+    DailyRewardTask("watch_10", "Watch 10 minutes", 10, 20, 0, false, false),
+    DailyRewardTask("watch_15", "Watch 15 minutes", 15, 30, 0, false, false)
+)

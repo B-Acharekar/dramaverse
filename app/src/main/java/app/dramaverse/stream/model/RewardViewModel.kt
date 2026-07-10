@@ -12,12 +12,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 data class RewardUiState(
     val isLoading: Boolean = true,
     val feed: RewardFeed? = null,
     val errorMessage: String? = null,
-    val selectedPlanIndex: Int = 1
+    val showRules: Boolean = false,
+    val spinPointerIndex: Int = 0
 )
 
 class RewardViewModel(application: Application) : AndroidViewModel(application) {
@@ -45,47 +47,41 @@ class RewardViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun selectPlan(index: Int) {
-        _uiState.update { it.copy(selectedPlanIndex = index) }
+    fun setRulesVisible(visible: Boolean) {
+        _uiState.update { it.copy(showRules = visible) }
     }
 
     fun claimDailyCheckIn(backendBaseUrl: String) {
-        val optimistic = _uiState.value.feed.orFallback().claimCoins(amount = 10, advanceCheckIn = true)
-        _uiState.update { it.copy(feed = optimistic, errorMessage = null) }
         viewModelScope.launch {
-            repository.claimAction(backendBaseUrl, "daily_check_in", 10)
+            repository.claimAction(backendBaseUrl, "daily_check_in")
                 .onSuccess { feed -> _uiState.update { it.copy(feed = feed, errorMessage = null) } }
                 .onFailure { error -> _uiState.update { it.copy(errorMessage = error.message) } }
+        }
+    }
+
+    fun claimDailyTask(backendBaseUrl: String, taskId: String) {
+        viewModelScope.launch {
+            repository.claimAction(
+                backendBaseUrl = backendBaseUrl,
+                action = "daily_task",
+                metadata = JSONObject().put("task_id", taskId)
+            ).onSuccess { feed ->
+                _uiState.update { it.copy(feed = feed, errorMessage = null) }
+            }.onFailure { error ->
+                _uiState.update { it.copy(errorMessage = error.message) }
+            }
         }
     }
 
     fun spin(backendBaseUrl: String) {
-        val optimistic = _uiState.value.feed.orFallback().claimCoins(amount = 25, consumeSpin = true)
-        _uiState.update { it.copy(feed = optimistic, errorMessage = null) }
         viewModelScope.launch {
-            repository.claimAction(backendBaseUrl, "lucky_spin", 25)
-                .onSuccess { feed -> _uiState.update { it.copy(feed = feed, errorMessage = null) } }
-                .onFailure { error -> _uiState.update { it.copy(errorMessage = error.message) } }
-        }
-    }
-
-    fun trackSubscriptionIntent(backendBaseUrl: String) {
-        viewModelScope.launch {
-            repository.claimAction(backendBaseUrl, "select_subscription", 0)
-                .onSuccess { feed -> _uiState.update { it.copy(feed = feed, errorMessage = null) } }
+            repository.claimAction(backendBaseUrl, "weekly_spin")
+                .onSuccess { feed ->
+                    val segments = feed.spin.segments
+                    val pointer = if (segments.isEmpty()) 0 else (feed.coins + segments.size) % segments.size
+                    _uiState.update { it.copy(feed = feed, spinPointerIndex = pointer, errorMessage = null) }
+                }
                 .onFailure { error -> _uiState.update { it.copy(errorMessage = error.message) } }
         }
     }
 }
-
-private fun RewardFeed?.orFallback(): RewardFeed = this ?: fallbackRewardFeed()
-
-private fun RewardFeed.claimCoins(
-    amount: Int,
-    advanceCheckIn: Boolean = false,
-    consumeSpin: Boolean = false
-): RewardFeed = copy(
-    coins = coins + amount,
-    checkInDay = if (advanceCheckIn) (checkInDay % 7) + 1 else checkInDay,
-    spinAvailable = if (consumeSpin) (spinAvailable - 1).coerceAtLeast(0) else spinAvailable
-)
