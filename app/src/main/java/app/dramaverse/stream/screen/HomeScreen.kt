@@ -414,8 +414,7 @@ private val fallbackHotTags = listOf(
     "CEO",
     "Family",
     "Romance",
-    "Thriller",
-    "Melodrama"
+    "Thriller"
 )
 
 @Composable

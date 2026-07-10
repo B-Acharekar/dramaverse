@@ -28,14 +28,14 @@ class SavedWatchListStore(context: Context) {
                         )
                     )
                 }
-            }.filter { it.title.isNotBlank() }
+            }.filterNot { it.isInvalidSavedFilm() }
         }.getOrDefault(emptyList())
     }
 
     fun savedIds(): Set<Int> = readItems().map { it.id }.filter { it != 0 }.toSet()
 
     fun save(item: DramaItem) {
-        if (item.id == 0 || item.title.isBlank()) return
+        if (item.isInvalidSavedFilm()) return
         writeItems((listOf(item) + readItems()).distinctBy { it.id })
     }
 
@@ -46,7 +46,7 @@ class SavedWatchListStore(context: Context) {
 
     private fun writeItems(items: List<DramaItem>) {
         val array = JSONArray()
-        items.take(MAX_ITEMS).forEach { item ->
+        items.filterNot { it.isInvalidSavedFilm() }.take(MAX_ITEMS).forEach { item ->
             array.put(
                 JSONObject()
                     .put("id", item.id)
@@ -67,4 +67,22 @@ class SavedWatchListStore(context: Context) {
         const val KEY_ITEMS = "items"
         const val MAX_ITEMS = 80
     }
+}
+
+private fun DramaItem.isInvalidSavedFilm(): Boolean {
+    val normalizedTitle = title.trim().lowercase()
+    val normalizedGenre = genre.trim().lowercase()
+    val blockedTitles = setOf(
+        "drama",
+        "romance",
+        "melodrama",
+        "thriller",
+        "mystery",
+        "historical drama",
+        "toxic love"
+    )
+    return title.isBlank() ||
+        normalizedTitle in blockedTitles ||
+        (id == 0 && imageUrl.isBlank()) ||
+        (id == 0 && normalizedTitle == normalizedGenre)
 }

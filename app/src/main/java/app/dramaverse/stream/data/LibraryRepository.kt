@@ -329,7 +329,8 @@ private fun DramaItem.looksLikePlaceholder(): Boolean {
         "toxic love",
         "historical drama",
         "drama",
-        "romance"
+        "romance",
+        "melodrama"
     )
     return title.isBlank() ||
         normalizedTitle in blockedTitles ||
