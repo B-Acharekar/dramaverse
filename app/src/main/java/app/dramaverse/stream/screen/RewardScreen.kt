@@ -40,6 +40,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -59,8 +60,10 @@ private val StrokeColor = Color(0x29FFFFFF)
 private val Gold = Color(0xFFF7C64B)
 private val Pink = Color(0xFFFF3F68)
 private val SoftPink = Color(0xFFFFB7C2)
+private val Track = Color(0xFF37323A)
 private val TextMuted = Color(0xFFC7B6BE)
 private val TextDim = Color(0xFF8F828B)
+private val CardShape = RoundedCornerShape(16.dp)
 
 @Composable
 fun RewardScreen(
@@ -122,8 +125,8 @@ private fun RewardContent(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 18.dp, end = 18.dp, top = 28.dp, bottom = 108.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+        contentPadding = PaddingValues(start = 18.dp, end = 18.dp, top = 32.dp, bottom = 112.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         item { RewardHeader(onRules) }
         item { BalanceCard(feed.coins) }
@@ -150,12 +153,20 @@ private fun RewardBackdrop() {
 @Composable
 private fun RewardHeader(onRules: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().height(50.dp),
-        verticalAlignment = Alignment.CenterVertically
+        Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top
     ) {
-        Column(Modifier.weight(1f)) {
+        Column(Modifier.weight(1f).padding(end = 14.dp)) {
             Text("Rewards", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
-            Text("Earn coins from watch streaks", color = TextMuted, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+            Spacer(Modifier.height(5.dp))
+            Text(
+                "Earn coins from check-ins, watch time, and the weekly spin.",
+                color = TextMuted,
+                fontSize = 13.sp,
+                lineHeight = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.sp
+            )
         }
         Box(
             modifier = Modifier
@@ -176,14 +187,15 @@ private fun BalanceCard(coins: Int) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(22.dp))
+            .clip(CardShape)
             .background(Brush.linearGradient(listOf(Color(0xFF241D28), Color(0xFF151319))))
-            .border(1.dp, Color(0x45F7C64B), RoundedCornerShape(22.dp))
+            .border(1.dp, Color(0x45F7C64B), CardShape)
             .padding(18.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(Modifier.weight(1f)) {
+        Column {
             Text("CURRENT BALANCE", color = SoftPink, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+            Spacer(Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(coins.toString(), color = Color.White, fontSize = 42.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
                 Spacer(Modifier.width(9.dp))
@@ -192,17 +204,6 @@ private fun BalanceCard(coins: Int) {
                 Text("Coins", color = TextMuted, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
             }
         }
-        Text(
-            "STARTS AT 0",
-            color = Gold,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Black,
-            modifier = Modifier
-                .clip(RoundedCornerShape(14.dp))
-                .background(Color(0x22F7C64B))
-                .padding(horizontal = 10.dp, vertical = 7.dp),
-            letterSpacing = 0.sp
-        )
     }
 }
 
@@ -212,15 +213,23 @@ private fun DailyCheckInSection(
     canCheckIn: Boolean,
     onCheckIn: () -> Unit
 ) {
-    SectionHeader("Daily Check-in", if (canCheckIn) "Ready" else "Done today")
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        rewards.forEach { item ->
-            CheckInTile(
-                item = item,
-                canClaim = canCheckIn && item.current,
-                onCheckIn = onCheckIn,
-                modifier = Modifier.weight(1f)
-            )
+    val activeDay = rewards.firstOrNull { it.current }?.day
+    SectionHeader("Daily Check-in", if (canCheckIn && activeDay != null) "Claim day $activeDay" else "Claimed today")
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        rewards.chunked(4).forEach { rowItems ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                rowItems.forEach { item ->
+                    CheckInTile(
+                        item = item,
+                        canClaim = canCheckIn && item.current,
+                        onCheckIn = onCheckIn,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                repeat(4 - rowItems.size) {
+                    Spacer(Modifier.weight(1f))
+                }
+            }
         }
     }
 }
@@ -232,32 +241,56 @@ private fun CheckInTile(
     onCheckIn: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val active = item.current
+    val state = when {
+        item.claimed -> CheckInState.Claimed
+        canClaim -> CheckInState.Today
+        else -> CheckInState.Upcoming
+    }
     Column(
         modifier = modifier
-            .height(if (item.day == 7) 102.dp else 86.dp)
-            .clip(RoundedCornerShape(14.dp))
+            .height(92.dp)
+            .clip(CardShape)
             .background(
-                when {
-                    canClaim -> Color(0x33362C11)
-                    active -> Color(0xFF251F16)
-                    else -> Panel
+                when (state) {
+                    CheckInState.Today -> Color(0xFF2A2114)
+                    CheckInState.Claimed -> Color(0xFF231821)
+                    CheckInState.Upcoming -> Panel
                 }
             )
-            .border(1.dp, if (active) Gold else StrokeColor, RoundedCornerShape(14.dp))
+            .border(
+                1.dp,
+                when (state) {
+                    CheckInState.Today -> Gold
+                    CheckInState.Claimed -> SoftPink
+                    CheckInState.Upcoming -> StrokeColor
+                },
+                CardShape
+            )
             .clickable(enabled = canClaim, onClick = onCheckIn),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Day ${item.day}", color = if (active) Gold else TextMuted, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+        Text("Day ${item.day}", color = if (state == CheckInState.Upcoming) TextMuted else Color.White, fontSize = 11.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
         Spacer(Modifier.height(6.dp))
-        if (item.claimed) {
+        if (state == CheckInState.Claimed) {
             Icon(Icons.Filled.Check, contentDescription = null, tint = SoftPink, modifier = Modifier.size(22.dp))
         } else {
             CoinIcon(22)
         }
         Spacer(Modifier.height(5.dp))
-        Text("+${item.reward}", color = if (active) Gold else TextDim, fontSize = 11.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+        Text("+${item.reward}", color = if (state == CheckInState.Upcoming) TextDim else Gold, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+        Spacer(Modifier.height(3.dp))
+        Text(
+            when (state) {
+                CheckInState.Today -> "Today"
+                CheckInState.Claimed -> "Claimed"
+                CheckInState.Upcoming -> if (item.day == 7) "Bonus" else "Locked"
+            },
+            color = if (state == CheckInState.Upcoming) TextDim else TextMuted,
+            fontSize = 9.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 0.sp
+        )
     }
 }
 
@@ -281,14 +314,14 @@ private fun DailyTaskRow(task: DailyRewardTask, onTaskClaim: (String) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
+            .clip(CardShape)
             .background(Panel)
-            .border(1.dp, if (task.completed && !task.claimed) Color(0x66F7C64B) else StrokeColor, RoundedCornerShape(18.dp))
+            .border(1.dp, if (task.completed && !task.claimed) Color(0x66F7C64B) else StrokeColor, CardShape)
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(Modifier.size(44.dp).clip(CircleShape).background(Color(0x28FFB7C2)), contentAlignment = Alignment.Center) {
-            Icon(Icons.Filled.PlayCircle, contentDescription = null, tint = SoftPink, modifier = Modifier.size(24.dp))
+        Box(Modifier.size(44.dp).clip(CircleShape).background(Color(0x22F7C64B)), contentAlignment = Alignment.Center) {
+            Icon(Icons.Filled.PlayCircle, contentDescription = null, tint = Gold, modifier = Modifier.size(24.dp))
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
@@ -297,8 +330,13 @@ private fun DailyTaskRow(task: DailyRewardTask, onTaskClaim: (String) -> Unit) {
                 Text("+${task.reward}", color = Gold, fontSize = 14.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
             }
             Spacer(Modifier.height(8.dp))
-            Box(Modifier.fillMaxWidth().height(7.dp).clip(RoundedCornerShape(7.dp)).background(Color(0xFF2A272D))) {
-                Box(Modifier.fillMaxWidth(progress).height(7.dp).background(SoftPink, RoundedCornerShape(7.dp)))
+            Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(8.dp)).background(Track)) {
+                Box(
+                    Modifier
+                        .fillMaxWidth(progress)
+                        .height(8.dp)
+                        .background(Brush.horizontalGradient(listOf(Gold, Pink)), RoundedCornerShape(8.dp))
+                )
             }
             Spacer(Modifier.height(5.dp))
             Text("${task.progressMinutes}/${task.targetMinutes} min", color = TextDim, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
@@ -336,9 +374,9 @@ private fun WeeklySpinSection(spin: SpinReward, pointerIndex: Int, onSpin: () ->
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
+            .clip(CardShape)
             .background(Panel)
-            .border(1.dp, StrokeColor, RoundedCornerShape(24.dp))
+            .border(1.dp, StrokeColor, CardShape)
             .padding(18.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -348,7 +386,7 @@ private fun WeeklySpinSection(spin: SpinReward, pointerIndex: Int, onSpin: () ->
             Modifier
                 .fillMaxWidth()
                 .height(54.dp)
-                .clip(RoundedCornerShape(18.dp))
+                .clip(RoundedCornerShape(16.dp))
                 .background(if (spin.available) Brush.horizontalGradient(listOf(Color(0xFFFF4D73), Color(0xFFD70842))) else Brush.horizontalGradient(listOf(Color(0xFF27242B), Color(0xFF27242B))))
                 .clickable(enabled = spin.available, onClick = onSpin),
             contentAlignment = Alignment.Center
@@ -360,11 +398,11 @@ private fun WeeklySpinSection(spin: SpinReward, pointerIndex: Int, onSpin: () ->
 
 @Composable
 private fun SpinWheel(segments: List<Int>, pointerIndex: Int) {
-    val colors = listOf(Color(0xFFF7C64B), Color(0xFFFFB7C2), Color(0xFF5D3BC4), Color(0xFFFF3F68))
+    val colors = listOf(Color(0xFFF7C64B), Color(0xFFFF5F7F), Color(0xFF5036A8), Color(0xFF211C25))
     Box(Modifier.size(230.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
             val sweep = 360f / segments.size.coerceAtLeast(1)
-            val inset = 8.dp.toPx()
+            val inset = 16.dp.toPx()
             segments.forEachIndexed { index, _ ->
                 drawArc(
                     color = colors[index % colors.size],
@@ -377,18 +415,20 @@ private fun SpinWheel(segments: List<Int>, pointerIndex: Int) {
             }
             drawCircle(color = Color(0xFF111015), radius = 44.dp.toPx(), center = center)
             drawCircle(color = Color(0x55FFFFFF), radius = size.minDimension / 2f - inset, style = Stroke(width = 5.dp.toPx()))
+            drawPath(
+                path = Path().apply {
+                    moveTo(center.x, 4.dp.toPx())
+                    lineTo(center.x - 14.dp.toPx(), 38.dp.toPx())
+                    lineTo(center.x + 14.dp.toPx(), 38.dp.toPx())
+                    close()
+                },
+                color = Gold
+            )
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text("WEEKLY", color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
             Text("+${segments.getOrNull(pointerIndex.coerceIn(0, (segments.size - 1).coerceAtLeast(0))) ?: 0}", color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
         }
-        Box(
-            Modifier
-                .align(Alignment.TopCenter)
-                .size(28.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .background(Color.White)
-        )
     }
 }
 
@@ -424,6 +464,12 @@ private fun SectionHeader(title: String, action: String) {
         Text(title, color = Color.White, fontSize = 23.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp, modifier = Modifier.weight(1f))
         Text(action, color = SoftPink, fontSize = 12.sp, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
     }
+}
+
+private enum class CheckInState {
+    Today,
+    Claimed,
+    Upcoming
 }
 
 @Composable
