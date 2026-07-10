@@ -31,7 +31,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Explore
@@ -237,7 +236,6 @@ private fun HeroCarousel(
                 isMoodLoading = isMoodLoading,
                 onMoodSelected = onMoodSelected,
                 onSearchClick = onSearchClick,
-                onPlanner = onPlanner,
                 onNotifications = onNotifications,
                 modifier = Modifier.align(Alignment.TopCenter)
             )
@@ -318,10 +316,10 @@ private fun HeroSection(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 WatchButton(width = 152, onClick = { onOpenShorts(filmId) })
                 Spacer(modifier = Modifier.width(12.dp))
-                PlusButton(
+                SaveButton(
                     saved = saved,
                     onClick = {
-                        // Mirrors Shorts bookmark behavior: plus -> filled bookmark after save.
+                        // Mirrors Shorts bookmark behavior: Save toggles the watchlist state immediately.
                         filmId?.let { onToggleWatchList(it, !saved) }
                     }
                 )
@@ -357,7 +355,6 @@ private fun HomeTopBar(
     isMoodLoading: Boolean = false,
     onMoodSelected: (String) -> Unit = {},
     onSearchClick: () -> Unit = {},
-    onPlanner: () -> Unit = {},
     onNotifications: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -388,8 +385,6 @@ private fun HomeTopBar(
             BrandMark()
             Spacer(modifier = Modifier.weight(1f))
             HeaderIcon(Icons.Filled.Search, onSearchClick)
-            Spacer(modifier = Modifier.width(12.dp))
-            HeaderIcon(Icons.Filled.CalendarMonth, onPlanner)
             Spacer(modifier = Modifier.width(12.dp))
             HeaderIcon(Icons.Filled.Notifications, onNotifications)
         }
@@ -436,9 +431,10 @@ private fun BrandMark() {
             contentDescription = null,
             modifier = Modifier
                 .size(42.dp)
+                .padding(3.dp)
                 .clip(RoundedCornerShape(11.dp))
                 .background(Color.White),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Fit
         )
         Spacer(modifier = Modifier.width(10.dp))
         Text("DramaVerse", color = SoftPink, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
@@ -642,8 +638,14 @@ private fun ActionCards(onPlanner: () -> Unit, onRewards: () -> Unit) {
             .padding(horizontal = 18.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        SmallActionCard(stringResource(R.string.vip_short), stringResource(R.string.join_vip_club), stringResource(R.string.unlock_all_episodes), Modifier.weight(1f), onRewards)
-        SmallActionCard("PLAN", "My Drama Planner", "Schedule your weekly watchlist", Modifier.weight(1f), onPlanner)
+        SmallActionCard(
+            stringResource(R.string.planner_action_short),
+            stringResource(R.string.plan_saved_dramas),
+            stringResource(R.string.schedule_watchlist_reminders),
+            Modifier.weight(1.15f),
+            onPlanner
+        )
+        SmallActionCard(stringResource(R.string.vip_short), stringResource(R.string.join_vip_club), stringResource(R.string.unlock_all_episodes), Modifier.weight(0.85f), onRewards)
     }
 }
 
@@ -763,25 +765,32 @@ private fun PremiumBadge(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun PlusButton(size: Int = 44, saved: Boolean, onClick: () -> Unit) {
+private fun SaveButton(saved: Boolean, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
-    Box(
+    Row(
         modifier = Modifier
-            .size(size.dp)
-            .clip(RoundedCornerShape(9.dp))
+            .height(50.dp)
+            .width(92.dp)
+            .clip(RoundedCornerShape(13.dp))
             .background(if (saved) Color(0x33F5C65B) else Color(0xCC17171B))
-            .border(1.dp, if (saved) Gold else Color(0xFF343139), RoundedCornerShape(9.dp))
+            .border(1.dp, if (saved) Gold else Color(0xFF343139), RoundedCornerShape(13.dp))
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick
-            ),
-        contentAlignment = Alignment.Center
+            )
+            .padding(horizontal = 10.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         if (saved) {
-            Icon(Icons.Filled.Bookmark, contentDescription = null, tint = Gold, modifier = Modifier.size(22.dp))
+            Icon(Icons.Filled.Bookmark, contentDescription = null, tint = Gold, modifier = Modifier.size(18.dp))
+            Spacer(modifier = Modifier.width(5.dp))
+            Text(stringResource(R.string.saved), color = Gold, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
         } else {
-            Text("+", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Light, letterSpacing = 0.sp)
+            Text("+", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Light, letterSpacing = 0.sp)
+            Spacer(modifier = Modifier.width(5.dp))
+            Text(stringResource(R.string.save), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
         }
     }
 }
