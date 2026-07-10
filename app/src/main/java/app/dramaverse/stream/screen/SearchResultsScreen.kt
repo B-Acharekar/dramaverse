@@ -69,6 +69,7 @@ fun SearchResultsScreen(
     onOpenShorts: (Int?) -> Unit,
     onSearch: (String) -> Unit,
     onRewards: () -> Unit,
+    onPlanner: () -> Unit,
     viewModel: SearchViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -152,6 +153,7 @@ fun SearchResultsScreen(
             onShorts = onShorts,
             onLibrary = onLibrary,
             onRewards = onRewards,
+            onPlanner = onPlanner,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }

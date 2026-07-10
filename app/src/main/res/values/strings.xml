@@ -88,6 +88,7 @@
     <string name="nav_shorts">Shorts</string>
     <string name="nav_library">Library</string>
     <string name="nav_rewards">Rewards</string>
+    <string name="nav_planner">Planner</string>
     <string name="nav_profile">Profile</string>
 
     <!-- Library / Search -->

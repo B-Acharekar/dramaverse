@@ -31,12 +31,12 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.VideoLibrary
@@ -128,6 +128,7 @@ fun HomeScreen(
             onShorts = { onOpenShorts(null) },
             onLibrary = onLibrary,
             onRewards = onRewards,
+            onPlanner = onPlanner,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
@@ -316,7 +317,7 @@ private fun HeroSection(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 WatchButton(width = 152, onClick = { onOpenShorts(filmId) })
                 Spacer(modifier = Modifier.width(12.dp))
-                SaveButton(
+                PlusButton(
                     saved = saved,
                     onClick = {
                         // Mirrors Shorts bookmark behavior: Save toggles the watchlist state immediately.
@@ -674,6 +675,7 @@ fun BottomNavigationBar(
     onShorts: () -> Unit,
     onLibrary: () -> Unit,
     onRewards: () -> Unit = {},
+    onPlanner: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -690,7 +692,7 @@ fun BottomNavigationBar(
         NavItem(Icons.Filled.Explore, stringResource(R.string.nav_shorts), selected == "Shorts", onShorts)
         NavItem(Icons.Filled.VideoLibrary, stringResource(R.string.nav_library), selected == "Library", onLibrary)
         NavItem(Icons.Filled.CardGiftcard, stringResource(R.string.nav_rewards), selected == "Rewards", onRewards)
-        NavItem(Icons.Filled.Person, stringResource(R.string.nav_profile), selected == "Profile", {})
+        NavItem(Icons.Filled.CalendarMonth, stringResource(R.string.nav_planner), selected == "Planner", onPlanner)
     }
 }
 
@@ -765,12 +767,11 @@ private fun PremiumBadge(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun SaveButton(saved: Boolean, onClick: () -> Unit) {
+private fun PlusButton(saved: Boolean, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
-    Row(
+    Box(
         modifier = Modifier
-            .height(50.dp)
-            .width(92.dp)
+            .size(50.dp)
             .clip(RoundedCornerShape(13.dp))
             .background(if (saved) Color(0x33F5C65B) else Color(0xCC17171B))
             .border(1.dp, if (saved) Gold else Color(0xFF343139), RoundedCornerShape(13.dp))
@@ -778,19 +779,13 @@ private fun SaveButton(saved: Boolean, onClick: () -> Unit) {
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick
-            )
-            .padding(horizontal = 10.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
+            ),
+        contentAlignment = Alignment.Center
     ) {
         if (saved) {
-            Icon(Icons.Filled.Bookmark, contentDescription = null, tint = Gold, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(5.dp))
-            Text(stringResource(R.string.saved), color = Gold, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+            Icon(Icons.Filled.Bookmark, contentDescription = null, tint = Gold, modifier = Modifier.size(22.dp))
         } else {
-            Text("+", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Light, letterSpacing = 0.sp)
-            Spacer(modifier = Modifier.width(5.dp))
-            Text(stringResource(R.string.save), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+            Text("+", color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.Light, letterSpacing = 0.sp)
         }
     }
 }

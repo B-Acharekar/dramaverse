@@ -63,6 +63,7 @@ fun NotificationScreen(
     onShorts: () -> Unit,
     onLibrary: () -> Unit,
     onRewards: () -> Unit,
+    onPlanner: () -> Unit,
     viewModel: NotificationViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -115,6 +116,7 @@ fun NotificationScreen(
             onShorts = onShorts,
             onLibrary = onLibrary,
             onRewards = onRewards,
+            onPlanner = onPlanner,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
