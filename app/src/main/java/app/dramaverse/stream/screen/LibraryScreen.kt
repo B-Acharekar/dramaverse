@@ -31,7 +31,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
@@ -152,7 +151,8 @@ private fun LibraryContent(
                     subtitle = stringResource(R.string.library_watch_list_subtitle),
                     items = feed.watchList,
                     emptyText = stringResource(R.string.library_watch_list_empty),
-                    plannerCard = { WatchListPlannerCard(feed.watchList.size, onPlanner) },
+                    actionLabel = stringResource(R.string.schedule),
+                    onAction = onPlanner,
                     onOpenShorts = onOpenShorts
                 )
             }
@@ -351,15 +351,15 @@ private fun LibraryFilmRail(
     subtitle: String,
     items: List<DramaItem>,
     emptyText: String,
-    plannerCard: (@Composable () -> Unit)? = null,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null,
     onOpenShorts: (Int?) -> Unit
 ) {
     Box(Modifier.padding(horizontal = 18.dp)) {
         Column {
-            LibraryHeader(title, subtitle)
+            LibraryHeader(title, subtitle, actionLabel, onAction)
         }
     }
-    plannerCard?.invoke()
     if (items.isEmpty()) {
         Box(Modifier.padding(horizontal = 18.dp)) { EmptyLibraryBlock(emptyText) }
         return
@@ -371,44 +371,6 @@ private fun LibraryFilmRail(
         items(items) { film ->
             CompactLibraryCard(film = film, onOpenShorts = onOpenShorts)
         }
-    }
-}
-
-@Composable
-private fun WatchListPlannerCard(savedCount: Int, onPlanner: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .padding(horizontal = 18.dp)
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF121116))
-            .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(12.dp))
-            .clickable(onClick = onPlanner)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(34.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color(0x18F5C65B)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(Icons.Filled.CalendarMonth, contentDescription = null, tint = Gold, modifier = Modifier.size(18.dp))
-        }
-        Spacer(modifier = Modifier.width(10.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(stringResource(R.string.schedule_watchlist), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
-            Text(
-                stringResource(R.string.watchlist_planner_hint, savedCount),
-                color = Color(0xFFCDB5BC),
-                fontSize = 10.sp,
-                lineHeight = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.sp
-            )
-        }
-        Text(stringResource(R.string.schedule), color = Gold, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
     }
 }
 
@@ -497,13 +459,32 @@ private fun TopStarsSection(stars: List<TopStar>, onOpenShorts: (Int?) -> Unit) 
 }
 
 @Composable
-private fun LibraryHeader(title: String, subtitle: String?) {
+private fun LibraryHeader(
+    title: String,
+    subtitle: String?,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null
+) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.weight(1f)) {
             Text(title, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
             if (subtitle != null) {
                 Text(subtitle, color = Color(0xFFBBA3AB), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
             }
+        }
+        if (actionLabel != null && onAction != null) {
+            Text(
+                actionLabel,
+                color = Gold,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 0.sp,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color(0x18F5C65B))
+                    .clickable(onClick = onAction)
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
+            )
         }
     }
     Spacer(modifier = Modifier.height(12.dp))

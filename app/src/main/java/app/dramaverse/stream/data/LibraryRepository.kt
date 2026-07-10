@@ -38,7 +38,25 @@ class LibraryRepository(
     private val savedWatchListStore = SavedWatchListStore(context.applicationContext)
 
     suspend fun loadCachedLibrary(): LibraryFeed? = withContext(Dispatchers.IO) {
-        cacheStore.readFeed()
+        withLocalWatchList(cacheStore.readFeed())
+    }
+
+    private fun withLocalWatchList(feed: LibraryFeed?): LibraryFeed? {
+        val localWatchListItems = savedWatchListStore.readItems()
+            .filterNot { it.looksLikePlaceholder() }
+        if (feed == null) {
+            return localWatchListItems.takeIf { it.isNotEmpty() }?.let {
+                LibraryFeed(
+                    watchList = it.distinctFilms(),
+                    watchHistory = emptyList(),
+                    topStars = emptyList(),
+                    recommended = emptyList(),
+                    similarFilms = emptyList()
+                )
+            }
+        }
+        // Local saves are merged into cached data so Library reflects new saves before backend refresh finishes.
+        return feed.copy(watchList = (localWatchListItems + feed.watchList).distinctFilms())
     }
 
     suspend fun loadLibrary(
