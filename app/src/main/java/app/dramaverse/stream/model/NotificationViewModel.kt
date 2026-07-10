@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 
 data class NotificationUiState(
     val isLoading: Boolean = true,
+    val isClearing: Boolean = false,
     val unreadCount: Int = 0,
     val items: List<AppNotification> = emptyList(),
     val errorMessage: String? = null
@@ -38,6 +39,28 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
                 }
                 .onFailure { error ->
                     _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                }
+        }
+    }
+
+    fun clearAll(backendBaseUrl: String) {
+        viewModelScope.launch {
+            val previousItems = _uiState.value.items
+            val previousUnread = _uiState.value.unreadCount
+            _uiState.update { it.copy(isClearing = true, unreadCount = 0, items = emptyList(), errorMessage = null) }
+            repository.clearNotifications(backendBaseUrl)
+                .onSuccess {
+                    _uiState.update { it.copy(isClearing = false, unreadCount = 0, items = emptyList()) }
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            isClearing = false,
+                            unreadCount = previousUnread,
+                            items = previousItems,
+                            errorMessage = error.message
+                        )
+                    }
                 }
         }
     }

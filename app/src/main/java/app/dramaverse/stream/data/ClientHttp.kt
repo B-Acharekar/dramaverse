@@ -49,6 +49,23 @@ internal fun postClientJson(
     return connection.readJson(path)
 }
 
+internal fun deleteClientJson(
+    backendBaseUrl: String,
+    path: String,
+    language: String,
+    token: String
+): JSONObject {
+    val url = URL("${backendBaseUrl.trimEndSlash()}/$path?language=$language")
+    val connection = (url.openConnection() as HttpURLConnection).apply {
+        requestMethod = "DELETE"
+        connectTimeout = 7000
+        readTimeout = 7000
+        setRequestProperty("Accept", "application/json")
+        setRequestProperty("Authorization", "Bearer $token")
+    }
+    return connection.readJson(path)
+}
+
 private fun HttpURLConnection.readJson(path: String): JSONObject {
     val responseText = if (responseCode in 200..299) {
         inputStream.bufferedReader().use { it.readText() }

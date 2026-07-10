@@ -58,6 +58,15 @@ class NotificationRepository(
             Unit
         }
     }
+
+    suspend fun clearNotifications(backendBaseUrl: String): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val language = LocaleHelper.persistedLanguageCode(appContext)
+            val token = authRepository.clientToken(backendBaseUrl, language)
+            deleteClientJson(backendBaseUrl, "client/notifications", language, token)
+            Unit
+        }
+    }
 }
 
 private fun parseNotifications(json: JSONObject): NotificationFeed {
