@@ -79,6 +79,8 @@
     <string name="planner_action_short">SAVE</string>
     <string name="plan_saved_dramas">Plan saved dramas</string>
     <string name="schedule_watchlist_reminders">Schedule reminders from your watchlist</string>
+    <string name="watchlist_planner_hint">%1$d saved dramas ready to schedule</string>
+    <string name="schedule">Schedule</string>
     <string name="daily_reward_short">50</string>
     <string name="daily_rewards">Daily Rewards</string>
     <string name="claim_daily_coins">Claim your 50 coins</string>

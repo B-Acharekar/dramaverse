@@ -78,7 +78,6 @@ fun RewardScreen(
     onHome: () -> Unit,
     onShorts: () -> Unit,
     onLibrary: () -> Unit,
-    onPlanner: () -> Unit,
     viewModel: RewardViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -112,7 +111,6 @@ fun RewardScreen(
             onShorts = onShorts,
             onLibrary = onLibrary,
             onRewards = {},
-            onPlanner = onPlanner,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }

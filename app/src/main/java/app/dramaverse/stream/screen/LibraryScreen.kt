@@ -31,6 +31,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
@@ -101,7 +102,8 @@ fun LibraryScreen(
                 feed = feed ?: LibraryFeed(emptyList(), emptyList(), emptyList(), emptyList(), emptyList()),
                 errorMessage = uiState.errorMessage,
                 onSearch = onSearch,
-                onOpenShorts = onOpenShorts
+                onOpenShorts = onOpenShorts,
+                onPlanner = onPlanner
             )
         }
         BottomNavigationBar(
@@ -110,7 +112,6 @@ fun LibraryScreen(
             onShorts = onShorts,
             onLibrary = {},
             onRewards = onRewards,
-            onPlanner = onPlanner,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
@@ -121,7 +122,8 @@ private fun LibraryContent(
     feed: LibraryFeed,
     errorMessage: String?,
     onSearch: (String) -> Unit,
-    onOpenShorts: (Int?) -> Unit
+    onOpenShorts: (Int?) -> Unit,
+    onPlanner: () -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -150,6 +152,7 @@ private fun LibraryContent(
                     subtitle = stringResource(R.string.library_watch_list_subtitle),
                     items = feed.watchList,
                     emptyText = stringResource(R.string.library_watch_list_empty),
+                    plannerCard = { WatchListPlannerCard(feed.watchList.size, onPlanner) },
                     onOpenShorts = onOpenShorts
                 )
             }
@@ -348,6 +351,7 @@ private fun LibraryFilmRail(
     subtitle: String,
     items: List<DramaItem>,
     emptyText: String,
+    plannerCard: (@Composable () -> Unit)? = null,
     onOpenShorts: (Int?) -> Unit
 ) {
     Box(Modifier.padding(horizontal = 18.dp)) {
@@ -355,6 +359,7 @@ private fun LibraryFilmRail(
             LibraryHeader(title, subtitle)
         }
     }
+    plannerCard?.invoke()
     if (items.isEmpty()) {
         Box(Modifier.padding(horizontal = 18.dp)) { EmptyLibraryBlock(emptyText) }
         return
@@ -366,6 +371,44 @@ private fun LibraryFilmRail(
         items(items) { film ->
             CompactLibraryCard(film = film, onOpenShorts = onOpenShorts)
         }
+    }
+}
+
+@Composable
+private fun WatchListPlannerCard(savedCount: Int, onPlanner: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .padding(horizontal = 18.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Brush.horizontalGradient(listOf(Color(0xFF251820), Color(0xFF171318))))
+            .border(1.dp, Color(0x44F5C65B), RoundedCornerShape(16.dp))
+            .clickable(onClick = onPlanner)
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(13.dp))
+                .background(Color(0x26F5C65B)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Filled.CalendarMonth, contentDescription = null, tint = Gold, modifier = Modifier.size(23.dp))
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.plan_saved_dramas), color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+            Text(
+                stringResource(R.string.watchlist_planner_hint, savedCount),
+                color = Color(0xFFCDB5BC),
+                fontSize = 12.sp,
+                lineHeight = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.sp
+            )
+        }
+        Text(stringResource(R.string.schedule), color = Gold, fontSize = 11.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
     }
 }
 

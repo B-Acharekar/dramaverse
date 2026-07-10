@@ -68,7 +68,6 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
             onLibrary = viewModel::openLibrary,
             onSearch = viewModel::openSearch,
             onRewards = viewModel::openRewards,
-            onPlanner = viewModel::openPlanner,
             onNotifications = viewModel::openNotifications
         )
 
@@ -78,8 +77,7 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
             onBack = viewModel::openHome,
             onHome = viewModel::openHome,
             onLibrary = viewModel::openLibrary,
-            onRewards = viewModel::openRewards,
-            onPlanner = viewModel::openPlanner
+            onRewards = viewModel::openRewards
         )
 
         AppStep.Library -> LibraryScreen(
@@ -101,16 +99,14 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
             onLibrary = viewModel::openLibrary,
             onOpenShorts = viewModel::openShorts,
             onSearch = viewModel::openSearch,
-            onRewards = viewModel::openRewards,
-            onPlanner = viewModel::openPlanner
+            onRewards = viewModel::openRewards
         )
 
         AppStep.Rewards -> RewardScreen(
             backendBaseUrl = uiState.backendBaseUrl,
             onHome = viewModel::openHome,
             onShorts = { viewModel.openShorts(null) },
-            onLibrary = viewModel::openLibrary,
-            onPlanner = viewModel::openPlanner
+            onLibrary = viewModel::openLibrary
         )
 
         AppStep.Planner -> PlannerScreen(
@@ -128,8 +124,7 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
             onHome = viewModel::openHome,
             onShorts = { viewModel.openShorts(null) },
             onLibrary = viewModel::openLibrary,
-            onRewards = viewModel::openRewards,
-            onPlanner = viewModel::openPlanner
+            onRewards = viewModel::openRewards
         )
     }
 

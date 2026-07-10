@@ -31,12 +31,12 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.VideoLibrary
@@ -87,7 +87,6 @@ fun HomeScreen(
     onLibrary: () -> Unit,
     onSearch: (String) -> Unit,
     onRewards: () -> Unit,
-    onPlanner: () -> Unit,
     onNotifications: () -> Unit,
     viewModel: HomeViewModel = viewModel()
 ) {
@@ -115,7 +114,6 @@ fun HomeScreen(
                 onSearchClick = { onSearch("hot") },
                 onNotifications = onNotifications,
                 onOpenShorts = onOpenShorts,
-                onPlanner = onPlanner,
                 onRewards = onRewards,
                 onToggleWatchList = { filmId, enabled ->
                     viewModel.setReminder(backendBaseUrl, filmId, enabled)
@@ -128,7 +126,6 @@ fun HomeScreen(
             onShorts = { onOpenShorts(null) },
             onLibrary = onLibrary,
             onRewards = onRewards,
-            onPlanner = onPlanner,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
@@ -144,7 +141,6 @@ private fun HomeContent(
     onSearchClick: () -> Unit,
     onNotifications: () -> Unit,
     onOpenShorts: (Int?) -> Unit,
-    onPlanner: () -> Unit,
     onRewards: () -> Unit,
     onToggleWatchList: (Int, Boolean) -> Unit
 ) {
@@ -171,7 +167,6 @@ private fun HomeContent(
                 onSearchClick = onSearchClick,
                 onNotifications = onNotifications,
                 onOpenShorts = onOpenShorts,
-                onPlanner = onPlanner,
                 onToggleWatchList = onToggleWatchList
             )
         }
@@ -180,7 +175,7 @@ private fun HomeContent(
         }
         item { PosterRail(title = stringResource(R.string.trending_now), items = trendingItems, showTrend = true, onOpenShorts = onOpenShorts) }
         item { TopRatedCard(feed.topRated, onOpenShorts) }
-        item { ActionCards(onPlanner = onPlanner, onRewards = onRewards) }
+        item { ActionCards(onRewards = onRewards) }
         item { Spacer(modifier = Modifier.height(18.dp)) }
     }
 }
@@ -196,7 +191,6 @@ private fun HeroCarousel(
     onSearchClick: () -> Unit,
     onNotifications: () -> Unit,
     onOpenShorts: (Int?) -> Unit,
-    onPlanner: () -> Unit,
     onToggleWatchList: (Int, Boolean) -> Unit
 ) {
     val pageCount = 10_000
@@ -632,21 +626,13 @@ private fun TopRatedCard(item: DramaItem, onOpenShorts: (Int?) -> Unit) {
 }
 
 @Composable
-private fun ActionCards(onPlanner: () -> Unit, onRewards: () -> Unit) {
-    Row(
+private fun ActionCards(onRewards: () -> Unit) {
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 18.dp, vertical = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(horizontal = 18.dp, vertical = 16.dp)
     ) {
-        SmallActionCard(
-            stringResource(R.string.planner_action_short),
-            stringResource(R.string.plan_saved_dramas),
-            stringResource(R.string.schedule_watchlist_reminders),
-            Modifier.weight(1.15f),
-            onPlanner
-        )
-        SmallActionCard(stringResource(R.string.vip_short), stringResource(R.string.join_vip_club), stringResource(R.string.unlock_all_episodes), Modifier.weight(0.85f), onRewards)
+        SmallActionCard(stringResource(R.string.vip_short), stringResource(R.string.join_vip_club), stringResource(R.string.unlock_all_episodes), Modifier.fillMaxWidth(), onRewards)
     }
 }
 
@@ -675,7 +661,6 @@ fun BottomNavigationBar(
     onShorts: () -> Unit,
     onLibrary: () -> Unit,
     onRewards: () -> Unit = {},
-    onPlanner: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -692,7 +677,7 @@ fun BottomNavigationBar(
         NavItem(Icons.Filled.Explore, stringResource(R.string.nav_shorts), selected == "Shorts", onShorts)
         NavItem(Icons.Filled.VideoLibrary, stringResource(R.string.nav_library), selected == "Library", onLibrary)
         NavItem(Icons.Filled.CardGiftcard, stringResource(R.string.nav_rewards), selected == "Rewards", onRewards)
-        NavItem(Icons.Filled.CalendarMonth, stringResource(R.string.nav_planner), selected == "Planner", onPlanner)
+        NavItem(Icons.Filled.Person, stringResource(R.string.nav_profile), selected == "Profile", {})
     }
 }
 
