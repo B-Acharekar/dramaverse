@@ -24,6 +24,7 @@ class PlannerRepository(
     private val authRepository: AuthRepository
 ) {
     private val appContext = context.applicationContext
+    private val savedWatchListStore = SavedWatchListStore(context.applicationContext)
 
     suspend fun loadPlanner(backendBaseUrl: String): Result<List<PlannerItem>> = withContext(Dispatchers.IO) {
         runCatching {
@@ -63,14 +64,16 @@ class PlannerRepository(
 
     suspend fun loadSuggestions(backendBaseUrl: String): Result<List<DramaItem>> = withContext(Dispatchers.IO) {
         runCatching {
+            val localItems = savedWatchListStore.readItems()
             val language = LocaleHelper.persistedLanguageCode(appContext)
             val token = authRepository.clientToken(backendBaseUrl, language)
-            val json = getClientJson(backendBaseUrl, "client/films", language, token)
-            collectDramaItems(json)
+            val remindersJson = runCatching {
+                getClientJson(backendBaseUrl, "client/reminders", language, token)
+            }.getOrNull()
+            (localItems + collectDramaItems(remindersJson))
                 .distinctBy { it.id.takeIf { id -> id != 0 } ?: it.title }
                 .filter { it.title.isNotBlank() }
-                .take(8)
-                .ifEmpty { fallbackPlannerFilms() }
+                .take(12)
         }
     }
 }
@@ -126,11 +129,6 @@ private fun JSONObject.toPlannerDramaItemOrNull(): DramaItem? {
         genre = firstString("genre", "category", "tag").ifBlank { "Drama" }
     )
 }
-
-private fun fallbackPlannerFilms(): List<DramaItem> = listOf(
-    DramaItem(1, "The Secret Vow", "A hidden promise changes two lives forever.", "", "4.8", 42, "Drama"),
-    DramaItem(2, "Midnight Pulse", "A midnight cliffhanger worth planning.", "", "4.7", 64, "Thriller")
-)
 
 private fun JSONObject.firstString(vararg keys: String): String {
     for (key in keys) {

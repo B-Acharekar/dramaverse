@@ -40,11 +40,14 @@ class PlannerViewModel(application: Application) : AndroidViewModel(application)
             val items = repository.loadPlanner(backendBaseUrl).getOrElse { emptyList() }
             val suggestions = repository.loadSuggestions(backendBaseUrl).getOrElse { emptyList() }
             _uiState.update {
+                val selected = it.selectedFilm?.takeIf { current ->
+                    suggestions.any { film -> film.id == current.id && film.title == current.title }
+                } ?: suggestions.firstOrNull()
                 it.copy(
                     isLoading = false,
                     items = items,
                     suggestions = suggestions,
-                    selectedFilm = it.selectedFilm ?: suggestions.firstOrNull()
+                    selectedFilm = selected
                 )
             }
         }
