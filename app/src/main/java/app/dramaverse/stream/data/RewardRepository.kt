@@ -10,7 +10,8 @@ data class CheckInReward(
     val day: Int,
     val reward: Int,
     val current: Boolean,
-    val claimed: Boolean
+    val claimed: Boolean,
+    val status: String
 )
 
 data class DailyRewardTask(
@@ -26,7 +27,9 @@ data class DailyRewardTask(
 data class SpinReward(
     val available: Boolean,
     val weekKey: String,
-    val segments: List<Int>
+    val segments: List<Int>,
+    val selectedIndex: Int?,
+    val lastReward: Int?
 )
 
 data class RewardFeed(
@@ -45,7 +48,7 @@ fun fallbackRewardFeed(): RewardFeed = RewardFeed(
     canCheckIn = true,
     checkInRewards = defaultCheckIns(),
     dailyTasks = defaultTasks(),
-    spin = SpinReward(available = true, weekKey = "", segments = listOf(10, 15, 20, 30, 40, 60, 100, 150)),
+    spin = SpinReward(available = true, weekKey = "", segments = listOf(0, 10, 15, 20, 30, 40, 60, 100), selectedIndex = null, lastReward = null),
     rules = listOf(
         "Balance starts at 0 coins.",
         "Daily check-in starts at +20 and resets after day 7.",
@@ -112,7 +115,8 @@ private fun JSONArray?.toCheckIns(): List<CheckInReward> {
                     day = item.optInt("day", index + 1),
                     reward = item.optInt("reward", 20 + index * 5),
                     current = item.optBoolean("current", index == 0),
-                    claimed = item.optBoolean("claimed", false)
+                    claimed = item.optBoolean("claimed", false),
+                    status = item.optString("status", if (item.optBoolean("current", false)) "today" else if (item.optBoolean("claimed", false)) "claimed" else "locked")
                 )
             )
         }
@@ -144,7 +148,9 @@ private fun JSONObject?.toSpinReward(): SpinReward {
     return SpinReward(
         available = optBoolean("available", true),
         weekKey = optString("week_key"),
-        segments = optJSONArray("segments").toIntList().ifEmpty { fallbackRewardFeed().spin.segments }
+        segments = optJSONArray("segments").toIntList().ifEmpty { fallbackRewardFeed().spin.segments },
+        selectedIndex = if (has("selected_index") && !isNull("selected_index")) optInt("selected_index") else null,
+        lastReward = if (has("last_reward") && !isNull("last_reward")) optInt("last_reward") else null
     )
 }
 
@@ -159,12 +165,12 @@ private fun JSONArray?.toIntList(): List<Int> {
     if (this == null) return emptyList()
     return buildList {
         for (index in 0 until length()) add(optInt(index))
-    }.filter { it > 0 }
+    }.filter { it >= 0 }
 }
 
 private fun defaultCheckIns(): List<CheckInReward> =
     listOf(20, 25, 30, 35, 40, 45, 60).mapIndexed { index, reward ->
-        CheckInReward(day = index + 1, reward = reward, current = index == 0, claimed = false)
+        CheckInReward(day = index + 1, reward = reward, current = index == 0, claimed = false, status = if (index == 0) "today" else "locked")
     }
 
 private fun defaultTasks(): List<DailyRewardTask> = listOf(

@@ -19,7 +19,8 @@ data class RewardUiState(
     val feed: RewardFeed? = null,
     val errorMessage: String? = null,
     val showRules: Boolean = false,
-    val spinPointerIndex: Int = 0
+    val spinPointerIndex: Int = 0,
+    val spinTurns: Int = 0
 )
 
 class RewardViewModel(application: Application) : AndroidViewModel(application) {
@@ -78,8 +79,15 @@ class RewardViewModel(application: Application) : AndroidViewModel(application) 
             repository.claimAction(backendBaseUrl, "weekly_spin")
                 .onSuccess { feed ->
                     val segments = feed.spin.segments
-                    val pointer = if (segments.isEmpty()) 0 else (feed.coins + segments.size) % segments.size
-                    _uiState.update { it.copy(feed = feed, spinPointerIndex = pointer, errorMessage = null) }
+                    val pointer = feed.spin.selectedIndex?.coerceIn(0, (segments.size - 1).coerceAtLeast(0)) ?: 0
+                    _uiState.update {
+                        it.copy(
+                            feed = feed,
+                            spinPointerIndex = pointer,
+                            spinTurns = it.spinTurns + 1,
+                            errorMessage = null
+                        )
+                    }
                 }
                 .onFailure { error -> _uiState.update { it.copy(errorMessage = error.message) } }
         }

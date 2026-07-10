@@ -1,5 +1,9 @@
 package app.dramaverse.stream.screen
 
+import android.graphics.Paint
+import android.graphics.Typeface
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -41,6 +45,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -53,6 +58,8 @@ import app.dramaverse.stream.data.RewardFeed
 import app.dramaverse.stream.data.SpinReward
 import app.dramaverse.stream.data.fallbackRewardFeed
 import app.dramaverse.stream.model.RewardViewModel
+import kotlin.math.cos
+import kotlin.math.sin
 
 private val Background = Color(0xFF08080A)
 private val Panel = Color(0xFF16151A)
@@ -60,7 +67,7 @@ private val StrokeColor = Color(0x29FFFFFF)
 private val Gold = Color(0xFFF7C64B)
 private val Pink = Color(0xFFFF3F68)
 private val SoftPink = Color(0xFFFFB7C2)
-private val Track = Color(0xFF37323A)
+private val Track = Color(0xFF5E5664)
 private val TextMuted = Color(0xFFC7B6BE)
 private val TextDim = Color(0xFF8F828B)
 private val CardShape = RoundedCornerShape(16.dp)
@@ -90,9 +97,11 @@ fun RewardScreen(
             RewardContent(
                 feed = feed ?: fallbackRewardFeed(),
                 spinPointerIndex = uiState.spinPointerIndex,
+                spinTurns = uiState.spinTurns,
                 onRules = { viewModel.setRulesVisible(true) },
                 onCheckIn = { viewModel.claimDailyCheckIn(backendBaseUrl) },
                 onTaskClaim = { taskId -> viewModel.claimDailyTask(backendBaseUrl, taskId) },
+                onTaskStart = onHome,
                 onSpin = { viewModel.spin(backendBaseUrl) }
             )
         }
@@ -118,9 +127,11 @@ fun RewardScreen(
 private fun RewardContent(
     feed: RewardFeed,
     spinPointerIndex: Int,
+    spinTurns: Int,
     onRules: () -> Unit,
     onCheckIn: () -> Unit,
     onTaskClaim: (String) -> Unit,
+    onTaskStart: () -> Unit,
     onSpin: () -> Unit
 ) {
     LazyColumn(
@@ -131,8 +142,8 @@ private fun RewardContent(
         item { RewardHeader(onRules) }
         item { BalanceCard(feed.coins) }
         item { DailyCheckInSection(feed.checkInRewards, feed.canCheckIn, onCheckIn) }
-        item { DailyTaskSection(feed.dailyTasks, onTaskClaim) }
-        item { WeeklySpinSection(feed.spin, spinPointerIndex, onSpin) }
+        item { DailyTaskSection(feed.dailyTasks, onTaskClaim, onTaskStart) }
+        item { WeeklySpinSection(feed.spin, spinPointerIndex, spinTurns, onSpin) }
     }
 }
 
@@ -163,7 +174,7 @@ private fun RewardHeader(onRules: () -> Unit) {
                 "Earn coins from check-ins, watch time, and the weekly spin.",
                 color = TextMuted,
                 fontSize = 13.sp,
-                lineHeight = 18.sp,
+                lineHeight = 21.sp,
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = 0.sp
             )
@@ -242,8 +253,8 @@ private fun CheckInTile(
     modifier: Modifier = Modifier
 ) {
     val state = when {
-        item.claimed -> CheckInState.Claimed
-        canClaim -> CheckInState.Today
+        item.status == "claimed" || item.claimed -> CheckInState.Claimed
+        item.status == "today" || canClaim -> CheckInState.Today
         else -> CheckInState.Upcoming
     }
     Column(
@@ -295,17 +306,25 @@ private fun CheckInTile(
 }
 
 @Composable
-private fun DailyTaskSection(tasks: List<DailyRewardTask>, onTaskClaim: (String) -> Unit) {
-    SectionHeader("Daily Task", "Random today")
+private fun DailyTaskSection(
+    tasks: List<DailyRewardTask>,
+    onTaskClaim: (String) -> Unit,
+    onTaskStart: () -> Unit
+) {
+    SectionHeader("Daily Task", "Rotates today")
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         tasks.forEach { task ->
-            DailyTaskRow(task, onTaskClaim)
+            DailyTaskRow(task, onTaskClaim, onTaskStart)
         }
     }
 }
 
 @Composable
-private fun DailyTaskRow(task: DailyRewardTask, onTaskClaim: (String) -> Unit) {
+private fun DailyTaskRow(
+    task: DailyRewardTask,
+    onTaskClaim: (String) -> Unit,
+    onTaskStart: () -> Unit
+) {
     val progress = if (task.targetMinutes > 0) {
         (task.progressMinutes.toFloat() / task.targetMinutes.toFloat()).coerceIn(0f, 1f)
     } else {
@@ -330,11 +349,17 @@ private fun DailyTaskRow(task: DailyRewardTask, onTaskClaim: (String) -> Unit) {
                 Text("+${task.reward}", color = Gold, fontSize = 14.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
             }
             Spacer(Modifier.height(8.dp))
-            Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(8.dp)).background(Track)) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(10.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Track)
+            ) {
                 Box(
                     Modifier
                         .fillMaxWidth(progress)
-                        .height(8.dp)
+                        .height(10.dp)
                         .background(Brush.horizontalGradient(listOf(Gold, Pink)), RoundedCornerShape(8.dp))
                 )
             }
@@ -342,25 +367,31 @@ private fun DailyTaskRow(task: DailyRewardTask, onTaskClaim: (String) -> Unit) {
             Text("${task.progressMinutes}/${task.targetMinutes} min", color = TextDim, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
         }
         Spacer(Modifier.width(12.dp))
-        TaskClaimButton(task, onTaskClaim)
+        TaskClaimButton(task, onTaskClaim, onTaskStart)
     }
 }
 
 @Composable
-private fun TaskClaimButton(task: DailyRewardTask, onTaskClaim: (String) -> Unit) {
-    val enabled = task.completed && !task.claimed
+private fun TaskClaimButton(
+    task: DailyRewardTask,
+    onTaskClaim: (String) -> Unit,
+    onTaskStart: () -> Unit
+) {
+    val claimable = task.completed && !task.claimed
+    val clickable = !task.claimed
     Box(
         modifier = Modifier
             .width(78.dp)
             .height(38.dp)
             .clip(RoundedCornerShape(14.dp))
-            .background(if (enabled) Pink else Color(0xFF26232A))
-            .clickable(enabled = enabled) { onTaskClaim(task.id) },
+            .background(if (claimable) Pink else if (task.claimed) Color(0xFF26232A) else Color(0x33F7C64B))
+            .border(1.dp, if (!task.claimed && !claimable) Color(0x66F7C64B) else Color.Transparent, RoundedCornerShape(14.dp))
+            .clickable(enabled = clickable) { if (claimable) onTaskClaim(task.id) else onTaskStart() },
         contentAlignment = Alignment.Center
     ) {
         Text(
-            if (task.claimed) "Done" else if (enabled) "Claim" else "Locked",
-            color = if (enabled) Color.White else TextDim,
+            if (task.claimed) "Done" else if (claimable) "Claim" else "Go",
+            color = if (task.claimed) TextDim else Color.White,
             fontSize = 12.sp,
             fontWeight = FontWeight.Black,
             letterSpacing = 0.sp
@@ -369,7 +400,7 @@ private fun TaskClaimButton(task: DailyRewardTask, onTaskClaim: (String) -> Unit
 }
 
 @Composable
-private fun WeeklySpinSection(spin: SpinReward, pointerIndex: Int, onSpin: () -> Unit) {
+private fun WeeklySpinSection(spin: SpinReward, pointerIndex: Int, spinTurns: Int, onSpin: () -> Unit) {
     SectionHeader("Spin Wheel", "Once weekly")
     Column(
         modifier = Modifier
@@ -380,7 +411,7 @@ private fun WeeklySpinSection(spin: SpinReward, pointerIndex: Int, onSpin: () ->
             .padding(18.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        SpinWheel(spin.segments, pointerIndex)
+        SpinWheel(spin.segments, pointerIndex, spinTurns, spin.lastReward)
         Spacer(Modifier.height(18.dp))
         Box(
             Modifier
@@ -397,20 +428,42 @@ private fun WeeklySpinSection(spin: SpinReward, pointerIndex: Int, onSpin: () ->
 }
 
 @Composable
-private fun SpinWheel(segments: List<Int>, pointerIndex: Int) {
+private fun SpinWheel(segments: List<Int>, pointerIndex: Int, spinTurns: Int, lastReward: Int?) {
     val colors = listOf(Color(0xFFF7C64B), Color(0xFFFF5F7F), Color(0xFF5036A8), Color(0xFF211C25))
+    val safeSegments = segments.ifEmpty { listOf(0, 10, 15, 20, 30, 40, 60, 100) }
+    val sweep = 360f / safeSegments.size.coerceAtLeast(1)
+    val selected = pointerIndex.coerceIn(0, (safeSegments.size - 1).coerceAtLeast(0))
+    val rotation by animateFloatAsState(
+        targetValue = spinTurns * 720f - selected * sweep,
+        animationSpec = tween(durationMillis = 1100),
+        label = "spinWheelRotation"
+    )
     Box(Modifier.size(230.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
-            val sweep = 360f / segments.size.coerceAtLeast(1)
             val inset = 16.dp.toPx()
-            segments.forEachIndexed { index, _ ->
+            val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = android.graphics.Color.WHITE
+                textAlign = Paint.Align.CENTER
+                textSize = 12.sp.toPx()
+                typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            }
+            safeSegments.forEachIndexed { index, reward ->
+                val start = -90f + rotation + index * sweep
                 drawArc(
                     color = colors[index % colors.size],
-                    startAngle = -90f + index * sweep,
+                    startAngle = start,
                     sweepAngle = sweep,
                     useCenter = true,
                     topLeft = Offset(inset, inset),
                     size = Size(size.width - inset * 2, size.height - inset * 2)
+                )
+                val angle = Math.toRadians((start + sweep / 2f).toDouble())
+                val radius = size.minDimension * 0.34f
+                drawContext.canvas.nativeCanvas.drawText(
+                    if (reward == 0) "TRY" else "+$reward",
+                    center.x + cos(angle).toFloat() * radius,
+                    center.y + sin(angle).toFloat() * radius + 4.dp.toPx(),
+                    labelPaint
                 )
             }
             drawCircle(color = Color(0xFF111015), radius = 44.dp.toPx(), center = center)
@@ -427,7 +480,15 @@ private fun SpinWheel(segments: List<Int>, pointerIndex: Int) {
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text("WEEKLY", color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
-            Text("+${segments.getOrNull(pointerIndex.coerceIn(0, (segments.size - 1).coerceAtLeast(0))) ?: 0}", color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+            val centerReward = lastReward ?: safeSegments.getOrElse(selected) { 0 }
+            Text(
+                if (centerReward == 0) "Better\nluck" else "+$centerReward",
+                color = Color.White,
+                fontSize = if (centerReward == 0) 15.sp else 26.sp,
+                lineHeight = if (centerReward == 0) 16.sp else 28.sp,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 0.sp
+            )
         }
     }
 }
@@ -462,7 +523,20 @@ private fun RulesDialog(rules: List<String>, onDismiss: () -> Unit) {
 private fun SectionHeader(title: String, action: String) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(title, color = Color.White, fontSize = 23.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp, modifier = Modifier.weight(1f))
-        Text(action, color = SoftPink, fontSize = 12.sp, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
+        Text(
+            action,
+            color = SoftPink,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Black,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            letterSpacing = 0.sp,
+            modifier = Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color(0x2216151A))
+                .border(1.dp, Color(0x33FFB7C2), RoundedCornerShape(12.dp))
+                .padding(horizontal = 9.dp, vertical = 5.dp)
+        )
     }
 }
 
