@@ -1,7 +1,6 @@
 package app.dramaverse.stream.data
 
 import android.content.Context
-import android.provider.Settings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -26,15 +25,8 @@ class AuthRepository(private val context: Context) {
     fun deviceId(): String {
         prefs.getString(KEY_DEVICE_ID, null)?.let { return it }
 
-        val androidId = Settings.Secure.getString(
-            context.contentResolver,
-            Settings.Secure.ANDROID_ID
-        ).orEmpty()
-        val generated = if (androidId.isNotBlank()) {
-            "android-$androidId"
-        } else {
-            "android-${UUID.randomUUID()}"
-        }
+        // Keep rewards tied to this install, not the phone-wide Android ID.
+        val generated = "android-${UUID.randomUUID()}"
 
         prefs.edit().putString(KEY_DEVICE_ID, generated).apply()
         return generated
