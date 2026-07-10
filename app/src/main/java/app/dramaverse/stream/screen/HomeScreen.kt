@@ -31,6 +31,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Explore
@@ -57,6 +58,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -161,6 +163,7 @@ private fun HomeContent(
         item {
             HeroCarousel(
                 items = heroItems,
+                hotTags = feed.hotTags,
                 selectedMood = selectedMood,
                 isMoodLoading = isMoodLoading,
                 savedFilmIds = savedFilmIds,
@@ -168,6 +171,7 @@ private fun HomeContent(
                 onSearchClick = onSearchClick,
                 onNotifications = onNotifications,
                 onOpenShorts = onOpenShorts,
+                onPlanner = onPlanner,
                 onToggleWatchList = onToggleWatchList
             )
         }
@@ -184,6 +188,7 @@ private fun HomeContent(
 @Composable
 private fun HeroCarousel(
     items: List<DramaItem>,
+    hotTags: List<String>,
     selectedMood: String?,
     isMoodLoading: Boolean,
     savedFilmIds: Set<Int>,
@@ -191,6 +196,7 @@ private fun HeroCarousel(
     onSearchClick: () -> Unit,
     onNotifications: () -> Unit,
     onOpenShorts: (Int?) -> Unit,
+    onPlanner: () -> Unit,
     onToggleWatchList: (Int, Boolean) -> Unit
 ) {
     val pageCount = 10_000
@@ -225,14 +231,16 @@ private fun HeroCarousel(
                 onToggleWatchList = onToggleWatchList
             )
         }
-        HomeTopBar(
-            selectedMood = selectedMood,
-            isMoodLoading = isMoodLoading,
-            onMoodSelected = onMoodSelected,
-            onSearchClick = onSearchClick,
-            onNotifications = onNotifications,
-            modifier = Modifier.align(Alignment.TopCenter)
-        )
+            HomeTopBar(
+                hotTags = hotTags,
+                selectedMood = selectedMood,
+                isMoodLoading = isMoodLoading,
+                onMoodSelected = onMoodSelected,
+                onSearchClick = onSearchClick,
+                onPlanner = onPlanner,
+                onNotifications = onNotifications,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
     }
 }
 
@@ -344,10 +352,12 @@ private fun HeroIndicators(selectedIndex: Int, count: Int) {
 
 @Composable
 private fun HomeTopBar(
+    hotTags: List<String> = emptyList(),
     selectedMood: String? = null,
     isMoodLoading: Boolean = false,
     onMoodSelected: (String) -> Unit = {},
     onSearchClick: () -> Unit = {},
+    onPlanner: () -> Unit = {},
     onNotifications: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -371,41 +381,17 @@ private fun HomeTopBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(40.dp)
+                .height(44.dp)
                 .padding(horizontal = 18.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            BrandMark()
             Spacer(modifier = Modifier.weight(1f))
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(Color(0x6618171C))
-                    .border(1.dp, Color(0x33FFFFFF), CircleShape)
-                    .clickable(onClick = onSearchClick),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Filled.Search, contentDescription = null, tint = Color(0xFFF2E3E7), modifier = Modifier.size(20.dp))
-            }
-            Spacer(modifier = Modifier.width(18.dp))
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(Color(0x6618171C))
-                    .border(1.dp, Color(0x33FFFFFF), CircleShape)
-                    .clickable(onClick = onNotifications),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Filled.Notifications, contentDescription = null, tint = Color(0xFFE8D5DA), modifier = Modifier.size(19.dp))
-            }
-            Spacer(modifier = Modifier.width(14.dp))
-            Box(
-                modifier = Modifier
-                    .size(34.dp)
-                    .clip(CircleShape)
-                    .background(Brush.radialGradient(listOf(Color(0xFFF0B18B), Color(0xFF351B1F))))
-            )
+            HeaderIcon(Icons.Filled.Search, onSearchClick)
+            Spacer(modifier = Modifier.width(12.dp))
+            HeaderIcon(Icons.Filled.CalendarMonth, onPlanner)
+            Spacer(modifier = Modifier.width(12.dp))
+            HeaderIcon(Icons.Filled.Notifications, onNotifications)
         }
         Spacer(modifier = Modifier.height(10.dp))
         LazyRow(
@@ -420,32 +406,59 @@ private fun HomeTopBar(
                     onClick = onSearchClick
                 )
             }
-            items(moodLabels) { label ->
+            items(hotTags.ifEmpty { fallbackHotTags }) { label ->
                 MoodChip(
-                    label = stringResource(label.display),
-                    selected = selectedMood == label.query,
-                    loading = isMoodLoading && selectedMood == label.query,
-                    onClick = { onMoodSelected(label.query) }
+                    label = label,
+                    selected = selectedMood.equals(label, ignoreCase = true),
+                    loading = isMoodLoading && selectedMood.equals(label, ignoreCase = true),
+                    onClick = { onMoodSelected(label) }
                 )
             }
         }
     }
 }
 
-private data class MoodLabel(
-    val display: Int,
-    val query: String
+private val fallbackHotTags = listOf(
+    "Trending",
+    "New Release",
+    "Billionaire",
+    "Revenge",
+    "CEO",
+    "Family",
+    "Mystery"
 )
 
-private val moodLabels = listOf(
-    MoodLabel(R.string.mood_happy, "happy"),
-    MoodLabel(R.string.mood_emotional, "emotional"),
-    MoodLabel(R.string.mood_action, "action"),
-    MoodLabel(R.string.mood_romance, "romance"),
-    MoodLabel(R.string.mood_horror, "horror"),
-    MoodLabel(R.string.mood_mind_blowing, "mind blowing"),
-    MoodLabel(R.string.mood_relax, "relax")
-)
+@Composable
+private fun BrandMark() {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Image(
+            painter = painterResource(R.drawable.icon_2),
+            contentDescription = null,
+            modifier = Modifier
+                .size(42.dp)
+                .clip(RoundedCornerShape(11.dp))
+                .background(Color.White),
+            contentScale = ContentScale.Crop
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        Text("DramaVerse", color = SoftPink, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+    }
+}
+
+@Composable
+private fun HeaderIcon(icon: ImageVector, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(38.dp)
+            .clip(CircleShape)
+            .background(Color(0x6618171C))
+            .border(1.dp, Color(0x33FFFFFF), CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(icon, contentDescription = null, tint = Color(0xFFF2E3E7), modifier = Modifier.size(20.dp))
+    }
+}
 
 @Composable
 private fun MoodChip(

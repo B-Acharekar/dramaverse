@@ -53,7 +53,8 @@ data class HomeFeed(
     val continueWatching: List<ContinueWatchingItem>,
     val trending: List<DramaItem>,
     val topRated: DramaItem,
-    val moreLikeThis: List<DramaItem>
+    val moreLikeThis: List<DramaItem>,
+    val hotTags: List<String> = emptyList()
 ) {
     companion object
 }
@@ -252,11 +253,18 @@ private suspend fun fetchHomeFeed(
         }.getOrNull()
     }
 
+    val tags = async {
+        runCatching {
+            getClientJson(backendBaseUrl, "client/tags", language, token, timeoutMillis, page = 1)
+        }.getOrNull()
+    }
+
     parseHomeFeed(
         homeJson = home.await().getOrNull(),
         filmsJsons = filmPages.mapNotNull { it.await() },
         forYouJsons = forYouPages.mapNotNull { it.await() },
-        watchHistoryJson = watchHistory.await()
+        watchHistoryJson = watchHistory.await(),
+        tagsJson = tags.await()
     )
 }
 
@@ -322,7 +330,8 @@ private fun parseHomeFeed(
     homeJson: JSONObject?,
     filmsJsons: List<JSONObject>,
     forYouJsons: List<JSONObject>,
-    watchHistoryJson: JSONObject? = null
+    watchHistoryJson: JSONObject? = null,
+    tagsJson: JSONObject? = null
 ): HomeFeed {
     val homeItems = collectDramaItems(homeJson)
         .distinctBy { it.id.takeIf { id -> id != 0 } ?: it.title }
@@ -369,7 +378,8 @@ private fun parseHomeFeed(
         trending = filmItems.take(12).ifEmpty { feedItems.drop(2).take(8).ifEmpty { feedItems.take(4) } },
         topRated = homeItems.getOrNull(1) ?: feedItems.getOrElse(3) { feedItems.first() },
         moreLikeThis = (forYouItems + filmItems).distinctBy { it.stableKey() }.take(12)
-            .ifEmpty { feedItems.drop(4).take(8).ifEmpty { feedItems.take(4) } }
+            .ifEmpty { feedItems.drop(4).take(8).ifEmpty { feedItems.take(4) } },
+        hotTags = collectHotTags(tagsJson, items)
     )
 }
 
@@ -444,7 +454,8 @@ private class HomeCacheStore(context: Context) :
             hero = hero,
             trending = trending,
             topRated = topRated,
-            moreLikeThis = moreLikeThis
+            moreLikeThis = moreLikeThis,
+            hotTags = rawFeed.hotTags
         )
     }
 
@@ -539,6 +550,46 @@ private fun collectDramaItems(value: Any?): List<DramaItem> {
     }
 }
 
+private fun collectHotTags(tagsJson: JSONObject?, items: List<DramaItem>): List<String> {
+    val backendTags = collectTagLabels(tagsJson)
+    val itemTags = items
+        .map { it.genre.trim() }
+        .filter { it.isUsefulHotTag() }
+    return (backendTags + itemTags)
+        .map { it.trim() }
+        .filter { it.isUsefulHotTag() }
+        .distinctBy { it.lowercase(Locale.US) }
+        .take(8)
+}
+
+private fun collectTagLabels(value: Any?): List<String> {
+    return when (value) {
+        is JSONObject -> {
+            val direct = value.firstString("title", "name", "label", "tag", "genre", "category")
+                .takeIf { it.isUsefulHotTag() }
+            val children = value.keys().asSequence().flatMap { key ->
+                collectTagLabels(value.opt(key)).asSequence()
+            }.toList()
+            listOfNotNull(direct) + children
+        }
+
+        is JSONArray -> buildList {
+            for (index in 0 until value.length()) {
+                addAll(collectTagLabels(value.opt(index)))
+            }
+        }
+
+        is String -> listOf(value).filter { it.isUsefulHotTag() }
+        else -> emptyList()
+    }
+}
+
+private fun String.isUsefulHotTag(): Boolean {
+    val normalized = trim().lowercase(Locale.US)
+    return normalized.length in 3..24 &&
+        normalized !in setOf("all", "more", "null", "none", "drama", "movie", "film", "series", "short", "home", "data")
+}
+
 private fun parseContinueWatching(json: JSONObject?): List<ContinueWatchingItem> {
     val data = json?.opt("data") ?: return emptyList()
     val array = when (data) {
@@ -589,6 +640,7 @@ private fun HomeFeed.toJson(): JSONObject = JSONObject()
     .put("trending", trending.toJsonArray())
     .put("topRated", topRated.toJson())
     .put("moreLikeThis", moreLikeThis.toJsonArray())
+    .put("hotTags", JSONArray().also { array -> hotTags.forEach(array::put) })
 
 private fun List<DramaItem>.toJsonArray(): JSONArray = JSONArray().also { array ->
     forEach { array.put(it.toJson()) }
@@ -604,8 +656,18 @@ private fun HomeFeed.Companion.fromJson(json: JSONObject): HomeFeed {
         continueWatching = json.optJSONArray("continueWatching").toContinueWatchingItems(),
         trending = json.optJSONArray("trending").toDramaItems(),
         topRated = json.getJSONObject("topRated").toDramaItem(),
-        moreLikeThis = json.optJSONArray("moreLikeThis").toDramaItems()
+        moreLikeThis = json.optJSONArray("moreLikeThis").toDramaItems(),
+        hotTags = json.optJSONArray("hotTags").toStringList()
     )
+}
+
+private fun JSONArray?.toStringList(): List<String> {
+    if (this == null) return emptyList()
+    return buildList {
+        for (index in 0 until length()) {
+            optString(index).takeIf { it.isUsefulHotTag() }?.let(::add)
+        }
+    }
 }
 
 private fun JSONObject.toDramaItemFromBackend(): DramaItem = DramaItem(

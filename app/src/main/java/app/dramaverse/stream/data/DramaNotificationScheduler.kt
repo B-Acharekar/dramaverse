@@ -36,7 +36,7 @@ class DramaReminderReceiver : BroadcastReceiver() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.icon_2)
             .setContentTitle(intent.getStringExtra(EXTRA_TITLE) ?: "Drama reminder")
             .setContentText(intent.getStringExtra(EXTRA_BODY) ?: "Your planned drama starts soon.")
             .setStyle(NotificationCompat.BigTextStyle().bigText(intent.getStringExtra(EXTRA_BODY)))
