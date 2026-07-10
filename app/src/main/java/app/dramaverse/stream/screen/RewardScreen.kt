@@ -51,6 +51,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import app.dramaverse.stream.data.RewardAchievement
 import app.dramaverse.stream.data.RewardFeed
 import app.dramaverse.stream.data.RewardPackage
+import app.dramaverse.stream.data.fallbackRewardFeed
 import app.dramaverse.stream.model.RewardViewModel
 
 private val Background = Color(0xFF07070A)
@@ -93,6 +94,7 @@ fun RewardScreen(
                 feed = feed ?: fallbackRewardFeed(),
                 selectedPlanIndex = uiState.selectedPlanIndex,
                 onPlanSelected = viewModel::selectPlan,
+                onGetAccess = { viewModel.trackSubscriptionIntent(backendBaseUrl) },
                 onClaimDaily = { viewModel.claimDailyCheckIn(backendBaseUrl) },
                 onSpin = { viewModel.spin(backendBaseUrl) }
             )
@@ -113,6 +115,7 @@ private fun RewardContent(
     feed: RewardFeed,
     selectedPlanIndex: Int,
     onPlanSelected: (Int) -> Unit,
+    onGetAccess: () -> Unit,
     onClaimDaily: () -> Unit,
     onSpin: () -> Unit
 ) {
@@ -122,7 +125,7 @@ private fun RewardContent(
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         item { RewardsHeader(feed.coins) }
-        item { PremiumAccessPanel(feed.subscriptionPackages, selectedPlanIndex, onPlanSelected) }
+        item { PremiumAccessPanel(feed.subscriptionPackages, selectedPlanIndex, onPlanSelected, onGetAccess) }
         item { CoinWallet(feed.coins, feed.coinPackages) }
         item { DailyRewards(feed.checkInDay, onClaimDaily) }
         item { MissionDeck(feed.watchMinutesToday, feed.spinAvailable, onSpin) }
@@ -199,7 +202,8 @@ private fun RewardsHeader(coins: Int) {
 private fun PremiumAccessPanel(
     packages: List<RewardPackage>,
     selectedPlanIndex: Int,
-    onPlanSelected: (Int) -> Unit
+    onPlanSelected: (Int) -> Unit,
+    onGetAccess: () -> Unit
 ) {
     val plans = pricingPlans(packages)
     val selected = selectedPlanIndex.coerceIn(0, plans.lastIndex)
@@ -278,7 +282,7 @@ private fun PremiumAccessPanel(
                 .height(58.dp)
                 .clip(RoundedCornerShape(30.dp))
                 .background(Color.White)
-                .clickable { },
+                .clickable(onClick = onGetAccess),
             contentAlignment = Alignment.Center
         ) {
             Text("Get Full Access", color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
@@ -668,29 +672,3 @@ private fun coinAmountLabel(pack: RewardPackage): String {
     val amount = pack.amount.takeIf { it > 0 } ?: pack.title.filter(Char::isDigit).toIntOrNull() ?: 50
     return "$amount Coins"
 }
-
-private fun fallbackRewardFeed(): RewardFeed = RewardFeed(
-    coins = 1240,
-    vip = false,
-    checkInDay = 4,
-    spinAvailable = 1,
-    watchMinutesToday = 22,
-    coinPackages = listOf(
-        RewardPackage("50 Coins", 50, "$0.99"),
-        RewardPackage("100 Coins", 100, "$1.99"),
-        RewardPackage("250 Coins", 250, "$4.99"),
-        RewardPackage("500 Coins", 500, "$8.99"),
-        RewardPackage("1000 Coins Pack", 1000, "$14.99", true)
-    ),
-    subscriptionPackages = listOf(
-        RewardPackage("Monthly", 0, "$10.99"),
-        RewardPackage("Yearly", 0, "$100.99", true),
-        RewardPackage("Weekly", 0, "$4.99")
-    ),
-    achievements = listOf(
-        RewardAchievement("Drama King", "Watch 100 episodes", true),
-        RewardAchievement("Night Owl", "Watch after 12 AM", false),
-        RewardAchievement("Top Fan", "Favorite 5 series", true),
-        RewardAchievement("Socialite", "Invite 3 friends", false)
-    )
-)

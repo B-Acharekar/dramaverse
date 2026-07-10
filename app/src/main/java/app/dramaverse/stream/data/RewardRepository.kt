@@ -30,6 +30,32 @@ data class RewardFeed(
     val achievements: List<RewardAchievement>
 )
 
+fun fallbackRewardFeed(): RewardFeed = RewardFeed(
+    coins = 1240,
+    vip = false,
+    checkInDay = 4,
+    spinAvailable = 1,
+    watchMinutesToday = 22,
+    coinPackages = listOf(
+        RewardPackage("50 Coins", 50, "$0.99"),
+        RewardPackage("100 Coins", 100, "$1.99"),
+        RewardPackage("250 Coins", 250, "$4.99"),
+        RewardPackage("500 Coins", 500, "$8.99"),
+        RewardPackage("1000 Coins Pack", 1000, "$14.99", true)
+    ),
+    subscriptionPackages = listOf(
+        RewardPackage("Monthly", 0, "$10.99"),
+        RewardPackage("Yearly", 0, "$100.99", true),
+        RewardPackage("Weekly", 0, "$4.99")
+    ),
+    achievements = listOf(
+        RewardAchievement("Drama King", "Watch 100 episodes", true),
+        RewardAchievement("Night Owl", "Watch after 12 AM", false),
+        RewardAchievement("Top Fan", "Favorite 5 series", true),
+        RewardAchievement("Socialite", "Invite 3 friends", false)
+    )
+)
+
 class RewardRepository(
     context: Context,
     private val authRepository: AuthRepository
@@ -87,9 +113,9 @@ private fun parseRewardFeed(data: JSONObject): RewardFeed {
         ),
         subscriptionPackages = data.opt("subscription_packages").toRewardPackages(
             fallback = listOf(
-                RewardPackage("Monthly", 0, "$9.99"),
-                RewardPackage("Quarterly", 0, "$24.99", true),
-                RewardPackage("Yearly", 0, "$79.99")
+                RewardPackage("Monthly", 0, "$10.99"),
+                RewardPackage("Yearly", 0, "$100.99", true),
+                RewardPackage("Weekly", 0, "$4.99")
             )
         ),
         achievements = listOf(
