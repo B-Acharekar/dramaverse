@@ -37,6 +37,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,6 +55,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.dramaverse.stream.data.CheckInReward
 import app.dramaverse.stream.data.DailyRewardTask
@@ -58,6 +64,10 @@ import app.dramaverse.stream.data.RewardFeed
 import app.dramaverse.stream.data.SpinReward
 import app.dramaverse.stream.data.fallbackRewardFeed
 import app.dramaverse.stream.model.RewardViewModel
+import kotlinx.coroutines.delay
+import java.time.DayOfWeek
+import java.time.Duration
+import java.time.ZonedDateTime
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -81,6 +91,7 @@ fun RewardScreen(
     viewModel: RewardViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showSpinDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(backendBaseUrl) {
         viewModel.loadRewards(backendBaseUrl)
@@ -96,13 +107,11 @@ fun RewardScreen(
         } else {
             RewardContent(
                 feed = feed ?: fallbackRewardFeed(),
-                spinPointerIndex = uiState.spinPointerIndex,
-                spinTurns = uiState.spinTurns,
                 onRules = { viewModel.setRulesVisible(true) },
                 onCheckIn = { viewModel.claimDailyCheckIn(backendBaseUrl) },
                 onTaskClaim = { taskId -> viewModel.claimDailyTask(backendBaseUrl, taskId) },
                 onTaskStart = onHome,
-                onSpin = { viewModel.spin(backendBaseUrl) }
+                onSpinOpen = { showSpinDialog = true }
             )
         }
         BottomNavigationBar(
@@ -121,18 +130,26 @@ fun RewardScreen(
             onDismiss = { viewModel.setRulesVisible(false) }
         )
     }
+    if (showSpinDialog) {
+        val feed = uiState.feed ?: fallbackRewardFeed()
+        SpinWheelDialog(
+            spin = feed.spin,
+            pointerIndex = uiState.spinPointerIndex,
+            spinTurns = uiState.spinTurns,
+            onDismiss = { showSpinDialog = false },
+            onSpin = { viewModel.spin(backendBaseUrl) }
+        )
+    }
 }
 
 @Composable
 private fun RewardContent(
     feed: RewardFeed,
-    spinPointerIndex: Int,
-    spinTurns: Int,
     onRules: () -> Unit,
     onCheckIn: () -> Unit,
     onTaskClaim: (String) -> Unit,
     onTaskStart: () -> Unit,
-    onSpin: () -> Unit
+    onSpinOpen: () -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -143,7 +160,7 @@ private fun RewardContent(
         item { BalanceCard(feed.coins) }
         item { DailyCheckInSection(feed.checkInRewards, feed.canCheckIn, onCheckIn) }
         item { DailyTaskSection(feed.dailyTasks, onTaskClaim, onTaskStart) }
-        item { WeeklySpinSection(feed.spin, spinPointerIndex, spinTurns, onSpin) }
+        item { WeeklySpinSection(feed.spin, onSpinOpen) }
     }
 }
 
@@ -400,36 +417,152 @@ private fun TaskClaimButton(
 }
 
 @Composable
-private fun WeeklySpinSection(spin: SpinReward, pointerIndex: Int, spinTurns: Int, onSpin: () -> Unit) {
-    SectionHeader("Spin Wheel", "Once weekly")
-    Column(
+private fun WeeklySpinSection(spin: SpinReward, onSpinOpen: () -> Unit) {
+    SectionHeader("Weekly Spin", if (spin.available) "Ready" else weeklySpinCountdown())
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(CardShape)
-            .background(Panel)
-            .border(1.dp, StrokeColor, CardShape)
-            .padding(18.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .clip(RoundedCornerShape(22.dp))
+            .background(
+                Brush.linearGradient(
+                    listOf(Color(0xFF241229), Color(0xFF19151F), Color(0xFF101014))
+                )
+            )
+            .border(1.dp, if (spin.available) Color(0x77F7C64B) else StrokeColor, RoundedCornerShape(22.dp))
+            .clickable(onClick = onSpinOpen)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        SpinWheel(spin.segments, pointerIndex, spinTurns, spin.lastReward)
-        Spacer(Modifier.height(18.dp))
         Box(
-            Modifier
-                .fillMaxWidth()
-                .height(54.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(if (spin.available) Brush.horizontalGradient(listOf(Color(0xFFFF4D73), Color(0xFFD70842))) else Brush.horizontalGradient(listOf(Color(0xFF27242B), Color(0xFF27242B))))
-                .clickable(enabled = spin.available, onClick = onSpin),
+            modifier = Modifier
+                .size(72.dp)
+                .clip(CircleShape)
+                .background(Brush.radialGradient(listOf(Color(0xFFFFD36D), Color(0xFFFF456D), Color(0xFF6338D8))))
+                .border(1.dp, Color(0x55FFFFFF), CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Text(if (spin.available) "SPIN THIS WEEK" else "USED THIS WEEK", color = if (spin.available) Color.White else TextDim, fontSize = 16.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+            Icon(Icons.Filled.Star, contentDescription = null, tint = Color.White, modifier = Modifier.size(34.dp))
+        }
+        Spacer(Modifier.width(14.dp))
+        Column(Modifier.weight(1f)) {
+            Text("Spin the Wheel", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                if (spin.available) "Open the wheel and win coins for this week." else "You used this week's spin. Next chance ${weeklySpinCountdown().lowercase()}.",
+                color = TextMuted,
+                fontSize = 12.sp,
+                lineHeight = 17.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.sp
+            )
+            if (spin.lastReward != null) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    if (spin.lastReward == 0) "Last spin: Better luck next time" else "Last spin: +${spin.lastReward} coins",
+                    color = Gold,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 0.sp
+                )
+            }
+        }
+        Spacer(Modifier.width(10.dp))
+        Text(
+            if (spin.available) "OPEN" else "VIEW",
+            color = if (spin.available) Color(0xFF17100D) else TextDim,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Black,
+            letterSpacing = 0.sp,
+            modifier = Modifier
+                .clip(RoundedCornerShape(18.dp))
+                .background(if (spin.available) Gold else Color(0xFF27242B))
+                .padding(horizontal = 13.dp, vertical = 8.dp)
+        )
+    }
+}
+
+@Composable
+private fun SpinWheelDialog(
+    spin: SpinReward,
+    pointerIndex: Int,
+    spinTurns: Int,
+    onDismiss: () -> Unit,
+    onSpin: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp)
+                .clip(RoundedCornerShape(28.dp))
+                .background(Color(0xFFFDFBFF))
+                .padding(top = 18.dp, start = 18.dp, end = 18.dp, bottom = 18.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Spacer(Modifier.width(40.dp))
+                Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Spin the Wheel", color = Color(0xFF3A148C), fontSize = 29.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+                    Text("and win coins", color = Color(0xFF766B7C), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+                }
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color(0x11000000))
+                        .clickable(onClick = onDismiss),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Filled.Close, contentDescription = null, tint = Color(0xFF4C4152), modifier = Modifier.size(21.dp))
+                }
+            }
+            Spacer(Modifier.height(18.dp))
+            SpinWheel(spin.segments, pointerIndex, spinTurns, spin.lastReward, large = true)
+            Spacer(Modifier.height(18.dp))
+            Text(
+                spinResultText(spin),
+                color = if (spin.lastReward == 0) Color(0xFF6E6074) else Color(0xFF1B1720),
+                fontSize = 15.sp,
+                lineHeight = 20.sp,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 0.sp
+            )
+            Spacer(Modifier.height(14.dp))
+            Text(
+                if (spin.available) "One spin available this week" else weeklySpinCountdown(),
+                color = Color(0xFF8A7B91),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.sp
+            )
+            Spacer(Modifier.height(14.dp))
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(54.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(if (spin.available) Brush.horizontalGradient(listOf(Color(0xFFFF4D73), Color(0xFFD70842))) else Brush.horizontalGradient(listOf(Color(0xFFE9E5ED), Color(0xFFE9E5ED))))
+                    .clickable(enabled = spin.available, onClick = onSpin),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    if (spin.available) "SPIN NOW" else "USED THIS WEEK",
+                    color = if (spin.available) Color.White else Color(0xFF86798D),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 0.sp
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun SpinWheel(segments: List<Int>, pointerIndex: Int, spinTurns: Int, lastReward: Int?) {
-    val colors = listOf(Color(0xFFF7C64B), Color(0xFFFF5F7F), Color(0xFF5036A8), Color(0xFF211C25))
+private fun SpinWheel(segments: List<Int>, pointerIndex: Int, spinTurns: Int, lastReward: Int?, large: Boolean = false) {
+    val colors = listOf(Color(0xFFFFC94D), Color(0xFF6B36E8), Color(0xFF58C2FF), Color(0xFF8A4DFF), Color(0xFFFF5F85))
     val safeSegments = segments.ifEmpty { listOf(0, 10, 15, 20, 30, 40, 60, 100) }
     val sweep = 360f / safeSegments.size.coerceAtLeast(1)
     val selected = pointerIndex.coerceIn(0, (safeSegments.size - 1).coerceAtLeast(0))
@@ -438,13 +571,13 @@ private fun SpinWheel(segments: List<Int>, pointerIndex: Int, spinTurns: Int, la
         animationSpec = tween(durationMillis = 1100),
         label = "spinWheelRotation"
     )
-    Box(Modifier.size(230.dp), contentAlignment = Alignment.Center) {
+    Box(Modifier.size(if (large) 292.dp else 230.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
-            val inset = 16.dp.toPx()
+            val inset = if (large) 8.dp.toPx() else 16.dp.toPx()
             val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = android.graphics.Color.WHITE
                 textAlign = Paint.Align.CENTER
-                textSize = 12.sp.toPx()
+                textSize = if (large) 22.sp.toPx() else 12.sp.toPx()
                 typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             }
             safeSegments.forEachIndexed { index, reward ->
@@ -459,33 +592,40 @@ private fun SpinWheel(segments: List<Int>, pointerIndex: Int, spinTurns: Int, la
                 )
                 val angle = Math.toRadians((start + sweep / 2f).toDouble())
                 val radius = size.minDimension * 0.34f
+                drawContext.canvas.nativeCanvas.save()
+                drawContext.canvas.nativeCanvas.rotate(
+                    (start + sweep / 2f + 90f),
+                    center.x + cos(angle).toFloat() * radius,
+                    center.y + sin(angle).toFloat() * radius
+                )
                 drawContext.canvas.nativeCanvas.drawText(
-                    if (reward == 0) "TRY" else "+$reward",
+                    if (reward == 0) "MISS" else reward.toString(),
                     center.x + cos(angle).toFloat() * radius,
                     center.y + sin(angle).toFloat() * radius + 4.dp.toPx(),
                     labelPaint
                 )
+                drawContext.canvas.nativeCanvas.restore()
             }
-            drawCircle(color = Color(0xFF111015), radius = 44.dp.toPx(), center = center)
-            drawCircle(color = Color(0x55FFFFFF), radius = size.minDimension / 2f - inset, style = Stroke(width = 5.dp.toPx()))
+            drawCircle(color = Color(0xFF5E31D6), radius = if (large) 38.dp.toPx() else 44.dp.toPx(), center = center)
+            drawCircle(color = Color(0x55FFFFFF), radius = size.minDimension / 2f - inset, style = Stroke(width = if (large) 3.dp.toPx() else 5.dp.toPx()))
             drawPath(
                 path = Path().apply {
                     moveTo(center.x, 4.dp.toPx())
-                    lineTo(center.x - 14.dp.toPx(), 38.dp.toPx())
-                    lineTo(center.x + 14.dp.toPx(), 38.dp.toPx())
+                    lineTo(center.x - 18.dp.toPx(), 44.dp.toPx())
+                    lineTo(center.x + 18.dp.toPx(), 44.dp.toPx())
                     close()
                 },
-                color = Gold
+                color = Pink
             )
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("WEEKLY", color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+            Text("WEEKLY", color = Color.White.copy(alpha = 0.82f), fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
             val centerReward = lastReward ?: safeSegments.getOrElse(selected) { 0 }
             Text(
-                if (centerReward == 0) "Better\nluck" else "+$centerReward",
+                if (centerReward == 0) "MISS" else "+$centerReward",
                 color = Color.White,
-                fontSize = if (centerReward == 0) 15.sp else 26.sp,
-                lineHeight = if (centerReward == 0) 16.sp else 28.sp,
+                fontSize = if (centerReward == 0) 14.sp else 24.sp,
+                lineHeight = 26.sp,
                 fontWeight = FontWeight.ExtraBold,
                 letterSpacing = 0.sp
             )
@@ -517,6 +657,44 @@ private fun RulesDialog(rules: List<String>, onDismiss: () -> Unit) {
         },
         confirmButton = {}
     )
+}
+
+@Composable
+private fun weeklySpinCountdown(): String {
+    val value by produceState(initialValue = nextWeeklySpinText()) {
+        while (true) {
+            this.value = nextWeeklySpinText()
+            delay(60_000)
+        }
+    }
+    return value
+}
+
+private fun nextWeeklySpinText(): String {
+    val now = ZonedDateTime.now()
+    var reset = now.with(DayOfWeek.MONDAY).toLocalDate().plusWeeks(1).atStartOfDay(now.zone)
+    if (!reset.isAfter(now)) {
+        reset = reset.plusWeeks(1)
+    }
+    val duration = Duration.between(now, reset)
+    val days = duration.toDays()
+    val hours = duration.minusDays(days).toHours()
+    val minutes = duration.minusDays(days).minusHours(hours).toMinutes()
+    return when {
+        days > 0 -> "Resets in ${days}d ${hours}h"
+        hours > 0 -> "Resets in ${hours}h ${minutes}m"
+        else -> "Resets in ${minutes.coerceAtLeast(1)}m"
+    }
+}
+
+private fun spinResultText(spin: SpinReward): String {
+    val reward = spin.lastReward
+    return when {
+        spin.available -> "Rewards include coins and a better-luck-next-time slot."
+        reward == null -> "Come back when your weekly spin is ready."
+        reward == 0 -> "Better luck next time"
+        else -> "You won +$reward coins"
+    }
 }
 
 @Composable
