@@ -34,7 +34,10 @@ enum class AppStep {
     Home,
     Shorts,
     Library,
-    Search
+    Search,
+    Rewards,
+    Planner,
+    Notifications
 }
 
 data class AppUiState(
@@ -63,16 +66,22 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun onSplashFinished() {
         // Language selection triggers Activity recreation; this pending step restores the intended screen.
+        val onboardingDone = prefs.getBoolean(KEY_ONBOARDING_DONE, false)
         LocaleHelper.consumePendingStep(appContext)?.let { pending ->
             val pendingStep = runCatching { AppStep.valueOf(pending) }.getOrNull()
-            if (pendingStep == AppStep.Onboarding || pendingStep == AppStep.Home) {
+            val restoredStep = when {
+                pendingStep == AppStep.Home && onboardingDone -> AppStep.Home
+                pendingStep == AppStep.Onboarding && !onboardingDone -> AppStep.Onboarding
+                else -> null
+            }
+            if (restoredStep != null) {
                 val language = LocaleHelper.persistedLanguageName(appContext) ?: _uiState.value.selectedLanguage ?: "English"
-                _uiState.update { it.copy(currentStep = pendingStep, selectedLanguage = language) }
+                _uiState.update { it.copy(currentStep = restoredStep, selectedLanguage = language) }
                 registerDevice(language)
                 return
             }
         }
-        if (prefs.getBoolean(KEY_ONBOARDING_DONE, false)) {
+        if (onboardingDone) {
             val language = LocaleHelper.persistedLanguageName(appContext) ?: "English"
             _uiState.update { it.copy(currentStep = AppStep.Home, selectedLanguage = language) }
             registerDevice(language)
@@ -106,6 +115,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun onOnboardingFinished() {
         prefs.edit().putBoolean(KEY_ONBOARDING_DONE, true).apply()
+        LocaleHelper.persistPendingStep(appContext, AppStep.Home.name)
         _uiState.update { it.copy(currentStep = AppStep.Home) }
     }
 
@@ -119,6 +129,18 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun openLibrary() {
         _uiState.update { it.copy(currentStep = AppStep.Library, selectedShortFilmId = null) }
+    }
+
+    fun openRewards() {
+        _uiState.update { it.copy(currentStep = AppStep.Rewards, selectedShortFilmId = null) }
+    }
+
+    fun openPlanner() {
+        _uiState.update { it.copy(currentStep = AppStep.Planner, selectedShortFilmId = null) }
+    }
+
+    fun openNotifications() {
+        _uiState.update { it.copy(currentStep = AppStep.Notifications, selectedShortFilmId = null) }
     }
 
     fun openSearch(query: String) {

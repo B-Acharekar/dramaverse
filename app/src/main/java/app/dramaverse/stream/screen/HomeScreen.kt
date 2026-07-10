@@ -85,6 +85,9 @@ fun HomeScreen(
     onOpenShorts: (Int?) -> Unit,
     onLibrary: () -> Unit,
     onSearch: (String) -> Unit,
+    onRewards: () -> Unit,
+    onPlanner: () -> Unit,
+    onNotifications: () -> Unit,
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -109,7 +112,10 @@ fun HomeScreen(
                 savedFilmIds = uiState.savedFilmIds,
                 onMoodSelected = onSearch,
                 onSearchClick = { onSearch("hot") },
+                onNotifications = onNotifications,
                 onOpenShorts = onOpenShorts,
+                onPlanner = onPlanner,
+                onRewards = onRewards,
                 onToggleWatchList = { filmId, enabled ->
                     viewModel.setReminder(backendBaseUrl, filmId, enabled)
                 }
@@ -120,6 +126,7 @@ fun HomeScreen(
             onHome = {},
             onShorts = { onOpenShorts(null) },
             onLibrary = onLibrary,
+            onRewards = onRewards,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
@@ -133,7 +140,10 @@ private fun HomeContent(
     savedFilmIds: Set<Int>,
     onMoodSelected: (String) -> Unit,
     onSearchClick: () -> Unit,
+    onNotifications: () -> Unit,
     onOpenShorts: (Int?) -> Unit,
+    onPlanner: () -> Unit,
+    onRewards: () -> Unit,
     onToggleWatchList: (Int, Boolean) -> Unit
 ) {
     val heroItems = feed.heroItems()
@@ -156,6 +166,7 @@ private fun HomeContent(
                 savedFilmIds = savedFilmIds,
                 onMoodSelected = onMoodSelected,
                 onSearchClick = onSearchClick,
+                onNotifications = onNotifications,
                 onOpenShorts = onOpenShorts,
                 onToggleWatchList = onToggleWatchList
             )
@@ -165,7 +176,7 @@ private fun HomeContent(
         }
         item { PosterRail(title = stringResource(R.string.trending_now), items = trendingItems, showTrend = true, onOpenShorts = onOpenShorts) }
         item { TopRatedCard(feed.topRated, onOpenShorts) }
-        item { ActionCards() }
+        item { ActionCards(onPlanner = onPlanner, onRewards = onRewards) }
         item { Spacer(modifier = Modifier.height(18.dp)) }
     }
 }
@@ -178,6 +189,7 @@ private fun HeroCarousel(
     savedFilmIds: Set<Int>,
     onMoodSelected: (String) -> Unit,
     onSearchClick: () -> Unit,
+    onNotifications: () -> Unit,
     onOpenShorts: (Int?) -> Unit,
     onToggleWatchList: (Int, Boolean) -> Unit
 ) {
@@ -218,6 +230,7 @@ private fun HeroCarousel(
             isMoodLoading = isMoodLoading,
             onMoodSelected = onMoodSelected,
             onSearchClick = onSearchClick,
+            onNotifications = onNotifications,
             modifier = Modifier.align(Alignment.TopCenter)
         )
     }
@@ -335,6 +348,7 @@ private fun HomeTopBar(
     isMoodLoading: Boolean = false,
     onMoodSelected: (String) -> Unit = {},
     onSearchClick: () -> Unit = {},
+    onNotifications: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -379,7 +393,8 @@ private fun HomeTopBar(
                     .size(36.dp)
                     .clip(CircleShape)
                     .background(Color(0x6618171C))
-                    .border(1.dp, Color(0x33FFFFFF), CircleShape),
+                    .border(1.dp, Color(0x33FFFFFF), CircleShape)
+                    .clickable(onClick = onNotifications),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(Icons.Filled.Notifications, contentDescription = null, tint = Color(0xFFE8D5DA), modifier = Modifier.size(19.dp))
@@ -607,26 +622,27 @@ private fun TopRatedCard(item: DramaItem, onOpenShorts: (Int?) -> Unit) {
 }
 
 @Composable
-private fun ActionCards() {
+private fun ActionCards(onPlanner: () -> Unit, onRewards: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 18.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        SmallActionCard(stringResource(R.string.vip_short), stringResource(R.string.join_vip_club), stringResource(R.string.unlock_all_episodes), Modifier.weight(1f))
-        SmallActionCard(stringResource(R.string.daily_reward_short), stringResource(R.string.daily_rewards), stringResource(R.string.claim_daily_coins), Modifier.weight(1f))
+        SmallActionCard(stringResource(R.string.vip_short), stringResource(R.string.join_vip_club), stringResource(R.string.unlock_all_episodes), Modifier.weight(1f), onRewards)
+        SmallActionCard("PLAN", "My Drama Planner", "Schedule your weekly watchlist", Modifier.weight(1f), onPlanner)
     }
 }
 
 @Composable
-private fun SmallActionCard(icon: String, title: String, body: String, modifier: Modifier) {
+private fun SmallActionCard(icon: String, title: String, body: String, modifier: Modifier, onClick: () -> Unit) {
     Column(
         modifier = modifier
             .height(108.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(Brush.verticalGradient(listOf(Color(0xFF2A1A22), Color(0xFF171318))))
             .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick)
             .padding(14.dp)
     ) {
         Text(icon, color = SoftPink, fontSize = 18.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
@@ -642,6 +658,7 @@ fun BottomNavigationBar(
     onHome: () -> Unit,
     onShorts: () -> Unit,
     onLibrary: () -> Unit,
+    onRewards: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -657,7 +674,7 @@ fun BottomNavigationBar(
         NavItem(Icons.Filled.Home, stringResource(R.string.nav_home), selected == "Home", onHome)
         NavItem(Icons.Filled.Explore, stringResource(R.string.nav_shorts), selected == "Shorts", onShorts)
         NavItem(Icons.Filled.VideoLibrary, stringResource(R.string.nav_library), selected == "Library", onLibrary)
-        NavItem(Icons.Filled.CardGiftcard, stringResource(R.string.nav_rewards), selected == "Rewards", {})
+        NavItem(Icons.Filled.CardGiftcard, stringResource(R.string.nav_rewards), selected == "Rewards", onRewards)
         NavItem(Icons.Filled.Person, stringResource(R.string.nav_profile), selected == "Profile", {})
     }
 }

@@ -21,7 +21,10 @@ import app.dramaverse.stream.screen.CustomSplashScreen
 import app.dramaverse.stream.screen.HomeScreen
 import app.dramaverse.stream.screen.LanguageScreen
 import app.dramaverse.stream.screen.LibraryScreen
+import app.dramaverse.stream.screen.NotificationScreen
 import app.dramaverse.stream.screen.OnboardingScreen
+import app.dramaverse.stream.screen.PlannerScreen
+import app.dramaverse.stream.screen.RewardScreen
 import app.dramaverse.stream.screen.SearchResultsScreen
 import app.dramaverse.stream.screen.ShortsScreen
 
@@ -52,7 +55,6 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
                     viewModel.onLanguageFinished(language)
                 }
             )
-            NotificationPermissionRequester()
         }
 
         AppStep.Onboarding -> OnboardingScreen(
@@ -64,7 +66,10 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
             backendBaseUrl = uiState.backendBaseUrl,
             onOpenShorts = viewModel::openShorts,
             onLibrary = viewModel::openLibrary,
-            onSearch = viewModel::openSearch
+            onSearch = viewModel::openSearch,
+            onRewards = viewModel::openRewards,
+            onPlanner = viewModel::openPlanner,
+            onNotifications = viewModel::openNotifications
         )
 
         AppStep.Shorts -> ShortsScreen(
@@ -72,7 +77,8 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
             initialFilmId = uiState.selectedShortFilmId,
             onBack = viewModel::openHome,
             onHome = viewModel::openHome,
-            onLibrary = viewModel::openLibrary
+            onLibrary = viewModel::openLibrary,
+            onRewards = viewModel::openRewards
         )
 
         AppStep.Library -> LibraryScreen(
@@ -80,7 +86,8 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
             onHome = viewModel::openHome,
             onShorts = { viewModel.openShorts(null) },
             onOpenShorts = viewModel::openShorts,
-            onSearch = viewModel::openSearch
+            onSearch = viewModel::openSearch,
+            onRewards = viewModel::openRewards
         )
 
         AppStep.Search -> SearchResultsScreen(
@@ -91,9 +98,37 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
             onShorts = { viewModel.openShorts(null) },
             onLibrary = viewModel::openLibrary,
             onOpenShorts = viewModel::openShorts,
-            onSearch = viewModel::openSearch
+            onSearch = viewModel::openSearch,
+            onRewards = viewModel::openRewards
+        )
+
+        AppStep.Rewards -> RewardScreen(
+            backendBaseUrl = uiState.backendBaseUrl,
+            onHome = viewModel::openHome,
+            onShorts = { viewModel.openShorts(null) },
+            onLibrary = viewModel::openLibrary
+        )
+
+        AppStep.Planner -> PlannerScreen(
+            backendBaseUrl = uiState.backendBaseUrl,
+            onBack = viewModel::openHome,
+            onHome = viewModel::openHome,
+            onShorts = { viewModel.openShorts(null) },
+            onLibrary = viewModel::openLibrary,
+            onRewards = viewModel::openRewards
+        )
+
+        AppStep.Notifications -> NotificationScreen(
+            backendBaseUrl = uiState.backendBaseUrl,
+            onBack = viewModel::openHome,
+            onHome = viewModel::openHome,
+            onShorts = { viewModel.openShorts(null) },
+            onLibrary = viewModel::openLibrary,
+            onRewards = viewModel::openRewards
         )
     }
+
+    NotificationPermissionRequester()
 }
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {

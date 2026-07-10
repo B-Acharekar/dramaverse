@@ -78,6 +78,7 @@ fun LibraryScreen(
     onShorts: () -> Unit,
     onOpenShorts: (Int?) -> Unit,
     onSearch: (String) -> Unit,
+    onRewards: () -> Unit,
     viewModel: LibraryViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -107,6 +108,7 @@ fun LibraryScreen(
             onHome = onHome,
             onShorts = onShorts,
             onLibrary = {},
+            onRewards = onRewards,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
