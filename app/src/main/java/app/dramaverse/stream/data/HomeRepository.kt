@@ -567,9 +567,10 @@ private fun collectTagLabels(value: Any?): List<String> {
         is JSONObject -> {
             val direct = value.firstString("title", "name", "label", "tag", "genre", "category")
                 .takeIf { it.isUsefulHotTag() }
-            val children = value.keys().asSequence().flatMap { key ->
-                collectTagLabels(value.opt(key)).asSequence()
-            }.toList()
+            val children = value.keys().asSequence()
+                .filterNot { it.isBlockedHotTagKey() }
+                .flatMap { key -> collectTagLabels(value.opt(key)).asSequence() }
+                .toList()
             listOfNotNull(direct) + children
         }
 
@@ -584,10 +585,61 @@ private fun collectTagLabels(value: Any?): List<String> {
     }
 }
 
+// Tag endpoints also return ids/counts/status fields; only user-facing labels should become chips.
+private val blockedHotTagKeys = setOf(
+    "id",
+    "film_id",
+    "movie_id",
+    "drama_id",
+    "category_id",
+    "tag_id",
+    "type",
+    "order",
+    "sort",
+    "count",
+    "total",
+    "response",
+    "responses",
+    "page",
+    "per_page",
+    "limit",
+    "offset",
+    "status",
+    "code",
+    "value",
+    "created_at",
+    "updated_at",
+    "deleted_at",
+    "is_hot",
+    "is_active",
+    "is_publish"
+)
+
+private fun String.isBlockedHotTagKey(): Boolean {
+    return trim().lowercase(Locale.US) in blockedHotTagKeys
+}
+
 private fun String.isUsefulHotTag(): Boolean {
     val normalized = trim().lowercase(Locale.US)
     return normalized.length in 3..24 &&
-        normalized !in setOf("all", "more", "null", "none", "drama", "movie", "film", "series", "short", "home", "data")
+        normalized.toDoubleOrNull() == null &&
+        normalized.any { it.isLetter() } &&
+        !normalized.matches(Regex("""^\d+\s+responses?$""")) &&
+        normalized !in setOf(
+            "all",
+            "more",
+            "null",
+            "none",
+            "drama",
+            "movie",
+            "film",
+            "series",
+            "short",
+            "home",
+            "data",
+            "response",
+            "responses"
+        )
 }
 
 private fun parseContinueWatching(json: JSONObject?): List<ContinueWatchingItem> {

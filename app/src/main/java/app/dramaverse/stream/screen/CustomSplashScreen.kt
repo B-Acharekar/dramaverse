@@ -94,7 +94,7 @@ fun CustomSplashScreen(onFinished: () -> Unit) {
         ) {
             Spacer(modifier = Modifier.weight(1f))
             Image(
-                painter = painterResource(id = R.drawable.icon),
+                painter = painterResource(id = R.drawable.icon_2),
                 contentDescription = null,
                 modifier = Modifier.size(96.dp),
                 contentScale = ContentScale.Fit
