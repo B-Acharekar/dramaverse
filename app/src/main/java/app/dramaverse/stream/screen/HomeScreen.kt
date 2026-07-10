@@ -409,13 +409,13 @@ private fun HomeTopBar(
 }
 
 private val fallbackHotTags = listOf(
-    "Trending",
-    "New Release",
     "Billionaire",
     "Revenge",
     "CEO",
     "Family",
-    "Mystery"
+    "Romance",
+    "Thriller",
+    "Melodrama"
 )
 
 @Composable

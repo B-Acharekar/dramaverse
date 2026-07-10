@@ -646,7 +646,11 @@ private fun String.isUsefulHotTag(): Boolean {
             "home",
             "data",
             "response",
-            "responses"
+            "responses",
+            "trending",
+            "new release",
+            "new releases",
+            "mystery"
         )
 }
 
