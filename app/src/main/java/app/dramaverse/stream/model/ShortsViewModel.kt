@@ -5,8 +5,10 @@ import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.dramaverse.stream.data.AuthRepository
+import app.dramaverse.stream.data.DramaItem
 import app.dramaverse.stream.data.EpisodeInfo
 import app.dramaverse.stream.data.LocaleHelper
+import app.dramaverse.stream.data.SavedWatchListStore
 import app.dramaverse.stream.data.ShortsItem
 import app.dramaverse.stream.data.ShortsRepository
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +32,7 @@ data class ShortsUiState(
 class ShortsViewModel(application: Application) : AndroidViewModel(application) {
     private val appContext = application.applicationContext
     private val repository = ShortsRepository(AuthRepository(application.applicationContext))
+    private val savedWatchListStore = SavedWatchListStore(application.applicationContext)
     private val _uiState = MutableStateFlow(ShortsUiState())
     val uiState: StateFlow<ShortsUiState> = _uiState.asStateFlow()
     private var nextPage = 1
@@ -142,10 +145,16 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
 
     fun setReminder(
         backendBaseUrl: String,
-        filmId: Int,
+        film: DramaItem,
         enabled: Boolean
     ) {
+        val filmId = film.id
         if (filmId == 0) return
+        if (enabled) {
+            savedWatchListStore.save(film)
+        } else {
+            savedWatchListStore.remove(filmId)
+        }
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 repository.setReminder(

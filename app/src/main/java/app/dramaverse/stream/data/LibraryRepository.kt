@@ -35,6 +35,7 @@ class LibraryRepository(
     private val authRepository: AuthRepository
 ) {
     private val cacheStore = LibraryCacheStore(context.applicationContext)
+    private val savedWatchListStore = SavedWatchListStore(context.applicationContext)
 
     suspend fun loadCachedLibrary(): LibraryFeed? = withContext(Dispatchers.IO) {
         cacheStore.readFeed()
@@ -70,7 +71,8 @@ class LibraryRepository(
 
                 val historyItems = parseContinueWatching(history.await())
                 val watchListJson = watchList.await()
-                val watchListItems = collectDramaItems(watchListJson)
+                val localWatchListItems = savedWatchListStore.readItems()
+                val watchListItems = (localWatchListItems + collectDramaItems(watchListJson))
                     .filterNot { it.looksLikePlaceholder() }
                     .distinctFilms()
                 val recommendedJsons = recommendedPages.mapNotNull { it.await() }

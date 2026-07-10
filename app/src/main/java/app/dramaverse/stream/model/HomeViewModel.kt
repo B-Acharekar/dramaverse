@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.dramaverse.stream.data.AuthRepository
+import app.dramaverse.stream.data.DramaItem
 import app.dramaverse.stream.data.HomeFeed
 import app.dramaverse.stream.data.HomeRepository
 import app.dramaverse.stream.data.LocaleHelper
@@ -33,6 +34,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
+        _uiState.update { it.copy(savedFilmIds = repository.savedWatchListIds()) }
         viewModelScope.launch {
             HomeRepository.prefetchedFeed.collectLatest { feed ->
                 if (feed != null) {
@@ -160,7 +162,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun setReminder(backendBaseUrl: String, filmId: Int, enabled: Boolean = true) {
+    fun setReminder(backendBaseUrl: String, film: DramaItem, enabled: Boolean = true) {
+        val filmId = film.id
         if (filmId == 0) return
         val language = LocaleHelper.persistedLanguageCode(appContext)
         // Optimistic update keeps the hero bookmark responsive; rollback happens on API failure.
@@ -173,7 +176,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             repository.setReminder(
                 backendBaseUrl = backendBaseUrl,
-                filmId = filmId,
+                film = film,
                 enabled = enabled,
                 language = language
             ).onFailure { error ->

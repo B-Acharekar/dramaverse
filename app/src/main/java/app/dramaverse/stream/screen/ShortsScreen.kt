@@ -232,7 +232,7 @@ fun ShortsScreen(
                     onReminderClick = { item, enabled ->
                         viewModel.setReminder(
                             backendBaseUrl = backendBaseUrl,
-                            filmId = item.film.id,
+                            film = item.film,
                             enabled = enabled
                         )
                     },

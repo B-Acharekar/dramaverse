@@ -68,6 +68,9 @@ class HomeRepository(
         val prefetchedFeed: StateFlow<HomeFeed?> = _prefetchedFeed.asStateFlow()
     }
     private val cacheStore = HomeCacheStore(context.applicationContext)
+    private val savedWatchListStore = SavedWatchListStore(context.applicationContext)
+
+    fun savedWatchListIds(): Set<Int> = savedWatchListStore.savedIds()
 
     suspend fun loadHome(
         backendBaseUrl: String,
@@ -135,17 +138,22 @@ class HomeRepository(
 
     suspend fun setReminder(
         backendBaseUrl: String,
-        filmId: Int,
+        film: DramaItem,
         enabled: Boolean,
         language: String = "en"
     ): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
+            if (enabled) {
+                savedWatchListStore.save(film)
+            } else {
+                savedWatchListStore.remove(film.id)
+            }
             val token = authRepository.authToken()
                 ?: authRepository.registerDevice(backendBaseUrl, language).getOrThrow().token
                 ?: throw IllegalStateException("Device auth did not return a bearer token.")
             postClientAction(
                 backendBaseUrl = backendBaseUrl,
-                path = "client/films/$filmId/${if (enabled) "reminder" else "unreminder"}",
+                path = "client/films/${film.id}/${if (enabled) "reminder" else "unreminder"}",
                 language = language,
                 token = token
             )

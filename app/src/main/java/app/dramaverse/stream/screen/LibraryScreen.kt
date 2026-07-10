@@ -380,35 +380,35 @@ private fun WatchListPlannerCard(savedCount: Int, onPlanner: () -> Unit) {
         modifier = Modifier
             .padding(horizontal = 18.dp)
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Brush.horizontalGradient(listOf(Color(0xFF251820), Color(0xFF171318))))
-            .border(1.dp, Color(0x44F5C65B), RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFF121116))
+            .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(12.dp))
             .clickable(onClick = onPlanner)
-            .padding(14.dp),
+            .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(44.dp)
-                .clip(RoundedCornerShape(13.dp))
-                .background(Color(0x26F5C65B)),
+                .size(34.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color(0x18F5C65B)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Filled.CalendarMonth, contentDescription = null, tint = Gold, modifier = Modifier.size(23.dp))
+            Icon(Icons.Filled.CalendarMonth, contentDescription = null, tint = Gold, modifier = Modifier.size(18.dp))
         }
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(stringResource(R.string.plan_saved_dramas), color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+            Text(stringResource(R.string.schedule_watchlist), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
             Text(
                 stringResource(R.string.watchlist_planner_hint, savedCount),
                 color = Color(0xFFCDB5BC),
-                fontSize = 12.sp,
-                lineHeight = 16.sp,
+                fontSize = 10.sp,
+                lineHeight = 13.sp,
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = 0.sp
             )
         }
-        Text(stringResource(R.string.schedule), color = Gold, fontSize = 11.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+        Text(stringResource(R.string.schedule), color = Gold, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
     }
 }
 

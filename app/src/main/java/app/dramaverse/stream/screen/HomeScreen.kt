@@ -115,8 +115,8 @@ fun HomeScreen(
                 onNotifications = onNotifications,
                 onOpenShorts = onOpenShorts,
                 onRewards = onRewards,
-                onToggleWatchList = { filmId, enabled ->
-                    viewModel.setReminder(backendBaseUrl, filmId, enabled)
+                onToggleWatchList = { film, enabled ->
+                    viewModel.setReminder(backendBaseUrl, film, enabled)
                 }
             )
         }
@@ -142,7 +142,7 @@ private fun HomeContent(
     onNotifications: () -> Unit,
     onOpenShorts: (Int?) -> Unit,
     onRewards: () -> Unit,
-    onToggleWatchList: (Int, Boolean) -> Unit
+    onToggleWatchList: (DramaItem, Boolean) -> Unit
 ) {
     val heroItems = feed.heroItems()
     val heroKeys = heroItems.map { it.uniqueKey() }.toSet()
@@ -191,7 +191,7 @@ private fun HeroCarousel(
     onSearchClick: () -> Unit,
     onNotifications: () -> Unit,
     onOpenShorts: (Int?) -> Unit,
-    onToggleWatchList: (Int, Boolean) -> Unit
+    onToggleWatchList: (DramaItem, Boolean) -> Unit
 ) {
     val pageCount = 10_000
     val startPage = pageCount / 2
@@ -244,7 +244,7 @@ private fun HeroSection(
     itemCount: Int,
     saved: Boolean,
     onOpenShorts: (Int?) -> Unit,
-    onToggleWatchList: (Int, Boolean) -> Unit
+    onToggleWatchList: (DramaItem, Boolean) -> Unit
 ) {
     val filmId = item.id.takeIf { it != 0 }
     Box(
@@ -315,7 +315,7 @@ private fun HeroSection(
                     saved = saved,
                     onClick = {
                         // Mirrors Shorts bookmark behavior: Save toggles the watchlist state immediately.
-                        filmId?.let { onToggleWatchList(it, !saved) }
+                        filmId?.let { onToggleWatchList(item, !saved) }
                     }
                 )
                 Spacer(modifier = Modifier.weight(1f))

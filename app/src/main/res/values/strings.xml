@@ -78,6 +78,7 @@
     <string name="unlock_all_episodes">Unlock all episodes\ntoday</string>
     <string name="planner_action_short">SAVE</string>
     <string name="plan_saved_dramas">Plan saved dramas</string>
+    <string name="schedule_watchlist">Schedule watchlist</string>
     <string name="schedule_watchlist_reminders">Schedule reminders from your watchlist</string>
     <string name="watchlist_planner_hint">%1$d saved dramas ready to schedule</string>
     <string name="schedule">Schedule</string>
