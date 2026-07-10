@@ -106,13 +106,16 @@ class LibraryRepository(
                     .drop(displayedRecommendedItems.size)
                     .filterNot { it.id != 0 && it.id in (watchedIds + watchListIds) }
                     .filterNot { it.title.trim().lowercase() in excludedTitles }
+                    .filterNot { it.looksLikePlaceholder() }
 
                 LibraryFeed(
                     watchList = watchListItems,
                     watchHistory = historyItems,
                     topStars = collectTopStars(listOf(watchListJson, similarJson) + recommendedJsons).take(12),
                     recommended = displayedRecommendedItems,
-                    similarFilms = similarItems.ifEmpty { similarFallbackItems }.take(12)
+                    similarFilms = similarItems.ifEmpty { similarFallbackItems }
+                        .filterNot { it.looksLikePlaceholder() }
+                        .take(12)
                 ).also { cacheStore.writeFeed(it) }
             }
         }
@@ -120,7 +123,7 @@ class LibraryRepository(
 }
 
 private class LibraryCacheStore(context: Context) :
-    SQLiteOpenHelper(context, "dramaverse_library.db", null, 1) {
+    SQLiteOpenHelper(context, "dramaverse_library.db", null, 2) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
             "CREATE TABLE library_cache (" +
@@ -303,6 +306,7 @@ private fun DramaItem.looksLikePlaceholder(): Boolean {
     val normalizedGenre = genre.trim().lowercase()
     val blockedTitles = setOf(
         "love after marriage",
+        "toxic love",
         "historical drama",
         "drama",
         "romance"

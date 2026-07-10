@@ -225,11 +225,11 @@ private fun LibraryTopHeader(onSearch: (String) -> Unit) {
                 .align(Alignment.BottomCenter)
                 .padding(horizontal = 18.dp, vertical = 16.dp)
                 .fillMaxWidth()
-                .height(46.dp)
-                .clip(RoundedCornerShape(14.dp))
+                .height(52.dp)
+                .clip(RoundedCornerShape(16.dp))
                 .background(Color(0xD017151A))
-                .border(1.dp, Color(0x35FFFFFF), RoundedCornerShape(14.dp))
-                .padding(horizontal = 13.dp),
+                .border(1.dp, Color(0x35FFFFFF), RoundedCornerShape(16.dp))
+                .padding(horizontal = 15.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(Icons.Filled.Search, contentDescription = null, tint = Color(0xFFF2E3E7), modifier = Modifier.size(19.dp))
@@ -243,10 +243,12 @@ private fun LibraryTopHeader(onSearch: (String) -> Unit) {
                 keyboardActions = KeyboardActions(onSearch = { submitSearch() }),
                 modifier = Modifier.weight(1f),
                 decorationBox = { innerTextField ->
-                    if (searchText.isBlank()) {
-                        Text(stringResource(R.string.search_films_hint), color = Color(0xFF9B858E), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
+                        if (searchText.isBlank()) {
+                            Text(stringResource(R.string.search_films_hint), color = Color(0xFF9B858E), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+                        }
+                        innerTextField()
                     }
-                    innerTextField()
                 }
             )
         }
