@@ -143,4 +143,55 @@
     <string name="speed_15x">1.5x</string>
     <string name="speed_2x">2x</string>
     <string name="speed_custom">%1$sx</string>
+
+    <string name="default_username">追剧达人</string>
+    <string name="update_profile_photo">更新个人资料照片</string>
+    <string name="banner_image">横幅图片</string>
+    <string name="avatar_image">头像</string>
+    <string name="update_banner_image">更新横幅图片</string>
+    <string name="update_avatar_image">更新头像</string>
+    <string name="choose_from_gallery">从相册选择</string>
+    <string name="choose_an_avatar">选择一个头像</string>
+    <string name="cancel">取消</string>
+
+    <!-- Stats -->
+    <string name="coins">金币</string>
+    <string name="watched">已观看</string>
+    <string name="episodes_cap">剧集</string>
+
+    <!-- Quick Actions -->
+    <string name="subscription">订阅</string>
+    <string name="wallet">钱包</string>
+    <string name="downloads">下载</string>
+
+    <!-- Sections -->
+    <string name="account_settings">账户设置</string>
+    <string name="edit_profile">编辑个人资料</string>
+    <string name="watch_history">观看历史</string>
+    <string name="my_watchlist">我的收藏</string>
+    <string name="preferences_support">偏好设置与支持</string>
+    <string name="language">语言</string>
+    <string name="settings">设置</string>
+    <string name="help_center">帮助中心</string>
+    <string name="privacy">隐私</string>
+    <string name="rate_us">给我们评分</string>
+    <string name="privacy_policy">隐私政策</string>
+    <string name="vip_gold_member">VIP 黄金会员</string>
+
+    <!-- Language Picker -->
+    <string name="english">英语</string>
+    <string name="spanish">西班牙语</string>
+    <string name="german">德语</string>
+    <string name="portuguese">葡萄牙语</string>
+    <string name="turkish">土耳其语</string>
+    <string name="arabic">阿拉伯语</string>
+    <string name="hindi">印地语</string>
+    <string name="japanese">日语</string>
+    <string name="korean">韩语</string>
+    <string name="chinese">中文</string>
+
+    <!-- Others -->
+    <string name="profile_avatar">个人头像</string>
+    <string name="preset_avatar">预设头像</string>
+    <string name="edit_profile_photo">编辑个人资料照片</string>
 </resources>

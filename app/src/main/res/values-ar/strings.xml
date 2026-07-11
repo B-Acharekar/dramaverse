@@ -143,4 +143,55 @@
     <string name="speed_15x">1.5×</string>
     <string name="speed_2x">2×</string>
     <string name="speed_custom">%1$s×</string>
+
+    <string name="default_username">عاشق الدراما</string>
+    <string name="update_profile_photo">تحديث صورة الملف الشخصي</string>
+    <string name="banner_image">صورة الغلاف</string>
+    <string name="avatar_image">الصورة الرمزية</string>
+    <string name="update_banner_image">تحديث صورة الغلاف</string>
+    <string name="update_avatar_image">تحديث الصورة الرمزية</string>
+    <string name="choose_from_gallery">اختر من المعرض</string>
+    <string name="choose_an_avatar">اختر صورة رمزية</string>
+    <string name="cancel">إلغاء</string>
+
+    <!-- Stats -->
+    <string name="coins">العملات</string>
+    <string name="watched">تمت المشاهدة</string>
+    <string name="episodes_cap">الحلقات</string>
+
+    <!-- Quick Actions -->
+    <string name="subscription">الاشتراك</string>
+    <string name="wallet">المحفظة</string>
+    <string name="downloads">التنزيلات</string>
+
+    <!-- Sections -->
+    <string name="account_settings">إعدادات الحساب</string>
+    <string name="edit_profile">تعديل الملف الشخصي</string>
+    <string name="watch_history">سجل المشاهدة</string>
+    <string name="my_watchlist">قائمة المشاهدة</string>
+    <string name="preferences_support">التفضيلات والدعم</string>
+    <string name="language">اللغة</string>
+    <string name="settings">الإعدادات</string>
+    <string name="help_center">مركز المساعدة</string>
+    <string name="privacy">الخصوصية</string>
+    <string name="rate_us">قيّمنا</string>
+    <string name="privacy_policy">سياسة الخصوصية</string>
+    <string name="vip_gold_member">عضو VIP الذهبي</string>
+
+    <!-- Language Picker -->
+    <string name="english">الإنجليزية</string>
+    <string name="spanish">الإسبانية</string>
+    <string name="german">الألمانية</string>
+    <string name="portuguese">البرتغالية</string>
+    <string name="turkish">التركية</string>
+    <string name="arabic">العربية</string>
+    <string name="hindi">الهندية</string>
+    <string name="japanese">اليابانية</string>
+    <string name="korean">الكورية</string>
+    <string name="chinese">الصينية</string>
+
+    <!-- Others -->
+    <string name="profile_avatar">الصورة الرمزية للملف الشخصي</string>
+    <string name="preset_avatar">صورة رمزية جاهزة</string>
+    <string name="edit_profile_photo">تعديل صورة الملف الشخصي</string>
 </resources>

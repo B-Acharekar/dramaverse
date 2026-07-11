@@ -68,6 +68,7 @@ fun SearchResultsScreen(
     onLibrary: () -> Unit,
     onOpenShorts: (Int?) -> Unit,
     onSearch: (String) -> Unit,
+    onProfile:() -> Unit,
     viewModel: SearchViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -150,6 +151,7 @@ fun SearchResultsScreen(
             onHome = onHome,
             onShorts = onShorts,
             onLibrary = onLibrary,
+            onProfile = onProfile,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }

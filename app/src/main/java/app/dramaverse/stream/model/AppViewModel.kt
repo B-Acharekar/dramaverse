@@ -34,7 +34,8 @@ enum class AppStep {
     Home,
     Shorts,
     Library,
-    Search
+    Search,
+    Profile
 }
 
 data class AppUiState(
@@ -121,6 +122,10 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update { it.copy(currentStep = AppStep.Library, selectedShortFilmId = null) }
     }
 
+    fun openProfile(){
+        _uiState.update { it.copy(currentStep = AppStep.Profile, selectedShortFilmId = null) }
+    }
+
     fun openSearch(query: String) {
         val trimmed = query.trim()
         if (trimmed.isBlank()) return
@@ -184,6 +189,51 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+
+    //Profile ViewModels
+    fun openEditProfile() {
+        Log.d(TAG, "openEditProfile: not yet implemented")
+    }
+
+    fun openWatchHistory() {
+        Log.d(TAG, "openWatchHistory: not yet implemented")
+    }
+
+    fun openWatchlist() {
+        Log.d(TAG, "openWatchlist: not yet implemented")
+    }
+
+    fun openLanguageSettings() {
+        Log.d(TAG, "openLanguageSettings: not yet implemented")
+    }
+
+    fun openSettings() {
+        Log.d(TAG, "openSettings: not yet implemented")
+    }
+
+    fun openHelpCenter() {
+        Log.d(TAG, "openHelpCenter: not yet implemented")
+    }
+
+    fun openRateUs() {
+        Log.d(TAG, "openRateUs: not yet implemented")
+    }
+
+    fun openPrivacyPolicy() {
+        Log.d(TAG, "openPrivacyPolicy: not yet implemented")
+    }
+
+    fun openSubscription() {
+        Log.d(TAG, "openSubscription: not yet implemented")
+    }
+
+    fun openWallet() {
+        Log.d(TAG, "openWallet: not yet implemented")
+    }
+
+    fun openDownloads() {
+        Log.d(TAG, "openDownloads: not yet implemented")
+    }
 }
 
 private fun configureRemoteConfig(context: Context): FirebaseRemoteConfig? {
@@ -201,3 +251,5 @@ private fun configureRemoteConfig(context: Context): FirebaseRemoteConfig? {
         Log.w(TAG, "Firebase Remote Config is using local defaults until Firebase config is added.", it)
     }.getOrNull()
 }
+
+

@@ -22,6 +22,7 @@ import app.dramaverse.stream.screen.HomeScreen
 import app.dramaverse.stream.screen.LanguageScreen
 import app.dramaverse.stream.screen.LibraryScreen
 import app.dramaverse.stream.screen.OnboardingScreen
+import app.dramaverse.stream.screen.ProfileScreen
 import app.dramaverse.stream.screen.SearchResultsScreen
 import app.dramaverse.stream.screen.ShortsScreen
 
@@ -64,7 +65,8 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
             backendBaseUrl = uiState.backendBaseUrl,
             onOpenShorts = viewModel::openShorts,
             onLibrary = viewModel::openLibrary,
-            onSearch = viewModel::openSearch
+            onSearch = viewModel::openSearch,
+            onProfile = viewModel::openProfile
         )
 
         AppStep.Shorts -> ShortsScreen(
@@ -72,7 +74,8 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
             initialFilmId = uiState.selectedShortFilmId,
             onBack = viewModel::openHome,
             onHome = viewModel::openHome,
-            onLibrary = viewModel::openLibrary
+            onLibrary = viewModel::openLibrary,
+            onProfile = viewModel::openProfile
         )
 
         AppStep.Library -> LibraryScreen(
@@ -80,7 +83,8 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
             onHome = viewModel::openHome,
             onShorts = { viewModel.openShorts(null) },
             onOpenShorts = viewModel::openShorts,
-            onSearch = viewModel::openSearch
+            onSearch = viewModel::openSearch,
+            onProfile = viewModel::openProfile
         )
 
         AppStep.Search -> SearchResultsScreen(
@@ -91,7 +95,23 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
             onShorts = { viewModel.openShorts(null) },
             onLibrary = viewModel::openLibrary,
             onOpenShorts = viewModel::openShorts,
-            onSearch = viewModel::openSearch
+            onSearch = viewModel::openSearch,
+            onProfile = viewModel::openProfile
+        )
+        AppStep.Profile -> ProfileScreen(
+            onHome = viewModel::openHome,
+            onLibrary = viewModel::openLibrary,
+//            onEditProfile = viewModel::openEditProfile,
+            onWatchHistory = viewModel::openWatchHistory,
+            onMyWatchlist = viewModel::openWatchlist,
+            onLanguage = viewModel::openLanguageSettings,
+            onSettings = viewModel::openSettings,
+            onHelpCenter = viewModel::openHelpCenter,
+            onRateUs = viewModel::openRateUs,
+            onPrivacyPolicy = viewModel::openPrivacyPolicy,
+//            onSubscription = viewModel::openSubscription,
+//            onWallet = viewModel::openWallet,
+//            onDownloads = viewModel::openDownloads
         )
     }
 }

@@ -143,4 +143,55 @@
     <string name="speed_15x">1.5x</string>
     <string name="speed_2x">2x</string>
     <string name="speed_custom">%1$sx</string>
+
+    <string name="default_username">ドラマファン</string>
+    <string name="update_profile_photo">プロフィール写真を更新</string>
+    <string name="banner_image">バナー画像</string>
+    <string name="avatar_image">アバター画像</string>
+    <string name="update_banner_image">バナー画像を更新</string>
+    <string name="update_avatar_image">アバター画像を更新</string>
+    <string name="choose_from_gallery">ギャラリーから選択</string>
+    <string name="choose_an_avatar">アバターを選択</string>
+    <string name="cancel">キャンセル</string>
+
+    <!-- Stats -->
+    <string name="coins">コイン</string>
+    <string name="watched">視聴済み</string>
+    <string name="episodes_cap">エピソード</string>
+
+    <!-- Quick Actions -->
+    <string name="subscription">サブスクリプション</string>
+    <string name="wallet">ウォレット</string>
+    <string name="downloads">ダウンロード</string>
+
+    <!-- Sections -->
+    <string name="account_settings">アカウント設定</string>
+    <string name="edit_profile">プロフィールを編集</string>
+    <string name="watch_history">視聴履歴</string>
+    <string name="my_watchlist">マイウォッチリスト</string>
+    <string name="preferences_support">設定とサポート</string>
+    <string name="language">言語</string>
+    <string name="settings">設定</string>
+    <string name="help_center">ヘルプセンター</string>
+    <string name="privacy">プライバシー</string>
+    <string name="rate_us">評価する</string>
+    <string name="privacy_policy">プライバシーポリシー</string>
+    <string name="vip_gold_member">VIPゴールド会員</string>
+
+    <!-- Language Picker -->
+    <string name="english">英語</string>
+    <string name="spanish">スペイン語</string>
+    <string name="german">ドイツ語</string>
+    <string name="portuguese">ポルトガル語</string>
+    <string name="turkish">トルコ語</string>
+    <string name="arabic">アラビア語</string>
+    <string name="hindi">ヒンディー語</string>
+    <string name="japanese">日本語</string>
+    <string name="korean">韓国語</string>
+    <string name="chinese">中国語</string>
+
+    <!-- Others -->
+    <string name="profile_avatar">プロフィールアバター</string>
+    <string name="preset_avatar">プリセットアバター</string>
+    <string name="edit_profile_photo">プロフィール写真を編集</string>
 </resources>

@@ -112,6 +112,7 @@ fun ShortsScreen(
     onBack: () -> Unit,
     onHome: () -> Unit,
     onLibrary: () -> Unit,
+    onProfile:() -> Unit,
     viewModel: ShortsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -264,6 +265,7 @@ fun ShortsScreen(
                 onHome = onHome,
                 onShorts = {},
                 onLibrary = onLibrary,
+                onProfile = onProfile,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
         }

@@ -143,4 +143,55 @@
     <string name="speed_15x">1.5x</string>
     <string name="speed_2x">2x</string>
     <string name="speed_custom">%1$sx</string>
+
+    <string name="default_username">ड्रामा प्रेमी</string>
+    <string name="update_profile_photo">प्रोफ़ाइल फ़ोटो अपडेट करें</string>
+    <string name="banner_image">बैनर छवि</string>
+    <string name="avatar_image">अवतार छवि</string>
+    <string name="update_banner_image">बैनर छवि अपडेट करें</string>
+    <string name="update_avatar_image">अवतार छवि अपडेट करें</string>
+    <string name="choose_from_gallery">गैलरी से चुनें</string>
+    <string name="choose_an_avatar">एक अवतार चुनें</string>
+    <string name="cancel">रद्द करें</string>
+
+    <!-- Stats -->
+    <string name="coins">सिक्के</string>
+    <string name="watched">देखा गया</string>
+    <string name="episodes_cap">एपिसोड</string>
+
+    <!-- Quick Actions -->
+    <string name="subscription">सदस्यता</string>
+    <string name="wallet">वॉलेट</string>
+    <string name="downloads">डाउनलोड</string>
+
+    <!-- Sections -->
+    <string name="account_settings">खाता सेटिंग्स</string>
+    <string name="edit_profile">प्रोफ़ाइल संपादित करें</string>
+    <string name="watch_history">देखने का इतिहास</string>
+    <string name="my_watchlist">मेरी वॉचलिस्ट</string>
+    <string name="preferences_support">प्राथमिकताएँ और सहायता</string>
+    <string name="language">भाषा</string>
+    <string name="settings">सेटिंग्स</string>
+    <string name="help_center">सहायता केंद्र</string>
+    <string name="privacy">गोपनीयता</string>
+    <string name="rate_us">हमें रेट करें</string>
+    <string name="privacy_policy">गोपनीयता नीति</string>
+    <string name="vip_gold_member">वीआईपी गोल्ड सदस्य</string>
+
+    <!-- Language Picker -->
+    <string name="english">अंग्रेज़ी</string>
+    <string name="spanish">स्पेनिश</string>
+    <string name="german">जर्मन</string>
+    <string name="portuguese">पुर्तगाली</string>
+    <string name="turkish">तुर्की</string>
+    <string name="arabic">अरबी</string>
+    <string name="hindi">हिन्दी</string>
+    <string name="japanese">जापानी</string>
+    <string name="korean">कोरियाई</string>
+    <string name="chinese">चीनी</string>
+
+    <!-- Others -->
+    <string name="profile_avatar">प्रोफ़ाइल अवतार</string>
+    <string name="preset_avatar">पूर्वनिर्धारित अवतार</string>
+    <string name="edit_profile_photo">प्रोफ़ाइल फ़ोटो संपादित करें</string>
 </resources>

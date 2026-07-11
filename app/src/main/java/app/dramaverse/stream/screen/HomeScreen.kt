@@ -85,6 +85,7 @@ fun HomeScreen(
     onOpenShorts: (Int?) -> Unit,
     onLibrary: () -> Unit,
     onSearch: (String) -> Unit,
+    onProfile:() -> Unit,
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -120,6 +121,7 @@ fun HomeScreen(
             onHome = {},
             onShorts = { onOpenShorts(null) },
             onLibrary = onLibrary,
+            onProfile = onProfile,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
@@ -642,6 +644,7 @@ fun BottomNavigationBar(
     onHome: () -> Unit,
     onShorts: () -> Unit,
     onLibrary: () -> Unit,
+    onProfile:() -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -658,7 +661,7 @@ fun BottomNavigationBar(
         NavItem(Icons.Filled.Explore, stringResource(R.string.nav_shorts), selected == "Shorts", onShorts)
         NavItem(Icons.Filled.VideoLibrary, stringResource(R.string.nav_library), selected == "Library", onLibrary)
         NavItem(Icons.Filled.CardGiftcard, stringResource(R.string.nav_rewards), selected == "Rewards", {})
-        NavItem(Icons.Filled.Person, stringResource(R.string.nav_profile), selected == "Profile", {})
+        NavItem(Icons.Filled.Person, stringResource(R.string.nav_profile), selected == "Profile", onProfile)
     }
 }
 

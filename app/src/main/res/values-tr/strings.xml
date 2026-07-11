@@ -143,4 +143,55 @@
     <string name="speed_15x">1.5x</string>
     <string name="speed_2x">2x</string>
     <string name="speed_custom">%1$sx</string>
+
+    <string name="default_username">Drama Hayranı</string>
+    <string name="update_profile_photo">Profil Fotoğrafını Güncelle</string>
+    <string name="banner_image">Afiş Görseli</string>
+    <string name="avatar_image">Avatar Görseli</string>
+    <string name="update_banner_image">Afiş Görselini Güncelle</string>
+    <string name="update_avatar_image">Avatar Görselini Güncelle</string>
+    <string name="choose_from_gallery">Galeriden Seç</string>
+    <string name="choose_an_avatar">Bir Avatar Seç</string>
+    <string name="cancel">İptal</string>
+
+    <!-- Stats -->
+    <string name="coins">JETON</string>
+    <string name="watched">İZLENDİ</string>
+    <string name="episodes_cap">BÖLÜMLER</string>
+
+    <!-- Quick Actions -->
+    <string name="subscription">Abonelik</string>
+    <string name="wallet">Cüzdan</string>
+    <string name="downloads">İndirilenler</string>
+
+    <!-- Sections -->
+    <string name="account_settings">HESAP AYARLARI</string>
+    <string name="edit_profile">Profili Düzenle</string>
+    <string name="watch_history">İzleme Geçmişi</string>
+    <string name="my_watchlist">İzleme Listem</string>
+    <string name="preferences_support">TERCİHLER VE DESTEK</string>
+    <string name="language">Dil</string>
+    <string name="settings">Ayarlar</string>
+    <string name="help_center">Yardım Merkezi</string>
+    <string name="privacy">GİZLİLİK</string>
+    <string name="rate_us">Bizi Değerlendir</string>
+    <string name="privacy_policy">Gizlilik Politikası</string>
+    <string name="vip_gold_member">VIP ALTIN ÜYE</string>
+
+    <!-- Language Picker -->
+    <string name="english">İngilizce</string>
+    <string name="spanish">İspanyolca</string>
+    <string name="german">Almanca</string>
+    <string name="portuguese">Portekizce</string>
+    <string name="turkish">Türkçe</string>
+    <string name="arabic">Arapça</string>
+    <string name="hindi">Hintçe</string>
+    <string name="japanese">Japonca</string>
+    <string name="korean">Korece</string>
+    <string name="chinese">Çince</string>
+
+    <!-- Others -->
+    <string name="profile_avatar">Profil avatarı</string>
+    <string name="preset_avatar">Hazır avatar</string>
+    <string name="edit_profile_photo">Profil fotoğrafını düzenle</string>
 </resources>
