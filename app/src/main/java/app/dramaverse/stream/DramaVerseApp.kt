@@ -17,17 +17,21 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.dramaverse.stream.model.AppStep
 import app.dramaverse.stream.model.AppViewModel
+import app.dramaverse.stream.model.ProfileViewModel
 import app.dramaverse.stream.screen.CustomSplashScreen
 import app.dramaverse.stream.screen.HomeScreen
 import app.dramaverse.stream.screen.LanguageScreen
 import app.dramaverse.stream.screen.LibraryScreen
+import app.dramaverse.stream.screen.NotificationScreen
 import app.dramaverse.stream.screen.OnboardingScreen
+import app.dramaverse.stream.screen.PlannerScreen
 import app.dramaverse.stream.screen.ProfileScreen
+import app.dramaverse.stream.screen.RewardScreen
 import app.dramaverse.stream.screen.SearchResultsScreen
 import app.dramaverse.stream.screen.ShortsScreen
 
 @Composable
-fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
+fun DramaVerseApp(viewModel: AppViewModel = viewModel(),profileViewModel: ProfileViewModel = viewModel()) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
@@ -53,7 +57,6 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
                     viewModel.onLanguageFinished(language)
                 }
             )
-            NotificationPermissionRequester()
         }
 
         AppStep.Onboarding -> OnboardingScreen(
@@ -66,7 +69,9 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
             onOpenShorts = viewModel::openShorts,
             onLibrary = viewModel::openLibrary,
             onSearch = viewModel::openSearch,
-            onProfile = viewModel::openProfile
+            onRewards = viewModel::openRewards,
+            onProfile = viewModel::openProfile,
+            onNotifications = viewModel::openNotifications
         )
 
         AppStep.Shorts -> ShortsScreen(
@@ -75,6 +80,7 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
             onBack = viewModel::openHome,
             onHome = viewModel::openHome,
             onLibrary = viewModel::openLibrary,
+            onRewards = viewModel::openRewards,
             onProfile = viewModel::openProfile
         )
 
@@ -84,6 +90,8 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
             onShorts = { viewModel.openShorts(null) },
             onOpenShorts = viewModel::openShorts,
             onSearch = viewModel::openSearch,
+            onRewards = viewModel::openRewards,
+            onPlanner = viewModel::openPlanner,
             onProfile = viewModel::openProfile
         )
 
@@ -96,24 +104,54 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel()) {
             onLibrary = viewModel::openLibrary,
             onOpenShorts = viewModel::openShorts,
             onSearch = viewModel::openSearch,
+            onRewards = viewModel::openRewards,
             onProfile = viewModel::openProfile
         )
+
+        AppStep.Rewards -> RewardScreen(
+            backendBaseUrl = uiState.backendBaseUrl,
+            onHome = viewModel::openHome,
+            onShorts = { viewModel.openShorts(null) },
+            onLibrary = viewModel::openLibrary,
+            onProfile = viewModel::openProfile
+        )
+
+        AppStep.Planner -> PlannerScreen(
+            backendBaseUrl = uiState.backendBaseUrl,
+            onBack = viewModel::openHome,
+            onHome = viewModel::openHome,
+            onShorts = { viewModel.openShorts(null) },
+            onLibrary = viewModel::openLibrary,
+            onProfile = viewModel::openProfile,
+            onRewards = viewModel::openRewards
+        )
+
+        AppStep.Notifications -> NotificationScreen(
+            backendBaseUrl = uiState.backendBaseUrl,
+            onBack = viewModel::openHome,
+            onHome = viewModel::openHome,
+            onShorts = { viewModel.openShorts(null) },
+            onLibrary = viewModel::openLibrary,
+            onRewards = viewModel::openRewards,
+            onProfile = viewModel::openProfile
+        )
+
         AppStep.Profile -> ProfileScreen(
             onHome = viewModel::openHome,
             onLibrary = viewModel::openLibrary,
-//            onEditProfile = viewModel::openEditProfile,
-            onWatchHistory = viewModel::openWatchHistory,
-            onMyWatchlist = viewModel::openWatchlist,
-            onLanguage = viewModel::openLanguageSettings,
-            onSettings = viewModel::openSettings,
-            onHelpCenter = viewModel::openHelpCenter,
-            onRateUs = viewModel::openRateUs,
-            onPrivacyPolicy = viewModel::openPrivacyPolicy,
+            onRewards = viewModel::openRewards,
+//            onEditProfile = profileViewModel::openEditProfile,
+            onWatchHistory = profileViewModel::openWatchHistory,
+            onMyWatchlist = profileViewModel::openWatchlist,
+            onRateUs = profileViewModel::openRateUs,
+            onPrivacyPolicy = profileViewModel::openPrivacyPolicy,
 //            onSubscription = viewModel::openSubscription,
 //            onWallet = viewModel::openWallet,
 //            onDownloads = viewModel::openDownloads
         )
     }
+
+    NotificationPermissionRequester()
 }
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {

@@ -68,7 +68,8 @@ fun SearchResultsScreen(
     onLibrary: () -> Unit,
     onOpenShorts: (Int?) -> Unit,
     onSearch: (String) -> Unit,
-    onProfile:() -> Unit,
+    onRewards: () -> Unit,
+    onProfile: () -> Unit,
     viewModel: SearchViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -151,6 +152,7 @@ fun SearchResultsScreen(
             onHome = onHome,
             onShorts = onShorts,
             onLibrary = onLibrary,
+            onRewards = onRewards,
             onProfile = onProfile,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
@@ -167,9 +169,9 @@ private fun SearchHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(92.dp)
+            .height(102.dp)
             .background(Brush.verticalGradient(listOf(Color(0xFF050506), Color(0xE909090B), Color.Transparent)))
-            .padding(start = 14.dp, end = 18.dp, top = 24.dp),
+            .padding(start = 14.dp, end = 18.dp, top = 28.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
@@ -186,11 +188,11 @@ private fun SearchHeader(
         Row(
             modifier = Modifier
                 .weight(1f)
-                .height(46.dp)
-                .clip(RoundedCornerShape(14.dp))
+                .height(52.dp)
+                .clip(RoundedCornerShape(16.dp))
                 .background(Color(0xD017151A))
-                .border(1.dp, Color(0x44FFFFFF), RoundedCornerShape(14.dp))
-                .padding(horizontal = 13.dp),
+                .border(1.dp, Color(0x44FFFFFF), RoundedCornerShape(16.dp))
+                .padding(horizontal = 15.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -211,10 +213,12 @@ private fun SearchHeader(
                 keyboardActions = KeyboardActions(onSearch = { onSubmit() }),
                 modifier = Modifier.weight(1f),
                 decorationBox = { innerTextField ->
-                    if (query.isBlank()) {
-                        Text(stringResource(R.string.search_films_hint), color = Color(0xFF9B858E), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
+                        if (query.isBlank()) {
+                            Text(stringResource(R.string.search_films_hint), color = Color(0xFF9B858E), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+                        }
+                        innerTextField()
                     }
-                    innerTextField()
                 }
             )
         }

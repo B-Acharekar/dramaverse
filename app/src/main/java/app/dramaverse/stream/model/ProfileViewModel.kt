@@ -134,4 +134,47 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     private fun deleteFileQuietly(fileName: String) {
         runCatching { File(appContext.filesDir, fileName).delete() }
     }
+    fun openEditProfile() {
+        Log.d(TAG, "openEditProfile: not yet implemented")
+    }
+
+    fun openWatchHistory() {
+        Log.d(TAG, "openWatchHistory: not yet implemented")
+    }
+
+    fun openWatchlist() {
+        Log.d(TAG, "openWatchlist: not yet implemented")
+    }
+
+    fun openLanguageSettings() {
+        Log.d(TAG, "openLanguageSettings: not yet implemented")
+    }
+
+    fun openSettings() {
+        Log.d(TAG, "openSettings: not yet implemented")
+    }
+
+    fun openHelpCenter() {
+        Log.d(TAG, "openHelpCenter: not yet implemented")
+    }
+
+    fun openRateUs() {
+        Log.d(TAG, "openRateUs: not yet implemented")
+    }
+
+    fun openPrivacyPolicy() {
+        Log.d(TAG, "openPrivacyPolicy: not yet implemented")
+    }
+
+    fun openSubscription() {
+        Log.d(TAG, "openSubscription: not yet implemented")
+    }
+
+    fun openWallet() {
+        Log.d(TAG, "openWallet: not yet implemented")
+    }
+
+    fun openDownloads() {
+        Log.d(TAG, "openDownloads: not yet implemented")
+    }
 }

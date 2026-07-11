@@ -50,6 +50,8 @@
     <!-- Hero section -->
     <string name="featured">FEATURED</string>
     <string name="watch_now">Watch Now</string>
+    <string name="save">Save</string>
+    <string name="saved">Saved</string>
 
     <!-- Continue watching -->
     <string name="continue_watching">Continue Watching</string>
@@ -74,6 +76,7 @@
     <string name="vip_short">VIP</string>
     <string name="join_vip_club">Join VIP Club</string>
     <string name="unlock_all_episodes">Unlock all episodes\ntoday</string>
+    <string name="schedule">Schedule</string>
     <string name="daily_reward_short">50</string>
     <string name="daily_rewards">Daily Rewards</string>
     <string name="claim_daily_coins">Claim your 50 coins</string>
@@ -83,6 +86,7 @@
     <string name="nav_shorts">Shorts</string>
     <string name="nav_library">Library</string>
     <string name="nav_rewards">Rewards</string>
+    <string name="nav_planner">Planner</string>
     <string name="nav_profile">Profile</string>
 
     <!-- Library / Search -->

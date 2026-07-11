@@ -26,6 +26,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <receiver
+            android:name=".data.DramaReminderReceiver"
+            android:exported="false" />
     </application>
 
 </manifest>

@@ -108,6 +108,7 @@ fun ProfileScreen(
     onShorts: () -> Unit = {},
     onLibrary: () -> Unit = {},
     onEditAvatar: () -> Unit = {},
+    onRewards:() -> Unit = {},
 //    onSubscription: () -> Unit = {},
 //    onWallet: () -> Unit = {},
 //    onDownloads: () -> Unit = {},
@@ -153,6 +154,7 @@ fun ProfileScreen(
                 onHome = onHome,
                 onShorts = onShorts,
                 onLibrary = onLibrary,
+                onRewards = onRewards,
                 onProfile = {}
             )
         }

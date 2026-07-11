@@ -112,6 +112,7 @@ fun ShortsScreen(
     onBack: () -> Unit,
     onHome: () -> Unit,
     onLibrary: () -> Unit,
+    onRewards: () -> Unit,
     onProfile:() -> Unit,
     viewModel: ShortsViewModel = viewModel()
 ) {
@@ -232,7 +233,7 @@ fun ShortsScreen(
                     onReminderClick = { item, enabled ->
                         viewModel.setReminder(
                             backendBaseUrl = backendBaseUrl,
-                            filmId = item.film.id,
+                            film = item.film,
                             enabled = enabled
                         )
                     },
@@ -265,6 +266,7 @@ fun ShortsScreen(
                 onHome = onHome,
                 onShorts = {},
                 onLibrary = onLibrary,
+                onRewards = onRewards,
                 onProfile = onProfile,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
@@ -310,7 +312,7 @@ private fun ShortsPage(
     var pendingSeekMs by remember(item.playUrl) { mutableStateOf<Long?>(null) }
     var subtitleText by remember(item.playUrl) { mutableStateOf("") }
     var feedbackText by remember(item.playUrl) { mutableStateOf("") }
-    var selectedSubtitleUrl by remember(item.playUrl, item.subtitleUrl) { mutableStateOf(item.subtitleUrl) }
+    var selectedSubtitleUrl by remember(item.playUrl) { mutableStateOf("") }
     var showSubtitleOptions by remember(item.playUrl) { mutableStateOf(false) }
     var showEpisodeOptions by remember(item.film.id) { mutableStateOf(false) }
     val context = LocalContext.current
@@ -450,9 +452,15 @@ private fun ShortsPage(
                     if (ccEnabled && item.subtitleUrl.isNotBlank()) Gold else Color.White,
                     onClick = {
                         if (item.subtitleTracks.size > 1) {
+                            if (!ccEnabled && selectedSubtitleUrl.isBlank()) {
+                                selectedSubtitleUrl = item.subtitleTracks.firstOrNull()?.url.orEmpty()
+                            }
                             if (!ccEnabled) onToggleCc()
                             showSubtitleOptions = !showSubtitleOptions
                         } else {
+                            if (!ccEnabled && selectedSubtitleUrl.isBlank()) {
+                                selectedSubtitleUrl = item.subtitleTracks.firstOrNull()?.url.orEmpty()
+                            }
                             onToggleCc()
                             showSubtitleOptions = false
                         }
@@ -1027,7 +1035,7 @@ private fun HlsVideoPlayer(playUrl: String, modifier: Modifier) {
         subtitleTracks = emptyList(),
         selectedSubtitleUrl = "",
         isPlaying = true,
-        ccEnabled = true,
+        ccEnabled = false,
         controlsVisible = false,
         playbackSpeed = 1f,
         repeatCurrent = true,
@@ -1082,7 +1090,7 @@ private fun HlsVideoPlayer(
                 MediaItem.SubtitleConfiguration.Builder(Uri.parse(track.url))
                     .setMimeType(subtitleMimeType(track.url))
                     .setLanguage(track.language.ifBlank { "en" })
-                    .setSelectionFlags(androidx.media3.common.C.SELECTION_FLAG_DEFAULT)
+                    .setSelectionFlags(0)
                     .build()
             }
         val mediaItem = MediaItem.Builder()

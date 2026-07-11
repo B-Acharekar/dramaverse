@@ -78,6 +78,8 @@ fun LibraryScreen(
     onShorts: () -> Unit,
     onOpenShorts: (Int?) -> Unit,
     onSearch: (String) -> Unit,
+    onRewards: () -> Unit,
+    onPlanner: () -> Unit,
     onProfile:() -> Unit,
     viewModel: LibraryViewModel = viewModel()
 ) {
@@ -100,7 +102,8 @@ fun LibraryScreen(
                 feed = feed ?: LibraryFeed(emptyList(), emptyList(), emptyList(), emptyList(), emptyList()),
                 errorMessage = uiState.errorMessage,
                 onSearch = onSearch,
-                onOpenShorts = onOpenShorts
+                onOpenShorts = onOpenShorts,
+                onPlanner = onPlanner
             )
         }
         BottomNavigationBar(
@@ -108,6 +111,7 @@ fun LibraryScreen(
             onHome = onHome,
             onShorts = onShorts,
             onLibrary = {},
+            onRewards = onRewards,
             onProfile = onProfile,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
@@ -119,7 +123,8 @@ private fun LibraryContent(
     feed: LibraryFeed,
     errorMessage: String?,
     onSearch: (String) -> Unit,
-    onOpenShorts: (Int?) -> Unit
+    onOpenShorts: (Int?) -> Unit,
+    onPlanner: () -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -148,6 +153,8 @@ private fun LibraryContent(
                     subtitle = stringResource(R.string.library_watch_list_subtitle),
                     items = feed.watchList,
                     emptyText = stringResource(R.string.library_watch_list_empty),
+                    actionLabel = "Schedule",
+                    onAction = onPlanner,
                     onOpenShorts = onOpenShorts
                 )
             }
@@ -225,11 +232,11 @@ private fun LibraryTopHeader(onSearch: (String) -> Unit) {
                 .align(Alignment.BottomCenter)
                 .padding(horizontal = 18.dp, vertical = 16.dp)
                 .fillMaxWidth()
-                .height(46.dp)
-                .clip(RoundedCornerShape(14.dp))
+                .height(52.dp)
+                .clip(RoundedCornerShape(16.dp))
                 .background(Color(0xD017151A))
-                .border(1.dp, Color(0x35FFFFFF), RoundedCornerShape(14.dp))
-                .padding(horizontal = 13.dp),
+                .border(1.dp, Color(0x35FFFFFF), RoundedCornerShape(16.dp))
+                .padding(horizontal = 15.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(Icons.Filled.Search, contentDescription = null, tint = Color(0xFFF2E3E7), modifier = Modifier.size(19.dp))
@@ -243,10 +250,12 @@ private fun LibraryTopHeader(onSearch: (String) -> Unit) {
                 keyboardActions = KeyboardActions(onSearch = { submitSearch() }),
                 modifier = Modifier.weight(1f),
                 decorationBox = { innerTextField ->
-                    if (searchText.isBlank()) {
-                        Text(stringResource(R.string.search_films_hint), color = Color(0xFF9B858E), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
+                        if (searchText.isBlank()) {
+                            Text(stringResource(R.string.search_films_hint), color = Color(0xFF9B858E), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+                        }
+                        innerTextField()
                     }
-                    innerTextField()
                 }
             )
         }
@@ -344,11 +353,13 @@ private fun LibraryFilmRail(
     subtitle: String,
     items: List<DramaItem>,
     emptyText: String,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null,
     onOpenShorts: (Int?) -> Unit
 ) {
     Box(Modifier.padding(horizontal = 18.dp)) {
         Column {
-            LibraryHeader(title, subtitle)
+            LibraryHeader(title, subtitle, actionLabel, onAction)
         }
     }
     if (items.isEmpty()) {
@@ -450,13 +461,32 @@ private fun TopStarsSection(stars: List<TopStar>, onOpenShorts: (Int?) -> Unit) 
 }
 
 @Composable
-private fun LibraryHeader(title: String, subtitle: String?) {
+private fun LibraryHeader(
+    title: String,
+    subtitle: String?,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null
+) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.weight(1f)) {
             Text(title, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
             if (subtitle != null) {
                 Text(subtitle, color = Color(0xFFBBA3AB), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
             }
+        }
+        if (actionLabel != null && onAction != null) {
+            Text(
+                actionLabel,
+                color = Gold,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 0.sp,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color(0x18F5C65B))
+                    .clickable(onClick = onAction)
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
+            )
         }
     }
     Spacer(modifier = Modifier.height(12.dp))

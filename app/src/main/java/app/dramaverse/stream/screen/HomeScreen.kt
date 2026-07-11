@@ -57,6 +57,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -85,6 +86,8 @@ fun HomeScreen(
     onOpenShorts: (Int?) -> Unit,
     onLibrary: () -> Unit,
     onSearch: (String) -> Unit,
+    onRewards: () -> Unit,
+    onNotifications: () -> Unit,
     onProfile:() -> Unit,
     viewModel: HomeViewModel = viewModel()
 ) {
@@ -110,9 +113,11 @@ fun HomeScreen(
                 savedFilmIds = uiState.savedFilmIds,
                 onMoodSelected = onSearch,
                 onSearchClick = { onSearch("hot") },
+                onNotifications = onNotifications,
                 onOpenShorts = onOpenShorts,
-                onToggleWatchList = { filmId, enabled ->
-                    viewModel.setReminder(backendBaseUrl, filmId, enabled)
+                onRewards = onRewards,
+                onToggleWatchList = { film, enabled ->
+                    viewModel.setReminder(backendBaseUrl, film, enabled)
                 }
             )
         }
@@ -121,6 +126,7 @@ fun HomeScreen(
             onHome = {},
             onShorts = { onOpenShorts(null) },
             onLibrary = onLibrary,
+            onRewards = onRewards,
             onProfile = onProfile,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
@@ -135,8 +141,10 @@ private fun HomeContent(
     savedFilmIds: Set<Int>,
     onMoodSelected: (String) -> Unit,
     onSearchClick: () -> Unit,
+    onNotifications: () -> Unit,
     onOpenShorts: (Int?) -> Unit,
-    onToggleWatchList: (Int, Boolean) -> Unit
+    onRewards: () -> Unit,
+    onToggleWatchList: (DramaItem, Boolean) -> Unit
 ) {
     val heroItems = feed.heroItems()
     val heroKeys = heroItems.map { it.uniqueKey() }.toSet()
@@ -153,11 +161,13 @@ private fun HomeContent(
         item {
             HeroCarousel(
                 items = heroItems,
+                hotTags = feed.hotTags,
                 selectedMood = selectedMood,
                 isMoodLoading = isMoodLoading,
                 savedFilmIds = savedFilmIds,
                 onMoodSelected = onMoodSelected,
                 onSearchClick = onSearchClick,
+                onNotifications = onNotifications,
                 onOpenShorts = onOpenShorts,
                 onToggleWatchList = onToggleWatchList
             )
@@ -167,7 +177,7 @@ private fun HomeContent(
         }
         item { PosterRail(title = stringResource(R.string.trending_now), items = trendingItems, showTrend = true, onOpenShorts = onOpenShorts) }
         item { TopRatedCard(feed.topRated, onOpenShorts) }
-        item { ActionCards() }
+        item { ActionCards(onRewards = onRewards) }
         item { Spacer(modifier = Modifier.height(18.dp)) }
     }
 }
@@ -175,13 +185,15 @@ private fun HomeContent(
 @Composable
 private fun HeroCarousel(
     items: List<DramaItem>,
+    hotTags: List<String>,
     selectedMood: String?,
     isMoodLoading: Boolean,
     savedFilmIds: Set<Int>,
     onMoodSelected: (String) -> Unit,
     onSearchClick: () -> Unit,
+    onNotifications: () -> Unit,
     onOpenShorts: (Int?) -> Unit,
-    onToggleWatchList: (Int, Boolean) -> Unit
+    onToggleWatchList: (DramaItem, Boolean) -> Unit
 ) {
     val pageCount = 10_000
     val startPage = pageCount / 2
@@ -215,13 +227,15 @@ private fun HeroCarousel(
                 onToggleWatchList = onToggleWatchList
             )
         }
-        HomeTopBar(
-            selectedMood = selectedMood,
-            isMoodLoading = isMoodLoading,
-            onMoodSelected = onMoodSelected,
-            onSearchClick = onSearchClick,
-            modifier = Modifier.align(Alignment.TopCenter)
-        )
+            HomeTopBar(
+                hotTags = hotTags,
+                selectedMood = selectedMood,
+                isMoodLoading = isMoodLoading,
+                onMoodSelected = onMoodSelected,
+                onSearchClick = onSearchClick,
+                onNotifications = onNotifications,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
     }
 }
 
@@ -232,7 +246,7 @@ private fun HeroSection(
     itemCount: Int,
     saved: Boolean,
     onOpenShorts: (Int?) -> Unit,
-    onToggleWatchList: (Int, Boolean) -> Unit
+    onToggleWatchList: (DramaItem, Boolean) -> Unit
 ) {
     val filmId = item.id.takeIf { it != 0 }
     Box(
@@ -302,8 +316,8 @@ private fun HeroSection(
                 PlusButton(
                     saved = saved,
                     onClick = {
-                        // Mirrors Shorts bookmark behavior: plus -> filled bookmark after save.
-                        filmId?.let { onToggleWatchList(it, !saved) }
+                        // Mirrors Shorts bookmark behavior: Save toggles the watchlist state immediately.
+                        filmId?.let { onToggleWatchList(item, !saved) }
                     }
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -333,10 +347,12 @@ private fun HeroIndicators(selectedIndex: Int, count: Int) {
 
 @Composable
 private fun HomeTopBar(
+    hotTags: List<String> = emptyList(),
     selectedMood: String? = null,
     isMoodLoading: Boolean = false,
     onMoodSelected: (String) -> Unit = {},
     onSearchClick: () -> Unit = {},
+    onNotifications: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -359,40 +375,15 @@ private fun HomeTopBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(40.dp)
+                .height(44.dp)
                 .padding(horizontal = 18.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            BrandMark()
             Spacer(modifier = Modifier.weight(1f))
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(Color(0x6618171C))
-                    .border(1.dp, Color(0x33FFFFFF), CircleShape)
-                    .clickable(onClick = onSearchClick),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Filled.Search, contentDescription = null, tint = Color(0xFFF2E3E7), modifier = Modifier.size(20.dp))
-            }
-            Spacer(modifier = Modifier.width(18.dp))
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(Color(0x6618171C))
-                    .border(1.dp, Color(0x33FFFFFF), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Filled.Notifications, contentDescription = null, tint = Color(0xFFE8D5DA), modifier = Modifier.size(19.dp))
-            }
-            Spacer(modifier = Modifier.width(14.dp))
-            Box(
-                modifier = Modifier
-                    .size(34.dp)
-                    .clip(CircleShape)
-                    .background(Brush.radialGradient(listOf(Color(0xFFF0B18B), Color(0xFF351B1F))))
-            )
+            HeaderIcon(Icons.Filled.Search, onSearchClick)
+            Spacer(modifier = Modifier.width(12.dp))
+            HeaderIcon(Icons.Filled.Notifications, onNotifications)
         }
         Spacer(modifier = Modifier.height(10.dp))
         LazyRow(
@@ -407,32 +398,59 @@ private fun HomeTopBar(
                     onClick = onSearchClick
                 )
             }
-            items(moodLabels) { label ->
+            items(hotTags.ifEmpty { fallbackHotTags }) { label ->
                 MoodChip(
-                    label = stringResource(label.display),
-                    selected = selectedMood == label.query,
-                    loading = isMoodLoading && selectedMood == label.query,
-                    onClick = { onMoodSelected(label.query) }
+                    label = label,
+                    selected = selectedMood.equals(label, ignoreCase = true),
+                    loading = isMoodLoading && selectedMood.equals(label, ignoreCase = true),
+                    onClick = { onMoodSelected(label) }
                 )
             }
         }
     }
 }
 
-private data class MoodLabel(
-    val display: Int,
-    val query: String
+private val fallbackHotTags = listOf(
+    "Billionaire",
+    "Revenge",
+    "CEO",
+    "Family",
+    "Romance",
+    "Thriller"
 )
 
-private val moodLabels = listOf(
-    MoodLabel(R.string.mood_happy, "happy"),
-    MoodLabel(R.string.mood_emotional, "emotional"),
-    MoodLabel(R.string.mood_action, "action"),
-    MoodLabel(R.string.mood_romance, "romance"),
-    MoodLabel(R.string.mood_horror, "horror"),
-    MoodLabel(R.string.mood_mind_blowing, "mind blowing"),
-    MoodLabel(R.string.mood_relax, "relax")
-)
+@Composable
+private fun BrandMark() {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Image(
+            painter = painterResource(R.drawable.icon_2),
+            contentDescription = null,
+            modifier = Modifier
+                .size(42.dp)
+                .padding(3.dp)
+                .clip(RoundedCornerShape(11.dp))
+                .background(Color.White),
+            contentScale = ContentScale.Fit
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        Text("DramaVerse", color = SoftPink, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+    }
+}
+
+@Composable
+private fun HeaderIcon(icon: ImageVector, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(38.dp)
+            .clip(CircleShape)
+            .background(Color(0x6618171C))
+            .border(1.dp, Color(0x33FFFFFF), CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(icon, contentDescription = null, tint = Color(0xFFF2E3E7), modifier = Modifier.size(20.dp))
+    }
+}
 
 @Composable
 private fun MoodChip(
@@ -609,26 +627,25 @@ private fun TopRatedCard(item: DramaItem, onOpenShorts: (Int?) -> Unit) {
 }
 
 @Composable
-private fun ActionCards() {
-    Row(
+private fun ActionCards(onRewards: () -> Unit) {
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 18.dp, vertical = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(horizontal = 18.dp, vertical = 16.dp)
     ) {
-        SmallActionCard(stringResource(R.string.vip_short), stringResource(R.string.join_vip_club), stringResource(R.string.unlock_all_episodes), Modifier.weight(1f))
-        SmallActionCard(stringResource(R.string.daily_reward_short), stringResource(R.string.daily_rewards), stringResource(R.string.claim_daily_coins), Modifier.weight(1f))
+        SmallActionCard(stringResource(R.string.vip_short), stringResource(R.string.join_vip_club), stringResource(R.string.unlock_all_episodes), Modifier.fillMaxWidth(), onRewards)
     }
 }
 
 @Composable
-private fun SmallActionCard(icon: String, title: String, body: String, modifier: Modifier) {
+private fun SmallActionCard(icon: String, title: String, body: String, modifier: Modifier, onClick: () -> Unit) {
     Column(
         modifier = modifier
             .height(108.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(Brush.verticalGradient(listOf(Color(0xFF2A1A22), Color(0xFF171318))))
             .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick)
             .padding(14.dp)
     ) {
         Text(icon, color = SoftPink, fontSize = 18.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
@@ -644,7 +661,8 @@ fun BottomNavigationBar(
     onHome: () -> Unit,
     onShorts: () -> Unit,
     onLibrary: () -> Unit,
-    onProfile:() -> Unit,
+    onRewards: () -> Unit = {},
+    onProfile:()->Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -660,7 +678,7 @@ fun BottomNavigationBar(
         NavItem(Icons.Filled.Home, stringResource(R.string.nav_home), selected == "Home", onHome)
         NavItem(Icons.Filled.Explore, stringResource(R.string.nav_shorts), selected == "Shorts", onShorts)
         NavItem(Icons.Filled.VideoLibrary, stringResource(R.string.nav_library), selected == "Library", onLibrary)
-        NavItem(Icons.Filled.CardGiftcard, stringResource(R.string.nav_rewards), selected == "Rewards", {})
+        NavItem(Icons.Filled.CardGiftcard, stringResource(R.string.nav_rewards), selected == "Rewards", onRewards)
         NavItem(Icons.Filled.Person, stringResource(R.string.nav_profile), selected == "Profile", onProfile)
     }
 }
@@ -736,14 +754,14 @@ private fun PremiumBadge(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun PlusButton(size: Int = 44, saved: Boolean, onClick: () -> Unit) {
+private fun PlusButton(saved: Boolean, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
-            .size(size.dp)
-            .clip(RoundedCornerShape(9.dp))
+            .size(50.dp)
+            .clip(RoundedCornerShape(13.dp))
             .background(if (saved) Color(0x33F5C65B) else Color(0xCC17171B))
-            .border(1.dp, if (saved) Gold else Color(0xFF343139), RoundedCornerShape(9.dp))
+            .border(1.dp, if (saved) Gold else Color(0xFF343139), RoundedCornerShape(13.dp))
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -754,7 +772,7 @@ private fun PlusButton(size: Int = 44, saved: Boolean, onClick: () -> Unit) {
         if (saved) {
             Icon(Icons.Filled.Bookmark, contentDescription = null, tint = Gold, modifier = Modifier.size(22.dp))
         } else {
-            Text("+", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Light, letterSpacing = 0.sp)
+            Text("+", color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.Light, letterSpacing = 0.sp)
         }
     }
 }

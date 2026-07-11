@@ -35,9 +35,28 @@ class LibraryRepository(
     private val authRepository: AuthRepository
 ) {
     private val cacheStore = LibraryCacheStore(context.applicationContext)
+    private val savedWatchListStore = SavedWatchListStore(context.applicationContext)
 
     suspend fun loadCachedLibrary(): LibraryFeed? = withContext(Dispatchers.IO) {
-        cacheStore.readFeed()
+        withLocalWatchList(cacheStore.readFeed())
+    }
+
+    private fun withLocalWatchList(feed: LibraryFeed?): LibraryFeed? {
+        val localWatchListItems = savedWatchListStore.readItems()
+            .filterNot { it.looksLikePlaceholder() }
+        if (feed == null) {
+            return localWatchListItems.takeIf { it.isNotEmpty() }?.let {
+                LibraryFeed(
+                    watchList = it.distinctFilms(),
+                    watchHistory = emptyList(),
+                    topStars = emptyList(),
+                    recommended = emptyList(),
+                    similarFilms = emptyList()
+                )
+            }
+        }
+        // Local saves are merged into cached data so Library reflects new saves before backend refresh finishes.
+        return feed.copy(watchList = (localWatchListItems + feed.watchList).distinctFilms())
     }
 
     suspend fun loadLibrary(
@@ -70,7 +89,8 @@ class LibraryRepository(
 
                 val historyItems = parseContinueWatching(history.await())
                 val watchListJson = watchList.await()
-                val watchListItems = collectDramaItems(watchListJson)
+                val localWatchListItems = savedWatchListStore.readItems()
+                val watchListItems = (localWatchListItems + collectDramaItems(watchListJson))
                     .filterNot { it.looksLikePlaceholder() }
                     .distinctFilms()
                 val recommendedJsons = recommendedPages.mapNotNull { it.await() }
@@ -106,13 +126,16 @@ class LibraryRepository(
                     .drop(displayedRecommendedItems.size)
                     .filterNot { it.id != 0 && it.id in (watchedIds + watchListIds) }
                     .filterNot { it.title.trim().lowercase() in excludedTitles }
+                    .filterNot { it.looksLikePlaceholder() }
 
                 LibraryFeed(
                     watchList = watchListItems,
                     watchHistory = historyItems,
                     topStars = collectTopStars(listOf(watchListJson, similarJson) + recommendedJsons).take(12),
                     recommended = displayedRecommendedItems,
-                    similarFilms = similarItems.ifEmpty { similarFallbackItems }.take(12)
+                    similarFilms = similarItems.ifEmpty { similarFallbackItems }
+                        .filterNot { it.looksLikePlaceholder() }
+                        .take(12)
                 ).also { cacheStore.writeFeed(it) }
             }
         }
@@ -120,7 +143,7 @@ class LibraryRepository(
 }
 
 private class LibraryCacheStore(context: Context) :
-    SQLiteOpenHelper(context, "dramaverse_library.db", null, 1) {
+    SQLiteOpenHelper(context, "dramaverse_library.db", null, 2) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
             "CREATE TABLE library_cache (" +
@@ -303,9 +326,11 @@ private fun DramaItem.looksLikePlaceholder(): Boolean {
     val normalizedGenre = genre.trim().lowercase()
     val blockedTitles = setOf(
         "love after marriage",
+        "toxic love",
         "historical drama",
         "drama",
-        "romance"
+        "romance",
+        "melodrama"
     )
     return title.isBlank() ||
         normalizedTitle in blockedTitles ||

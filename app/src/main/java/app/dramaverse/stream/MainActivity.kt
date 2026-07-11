@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import app.dramaverse.stream.data.DramaNotificationScheduler
 import app.dramaverse.stream.data.LocaleHelper
 import app.dramaverse.stream.ui.theme.DramaVerseTheme
 
@@ -19,6 +20,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         useDefaultSystemBars()
+        DramaNotificationScheduler.ensureChannel(this)
 
         setContent {
             DramaVerseTheme {
