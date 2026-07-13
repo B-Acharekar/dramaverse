@@ -1,6 +1,7 @@
 package app.dramaverse.stream.screen
 
 import android.net.Uri
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.graphics.Bitmap
@@ -105,6 +106,12 @@ private val ShortsBackground = Color(0xFF050507)
 private val Gold = Color(0xFFF5C65B)
 private val Pink = Color(0xFFFF4D73)
 
+private data class SubtitleCue(
+    val startMs: Long,
+    val endMs: Long,
+    val text: String
+)
+
 @Composable
 fun ShortsScreen(
     backendBaseUrl: String,
@@ -124,7 +131,7 @@ fun ShortsScreen(
     var showFeedbackForm by remember { mutableStateOf(false) }
     var autoNext by remember { mutableStateOf(false) }
     var autoUnlock by remember { mutableStateOf(false) }
-    var ccEnabled by remember { mutableStateOf(false) }
+    var ccEnabled by remember { mutableStateOf(true) }
     var playbackSpeed by remember { mutableStateOf(1f) }
 
     LaunchedEffect(backendBaseUrl, initialFilmId) {
@@ -148,12 +155,13 @@ fun ShortsScreen(
         isPlaying = true
         showPlaybackOptions = false
         showFeedbackForm = false
+        ccEnabled = uiState.items.getOrNull(pagerState.currentPage)?.subtitleTracks?.isNotEmpty() != false
         viewModel.ensurePlayback(pagerState.currentPage, backendBaseUrl)
         viewModel.loadMoreIfNeeded(pagerState.currentPage, backendBaseUrl)
     }
 
-    LaunchedEffect(controlsVisible, isPlaying, pagerState.currentPage) {
-        if (controlsVisible && isPlaying) {
+    LaunchedEffect(controlsVisible, isPlaying, showPlaybackOptions, showFeedbackForm, pagerState.currentPage) {
+        if (controlsVisible && isPlaying && !showPlaybackOptions && !showFeedbackForm) {
             delay(8000)
             controlsVisible = false
             showPlaybackOptions = false
@@ -208,11 +216,9 @@ fun ShortsScreen(
                     },
                     onAutoUnlockChange = { enabled ->
                         autoUnlock = enabled
-                        showPlaybackOptions = false
                     },
                     onAutoNextChange = { enabled ->
                         autoNext = enabled
-                        showPlaybackOptions = false
                     },
                     onSubmitFeedback = { item, message ->
                         viewModel.sendFeedback(
@@ -312,9 +318,19 @@ private fun ShortsPage(
     var pendingSeekMs by remember(item.playUrl) { mutableStateOf<Long?>(null) }
     var subtitleText by remember(item.playUrl) { mutableStateOf("") }
     var feedbackText by remember(item.playUrl) { mutableStateOf("") }
-    var selectedSubtitleUrl by remember(item.playUrl) { mutableStateOf("") }
+    var selectedSubtitleUrl by remember(item.playUrl) {
+        mutableStateOf(item.subtitleTracks.preferredEnglishSubtitleUrl())
+    }
     var showSubtitleOptions by remember(item.playUrl) { mutableStateOf(false) }
     var showEpisodeOptions by remember(item.film.id) { mutableStateOf(false) }
+    val subtitleUrlForPlayback = selectedSubtitleUrl.ifBlank { item.subtitleTracks.firstOrNull()?.url.orEmpty() }
+    val fallbackSubtitleCues by produceState<List<SubtitleCue>>(initialValue = emptyList(), subtitleUrlForPlayback) {
+        value = if (subtitleUrlForPlayback.isBlank()) emptyList() else loadSubtitleCues(subtitleUrlForPlayback)
+    }
+    val fallbackSubtitleText = fallbackSubtitleCues
+        .firstOrNull { cue -> positionMs in cue.startMs..cue.endMs }
+        ?.text
+        .orEmpty()
     val context = LocalContext.current
     val savedToListText = stringResource(R.string.saved_to_list)
     val removedFromListText = stringResource(R.string.removed_from_list)
@@ -333,7 +349,7 @@ private fun ShortsPage(
             HlsVideoPlayer(
                 playUrl = item.playUrl,
                 subtitleTracks = item.subtitleTracks,
-                selectedSubtitleUrl = selectedSubtitleUrl,
+                selectedSubtitleUrl = subtitleUrlForPlayback,
                 isPlaying = isPlaying,
                 ccEnabled = ccEnabled,
                 controlsVisible = controlsVisible,
@@ -439,7 +455,12 @@ private fun ShortsPage(
                             .show()
                     }
                 )
-                SideAction(Icons.Filled.Share, R.string.share, Color.White)
+                SideAction(
+                    Icons.Filled.Share,
+                    R.string.share,
+                    Color.White,
+                    onClick = { context.shareShort(item) }
+                )
                 SideAction(
                     Icons.Filled.VideoLibrary,
                     R.string.episodes,
@@ -482,9 +503,10 @@ private fun ShortsPage(
             }
         }
 
-        if (ccEnabled && subtitleText.isNotBlank()) {
+        val visibleSubtitleText = subtitleText.ifBlank { fallbackSubtitleText }
+        if (ccEnabled && visibleSubtitleText.isNotBlank()) {
             ComposeSubtitleOverlay(
-                text = subtitleText,
+                text = visibleSubtitleText,
                 controlsVisible = controlsVisible,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
@@ -1254,6 +1276,48 @@ private suspend fun loadShortsBitmap(imageUrl: String): Bitmap? = withContext(Di
     }.getOrNull()
 }
 
+private suspend fun loadSubtitleCues(subtitleUrl: String): List<SubtitleCue> = withContext(Dispatchers.IO) {
+    runCatching {
+        URL(subtitleUrl).openStream().bufferedReader().use { reader ->
+            parseSubtitleCues(reader.readText())
+        }
+    }.getOrDefault(emptyList())
+}
+
+private fun parseSubtitleCues(raw: String): List<SubtitleCue> {
+    val normalized = raw
+        .replace("\r\n", "\n")
+        .replace('\r', '\n')
+        .lineSequence()
+        .dropWhile { it.trim().equals("WEBVTT", ignoreCase = true) || it.trim().startsWith("NOTE") }
+        .joinToString("\n")
+    return normalized.split(Regex("\n{2,}"))
+        .mapNotNull { block ->
+            val lines = block.lines().map { it.trim() }.filter { it.isNotBlank() }
+            val timeIndex = lines.indexOfFirst { "-->" in it }
+            if (timeIndex < 0) return@mapNotNull null
+            val times = lines[timeIndex].split("-->")
+            val start = times.getOrNull(0)?.subtitleTimeToMs() ?: return@mapNotNull null
+            val end = times.getOrNull(1)?.substringBefore(' ')?.subtitleTimeToMs() ?: return@mapNotNull null
+            val text = lines.drop(timeIndex + 1)
+                .joinToString("\n")
+                .replace(Regex("<[^>]+>"), "")
+                .trim()
+            if (text.isBlank()) null else SubtitleCue(start, end, text)
+        }
+}
+
+private fun String.subtitleTimeToMs(): Long? {
+    val clean = trim().replace(',', '.')
+    val parts = clean.split(":")
+    val secondsPart = parts.lastOrNull() ?: return null
+    val seconds = secondsPart.substringBefore('.').toLongOrNull() ?: return null
+    val millis = secondsPart.substringAfter('.', "").padEnd(3, '0').take(3).toLongOrNull() ?: 0L
+    val minutes = parts.getOrNull(parts.size - 2)?.toLongOrNull() ?: 0L
+    val hours = if (parts.size >= 3) parts.getOrNull(parts.size - 3)?.toLongOrNull() ?: 0L else 0L
+    return hours * 3_600_000L + minutes * 60_000L + seconds * 1_000L + millis
+}
+
 @Composable
 private fun SideTextAction(
     value: String,
@@ -1300,6 +1364,13 @@ private fun displaySaveCount(item: ShortsItem): Int {
     return 700 + (seed % 26000)
 }
 
+private fun List<SubtitleTrack>.preferredEnglishSubtitleUrl(): String {
+    return firstOrNull { track ->
+        track.language.equals("en", ignoreCase = true) ||
+            track.label.equals("English", ignoreCase = true)
+    }?.url ?: firstOrNull()?.url.orEmpty()
+}
+
 private fun formatCount(count: Int): String {
     return when {
         count >= 1_000_000 -> {
@@ -1324,6 +1395,24 @@ private fun formatPlaybackTime(milliseconds: Long): String {
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
     return "$minutes:${seconds.toString().padStart(2, '0')}"
+}
+
+private fun android.content.Context.shareShort(item: ShortsItem) {
+    val text = buildString {
+        append("Watch ")
+        append(item.film.title.ifBlank { "this DramaVerse short" })
+        append(" Episode ")
+        append(item.episodeNumber)
+        append(" on DramaVerse.")
+        append("\n\n")
+        append("Get the app: https://play.google.com/store/apps/details?id=")
+        append(packageName)
+    }
+    val intent = Intent(Intent.ACTION_SEND)
+        .setType("text/plain")
+        .putExtra(Intent.EXTRA_SUBJECT, item.film.title)
+        .putExtra(Intent.EXTRA_TEXT, text)
+    startActivity(Intent.createChooser(intent, getString(R.string.share)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
 }
 
 private fun subtitleMimeType(url: String): String {

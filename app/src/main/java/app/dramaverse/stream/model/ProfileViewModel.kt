@@ -6,6 +6,10 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import app.dramaverse.stream.data.AuthRepository
+import app.dramaverse.stream.data.LocaleHelper
+import app.dramaverse.stream.data.ProfileRepository
+import app.dramaverse.stream.data.ProfileSummary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,12 +44,55 @@ data class ProfileMediaState(
     val isSavingAvatar: Boolean = false
 )
 
+data class ProfileUiState(
+    val isLoading: Boolean = true,
+    val summary: ProfileSummary? = null,
+    val errorMessage: String? = null
+)
+
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
     private val appContext = application.applicationContext
     private val prefs = application.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private val profileRepository = ProfileRepository(appContext, AuthRepository(appContext))
 
     private val _mediaState = MutableStateFlow(loadPersistedState())
     val mediaState: StateFlow<ProfileMediaState> = _mediaState.asStateFlow()
+    private val _uiState = MutableStateFlow(ProfileUiState(summary = fallbackSummary()))
+    val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
+
+    fun loadProfile(backendBaseUrl: String) {
+        val language = LocaleHelper.persistedLanguageCode(appContext)
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            profileRepository.loadProfile(backendBaseUrl, language)
+                .onSuccess { summary ->
+                    _uiState.update { it.copy(isLoading = false, summary = summary, errorMessage = null) }
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            summary = it.summary ?: fallbackSummary(),
+                            errorMessage = error.message ?: "Unable to sync profile."
+                        )
+                    }
+                }
+        }
+    }
+
+    private fun fallbackSummary(): ProfileSummary {
+        val deviceId = AuthRepository(appContext).deviceId()
+        return ProfileSummary(
+            userName = "Guest ${deviceId.takeLast(6)}",
+            guestId = deviceId,
+            deviceId = deviceId,
+            avatarUrl = null,
+            coins = 0,
+            hoursWatched = 0,
+            minutesWatched = 0,
+            episodesWatched = 0
+        )
+    }
 
     private fun loadPersistedState(): ProfileMediaState {
         val bannerPath = prefs.getString(KEY_BANNER_PATH, null)?.takeIf { File(it).exists() }
@@ -64,7 +111,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     fun setBannerFromUri(uri: Uri) {
         _mediaState.update { it.copy(isSavingBanner = true) }
         viewModelScope.launch {
-            val savedPath = withContext(Dispatchers.IO) { copyUriToInternalFile(uri, BANNER_FILE_NAME) }
+            val savedPath = withContext(Dispatchers.IO) { copyUriToInternalFile(uri, uniqueMediaFileName("profile_banner")) }
             if (savedPath != null) {
                 prefs.edit()
                     .putString(KEY_BANNER_PATH, savedPath)
@@ -84,7 +131,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     fun setAvatarFromUri(uri: Uri) {
         _mediaState.update { it.copy(isSavingAvatar = true) }
         viewModelScope.launch {
-            val savedPath = withContext(Dispatchers.IO) { copyUriToInternalFile(uri, AVATAR_FILE_NAME) }
+            val savedPath = withContext(Dispatchers.IO) { copyUriToInternalFile(uri, uniqueMediaFileName("profile_avatar")) }
             if (savedPath != null) {
                 prefs.edit()
                     .putString(KEY_AVATAR_PATH, savedPath)
@@ -134,6 +181,8 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     private fun deleteFileQuietly(fileName: String) {
         runCatching { File(appContext.filesDir, fileName).delete() }
     }
+
+    private fun uniqueMediaFileName(prefix: String): String = "$prefix-${System.currentTimeMillis()}.jpg"
     fun openEditProfile() {
         Log.d(TAG, "openEditProfile: not yet implemented")
     }

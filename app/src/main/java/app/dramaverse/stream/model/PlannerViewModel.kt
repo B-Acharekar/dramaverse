@@ -23,6 +23,8 @@ data class PlannerUiState(
     val suggestions: List<DramaItem> = emptyList(),
     val selectedFilm: DramaItem? = null,
     val selectedEpisode: Int = 1,
+    val selectedDayOffset: Int = 1,
+    val selectedHour: Int = 20,
     val errorMessage: String? = null
 )
 
@@ -64,14 +66,32 @@ class PlannerViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun scheduleTomorrow(backendBaseUrl: String) {
+    fun changeDay(delta: Int) {
+        _uiState.update { state ->
+            state.copy(selectedDayOffset = (state.selectedDayOffset + delta).coerceIn(0, 13))
+        }
+    }
+
+    fun changeHour(delta: Int) {
+        _uiState.update { state ->
+            state.copy(selectedHour = Math.floorMod(state.selectedHour + delta, 24))
+        }
+    }
+
+    fun scheduleSelected(backendBaseUrl: String) {
         val film = _uiState.value.selectedFilm ?: return
-        val scheduledAt = OffsetDateTime.now(ZoneId.systemDefault()).plusDays(1).withHour(20).withMinute(0).withSecond(0).withNano(0)
+        val state = _uiState.value
+        val scheduledAt = OffsetDateTime.now(ZoneId.systemDefault())
+            .plusDays(state.selectedDayOffset.toLong())
+            .withHour(state.selectedHour)
+            .withMinute(0)
+            .withSecond(0)
+            .withNano(0)
         viewModelScope.launch {
             repository.savePlannerItem(
                 backendBaseUrl = backendBaseUrl,
                 film = film,
-                episode = _uiState.value.selectedEpisode,
+                episode = state.selectedEpisode,
                 scheduledAt = scheduledAt,
                 remindBeforeMinutes = 15
             ).onSuccess { item ->
@@ -79,7 +99,7 @@ class PlannerViewModel(application: Application) : AndroidViewModel(application)
                 notificationRepository.trackNotification(
                     backendBaseUrl,
                     "Drama planned",
-                    "${item.title} is scheduled for tomorrow.",
+                    "${item.title} is scheduled for ${item.scheduledAt}.",
                     "planner"
                 )
                 _uiState.update { it.copy(items = (it.items + item).distinctBy(PlannerItem::id), errorMessage = null) }

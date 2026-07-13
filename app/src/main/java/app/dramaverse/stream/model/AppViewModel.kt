@@ -72,6 +72,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             val pendingStep = runCatching { AppStep.valueOf(pending) }.getOrNull()
             val restoredStep = when {
                 pendingStep == AppStep.Home && onboardingDone -> AppStep.Home
+                pendingStep == AppStep.Profile && onboardingDone -> AppStep.Profile
                 pendingStep == AppStep.Onboarding && !onboardingDone -> AppStep.Onboarding
                 else -> null
             }

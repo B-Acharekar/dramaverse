@@ -3,6 +3,7 @@ package app.dramaverse.stream.screen
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -26,6 +27,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -75,6 +77,7 @@ private val RoseIconBg = Color(0x29F2C4CE)       // translucent circular icon ba
 data class ProfileStats(
     val coins: Int = 1240,
     val hoursWatched: Int = 48,
+    val minutesWatched: Int = 0,
     val episodesWatched: Int = 156
 )
 
@@ -98,6 +101,7 @@ private val presetAvatars = listOf(
 
 @Composable
 fun ProfileScreen(
+    backendBaseUrl: String,
     userName: String = "Drama Enthusiast",
 //    isVipGold: Boolean = true,
     stats: ProfileStats = ProfileStats(),
@@ -123,13 +127,29 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = viewModel()
 ) {
     val mediaState by viewModel.mediaState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val profile = uiState.summary
+    val dynamicUserName = profile?.userName ?: userName
+    val dynamicStats = ProfileStats(
+        coins = profile?.coins ?: stats.coins,
+        hoursWatched = profile?.hoursWatched ?: stats.hoursWatched,
+        minutesWatched = profile?.minutesWatched ?: stats.minutesWatched,
+        episodesWatched = profile?.episodesWatched ?: stats.episodesWatched
+    )
+    val dynamicAvatarUrl = avatarImageUrl ?: profile?.avatarUrl
+
+    LaunchedEffect(backendBaseUrl) {
+        viewModel.loadProfile(backendBaseUrl)
+    }
     // Picker flow state (purely transient UI state — fine to keep local).
     var showTargetDialog by remember { mutableStateOf(false) }
     var sourceDialogTarget by remember { mutableStateOf<ProfileImageTarget?>(null) }
     var avatarGridTarget by remember { mutableStateOf<ProfileImageTarget?>(null) }
     var galleryPickTarget by remember { mutableStateOf<ProfileImageTarget?>(null) }
     var showLanguageDialog by remember { mutableStateOf(false) }
+    var showRateDialog by remember { mutableStateOf(false) }
+    var showPrivacyDialog by remember { mutableStateOf(false) }
     val displayedLanguage = LocaleHelper.persistedLanguageName(context) ?: currentLanguage
 
 
@@ -166,13 +186,13 @@ fun ProfileScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             ProfileHeader(
-                userName = userName,
+                userName = dynamicUserName,
 //                isVipGold = isVipGold,
                 bannerImageUrl = bannerImageUrl,
                 bannerFilePath = mediaState.bannerFilePath,
                 bannerPreset = mediaState.bannerPresetIndex?.let { presetAvatars.getOrNull(it) },
                 isSavingBanner = mediaState.isSavingBanner,
-                avatarImageUrl = avatarImageUrl,
+                avatarImageUrl = dynamicAvatarUrl,
                 avatarFilePath = mediaState.avatarFilePath,
                 avatarPreset = mediaState.avatarPresetIndex?.let { presetAvatars.getOrNull(it) },
                 isSavingAvatar = mediaState.isSavingAvatar,
@@ -182,7 +202,7 @@ fun ProfileScreen(
                 }
             )
 
-            StatsRow(stats = stats)
+            StatsRow(stats = dynamicStats)
 
 //            QuickActionsRow(
 //                onSubscription = onSubscription,
@@ -203,7 +223,7 @@ fun ProfileScreen(
                 SettingsRow(
                     Icons.Outlined.Language,
                     R.string.language_title,
-                    subtitle = currentLanguage,
+                    subtitle = displayedLanguage,
                     onClick = { showLanguageDialog = true }
                 )
 //                SettingsRow(Icons.Outlined.Settings, R.string.settings, onClick = onSettings)
@@ -211,9 +231,15 @@ fun ProfileScreen(
 
             SectionLabel(stringResource(R.string.privacy))
             SettingsCard {
-                SettingsRow(Icons.Outlined.StarBorder, R.string.rate_us, onClick = onRateUs)
+                SettingsRow(Icons.Outlined.StarBorder, R.string.rate_us, onClick = {
+                    showRateDialog = true
+                    onRateUs()
+                })
                 RowDivider()
-                SettingsRow(Icons.Outlined.Shield, R.string.privacy_policy, onClick = onPrivacyPolicy)
+                SettingsRow(Icons.Outlined.Shield, R.string.privacy_policy, onClick = {
+                    showPrivacyDialog = true
+                    onPrivacyPolicy()
+                })
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -224,6 +250,50 @@ fun ProfileScreen(
         LanguagePickerDialog(
             currentLanguage = displayedLanguage,
             onDismiss = { showLanguageDialog = false }
+        )
+    }
+
+    if (showRateDialog) {
+        AlertDialog(
+            onDismissRequest = { showRateDialog = false },
+            containerColor = CardColor,
+            title = { Text(stringResource(R.string.rate_us), color = TextPrimary, fontWeight = FontWeight.Bold) },
+            text = { Text("Enjoying DramaVerse? Rate the app on the Play Store.", color = TextSecondary) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showRateDialog = false
+                        context.openPlayStoreRating()
+                    }
+                ) {
+                    Text("Rate Now", color = GoldColor)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRateDialog = false }) {
+                    Text(stringResource(R.string.cancel), color = TextSecondary)
+                }
+            }
+        )
+    }
+
+    if (showPrivacyDialog) {
+        AlertDialog(
+            onDismissRequest = { showPrivacyDialog = false },
+            containerColor = CardColor,
+            title = { Text(stringResource(R.string.privacy_policy), color = TextPrimary, fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    "Privacy Policy placeholder\n\nDramaVerse stores your device guest ID, app preferences, rewards, watch progress, watchlist, planner items, and feedback only to power the app experience. A full policy URL can be added here before release.",
+                    color = TextSecondary,
+                    lineHeight = 19.sp
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showPrivacyDialog = false }) {
+                    Text("OK", color = GoldColor)
+                }
+            }
         )
     }
 
@@ -554,7 +624,7 @@ private fun StatsRow(stats: ProfileStats) {
     ) {
         StatItem(value = stats.coins.toString(), label = stringResource(R.string.coins), valueColor = GoldColor)
         StatDivider()
-        StatItem(value = "${stats.hoursWatched}h", label = stringResource(R.string.watched))
+        StatItem(value = stats.watchTimeLabel(), label = stringResource(R.string.watched))
         StatDivider()
         StatItem(value = stats.episodesWatched.toString(), label = stringResource(R.string.episodes_cap))
     }
@@ -773,7 +843,7 @@ fun LanguagePickerDialog(
             LanguagePickerHeader(
                 onDoneClick = {
                     LocaleHelper.persistLanguage(context, selectedLanguage)
-                    LocaleHelper.persistPendingStep(context, "profile")
+                    LocaleHelper.persistPendingStep(context, "Profile")
                     onDismiss()
                     context.findActivity()?.recreate()
                 }
@@ -912,4 +982,19 @@ private fun Context.findActivity(): Activity? {
         current = current.baseContext
     }
     return null
+}
+
+private fun Context.openPlayStoreRating() {
+    val marketIntent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("market://details?id=$packageName"))
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    val webIntent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://play.google.com/store/apps/details?id=$packageName"))
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    runCatching { startActivity(marketIntent) }
+        .onFailure { runCatching { startActivity(webIntent) } }
+}
+
+private fun ProfileStats.watchTimeLabel(): String {
+    if (hoursWatched <= 0) return "${minutesWatched.coerceAtLeast(0)}m"
+    val remainingMinutes = minutesWatched % 60
+    return if (remainingMinutes > 0) "${hoursWatched}h ${remainingMinutes}m" else "${hoursWatched}h"
 }

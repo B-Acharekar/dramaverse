@@ -47,6 +47,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import app.dramaverse.stream.data.DramaItem
 import app.dramaverse.stream.data.PlannerItem
 import app.dramaverse.stream.model.PlannerViewModel
+import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
 
 private val Background = Color(0xFF09090B)
 private val Panel = Color(0xFF161519)
@@ -88,9 +91,15 @@ fun PlannerScreen(
                         selectedFilm = uiState.selectedFilm,
                         hasSavedFilms = uiState.suggestions.isNotEmpty(),
                         selectedEpisode = uiState.selectedEpisode,
+                        selectedDayOffset = uiState.selectedDayOffset,
+                        selectedHour = uiState.selectedHour,
                         onEpisodeMinus = { viewModel.changeEpisode(-1) },
                         onEpisodePlus = { viewModel.changeEpisode(1) },
-                        onSchedule = { viewModel.scheduleTomorrow(backendBaseUrl) }
+                        onDayMinus = { viewModel.changeDay(-1) },
+                        onDayPlus = { viewModel.changeDay(1) },
+                        onHourMinus = { viewModel.changeHour(-1) },
+                        onHourPlus = { viewModel.changeHour(1) },
+                        onSchedule = { viewModel.scheduleSelected(backendBaseUrl) }
                     )
                 }
                 item { SuggestionRail(uiState.suggestions, uiState.selectedFilm, viewModel::selectFilm, onLibrary) }
@@ -135,8 +144,14 @@ private fun ScheduleBuilder(
     selectedFilm: DramaItem?,
     hasSavedFilms: Boolean,
     selectedEpisode: Int,
+    selectedDayOffset: Int,
+    selectedHour: Int,
     onEpisodeMinus: () -> Unit,
     onEpisodePlus: () -> Unit,
+    onDayMinus: () -> Unit,
+    onDayPlus: () -> Unit,
+    onHourMinus: () -> Unit,
+    onHourPlus: () -> Unit,
     onSchedule: () -> Unit
 ) {
     Row(
@@ -156,7 +171,7 @@ private fun ScheduleBuilder(
         Column(Modifier.weight(1f)) {
             Text(selectedFilm?.title ?: if (hasSavedFilms) "Choose a saved drama" else "Save dramas first", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, maxLines = 2, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
             Text(
-                if (selectedFilm != null) "Tomorrow at 8:00 PM" else "Use + on Home or Shorts to build this list.",
+                if (selectedFilm != null) scheduleLabel(selectedDayOffset, selectedHour) else "Use + on Home or Shorts to build this list.",
                 color = if (selectedFilm != null) Gold else Color(0xFFCDB5BC),
                 fontSize = 12.sp,
                 lineHeight = 16.sp,
@@ -169,6 +184,18 @@ private fun ScheduleBuilder(
                     StepButton(Icons.Filled.Remove, onEpisodeMinus)
                     Text("Ep $selectedEpisode", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 12.dp), letterSpacing = 0.sp)
                     StepButton(Icons.Filled.Add, onEpisodePlus)
+                }
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    StepButton(Icons.Filled.Remove, onDayMinus)
+                    Text(dayLabel(selectedDayOffset), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 10.dp), letterSpacing = 0.sp)
+                    StepButton(Icons.Filled.Add, onDayPlus)
+                }
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    StepButton(Icons.Filled.Remove, onHourMinus)
+                    Text(timeLabel(selectedHour), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 10.dp), letterSpacing = 0.sp)
+                    StepButton(Icons.Filled.Add, onHourPlus)
                 }
             }
         }
@@ -300,4 +327,27 @@ private fun StepButton(icon: androidx.compose.ui.graphics.vector.ImageVector, on
 @Composable
 private fun SectionTitle(title: String) {
     Text(title, color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(horizontal = 18.dp), letterSpacing = 0.sp)
+}
+
+private fun scheduleLabel(dayOffset: Int, hour: Int): String = "${dayLabel(dayOffset)} at ${timeLabel(hour)}"
+
+private fun dayLabel(dayOffset: Int): String {
+    return when (dayOffset) {
+        0 -> "Today"
+        1 -> "Tomorrow"
+        else -> LocalDate.now()
+            .plusDays(dayOffset.toLong())
+            .dayOfWeek
+            .getDisplayName(TextStyle.SHORT, Locale.getDefault())
+    }
+}
+
+private fun timeLabel(hour: Int): String {
+    val normalized = Math.floorMod(hour, 24)
+    val displayHour = when (val value = normalized % 12) {
+        0 -> 12
+        else -> value
+    }
+    val suffix = if (normalized < 12) "AM" else "PM"
+    return "$displayHour:00 $suffix"
 }

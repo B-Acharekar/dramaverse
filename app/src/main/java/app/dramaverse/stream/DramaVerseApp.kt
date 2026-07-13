@@ -137,12 +137,14 @@ fun DramaVerseApp(viewModel: AppViewModel = viewModel(),profileViewModel: Profil
         )
 
         AppStep.Profile -> ProfileScreen(
+            backendBaseUrl = uiState.backendBaseUrl,
             onHome = viewModel::openHome,
+            onShorts = { viewModel.openShorts(null) },
             onLibrary = viewModel::openLibrary,
             onRewards = viewModel::openRewards,
 //            onEditProfile = profileViewModel::openEditProfile,
-            onWatchHistory = profileViewModel::openWatchHistory,
-            onMyWatchlist = profileViewModel::openWatchlist,
+            onWatchHistory = viewModel::openLibrary,
+            onMyWatchlist = viewModel::openLibrary,
             onRateUs = profileViewModel::openRateUs,
             onPrivacyPolicy = profileViewModel::openPrivacyPolicy,
 //            onSubscription = viewModel::openSubscription,
