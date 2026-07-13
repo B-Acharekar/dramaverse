@@ -194,4 +194,9 @@
     <string name="profile_avatar">प्रोफ़ाइल अवतार</string>
     <string name="preset_avatar">पूर्वनिर्धारित अवतार</string>
     <string name="edit_profile_photo">प्रोफ़ाइल फ़ोटो संपादित करें</string>
+
+    <string name="welcome_title">स्वागत है </string>
+    <string name="welcome_accent_title">DramaVerse</string>
+    <string name="welcome_description">हज़ारों अविस्मरणीय कहानियाँ आपका इंतज़ार कर रही हैं। अभी देखना शुरू करें।</string>
+    <string name="get_started">शुरू करें</string>
 </resources>

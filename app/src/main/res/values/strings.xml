@@ -36,7 +36,10 @@
     <string name="onboarding_title_4">Daily Rewards &amp; Missions</string>
     <string name="onboarding_description_4">Earn free coins every day just by watching. Complete missions to unlock premium episodes.</string>
 
-
+    <string name="welcome_title">Welcome to </string>
+    <string name="welcome_accent_title">DramaVerse</string>
+    <string name="welcome_description">Thousands of unforgettable stories are waiting, Start watching now.</string>
+    <string name="get_started">Get Started</string>
     <!-- Home screen — top bar / moods -->
     <string name="mood_hot">Hot</string>
     <string name="mood_happy">Happy</string>

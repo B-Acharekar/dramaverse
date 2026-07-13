@@ -194,4 +194,9 @@
     <string name="profile_avatar">Profilavatar</string>
     <string name="preset_avatar">Vorgegebener Avatar</string>
     <string name="edit_profile_photo">Profilbild bearbeiten</string>
+
+    <string name="welcome_title">Willkommen bei </string>
+    <string name="welcome_accent_title">DramaVerse</string>
+    <string name="welcome_description">Tausende unvergessliche Geschichten warten auf dich. Starte jetzt mit dem Ansehen.</string>
+    <string name="get_started">Loslegen</string>
 </resources>

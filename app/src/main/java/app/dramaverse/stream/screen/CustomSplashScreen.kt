@@ -96,7 +96,7 @@ fun CustomSplashScreen(onFinished: () -> Unit) {
             Image(
                 painter = painterResource(id = R.drawable.icon_2),
                 contentDescription = null,
-                modifier = Modifier.size(96.dp),
+                modifier = Modifier.size(128.dp),
                 contentScale = ContentScale.Fit
             )
             Spacer(modifier = Modifier.height(20.dp))
@@ -119,15 +119,15 @@ fun CustomSplashScreen(onFinished: () -> Unit) {
                 fontWeight = FontWeight.Light
             )
             Spacer(modifier = Modifier.height(26.dp))
-            Text(
-                text = stringResource(R.string.splash_description),
-                color = Color(0xFFB6959B),
-                fontSize = 12.sp,
-                lineHeight = 17.sp,
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.sp
-            )
+//            Text(
+//                text = stringResource(R.string.splash_description),
+//                color = Color(0xFFB6959B),
+//                fontSize = 12.sp,
+//                lineHeight = 17.sp,
+//                textAlign = TextAlign.Center,
+//                fontWeight = FontWeight.SemiBold,
+//                letterSpacing = 0.sp
+//            )
             Spacer(modifier = Modifier.height(38.dp))
             LoadingDots()
             Spacer(modifier = Modifier.weight(1.35f))

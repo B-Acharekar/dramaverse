@@ -22,12 +22,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -36,6 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.dramaverse.stream.R
 import app.dramaverse.stream.model.LanguageViewModel
+import java.nio.file.WatchEvent
 
 @Composable
 fun LanguageScreen(
@@ -46,20 +52,29 @@ fun LanguageScreen(
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
     val showActionButton = !delayDoneAfterSelection || uiState.selectedLanguage != null
-    val showDoneText = !delayDoneAfterSelection
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .statusBarsPadding()
             .background(Color(0xFF161616))
     ) {
         LanguageHeader(
             showActionButton = showActionButton,
-            showDoneText = showDoneText,
             onActionClick = {
                 onContinue(viewModel.confirmLanguage())
             }
         )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0x61000000))
+                .padding(vertical = 5.dp)
+        ) {
+            HorizontalDivider(
+                color = Color.Gray.copy(alpha = 0.3f)
+            )
+        }
 
         LazyColumn(
             state = listState,
@@ -85,17 +100,30 @@ fun LanguageScreen(
 @Composable
 private fun LanguageHeader(
     showActionButton: Boolean,
-    showDoneText: Boolean,
     onActionClick: () -> Unit
 ) {
+    val bgBrush = Brush.horizontalGradient(
+        colors = listOf(
+            Color(0xFF86011D),
+            Color(0xFF140105)
+
+        )
+    )
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(42.dp)
             .statusBarsPadding()
-            .padding(start = 13.dp, end = 10.dp),
+            .padding(start = 13.dp, end = 13.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        Icon(
+            imageVector = Icons.Default.Language,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = stringResource(R.string.language_title),
             color = Color.White,
@@ -105,32 +133,20 @@ private fun LanguageHeader(
         )
         Spacer(modifier = Modifier.weight(1f))
         if (showActionButton) {
-            Row(
-                modifier = Modifier.clickable(onClick = onActionClick),
-                verticalAlignment = Alignment.CenterVertically
+            Box(
+                modifier = Modifier
+                    .background(brush = bgBrush, RoundedCornerShape(50))
+                    .clickable(onClick = onActionClick)
+                    .padding(horizontal = 14.dp, vertical = 6.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier.size(26.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "\u2713",
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        letterSpacing = 0.sp
-                    )
-                }
-                if (showDoneText) {
-                    Spacer(modifier = Modifier.width(3.dp))
-                    Text(
-                        text = stringResource(R.string.done),
-                        color = Color.White,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.sp
-                    )
-                }
+                Text(
+                    text = stringResource(R.string.done),
+                    color = Color.White,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.sp
+                )
             }
         }
     }
@@ -159,7 +175,12 @@ private fun LanguageItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         SelectionRing(selected = selected)
-        Spacer(modifier = Modifier.width(5.dp))
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(
+            text = flagForLanguage(name),
+            fontSize = 18.sp
+        )
+        Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = name,
             color = Color.White,
@@ -178,7 +199,7 @@ private fun SelectionRing(selected: Boolean) {
             .aspectRatio(1f)
             .border(
                 width = 1.dp,
-                color = if (selected) Color.White else Color(0xFF4D7C3C),
+                color = if (selected) Color.White else Color(0xFF3D7A73),
                 shape = CircleShape
             ),
         contentAlignment = Alignment.Center
@@ -191,4 +212,21 @@ private fun SelectionRing(selected: Boolean) {
             )
         }
     }
+}
+
+private fun flagForLanguage(name: String): String = when (name) {
+    "English" -> "\uD83C\uDDFA\uD83C\uDDF8"
+    "Tiếng Việt" -> "\uD83C\uDDFB\uD83C\uDDF3"
+    "Español" -> "\uD83C\uDDEA\uD83C\uDDF8"
+    "Français" -> "\uD83C\uDDEB\uD83C\uDDF7"
+    "Deutsch" -> "\uD83C\uDDE9\uD83C\uDDEA"
+    "Italiano" -> "\uD83C\uDDEE\uD83C\uDDF9"
+    "Português" -> "\uD83C\uDDE7\uD83C\uDDF7"
+    "Türkçe" -> "\uD83C\uDDF9\uD83C\uDDF7"
+    "العربية" -> "\uD83C\uDDF8\uD83C\uDDE6"
+    "हिन्दी" -> "\uD83C\uDDEE\uD83C\uDDF3"
+    "한국어" -> "\uD83C\uDDF0\uD83C\uDDF7"
+    "日本語" -> "\uD83C\uDDEF\uD83C\uDDF5"
+    "中文" -> "\uD83C\uDDE8\uD83C\uDDF3"
+    else -> "\uD83C\uDF10"
 }

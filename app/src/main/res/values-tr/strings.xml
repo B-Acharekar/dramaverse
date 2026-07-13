@@ -194,4 +194,9 @@
     <string name="profile_avatar">Profil avatarı</string>
     <string name="preset_avatar">Hazır avatar</string>
     <string name="edit_profile_photo">Profil fotoğrafını düzenle</string>
+
+    <string name="welcome_title">DramaVerse'e Hoş Geldiniz </string>
+    <string name="welcome_accent_title">DramaVerse</string>
+    <string name="welcome_description">Binlerce unutulmaz hikâye sizi bekliyor. Hemen izlemeye başlayın.</string>
+    <string name="get_started">Başlayın</string>
 </resources>

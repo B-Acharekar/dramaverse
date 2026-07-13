@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -37,11 +36,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -85,24 +82,37 @@ fun OnboardingScreen(
             state = pagerState,
             modifier = Modifier.fillMaxSize()
         ) { pageIndex ->
-            OnboardingPageContent(
-                page = uiState.pages[pageIndex],
-                pageIndex = pageIndex,
-                pageCount = uiState.pages.size,
-                selectedPage = pagerState.currentPage,
-                onNext = {
-                    if (pagerState.currentPage == uiState.pages.lastIndex) {
-                        onFinished()
-                    } else {
-                        scope.launch {
-                            pagerState.animateScrollToPage(
-                                page = pagerState.currentPage + 1,
-                                animationSpec = tween(360, easing = FastOutSlowInEasing)
-                            )
-                        }
+            val page = uiState.pages[pageIndex]
+            val onNext: () -> Unit = {
+                if (pagerState.currentPage == uiState.pages.lastIndex) {
+                    onFinished()
+                } else {
+                    scope.launch {
+                        pagerState.animateScrollToPage(
+                            page = pagerState.currentPage + 1,
+                            animationSpec = tween(360, easing = FastOutSlowInEasing)
+                        )
                     }
                 }
-            )
+            }
+
+            if (page.visual == OnboardingVisual.Welcome) {
+                WelcomePageContent(
+                    page = page,
+                    pageIndex = pageIndex,
+                    pageCount = uiState.pages.size,
+                    selectedPage = pagerState.currentPage,
+                    onNext = onNext
+                )
+            } else {
+                OnboardingPageContent(
+                    page = page,
+                    pageIndex = pageIndex,
+                    pageCount = uiState.pages.size,
+                    selectedPage = pagerState.currentPage,
+                    onNext = onNext
+                )
+            }
         }
     }
 }
@@ -132,7 +142,7 @@ private fun OnboardingPageContent(
                 OnboardingVisual.DramaPhone -> DramaPhoneVisual(painterResource(R.drawable.onboarding1image))
                 OnboardingVisual.Collections -> CollectionsVisual()
                 OnboardingVisual.RomancePhone -> DramaPhoneVisual(painterResource(R.drawable.onboarding3image))
-                OnboardingVisual.Rewards -> RewardsVisual()
+                OnboardingVisual.Welcome -> Unit // unreachable — Welcome is routed to WelcomePageContent in the pager
             }
         }
         Spacer(modifier = Modifier.height(12.dp))
@@ -161,7 +171,7 @@ private fun OnboardingPageContent(
                 modifier = Modifier.weight(1f)
             )
             OnboardingActionButton(
-                label = if (pageIndex == pageCount - 1) R.string.start_btn else R.string.next_btn,
+                label = if (pageIndex == pageCount - 1) R.string.get_started else R.string.next_btn,
                 onClick = onNext
             )
         }
@@ -171,7 +181,7 @@ private fun OnboardingPageContent(
 
 @Composable
 private fun OnboardingTitle(page: OnboardingPage) {
-    if (page.accentTitle==0) {
+    if (page.accentTitle == 0) {
         Text(
             text = stringResource(page.title),
             color = Color.White,
@@ -240,7 +250,11 @@ private fun OnboardingActionButton(
         modifier = Modifier
             .height(44.dp)
             .width(112.dp)
-            .border(2.dp, Color(0xFFFF365E), RoundedCornerShape(24.dp))
+            .background( brush = Brush.horizontalGradient(
+                listOf(Color(0xFF86011D),
+                    Color(0xFF140105))
+            ),
+                shape = RoundedCornerShape(24.dp))
             .clip(RoundedCornerShape(24.dp))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
@@ -282,33 +296,9 @@ private fun OnboardingGlowBackground() {
     }
 }
 
-//@Composable
-//private fun DramaPhoneVisual(romance: Boolean) {
-//    Box(
-//        modifier = Modifier
-//            .fillMaxWidth(0.66f)
-//            .aspectRatio(0.52f)
-//            .background(Color(0xFF222225), RoundedCornerShape(32.dp))
-//            .padding(7.dp)
-//    ) {
-//        Canvas(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .clip(RoundedCornerShape(26.dp))
-//        ) {
-//            drawPhoneScene(romance)
-//        }
-//        PhoneSideActions(modifier = Modifier.align(Alignment.CenterEnd))
-//        PhoneBottomMeta(modifier = Modifier.align(Alignment.BottomStart))
-//    }
-//}
 @Composable
 private fun DramaPhoneVisual(painter: Painter) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-
+    Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painter,
             contentDescription = null,
@@ -321,10 +311,7 @@ private fun DramaPhoneVisual(painter: Painter) {
 
 @Composable
 private fun CollectionsVisual() {
-    Box(
-        modifier = Modifier
-
-    ) {
+    Box(modifier = Modifier) {
         Image(
             painter = painterResource(R.drawable.onboarding2image),
             contentDescription = null,
@@ -336,278 +323,114 @@ private fun CollectionsVisual() {
 }
 
 @Composable
-private fun RewardsVisual() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(505.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Canvas(modifier = Modifier.size(235.dp)) {
-            drawCircle(
-                brush = Brush.radialGradient(
-                    listOf(Color(0xAAFFBF3F), Color(0x332E2518), Color.Transparent)
-                ),
-                radius = size.minDimension * 0.52f,
-                center = center
-            )
-            drawCircle(
-                color = Color(0x33FFF0C1),
-                radius = size.minDimension * 0.25f,
-                center = center
-            )
-            drawCircle(
-                color = Color(0xFFFFC552),
-                radius = size.minDimension * 0.13f,
-                center = center
-            )
-            drawStar(center, size.minDimension * 0.08f, Color(0xFF201915))
-            drawRewardChip(Offset(size.width * 0.69f, size.height * 0.23f), rotationHint = true)
-            drawRewardChip(Offset(size.width * 0.16f, size.height * 0.56f), rotationHint = false)
-        }
-    }
-}
+private fun WelcomePageContent(
+    page: OnboardingPage,
+    pageIndex: Int,
+    pageCount: Int,
+    selectedPage: Int,
+    onNext: () -> Unit
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(R.drawable.welocome_bg),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.FillWidth
+        )
 
-@Composable
-private fun PhoneSideActions(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.padding(end = 7.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(11.dp)
-    ) {
-        Text("<3", color = Color.White, fontSize = 13.sp, lineHeight = 13.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
-        Text("[]", color = Color.White, fontSize = 12.sp, lineHeight = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
-        Text("=", color = Color.White, fontSize = 18.sp, lineHeight = 18.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
-    }
-}
-
-@Composable
-private fun PhoneBottomMeta(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.padding(start = 9.dp, bottom = 13.dp)
-    ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            MiniPill("TRENDING", Color(0xFFFF4D6D), Color(0xFF2D151A))
-            MiniPill("EPISODE 1", Color.White, Color(0x552B2B30))
-        }
-        Spacer(modifier = Modifier.height(6.dp))
-        Box(
+        // Frosted glass card — truly centered on screen
+        Column(
             modifier = Modifier
-                .height(4.dp)
-                .width(72.dp)
-                .background(Color(0x44FFFFFF), RoundedCornerShape(4.dp))
+                .align(Alignment.Center)
+                .fillMaxWidth()
+                .padding(horizontal = 22.dp)
+                .background(Color(0x1AFFFFFF), RoundedCornerShape(28.dp))
+                .padding(horizontal = 24.dp, vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
+                modifier = Modifier.size(96.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.applogo),
+                    contentDescription = "app logo",
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text(
+                text = stringResource(page.title),
+                color = Color.White,
+                fontSize = 28.sp,
+                lineHeight = 32.sp,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center,
+                letterSpacing = 0.sp
+            )
+            Text(
+                text = stringResource(page.accentTitle),
+                color = Color(0xFFF5B94A),
+                fontSize = 30.sp,
+                lineHeight = 34.sp,
+                fontStyle = FontStyle.Italic,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center,
+                letterSpacing = 0.sp
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = stringResource(page.description),
+                color = Color(0xFFE4D9DB),
+                fontSize = 15.sp,
+                lineHeight = 21.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+                letterSpacing = 0.sp
+            )
+        }
+
+        // Indicator + button — pinned to the bottom, independent of the card's position
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(horizontal = 22.dp)
+                .padding(bottom = 24.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            PageIndicator(
+                pageCount = pageCount,
+                selectedPage = selectedPage,
+                modifier = Modifier.weight(1f)
+            )
+            Box(
                 modifier = Modifier
-                    .fillMaxSize(0.64f)
-                    .background(Color(0xFFFF6076), RoundedCornerShape(4.dp))
-            )
+                    .height(46.dp)
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            listOf(Color(0xFF86011D),
+                                Color(0xFF140105))
+                        ),
+                        shape = RoundedCornerShape(24.dp)
+                    )
+                    .clip(RoundedCornerShape(24.dp))
+                    .clickable(onClick = onNext)
+                    .padding(horizontal = 26.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(if (pageIndex == pageCount - 1) R.string.get_started else R.string.next_btn),
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 0.sp
+                )
+            }
         }
     }
-}
-
-@Composable
-private fun MiniPill(text: String, color: Color, background: Color) {
-    Text(
-        text = text,
-        color = color,
-        fontSize = 5.sp,
-        lineHeight = 7.sp,
-        fontWeight = FontWeight.Black,
-        letterSpacing = 0.sp,
-        modifier = Modifier
-            .background(background, RoundedCornerShape(8.dp))
-            .padding(horizontal = 5.dp, vertical = 2.dp)
-    )
-}
-
-private fun DrawScope.drawPhoneScene(romance: Boolean) {
-    val base = if (romance) Color(0xFF342336) else Color(0xFF16283D)
-    drawRect(
-        brush = Brush.verticalGradient(
-            colors = listOf(Color(0xFF070A12), base, Color(0xFF0B0C11))
-        )
-    )
-    repeat(18) { index ->
-        val x = size.width * ((index * 37 % 100) / 100f)
-        val top = size.height * ((index * 13 % 45) / 100f)
-        val buildingWidth = size.width * (0.06f + (index % 4) * 0.012f)
-        val buildingHeight = size.height * (0.22f + (index % 5) * 0.035f)
-        drawRoundRect(
-            color = Color(0xAA121722),
-            topLeft = Offset(x, top),
-            size = Size(buildingWidth, buildingHeight),
-            cornerRadius = CornerRadius(2f, 2f)
-        )
-        repeat(4) { light ->
-            drawCircle(
-                color = if (romance) Color(0xFFFF7DAC) else Color(0xFF60B9FF),
-                radius = 1.8f,
-                center = Offset(x + buildingWidth * 0.45f, top + 10f + light * 17f)
-            )
-        }
-    }
-    drawRoundRect(
-        brush = Brush.horizontalGradient(
-            listOf(Color(0x99FF4067), Color(0x55683DFF), Color.Transparent)
-        ),
-        topLeft = Offset(size.width * 0.12f, size.height * 0.44f),
-        size = Size(size.width * 0.76f, size.height * 0.22f),
-        cornerRadius = CornerRadius(size.width * 0.18f, size.width * 0.18f)
-    )
-    drawCircle(
-        brush = Brush.radialGradient(
-            listOf(Color(0xAAFF5B7C), Color(0x22FF5B7C), Color.Transparent)
-        ),
-        radius = size.width * 0.34f,
-        center = Offset(size.width * 0.50f, size.height * 0.48f)
-    )
-    drawLeadFigure(
-        x = size.width * 0.44f,
-        ground = size.height * 0.70f,
-        body = Color(0xFF141721),
-        skin = Color(0xFFE8A681),
-        facingRight = true
-    )
-    drawLeadFigure(
-        x = size.width * 0.58f,
-        ground = size.height * 0.71f,
-        body = if (romance) Color(0xFF4C3030) else Color(0xFF22232C),
-        skin = Color(0xFFF2B088),
-        facingRight = false
-    )
-    drawRoundRect(
-        brush = Brush.verticalGradient(
-            listOf(Color(0x00111113), Color(0x440B0C11), Color(0xAA07080B)),
-            startY = size.height * 0.48f,
-            endY = size.height * 0.82f
-        ),
-        topLeft = Offset.Zero,
-        size = size,
-        cornerRadius = CornerRadius(0f, 0f)
-    )
-    drawRect(
-        brush = Brush.verticalGradient(
-            listOf(Color.Transparent, Color(0xAA09090B)),
-            startY = size.height * 0.62f,
-            endY = size.height
-        )
-    )
-}
-
-private fun DrawScope.drawLeadFigure(
-    x: Float,
-    ground: Float,
-    body: Color,
-    skin: Color,
-    facingRight: Boolean
-) {
-    val headCenter = Offset(x, ground - size.height * 0.26f)
-    drawCircle(
-        color = Color(0xFF1B1417),
-        radius = size.width * 0.052f,
-        center = Offset(headCenter.x + if (facingRight) -5f else 5f, headCenter.y - 7f)
-    )
-    drawOvalLikeHead(headCenter, skin)
-    drawRoundRect(
-        color = body,
-        topLeft = Offset(x - size.width * 0.050f, ground - size.height * 0.205f),
-        size = Size(size.width * 0.10f, size.height * 0.23f),
-        cornerRadius = CornerRadius(16f, 16f)
-    )
-    drawRoundRect(
-        color = body.copy(alpha = 0.85f),
-        topLeft = Offset(x + if (facingRight) size.width * 0.018f else -size.width * 0.050f, ground - size.height * 0.165f),
-        size = Size(size.width * 0.035f, size.height * 0.18f),
-        cornerRadius = CornerRadius(10f, 10f)
-    )
-}
-
-private fun DrawScope.drawOvalLikeHead(center: Offset, color: Color) {
-    drawRoundRect(
-        color = color,
-        topLeft = Offset(center.x - size.width * 0.035f, center.y - size.width * 0.045f),
-        size = Size(size.width * 0.070f, size.width * 0.086f),
-        cornerRadius = CornerRadius(size.width * 0.035f, size.width * 0.043f)
-    )
-}
-
-private fun DrawScope.drawPosterGrid() {
-    val titles = listOf("HROMATIC", "ATLANTIC\nPROMISE", "ASPHALT\nSHADOW", "PRECISION", "ROOTS & RUIN", "BINARY\nGHOST", "BLOODED\nSTEEL", "STATE\nSECRETS", "WHISPER")
-    val palette = listOf(
-        Color(0xFF16354B), Color(0xFFB58445), Color(0xFF2D4242),
-        Color(0xFF1E6574), Color(0xFF78613C), Color(0xFF223A4A),
-        Color(0xFF2A2725), Color(0xFF473530), Color(0xFF172727)
-    )
-    val columns = 3
-    val rows = 3
-    val cellWidth = size.width / columns
-    val cellHeight = size.height / rows
-    for (row in 0 until rows) {
-        for (column in 0 until columns) {
-            val index = row * columns + column
-            val left = column * cellWidth
-            val top = row * cellHeight
-            drawRect(
-                brush = Brush.verticalGradient(
-                    listOf(palette[index].copy(alpha = 0.95f), Color(0xFF08090B)),
-                    startY = top,
-                    endY = top + cellHeight
-                ),
-                topLeft = Offset(left, top),
-                size = Size(cellWidth - 1f, cellHeight - 1f)
-            )
-            drawCircle(
-                color = Color.White.copy(alpha = 0.15f),
-                radius = cellWidth * 0.22f,
-                center = Offset(left + cellWidth * 0.53f, top + cellHeight * 0.34f)
-            )
-            drawContext.canvas.nativeCanvas.drawText(
-                titles[index].replace('\n', ' '),
-                left + cellWidth * 0.08f,
-                top + cellHeight * 0.74f,
-                android.graphics.Paint().apply {
-                    color = android.graphics.Color.WHITE
-                    textSize = 16f
-                    isFakeBoldText = true
-                    alpha = 210
-                }
-            )
-        }
-    }
-}
-
-private fun DrawScope.drawStar(center: Offset, radius: Float, color: Color) {
-    val path = Path()
-    repeat(10) { index ->
-        val angle = Math.toRadians((index * 36.0) - 90.0)
-        val r = if (index % 2 == 0) radius else radius * 0.45f
-        val point = Offset(
-            x = center.x + (kotlin.math.cos(angle) * r).toFloat(),
-            y = center.y + (kotlin.math.sin(angle) * r).toFloat()
-        )
-        if (index == 0) path.moveTo(point.x, point.y) else path.lineTo(point.x, point.y)
-    }
-    path.close()
-    drawPath(path, color)
-}
-
-private fun DrawScope.drawRewardChip(anchor: Offset, rotationHint: Boolean) {
-    drawRoundRect(
-        color = Color(0x223E3321),
-        topLeft = Offset(anchor.x - 22f, anchor.y - 15f),
-        size = Size(44f, 30f),
-        cornerRadius = CornerRadius(8f, 8f),
-        style = Stroke(1.3f)
-    )
-    drawCircle(
-        color = Color(0xFFFFC552),
-        radius = 6f,
-        center = Offset(anchor.x + if (rotationHint) 2f else -3f, anchor.y)
-    )
-    drawCircle(
-        color = Color(0xFF17120E),
-        radius = 3f,
-        center = Offset(anchor.x + if (rotationHint) 2f else -3f, anchor.y)
-    )
 }

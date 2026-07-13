@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">DramaVerse</string>
+    <string name="app_name_display">DramaVerse</string>
+
+    <!-- Splash -->
+    <string name="splash_tagline">KỊCH NGẮN\nKHÔNG GIỚI HẠN</string>
+    <string name="splash_description">Trải nghiệm những câu chuyện hấp dẫn, được tuyển chọn dành cho mọi khoảnh khắc của bạn.</string>
+
+    <!-- Language -->
+    <string name="language_title">Ngôn ngữ</string>
+    <string name="done">XONG</string>
+
+    <!-- Onboarding -->
+    <string name="start_btn">Bắt đầu</string>
+    <string name="next_btn">Tiếp theo</string>
+
+    <string name="onboarding_title_1">Khám phá</string>
+    <string name="onboarding_accent_title_1">phim ngắn hấp dẫn</string>
+    <string name="onboarding_description_1">Những câu chuyện ngắn gọn phù hợp với cuộc sống bận rộn của bạn. Thưởng thức nội dung chất lượng mọi lúc mọi nơi.</string>
+
+    <string name="onboarding_title_2">Khám phá</string>
+    <string name="onboarding_accent_title_2">Bộ sưu tập tuyển chọn</string>
+    <string name="onboarding_description_2">Khám phá các bộ sưu tập phim được tuyển chọn theo nhiều thể loại và chủ đề.</string>
+
+    <string name="onboarding_title_3">Khám phá</string>
+    <string name="onboarding_accent_title_3">Bộ sưu tập tuyển chọn</string>
+    <string name="onboarding_description_3">Khám phá những bộ sưu tập phim được tuyển chọn với nhiều thể loại khác nhau.</string>
+
+    <string name="onboarding_title_4">Phần thưởng &amp; Nhiệm vụ hằng ngày</string>
+    <string name="onboarding_description_4">Nhận xu miễn phí mỗi ngày chỉ bằng cách xem phim. Hoàn thành nhiệm vụ để mở khóa các tập cao cấp.</string>
+
+    <!-- Home -->
+    <string name="mood_hot">Hot</string>
+    <string name="mood_happy">Vui vẻ</string>
+    <string name="mood_emotional">Cảm động</string>
+    <string name="mood_action">Hành động</string>
+    <string name="mood_romance">Lãng mạn</string>
+    <string name="mood_horror">Kinh dị</string>
+    <string name="mood_mind_blowing">Choáng ngợp</string>
+    <string name="mood_relax">Thư giãn</string>
+
+    <!-- Hero -->
+    <string name="featured">NỔI BẬT</string>
+    <string name="watch_now">Xem ngay</string>
+    <string name="save">Lưu</string>
+    <string name="saved">Đã lưu</string>
+
+    <!-- Continue -->
+    <string name="continue_watching">Tiếp tục xem</string>
+    <string name="continue_watching_subtitle">Tiếp tục từ tập gần đây nhất của bạn</string>
+    <string name="continue_watching_empty">Những phim đã xem hơn 10 giây sẽ xuất hiện ở đây.</string>
+    <string name="see_all">XEM TẤT CẢ</string>
+
+    <!-- Trending -->
+    <string name="trending_now">Đang thịnh hành</string>
+    <string name="recommended_for_you">Đề xuất cho bạn</string>
+    <string name="trending_tag">XU HƯỚNG</string>
+    <string name="episodes_count">%1$d tập</string>
+    <string name="premium">CAO CẤP</string>
+    <string name="rating_value">★ %1$s</string>
+
+    <!-- Top Rated -->
+    <string name="top_rated_this_week">Được đánh giá cao nhất tuần</string>
+    <string name="weekly_top_1">TOP #1 TUẦN</string>
+    <string name="rating_genre_episodes">★ %1$s    %2$s    %3$d tập</string>
+
+    <!-- Actions -->
+    <string name="vip_short">VIP</string>
+    <string name="join_vip_club">Tham gia VIP</string>
+    <string name="unlock_all_episodes">Mở khóa tất cả\ncác tập hôm nay</string>
+    <string name="schedule">Lịch trình</string>
+    <string name="daily_reward_short">50</string>
+    <string name="daily_rewards">Phần thưởng hằng ngày</string>
+    <string name="claim_daily_coins">Nhận 50 xu mỗi ngày</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_home">Trang chủ</string>
+    <string name="nav_shorts">Shorts</string>
+    <string name="nav_library">Thư viện</string>
+    <string name="nav_rewards">Phần thưởng</string>
+    <string name="nav_planner">Kế hoạch</string>
+    <string name="nav_profile">Hồ sơ</string>
+
+    <!-- Library -->
+    <string name="library_subtitle">Đã lưu, đã xem và được đề xuất cho bạn</string>
+    <string name="watch_list">Danh sách xem</string>
+    <string name="library_watch_list_subtitle">Phim đã lưu và đánh dấu</string>
+    <string name="library_watch_list_empty">Các phim đã lưu sẽ xuất hiện ở đây.</string>
+    <string name="similar_films">Phim tương tự</string>
+    <string name="top_stars">Diễn viên nổi bật</string>
+    <string name="top_stars_subtitle">Dựa trên dữ liệu diễn viên hiện có</string>
+    <string name="search_films_hint">Tìm kiếm phim...</string>
+    <string name="search_results_count">%1$d kết quả</string>
+    <string name="no_films_found">Không tìm thấy phim.</string>
+    <string name="no_films_yet">Chưa có phim.</string>
+    <string name="library_load_error">Không thể làm mới thư viện lúc này.</string>
+    <string name="search_error">Không thể tải kết quả tìm kiếm.</string>
+
+    <!-- Toast -->
+    <string name="saved_to_list">Đã lưu vào danh sách</string>
+    <string name="removed_from_list">Đã xóa khỏi danh sách</string>
+    <string name="feedback_sent">Đã gửi phản hồi</string>
+
+    <!-- Actions -->
+    <string name="share">Chia sẻ</string>
+    <string name="episodes">Tập</string>
+    <string name="cc">Phụ đề</string>
+    <string name="speed">Tốc độ</string>
+
+    <!-- Episode -->
+    <string name="episode_progress">Tập %1$d/%2$d</string>
+    <string name="episode_title">Tập %1$d</string>
+    <string name="playing">Đang phát</string>
+    <string name="free">Miễn phí</string>
+    <string name="trending_number">Xu hướng #1</string>
+
+    <!-- Description -->
+    <string name="default_short_description">Một bộ phim ngắn đầy bí mật, tình yêu và sự báo thù.</string>
+    <string name="view_more">Xem thêm</string>
+    <string name="view_less">Thu gọn</string>
+
+    <!-- Playback -->
+    <string name="playback_options">Tùy chọn phát</string>
+    <string name="auto_next_episode">Tự động phát tập tiếp theo</string>
+    <string name="auto_next_episode_desc">Tự động phát tập tiếp theo khi tập hiện tại kết thúc.</string>
+    <string name="auto_unlock_episodes">Tự động mở khóa tập</string>
+    <string name="auto_unlock_episodes_desc">Chỉ mở khóa tập bị khóa tiếp theo sau khi tập hiện tại kết thúc.</string>
+
+    <!-- Feedback -->
+    <string name="send_feedback">Gửi phản hồi</string>
+    <string name="feedback_hint">Hãy cho chúng tôi biết vấn đề...</string>
+    <string name="submit">Gửi</string>
+
+    <!-- Subtitle -->
+    <string name="subtitles">Phụ đề</string>
+    <string name="subtitle_on">Bật</string>
+
+    <!-- Speed -->
+    <string name="speed_1x">1x</string>
+    <string name="speed_125x">1.25x</string>
+    <string name="speed_15x">1.5x</string>
+    <string name="speed_2x">2x</string>
+    <string name="speed_custom">%1$sx</string>
+
+    <!-- Profile -->
+    <string name="default_username">Người yêu phim</string>
+    <string name="update_profile_photo">Cập nhật ảnh hồ sơ</string>
+    <string name="banner_image">Ảnh bìa</string>
+    <string name="avatar_image">Ảnh đại diện</string>
+    <string name="update_banner_image">Cập nhật ảnh bìa</string>
+    <string name="update_avatar_image">Cập nhật ảnh đại diện</string>
+    <string name="choose_from_gallery">Chọn từ thư viện</string>
+    <string name="choose_an_avatar">Chọn ảnh đại diện</string>
+    <string name="cancel">Hủy</string>
+
+    <!-- Stats -->
+    <string name="coins">XU</string>
+    <string name="watched">ĐÃ XEM</string>
+    <string name="episodes_cap">TẬP</string>
+
+    <!-- Quick Actions -->
+    <string name="subscription">Đăng ký</string>
+    <string name="wallet">Ví</string>
+    <string name="downloads">Tải xuống</string>
+
+    <!-- Sections -->
+    <string name="account_settings">CÀI ĐẶT TÀI KHOẢN</string>
+    <string name="edit_profile">Chỉnh sửa hồ sơ</string>
+    <string name="watch_history">Lịch sử xem</string>
+    <string name="my_watchlist">Danh sách xem của tôi</string>
+    <string name="preferences_support">TÙY CHỌN &amp; HỖ TRỢ</string>
+    <string name="language">Ngôn ngữ</string>
+    <string name="settings">Cài đặt</string>
+    <string name="help_center">Trung tâm trợ giúp</string>
+    <string name="privacy">QUYỀN RIÊNG TƯ</string>
+    <string name="rate_us">Đánh giá chúng tôi</string>
+    <string name="privacy_policy">Chính sách bảo mật</string>
+    <string name="vip_gold_member">THÀNH VIÊN VIP VÀNG</string>
+
+    <!-- Languages -->
+    <string name="english">Tiếng Anh</string>
+    <string name="spanish">Tiếng Tây Ban Nha</string>
+    <string name="german">Tiếng Đức</string>
+    <string name="portuguese">Tiếng Bồ Đào Nha</string>
+    <string name="turkish">Tiếng Thổ Nhĩ Kỳ</string>
+    <string name="arabic">Tiếng Ả Rập</string>
+    <string name="hindi">Tiếng Hindi</string>
+    <string name="japanese">Tiếng Nhật</string>
+    <string name="korean">Tiếng Hàn</string>
+    <string name="chinese">Tiếng Trung</string>
+
+    <!-- Others -->
+    <string name="profile_avatar">Ảnh đại diện</string>
+    <string name="preset_avatar">Ảnh đại diện có sẵn</string>
+    <string name="edit_profile_photo">Chỉnh sửa ảnh hồ sơ</string>
+
+    <string name="welcome_title">Chào mừng đến với </string>
+    <string name="welcome_accent_title">DramaVerse</string>
+    <string name="welcome_description">Hàng nghìn câu chuyện khó quên đang chờ bạn. Hãy bắt đầu xem ngay.</string>
+    <string name="get_started">Bắt đầu</string>
+</resources>

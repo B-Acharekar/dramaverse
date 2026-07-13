@@ -194,4 +194,9 @@
     <string name="profile_avatar">プロフィールアバター</string>
     <string name="preset_avatar">プリセットアバター</string>
     <string name="edit_profile_photo">プロフィール写真を編集</string>
+
+    <string name="welcome_title">ようこそ </string>
+    <string name="welcome_accent_title">DramaVerse</string>
+    <string name="welcome_description">何千もの忘れられない物語があなたを待っています。今すぐ視聴を始めましょう。</string>
+    <string name="get_started">始める</string>
 </resources>

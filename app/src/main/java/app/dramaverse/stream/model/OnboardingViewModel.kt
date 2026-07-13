@@ -19,7 +19,8 @@ enum class OnboardingVisual {
     DramaPhone,
     Collections,
     RomancePhone,
-    Rewards
+    Welcome,
+
 }
 
 data class OnboardingUiState(
@@ -43,10 +44,10 @@ data class OnboardingUiState(
             visual = OnboardingVisual.RomancePhone
         ),
         OnboardingPage(
-            title = R.string.onboarding_title_4,
-            accentTitle = 0, // No accent title
-            description = R.string.onboarding_description_4,
-            visual = OnboardingVisual.Rewards
+            title = R.string.welcome_title,
+            accentTitle = R.string.welcome_accent_title,
+            description = R.string.welcome_description,
+            visual = OnboardingVisual.Welcome
         )
     ),
     val selectedPage: Int = 0

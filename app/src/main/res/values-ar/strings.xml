@@ -194,4 +194,11 @@
     <string name="profile_avatar">الصورة الرمزية للملف الشخصي</string>
     <string name="preset_avatar">صورة رمزية جاهزة</string>
     <string name="edit_profile_photo">تعديل صورة الملف الشخصي</string>
+
+    <string name="welcome_title">مرحبًا بك في </string>
+    <string name="welcome_accent_title">DramaVerse</string>
+    <string name="welcome_description">آلاف القصص التي لا تُنسى بانتظارك. ابدأ المشاهدة الآن.</string>
+    <string name="get_started">ابدأ الآن</string>
+
+    
 </resources>

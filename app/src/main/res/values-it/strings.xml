@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">DramaVerse</string>
+    <string name="app_name_display">DramaVerse</string>
+
+    <!-- Splash -->
+    <string name="splash_tagline">D R A M M I\nC O R T I\nI L L I M I T A T I</string>
+    <string name="splash_description">Vivi storie coinvolgenti, selezionate per accompagnare ogni tuo momento.</string>
+
+    <!-- Language -->
+    <string name="language_title">Lingua</string>
+    <string name="done">FATTO</string>
+
+    <!-- Onboarding -->
+    <string name="start_btn">Inizia</string>
+    <string name="next_btn">Avanti</string>
+
+    <string name="onboarding_title_1">Scopri</string>
+    <string name="onboarding_accent_title_1">drammi brevi coinvolgenti</string>
+    <string name="onboarding_description_1">Storie brevi perfette per la tua vita frenetica. Goditi contenuti premium ovunque.</string>
+
+    <string name="onboarding_title_2">Esplora</string>
+    <string name="onboarding_accent_title_2">Collezioni selezionate</string>
+    <string name="onboarding_description_2">Scopri raccolte di drammi accuratamente selezionate in diversi generi e categorie.</string>
+
+    <string name="onboarding_title_3">Esplora</string>
+    <string name="onboarding_accent_title_3">Collezioni selezionate</string>
+    <string name="onboarding_description_3">Esplora collezioni curate di drammi appartenenti a diversi generi.</string>
+
+    <string name="onboarding_title_4">Ricompense e Missioni Giornaliere</string>
+    <string name="onboarding_description_4">Guadagna monete gratis ogni giorno guardando i contenuti. Completa le missioni per sbloccare episodi premium.</string>
+
+    <!-- Home -->
+    <string name="mood_hot">Hot</string>
+    <string name="mood_happy">Felice</string>
+    <string name="mood_emotional">Emozionante</string>
+    <string name="mood_action">Azione</string>
+    <string name="mood_romance">Romantico</string>
+    <string name="mood_horror">Horror</string>
+    <string name="mood_mind_blowing">Sorprendente</string>
+    <string name="mood_relax">Relax</string>
+
+    <!-- Hero -->
+    <string name="featured">IN EVIDENZA</string>
+    <string name="watch_now">Guarda ora</string>
+    <string name="save">Salva</string>
+    <string name="saved">Salvato</string>
+
+    <!-- Continue Watching -->
+    <string name="continue_watching">Continua a guardare</string>
+    <string name="continue_watching_subtitle">Riprendi dall\'ultimo episodio visto</string>
+    <string name="continue_watching_empty">I film guardati per almeno 10 secondi appariranno qui.</string>
+    <string name="see_all">VEDI TUTTO</string>
+
+    <!-- Trending -->
+    <string name="trending_now">Di tendenza</string>
+    <string name="recommended_for_you">Consigliati per te</string>
+    <string name="trending_tag">TENDENZA</string>
+    <string name="episodes_count">%1$d episodi</string>
+    <string name="premium">PREMIUM</string>
+    <string name="rating_value">★ %1$s</string>
+
+    <!-- Top Rated -->
+    <string name="top_rated_this_week">I più votati della settimana</string>
+    <string name="weekly_top_1">TOP #1 DELLA SETTIMANA</string>
+    <string name="rating_genre_episodes">★ %1$s    %2$s    %3$d episodi</string>
+
+    <!-- Actions -->
+    <string name="vip_short">VIP</string>
+    <string name="join_vip_club">Unisciti al Club VIP</string>
+    <string name="unlock_all_episodes">Sblocca tutti gli episodi\noggi</string>
+    <string name="schedule">Programma</string>
+    <string name="daily_reward_short">50</string>
+    <string name="daily_rewards">Ricompense giornaliere</string>
+    <string name="claim_daily_coins">Riscatta le tue 50 monete</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_shorts">Shorts</string>
+    <string name="nav_library">Libreria</string>
+    <string name="nav_rewards">Ricompense</string>
+    <string name="nav_planner">Planner</string>
+    <string name="nav_profile">Profilo</string>
+
+    <!-- Library -->
+    <string name="library_subtitle">Salvati, guardati e consigliati per te</string>
+    <string name="watch_list">Lista di visione</string>
+    <string name="library_watch_list_subtitle">Film salvati e aggiunti ai preferiti</string>
+    <string name="library_watch_list_empty">I film salvati appariranno qui.</string>
+    <string name="similar_films">Film simili</string>
+    <string name="top_stars">Attori principali</string>
+    <string name="top_stars_subtitle">Basato sui dati disponibili del cast</string>
+    <string name="search_films_hint">Cerca film...</string>
+    <string name="search_results_count">%1$d risultati</string>
+    <string name="no_films_found">Nessun film trovato.</string>
+    <string name="no_films_yet">Nessun film disponibile.</string>
+    <string name="library_load_error">Impossibile aggiornare la libreria in questo momento.</string>
+    <string name="search_error">Impossibile caricare i risultati della ricerca.</string>
+
+    <!-- Toast -->
+    <string name="saved_to_list">Salvato nella lista</string>
+    <string name="removed_from_list">Rimosso dalla lista</string>
+    <string name="feedback_sent">Feedback inviato</string>
+
+    <!-- Actions -->
+    <string name="share">Condividi</string>
+    <string name="episodes">Episodi</string>
+    <string name="cc">CC</string>
+    <string name="speed">Velocità</string>
+
+    <!-- Episode -->
+    <string name="episode_progress">Episodio %1$d/%2$d</string>
+    <string name="episode_title">Episodio %1$d</string>
+    <string name="playing">In riproduzione</string>
+    <string name="free">Gratis</string>
+    <string name="trending_number">Tendenza #1</string>
+
+    <!-- Description -->
+    <string name="default_short_description">Un breve dramma ricco di segreti, amore e vendetta.</string>
+    <string name="view_more">Mostra altro</string>
+    <string name="view_less">Mostra meno</string>
+
+    <!-- Playback -->
+    <string name="playback_options">Opzioni di riproduzione</string>
+    <string name="auto_next_episode">Riproduci automaticamente il prossimo episodio</string>
+    <string name="auto_next_episode_desc">Riproduce automaticamente il prossimo episodio quando quello attuale termina.</string>
+
+    <string name="auto_unlock_episodes">Sblocco automatico degli episodi</string>
+    <string name="auto_unlock_episodes_desc">Sblocca solo il prossimo episodio bloccato dopo la fine di quello attuale.</string>
+
+    <!-- Feedback -->
+    <string name="send_feedback">Invia feedback</string>
+    <string name="feedback_hint">Dicci cosa non ha funzionato...</string>
+    <string name="submit">Invia</string>
+
+    <!-- Subtitle -->
+    <string name="subtitles">Sottotitoli</string>
+    <string name="subtitle_on">Attivi</string>
+
+    <!-- Speed -->
+    <string name="speed_1x">1x</string>
+    <string name="speed_125x">1.25x</string>
+    <string name="speed_15x">1.5x</string>
+    <string name="speed_2x">2x</string>
+    <string name="speed_custom">%1$sx</string>
+
+    <!-- Profile -->
+    <string name="default_username">Appassionato di Drama</string>
+    <string name="update_profile_photo">Aggiorna foto profilo</string>
+    <string name="banner_image">Immagine banner</string>
+    <string name="avatar_image">Avatar</string>
+    <string name="update_banner_image">Aggiorna banner</string>
+    <string name="update_avatar_image">Aggiorna avatar</string>
+    <string name="choose_from_gallery">Scegli dalla galleria</string>
+    <string name="choose_an_avatar">Scegli un avatar</string>
+    <string name="cancel">Annulla</string>
+
+    <!-- Stats -->
+    <string name="coins">MONETE</string>
+    <string name="watched">VISTI</string>
+    <string name="episodes_cap">EPISODI</string>
+
+    <!-- Quick Actions -->
+    <string name="subscription">Abbonamento</string>
+    <string name="wallet">Portafoglio</string>
+    <string name="downloads">Download</string>
+
+    <!-- Sections -->
+    <string name="account_settings">IMPOSTAZIONI ACCOUNT</string>
+    <string name="edit_profile">Modifica profilo</string>
+    <string name="watch_history">Cronologia</string>
+    <string name="my_watchlist">La mia lista</string>
+    <string name="preferences_support">PREFERENZE E SUPPORTO</string>
+    <string name="language">Lingua</string>
+    <string name="settings">Impostazioni</string>
+    <string name="help_center">Centro assistenza</string>
+    <string name="privacy">PRIVACY</string>
+    <string name="rate_us">Valutaci</string>
+    <string name="privacy_policy">Informativa sulla privacy</string>
+    <string name="vip_gold_member">MEMBRO VIP GOLD</string>
+
+    <!-- Language Picker -->
+    <string name="english">Inglese</string>
+    <string name="spanish">Spagnolo</string>
+    <string name="german">Tedesco</string>
+    <string name="portuguese">Portoghese</string>
+    <string name="turkish">Turco</string>
+    <string name="arabic">Arabo</string>
+    <string name="hindi">Hindi</string>
+    <string name="japanese">Giapponese</string>
+    <string name="korean">Coreano</string>
+    <string name="chinese">Cinese</string>
+
+    <!-- Others -->
+    <string name="profile_avatar">Avatar del profilo</string>
+    <string name="preset_avatar">Avatar predefinito</string>
+    <string name="edit_profile_photo">Modifica foto profilo</string>
+
+    <string name="welcome_title">Benvenuto su </string>
+    <string name="welcome_accent_title">DramaVerse</string>
+    <string name="welcome_description">Migliaia di storie indimenticabili ti aspettano. Inizia a guardare ora.</string>
+    <string name="get_started">Inizia</string>
+</resources>

@@ -194,4 +194,9 @@
     <string name="profile_avatar">个人头像</string>
     <string name="preset_avatar">预设头像</string>
     <string name="edit_profile_photo">编辑个人资料照片</string>
+
+    <string name="welcome_title">欢迎来到 </string>
+    <string name="welcome_accent_title">DramaVerse</string>
+    <string name="welcome_description">数千个令人难忘的故事正在等着你。立即开始观看。</string>
+    <string name="get_started">开始使用</string>
 </resources>

@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">DramaVerse</string>
+    <string name="app_name_display">DramaVerse</string>
+
+    <!-- Splash -->
+    <string name="splash_tagline">D R A M E S\nC O U R T S\nI L L I M I T É S</string>
+    <string name="splash_description">Découvrez des histoires captivantes, sélectionnées pour accompagner chacun de vos moments.</string>
+
+    <!-- Language -->
+    <string name="language_title">Langue</string>
+    <string name="done">TERMINÉ</string>
+
+    <!-- Onboarding -->
+    <string name="start_btn">Commencer</string>
+    <string name="next_btn">Suivant</string>
+
+    <string name="onboarding_title_1">Découvrez des</string>
+    <string name="onboarding_accent_title_1">drames courts captivants</string>
+    <string name="onboarding_description_1">Des histoires courtes qui s\'adaptent à votre quotidien. Profitez d\'un contenu premium où que vous soyez.</string>
+
+    <string name="onboarding_title_2">Explorez des</string>
+    <string name="onboarding_accent_title_2">collections sélectionnées</string>
+    <string name="onboarding_description_2">Découvrez des collections de dramas soigneusement sélectionnées dans différentes catégories et genres.</string>
+
+    <string name="onboarding_title_3">Explorez des</string>
+    <string name="onboarding_accent_title_3">collections sélectionnées</string>
+    <string name="onboarding_description_3">Explorez des collections de dramas soigneusement choisies dans différents genres.</string>
+
+    <string name="onboarding_title_4">Récompenses et missions quotidiennes</string>
+    <string name="onboarding_description_4">Gagnez des pièces gratuites chaque jour simplement en regardant. Accomplissez des missions pour débloquer des épisodes premium.</string>
+
+    <!-- Home -->
+    <string name="mood_hot">Tendance</string>
+    <string name="mood_happy">Heureux</string>
+    <string name="mood_emotional">Émouvant</string>
+    <string name="mood_action">Action</string>
+    <string name="mood_romance">Romance</string>
+    <string name="mood_horror">Horreur</string>
+    <string name="mood_mind_blowing">Époustouflant</string>
+    <string name="mood_relax">Détente</string>
+
+    <!-- Hero -->
+    <string name="featured">À LA UNE</string>
+    <string name="watch_now">Regarder</string>
+    <string name="save">Enregistrer</string>
+    <string name="saved">Enregistré</string>
+
+    <!-- Continue Watching -->
+    <string name="continue_watching">Continuer à regarder</string>
+    <string name="continue_watching_subtitle">Reprenez là où vous vous êtes arrêté</string>
+    <string name="continue_watching_empty">Les films regardés pendant plus de 10 secondes apparaîtront ici.</string>
+    <string name="see_all">VOIR TOUT</string>
+
+    <!-- Trending -->
+    <string name="trending_now">Tendances</string>
+    <string name="recommended_for_you">Recommandés pour vous</string>
+    <string name="trending_tag">TENDANCE</string>
+    <string name="episodes_count">%1$d épisodes</string>
+    <string name="premium">PREMIUM</string>
+    <string name="rating_value">★ %1$s</string>
+
+    <!-- Top Rated -->
+    <string name="top_rated_this_week">Les mieux notés cette semaine</string>
+    <string name="weekly_top_1">TOP #1 DE LA SEMAINE</string>
+    <string name="rating_genre_episodes">★ %1$s    %2$s    %3$d épisodes</string>
+
+    <!-- Actions -->
+    <string name="vip_short">VIP</string>
+    <string name="join_vip_club">Rejoindre le Club VIP</string>
+    <string name="unlock_all_episodes">Débloquez tous les épisodes\ndès aujourd\'hui</string>
+    <string name="schedule">Planning</string>
+    <string name="daily_reward_short">50</string>
+    <string name="daily_rewards">Récompenses quotidiennes</string>
+    <string name="claim_daily_coins">Réclamez vos 50 pièces</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_home">Accueil</string>
+    <string name="nav_shorts">Shorts</string>
+    <string name="nav_library">Bibliothèque</string>
+    <string name="nav_rewards">Récompenses</string>
+    <string name="nav_planner">Planning</string>
+    <string name="nav_profile">Profil</string>
+
+    <!-- Library -->
+    <string name="library_subtitle">Enregistrés, regardés et recommandés pour vous</string>
+    <string name="watch_list">Liste de lecture</string>
+    <string name="library_watch_list_subtitle">Films enregistrés et favoris</string>
+    <string name="library_watch_list_empty">Les films enregistrés apparaîtront ici.</string>
+    <string name="similar_films">Films similaires</string>
+    <string name="top_stars">Acteurs populaires</string>
+    <string name="top_stars_subtitle">Basé sur les informations disponibles du casting</string>
+    <string name="search_films_hint">Rechercher un film...</string>
+    <string name="search_results_count">%1$d résultats</string>
+    <string name="no_films_found">Aucun film trouvé.</string>
+    <string name="no_films_yet">Aucun film disponible.</string>
+    <string name="library_load_error">Impossible d\'actualiser votre bibliothèque pour le moment.</string>
+    <string name="search_error">Impossible de charger les résultats de recherche.</string>
+
+    <!-- Toasts -->
+    <string name="saved_to_list">Ajouté à la liste</string>
+    <string name="removed_from_list">Retiré de la liste</string>
+    <string name="feedback_sent">Retour envoyé</string>
+
+    <!-- Actions -->
+    <string name="share">Partager</string>
+    <string name="episodes">Épisodes</string>
+    <string name="cc">CC</string>
+    <string name="speed">Vitesse</string>
+
+    <!-- Episode -->
+    <string name="episode_progress">Épisode %1$d/%2$d</string>
+    <string name="episode_title">Épisode %1$d</string>
+    <string name="playing">Lecture</string>
+    <string name="free">Gratuit</string>
+    <string name="trending_number">Tendance n°1</string>
+
+    <!-- Description -->
+    <string name="default_short_description">Un court drama rempli de secrets, de romance et de vengeance.</string>
+
+    <string name="view_more">Voir plus</string>
+    <string name="view_less">Voir moins</string>
+
+    <!-- Playback -->
+    <string name="playback_options">Options de lecture</string>
+
+    <string name="auto_next_episode">Lecture automatique de l\'épisode suivant</string>
+    <string name="auto_next_episode_desc">Lire automatiquement l\'épisode suivant lorsque celui-ci se termine.</string>
+
+    <string name="auto_unlock_episodes">Déverrouillage automatique des épisodes</string>
+    <string name="auto_unlock_episodes_desc">Déverrouille uniquement le prochain épisode verrouillé après la fin de l\'épisode actuel.</string>
+
+    <!-- Feedback -->
+    <string name="send_feedback">Envoyer un commentaire</string>
+    <string name="feedback_hint">Dites-nous ce qui n\'a pas fonctionné...</string>
+    <string name="submit">Envoyer</string>
+
+    <!-- Subtitle -->
+    <string name="subtitles">Sous-titres</string>
+    <string name="subtitle_on">Activés</string>
+
+    <!-- Speed -->
+    <string name="speed_1x">1x</string>
+    <string name="speed_125x">1.25x</string>
+    <string name="speed_15x">1.5x</string>
+    <string name="speed_2x">2x</string>
+    <string name="speed_custom">%1$sx</string>
+
+    <!-- Profile -->
+    <string name="default_username">Passionné de dramas</string>
+    <string name="update_profile_photo">Mettre à jour la photo de profil</string>
+    <string name="banner_image">Image de bannière</string>
+    <string name="avatar_image">Avatar</string>
+    <string name="update_banner_image">Mettre à jour la bannière</string>
+    <string name="update_avatar_image">Mettre à jour l\'avatar</string>
+    <string name="choose_from_gallery">Choisir depuis la galerie</string>
+    <string name="choose_an_avatar">Choisir un avatar</string>
+    <string name="cancel">Annuler</string>
+
+    <!-- Stats -->
+    <string name="coins">PIÈCES</string>
+    <string name="watched">REGARDÉS</string>
+    <string name="episodes_cap">ÉPISODES</string>
+
+    <!-- Quick Actions -->
+    <string name="subscription">Abonnement</string>
+    <string name="wallet">Portefeuille</string>
+    <string name="downloads">Téléchargements</string>
+
+    <!-- Sections -->
+    <string name="account_settings">PARAMÈTRES DU COMPTE</string>
+    <string name="edit_profile">Modifier le profil</string>
+    <string name="watch_history">Historique</string>
+    <string name="my_watchlist">Ma liste</string>
+    <string name="preferences_support">PRÉFÉRENCES ET ASSISTANCE</string>
+    <string name="language">Langue</string>
+    <string name="settings">Paramètres</string>
+    <string name="help_center">Centre d\'aide</string>
+    <string name="privacy">CONFIDENTIALITÉ</string>
+    <string name="rate_us">Évaluez-nous</string>
+    <string name="privacy_policy">Politique de confidentialité</string>
+    <string name="vip_gold_member">MEMBRE VIP OR</string>
+
+    <!-- Language Picker -->
+    <string name="english">Anglais</string>
+    <string name="spanish">Espagnol</string>
+    <string name="german">Allemand</string>
+    <string name="portuguese">Portugais</string>
+    <string name="turkish">Turc</string>
+    <string name="arabic">Arabe</string>
+    <string name="hindi">Hindi</string>
+    <string name="japanese">Japonais</string>
+    <string name="korean">Coréen</string>
+    <string name="chinese">Chinois</string>
+
+    <!-- Others -->
+    <string name="profile_avatar">Avatar du profil</string>
+    <string name="preset_avatar">Avatar prédéfini</string>
+    <string name="edit_profile_photo">Modifier la photo de profil</string>
+
+    <string name="welcome_title">Bienvenue sur </string>
+    <string name="welcome_accent_title">DramaVerse</string>
+    <string name="welcome_description">Des milliers d\'histoires inoubliables vous attendent. Commencez à regarder dès maintenant.</string>
+    <string name="get_started">Commencer</string>
+
+</resources>
