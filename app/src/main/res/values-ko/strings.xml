@@ -15,17 +15,17 @@
     <string name="start_btn">시작</string>
     <string name="next_btn">다음</string>
 
-    <string name="onboarding_title_1">중독성 있는</string>
-    <string name="onboarding_accent_title_1">숏드라마를 만나보세요</string>
-    <string name="onboarding_description_1">바쁜 일상에 딱 맞는 짧은 이야기. 언제 어디서나 프리미엄 스토리를 즐겨보세요.</string>
+    <string name="onboarding_title_1">놀라운</string>
+    <string name="onboarding_accent_title_1">숏드라마 발견</string>
+    <string name="onboarding_description_1">수천 개의 에피소드가 있는 독점 숏드라마를 여유 시간마다 즐겨보세요.</string>
 
-    <string name="onboarding_title_2">엄선된</string>
+    <string name="onboarding_title_2">끝없는 이야기</string>
     <string name="onboarding_accent_title_2">컬렉션</string>
-    <string name="onboarding_description_2">다양한 카테고리와 장르의 엄선된 드라마 컬렉션을 탐색해 보세요.</string>
+    <string name="onboarding_description_2">로맨스와 판타지부터 스릴러와 복수극까지, 매일 새로운 이야기를 만나보세요.</string>
 
-    <string name="onboarding_title_3">엄선된</string>
-    <string name="onboarding_accent_title_3">컬렉션</string>
-    <string name="onboarding_description_3">다양한 카테고리의 엄선된 드라마 컬렉션을 만나보세요.</string>
+    <string name="onboarding_title_3">언제든지,</string>
+    <string name="onboarding_accent_title_3">어디서나 시청</string>
+    <string name="onboarding_description_3">에피소드를 다운로드하고 어디서든, 오프라인에서도 좋아하는 드라마를 즐기세요.</string>
 
     <string name="onboarding_title_4">일일 보상 및 미션</string>
     <string name="onboarding_description_4">시청만 해도 매일 무료 코인을 받으세요. 미션을 완료하고 프리미엄 에피소드를 잠금 해제하세요.</string>
@@ -199,4 +199,16 @@
     <string name="welcome_accent_title">DramaX</string>
     <string name="welcome_description">수천 편의 잊을 수 없는 이야기가 여러분을 기다리고 있습니다. 지금 바로 시청을 시작하세요.</string>
     <string name="get_started">시작하기</string>
+    <!-- Uninstall flow -->
+    <string name="uninstall_confirm_title">시청 기록과 좋아하는 숏드라마가\n아직 기다리고 있어요</string>
+    <string name="uninstall_confirm_description">DramaX를 설치해 두고 이야기,\n보상, 새 에피소드를 언제든 계속하세요.</string>
+    <string name="uninstall_try_again">다시 시도</string>
+    <string name="uninstall_still_want">그래도 삭제하기</string>
+    <string name="uninstall_survey_title">사용 중 발생한 문제</string>
+    <string name="uninstall_reason_feature_not_working">기능이 작동하지 않음</string>
+    <string name="uninstall_reason_too_many_ads">광고가 너무 많음</string>
+    <string name="uninstall_reason_not_needed">필요하지 않음</string>
+    <string name="uninstall_reason_other">기타</string>
+    <string name="uninstall_action">제거</string>
+    <string name="uninstall_open_failed">제거 화면을 열 수 없습니다</string>
 </resources>

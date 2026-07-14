@@ -15,17 +15,17 @@
     <string name="start_btn">ابدأ</string>
     <string name="next_btn">التالي</string>
 
-    <string name="onboarding_title_1">اكتشف</string>
-    <string name="onboarding_accent_title_1">الدراما القصيرة</string>
-    <string name="onboarding_description_1">قصص قصيرة تناسب يومك المزدحم. استمتع بسرد قصصي مميز في أي وقت.</string>
+    <string name="onboarding_title_1">اكتشف دراما</string>
+    <string name="onboarding_accent_title_1">قصيرة مذهلة</string>
+    <string name="onboarding_description_1">شاهد دراما قصيرة حصرية تضم آلاف الحلقات، مثالية لكل لحظة فراغ.</string>
 
-    <string name="onboarding_title_2">استكشف</string>
-    <string name="onboarding_accent_title_2">المجموعات المختارة</string>
-    <string name="onboarding_description_2">استكشف مجموعات مختارة من الدراما في مختلف الفئات والأنواع.</string>
+    <string name="onboarding_title_2">قصص لا تنتهي</string>
+    <string name="onboarding_accent_title_2">مجموعة</string>
+    <string name="onboarding_description_2">من الرومانسية والخيال إلى الإثارة والانتقام، اكتشف قصصًا جديدة كل يوم.</string>
 
-    <string name="onboarding_title_3">استكشف</string>
-    <string name="onboarding_accent_title_3">المجموعات المختارة</string>
-    <string name="onboarding_description_3">تصفح مجموعات مختارة من الأعمال الدرامية ضمن تصنيفات متنوعة.</string>
+    <string name="onboarding_title_3">شاهد في أي وقت،</string>
+    <string name="onboarding_accent_title_3">وفي أي مكان</string>
+    <string name="onboarding_description_3">حمّل الحلقات واستمتع بدراماتك المفضلة أينما ذهبت، حتى بدون إنترنت.</string>
 
     <string name="onboarding_title_4">المكافآت اليومية والمهام</string>
     <string name="onboarding_description_4">احصل على عملات مجانية كل يوم بمجرد المشاهدة. أكمل المهام لفتح الحلقات المميزة.</string>
@@ -199,6 +199,16 @@
     <string name="welcome_accent_title">DramaX</string>
     <string name="welcome_description">آلاف القصص التي لا تُنسى بانتظارك. ابدأ المشاهدة الآن.</string>
     <string name="get_started">ابدأ الآن</string>
-
-    
+    <!-- Uninstall flow -->
+    <string name="uninstall_confirm_title">سجل المشاهدة والدراما القصيرة المفضلة لديك\nما زالا في انتظارك</string>
+    <string name="uninstall_confirm_description">أبقِ DramaX مثبتًا لمتابعة القصص،\nوالمكافآت، والحلقات الجديدة في أي وقت.</string>
+    <string name="uninstall_try_again">حاول مرة أخرى</string>
+    <string name="uninstall_still_want">ما زلت أريد إلغاء التثبيت</string>
+    <string name="uninstall_survey_title">مشكلات واجهتها أثناء الاستخدام</string>
+    <string name="uninstall_reason_feature_not_working">الميزة لا تعمل</string>
+    <string name="uninstall_reason_too_many_ads">إعلانات كثيرة جدًا</string>
+    <string name="uninstall_reason_not_needed">لا أحتاجه</string>
+    <string name="uninstall_reason_other">أخرى</string>
+    <string name="uninstall_action">إلغاء التثبيت</string>
+    <string name="uninstall_open_failed">تعذر فتح شاشة إلغاء التثبيت</string>
 </resources>

@@ -15,17 +15,17 @@
     <string name="start_btn">Başla</string>
     <string name="next_btn">İleri</string>
 
-    <string name="onboarding_title_1">Bağımlılık yapan</string>
-    <string name="onboarding_accent_title_1">kısa dizileri keşfedin</string>
-    <string name="onboarding_description_1">Yoğun yaşamınıza uyum sağlayan kısa hikâyeler. Her yerde premium hikâye anlatımının tadını çıkarın.</string>
+    <string name="onboarding_title_1">Muhteşem</string>
+    <string name="onboarding_accent_title_1">kısa dizileri keşfet</string>
+    <string name="onboarding_description_1">Binlerce bölümü olan özel kısa dizileri izle, her boş an için mükemmel.</string>
 
-    <string name="onboarding_title_2">Özenle seçilmiş</string>
-    <string name="onboarding_accent_title_2">koleksiyonları keşfedin</string>
-    <string name="onboarding_description_2">Farklı kategoriler ve türlerde özenle seçilmiş dizi koleksiyonlarını keşfedin.</string>
+    <string name="onboarding_title_2">Sonsuz Hikayeler</string>
+    <string name="onboarding_accent_title_2">Koleksiyon</string>
+    <string name="onboarding_description_2">Romantik ve fantastikten gerilim ve intikama kadar her gün yeni hikayeler keşfet.</string>
 
-    <string name="onboarding_title_3">Özenle seçilmiş</string>
-    <string name="onboarding_accent_title_3">koleksiyonları keşfedin</string>
-    <string name="onboarding_description_3">Farklı kategorilerde özenle hazırlanmış dizi koleksiyonlarını keşfedin.</string>
+    <string name="onboarding_title_3">İstediğin zaman izle,</string>
+    <string name="onboarding_accent_title_3">her yerde</string>
+    <string name="onboarding_description_3">Bölümleri indir ve favori dizilerini gittiğin her yerde, çevrimdışıyken bile izle.</string>
 
     <string name="onboarding_title_4">Günlük Ödüller ve Görevler</string>
     <string name="onboarding_description_4">Sadece izleyerek her gün ücretsiz jeton kazanın. Premium bölümlerin kilidini açmak için görevleri tamamlayın.</string>
@@ -199,4 +199,16 @@
     <string name="welcome_accent_title">DramaX</string>
     <string name="welcome_description">Binlerce unutulmaz hikâye sizi bekliyor. Hemen izlemeye başlayın.</string>
     <string name="get_started">Başlayın</string>
+    <!-- Uninstall flow -->
+    <string name="uninstall_confirm_title">İzleme geçmişin ve favori kısa dizilerin\nhala seni bekliyor</string>
+    <string name="uninstall_confirm_description">Hikayelere, ödüllere ve yeni bölümlere her zaman devam etmek için\nDramaX yüklü kalsın.</string>
+    <string name="uninstall_try_again">Tekrar dene</string>
+    <string name="uninstall_still_want">Yine de kaldırmak istiyorum</string>
+    <string name="uninstall_survey_title">Kullanım sırasında karşılaşılan sorunlar</string>
+    <string name="uninstall_reason_feature_not_working">Özellik çalışmıyor</string>
+    <string name="uninstall_reason_too_many_ads">Çok fazla reklam</string>
+    <string name="uninstall_reason_not_needed">Buna ihtiyacım yok</string>
+    <string name="uninstall_reason_other">Diğer</string>
+    <string name="uninstall_action">Kaldır</string>
+    <string name="uninstall_open_failed">Kaldırma ekranı açılamadı</string>
 </resources>

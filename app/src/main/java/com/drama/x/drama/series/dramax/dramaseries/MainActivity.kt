@@ -83,7 +83,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        AdsManager.clearLanguageAds()
+        val suppressNativeClear = AdsManager.consumeSuppressNativeClearOnDestroy()
+        val preserveNativeAds = isChangingConfigurations || suppressNativeClear
+        if (!preserveNativeAds) {
+            AdsManager.clearLanguageAds()
+        }
         super.onDestroy()
     }
 

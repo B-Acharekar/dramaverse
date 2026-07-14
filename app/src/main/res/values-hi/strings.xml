@@ -15,17 +15,17 @@
     <string name="start_btn">शुरू करें</string>
     <string name="next_btn">अगला</string>
 
-    <string name="onboarding_title_1">खोजें रोमांचक</string>
-    <string name="onboarding_accent_title_1">शॉर्ट ड्रामा</string>
-    <string name="onboarding_description_1">छोटी-छोटी कहानियाँ जो आपकी व्यस्त दिनचर्या में आसानी से फिट हो जाएँ। कहीं भी प्रीमियम कहानी का आनंद लें।</string>
+    <string name="onboarding_title_1">शानदार</string>
+    <string name="onboarding_accent_title_1">शॉर्ट ड्रामा खोजें</string>
+    <string name="onboarding_description_1">हजारों एपिसोड वाले एक्सक्लूसिव शॉर्ट ड्रामा देखें, हर खाली पल के लिए परफेक्ट।</string>
 
-    <string name="onboarding_title_2">खोजें चुने हुए</string>
-    <string name="onboarding_accent_title_2">संग्रह</string>
-    <string name="onboarding_description_2">विभिन्न श्रेणियों और शैलियों के बेहतरीन ड्रामा संग्रह देखें।</string>
+    <string name="onboarding_title_2">अनगिनत कहानियाँ</string>
+    <string name="onboarding_accent_title_2">कलेक्शन</string>
+    <string name="onboarding_description_2">रोमांस और फैंटेसी से लेकर थ्रिलर और बदले तक, हर दिन नई कहानियाँ खोजें।</string>
 
-    <string name="onboarding_title_3">खोजें चुने हुए</string>
-    <string name="onboarding_accent_title_3">संग्रह</string>
-    <string name="onboarding_description_3">विभिन्न श्रेणियों में चुने गए ड्रामा संग्रहों का आनंद लें।</string>
+    <string name="onboarding_title_3">कभी भी देखें,</string>
+    <string name="onboarding_accent_title_3">कहीं भी</string>
+    <string name="onboarding_description_3">एपिसोड डाउनलोड करें और जहाँ भी जाएँ अपने पसंदीदा ड्रामा देखें, ऑफलाइन भी।</string>
 
     <string name="onboarding_title_4">दैनिक पुरस्कार और मिशन</string>
     <string name="onboarding_description_4">सिर्फ देखकर हर दिन मुफ्त सिक्के कमाएँ। मिशन पूरे करें और प्रीमियम एपिसोड अनलॉक करें।</string>
@@ -199,4 +199,16 @@
     <string name="welcome_accent_title">DramaX</string>
     <string name="welcome_description">हज़ारों अविस्मरणीय कहानियाँ आपका इंतज़ार कर रही हैं। अभी देखना शुरू करें।</string>
     <string name="get_started">शुरू करें</string>
+    <!-- Uninstall flow -->
+    <string name="uninstall_confirm_title">आपका वॉच इतिहास और पसंदीदा शॉर्ट ड्रामा\nअभी भी आपका इंतज़ार कर रहे हैं</string>
+    <string name="uninstall_confirm_description">कहानियाँ, रिवार्ड्स और नए एपिसोड जारी रखने के लिए\nDramaX इंस्टॉल रखें।</string>
+    <string name="uninstall_try_again">फिर से कोशिश करें</string>
+    <string name="uninstall_still_want">फिर भी अनइंस्टॉल करना है</string>
+    <string name="uninstall_survey_title">उपयोग के दौरान आई समस्याएँ</string>
+    <string name="uninstall_reason_feature_not_working">फ़ीचर काम नहीं करता</string>
+    <string name="uninstall_reason_too_many_ads">बहुत सारे विज्ञापन</string>
+    <string name="uninstall_reason_not_needed">मुझे इसकी जरूरत नहीं</string>
+    <string name="uninstall_reason_other">अन्य</string>
+    <string name="uninstall_action">अनइंस्टॉल</string>
+    <string name="uninstall_open_failed">अनइंस्टॉल स्क्रीन नहीं खुल सकी</string>
 </resources>

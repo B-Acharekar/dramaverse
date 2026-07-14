@@ -15,17 +15,17 @@
     <string name="start_btn">開始</string>
     <string name="next_btn">次へ</string>
 
-    <string name="onboarding_title_1">夢中になれる</string>
-    <string name="onboarding_accent_title_1">ショートドラマ</string>
-    <string name="onboarding_description_1">忙しい毎日にぴったりの短編ストーリー。いつでもどこでも高品質な物語を楽しめます。</string>
+    <string name="onboarding_title_1">魅力的な</string>
+    <string name="onboarding_accent_title_1">ショートドラマを発見</string>
+    <string name="onboarding_description_1">すきま時間にぴったりな、数千話の独占ショートドラマを楽しめます。</string>
 
-    <string name="onboarding_title_2">厳選された</string>
+    <string name="onboarding_title_2">終わらない物語</string>
     <string name="onboarding_accent_title_2">コレクション</string>
-    <string name="onboarding_description_2">さまざまなカテゴリーやジャンルの厳選されたドラマコレクションをご覧ください。</string>
+    <string name="onboarding_description_2">恋愛やファンタジーからスリラー、復讐劇まで、毎日新しい物語に出会えます。</string>
 
-    <string name="onboarding_title_3">厳選された</string>
-    <string name="onboarding_accent_title_3">コレクション</string>
-    <string name="onboarding_description_3">さまざまなカテゴリーの厳選ドラマコレクションをお楽しみください。</string>
+    <string name="onboarding_title_3">いつでも、</string>
+    <string name="onboarding_accent_title_3">どこでも視聴</string>
+    <string name="onboarding_description_3">エピソードをダウンロードして、外出先でもオフラインでもお気に入りのドラマを楽しめます。</string>
 
     <string name="onboarding_title_4">デイリー報酬＆ミッション</string>
     <string name="onboarding_description_4">視聴するだけで毎日無料コインを獲得。ミッションを達成してプレミアムエピソードを解放しましょう。</string>
@@ -199,4 +199,16 @@
     <string name="welcome_accent_title">DramaX</string>
     <string name="welcome_description">何千もの忘れられない物語があなたを待っています。今すぐ視聴を始めましょう。</string>
     <string name="get_started">始める</string>
+    <!-- Uninstall flow -->
+    <string name="uninstall_confirm_title">視聴履歴とお気に入りのショートドラマが\nまだあなたを待っています</string>
+    <string name="uninstall_confirm_description">DramaXを残して、ストーリー、\n報酬、新しいエピソードをいつでも続けましょう。</string>
+    <string name="uninstall_try_again">もう一度試す</string>
+    <string name="uninstall_still_want">それでもアンインストール</string>
+    <string name="uninstall_survey_title">使用中に発生した問題</string>
+    <string name="uninstall_reason_feature_not_working">機能が動作しない</string>
+    <string name="uninstall_reason_too_many_ads">広告が多すぎる</string>
+    <string name="uninstall_reason_not_needed">必要ありません</string>
+    <string name="uninstall_reason_other">その他</string>
+    <string name="uninstall_action">アンインストール</string>
+    <string name="uninstall_open_failed">アンインストール画面を開けませんでした</string>
 </resources>

@@ -21,17 +21,17 @@
     <!-- Onboarding screen -->
     <string name="start_btn">Start</string>
     <string name="next_btn">Next</string>
-    <string name="onboarding_title_1">Discover addictive</string>
-    <string name="onboarding_accent_title_1">short dramas</string>
-    <string name="onboarding_description_1">Bite-sized stories that fit into your busy life. Experience premium storytelling anywhere.</string>
+    <string name="onboarding_title_1">Discover Amazing</string>
+    <string name="onboarding_accent_title_1">Short Dramas</string>
+    <string name="onboarding_description_1">Watch exclusive short dramas with thousands of episodes, perfect for every free moment.</string>
 
-    <string name="onboarding_title_2">Explore Curated</string>
-    <string name="onboarding_accent_title_2">Collections</string>
-    <string name="onboarding_description_2">Explore curated collections of dramas in various categories and genres.</string>
+    <string name="onboarding_title_2">Endless Stories</string>
+    <string name="onboarding_accent_title_2">Collection</string>
+    <string name="onboarding_description_2">From romance and fantasy to thrillers and revenge, discover new stories every day.</string>
 
-    <string name="onboarding_title_3">Explore Curated</string>
-    <string name="onboarding_accent_title_3">Collections</string>
-    <string name="onboarding_description_3">Explore the curated collections of dramas in various categories.</string>
+    <string name="onboarding_title_3">Watch Anytime,</string>
+    <string name="onboarding_accent_title_3">Anywhere</string>
+    <string name="onboarding_description_3">Download episodes and enjoy your favorite dramas wherever you go - even offline.</string>
 
     <string name="onboarding_title_4">Daily Rewards &amp; Missions</string>
     <string name="onboarding_description_4">Earn free coins every day just by watching. Complete missions to unlock premium episodes.</string>
@@ -215,6 +215,18 @@
     <string name="profile_avatar">Profile avatar</string>
     <string name="preset_avatar">Preset avatar</string>
     <string name="edit_profile_photo">Edit profile photo</string>
+    <!-- Uninstall flow -->
+    <string name="uninstall_confirm_title">Your watch history and favorite short dramas\nare still waiting for you</string>
+    <string name="uninstall_confirm_description">Keep DramaX installed to continue stories,\nrewards, and new episodes anytime.</string>
+    <string name="uninstall_try_again">Try Again</string>
+    <string name="uninstall_still_want">Still want to uninstall</string>
+    <string name="uninstall_survey_title">Issues encountered during usage</string>
+    <string name="uninstall_reason_feature_not_working">Feature does not work</string>
+    <string name="uninstall_reason_too_many_ads">Too many ads</string>
+    <string name="uninstall_reason_not_needed">I do not need it</string>
+    <string name="uninstall_reason_other">Other</string>
+    <string name="uninstall_action">Uninstall</string>
+    <string name="uninstall_open_failed">Unable to open uninstall screen</string>
 
     <!-- Home widget / uninstall flow -->
     <string name="widget_description" translatable="false">DramaX quick actions</string>

@@ -15,17 +15,17 @@
     <string name="start_btn">开始</string>
     <string name="next_btn">下一步</string>
 
-    <string name="onboarding_title_1">发现令人上瘾的</string>
+    <string name="onboarding_title_1">发现精彩</string>
     <string name="onboarding_accent_title_1">短剧</string>
-    <string name="onboarding_description_1">适合忙碌生活的精彩短篇故事，随时随地享受高品质剧情。</string>
+    <string name="onboarding_description_1">观看拥有数千集的独家短剧，适合每一个空闲时刻。</string>
 
-    <string name="onboarding_title_2">探索精选</string>
+    <string name="onboarding_title_2">无尽故事</string>
     <string name="onboarding_accent_title_2">合集</string>
-    <string name="onboarding_description_2">探索涵盖各种类型与题材的精选短剧合集。</string>
+    <string name="onboarding_description_2">从爱情、奇幻到惊悚和复仇，每天发现新的故事。</string>
 
-    <string name="onboarding_title_3">探索精选</string>
-    <string name="onboarding_accent_title_3">合集</string>
-    <string name="onboarding_description_3">浏览精心策划的不同类别短剧合集。</string>
+    <string name="onboarding_title_3">随时观看，</string>
+    <string name="onboarding_accent_title_3">随地享受</string>
+    <string name="onboarding_description_3">下载剧集，无论去哪里都能欣赏你喜欢的短剧，离线也可以。</string>
 
     <string name="onboarding_title_4">每日奖励与任务</string>
     <string name="onboarding_description_4">每天观看即可获得免费金币，完成任务即可解锁高级剧集。</string>
@@ -199,4 +199,16 @@
     <string name="welcome_accent_title">DramaX</string>
     <string name="welcome_description">数千个令人难忘的故事正在等着你。立即开始观看。</string>
     <string name="get_started">开始使用</string>
+    <!-- Uninstall flow -->
+    <string name="uninstall_confirm_title">你的观看记录和喜爱的短剧\n仍在等你</string>
+    <string name="uninstall_confirm_description">保留 DramaX，随时继续观看故事、\n领取奖励和新剧集。</string>
+    <string name="uninstall_try_again">再试一次</string>
+    <string name="uninstall_still_want">仍要卸载</string>
+    <string name="uninstall_survey_title">使用过程中遇到的问题</string>
+    <string name="uninstall_reason_feature_not_working">功能无法使用</string>
+    <string name="uninstall_reason_too_many_ads">广告太多</string>
+    <string name="uninstall_reason_not_needed">我不需要它</string>
+    <string name="uninstall_reason_other">其他</string>
+    <string name="uninstall_action">卸载</string>
+    <string name="uninstall_open_failed">无法打开卸载页面</string>
 </resources>

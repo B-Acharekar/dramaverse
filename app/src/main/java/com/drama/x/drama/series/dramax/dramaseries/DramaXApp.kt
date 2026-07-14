@@ -47,7 +47,10 @@ fun DramaXApp(
         if (uiState.recreateRequested) {
             viewModel.onRecreateHandled()
             // Recreate only after persisting locale so stringResource() resolves in the selected language.
-            context.findActivity()?.recreateWithoutTransition()
+            context.findActivity()?.let { activity ->
+                AdsManager.preserveNativeAdsForActivityRecreate()
+                activity.recreateWithoutTransition()
+            }
         }
     }
 

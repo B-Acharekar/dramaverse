@@ -57,6 +57,7 @@ import com.drama.x.drama.series.dramax.dramaseries.model.ProfileViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.drama.x.drama.series.dramax.dramaseries.R
+import com.drama.x.drama.series.dramax.dramaseries.ads.AdsManager
 import com.drama.x.drama.series.dramax.dramaseries.data.LocaleHelper
 
 private val BgColor = Color(0xFF0E0B10)
@@ -845,7 +846,10 @@ fun LanguagePickerDialog(
                     LocaleHelper.persistLanguage(context, selectedLanguage)
                     LocaleHelper.persistPendingStep(context, "Profile")
                     onDismiss()
-                    context.findActivity()?.recreate()
+                    context.findActivity()?.let { activity ->
+                        AdsManager.preserveNativeAdsForActivityRecreate()
+                        activity.recreate()
+                    }
                 }
             )
 

@@ -17,16 +17,16 @@
     <string name="next_btn">Suivant</string>
 
     <string name="onboarding_title_1">Découvrez des</string>
-    <string name="onboarding_accent_title_1">drames courts captivants</string>
-    <string name="onboarding_description_1">Des histoires courtes qui s\'adaptent à votre quotidien. Profitez d\'un contenu premium où que vous soyez.</string>
+    <string name="onboarding_accent_title_1">drames courts incroyables</string>
+    <string name="onboarding_description_1">Regardez des drames courts exclusifs avec des milliers épisodes, parfaits pour chaque moment libre.</string>
 
-    <string name="onboarding_title_2">Explorez des</string>
-    <string name="onboarding_accent_title_2">collections sélectionnées</string>
-    <string name="onboarding_description_2">Découvrez des collections de dramas soigneusement sélectionnées dans différentes catégories et genres.</string>
+    <string name="onboarding_title_2">Histoires infinies</string>
+    <string name="onboarding_accent_title_2">Collection</string>
+    <string name="onboarding_description_2">De la romance et la fantasy aux thrillers et à la vengeance, découvrez de nouvelles histoires chaque jour.</string>
 
-    <string name="onboarding_title_3">Explorez des</string>
-    <string name="onboarding_accent_title_3">collections sélectionnées</string>
-    <string name="onboarding_description_3">Explorez des collections de dramas soigneusement choisies dans différents genres.</string>
+    <string name="onboarding_title_3">Regardez à tout moment,</string>
+    <string name="onboarding_accent_title_3">partout</string>
+    <string name="onboarding_description_3">Téléchargez des épisodes et profitez de vos dramas préférés où que vous alliez, même hors ligne.</string>
 
     <string name="onboarding_title_4">Récompenses et missions quotidiennes</string>
     <string name="onboarding_description_4">Gagnez des pièces gratuites chaque jour simplement en regardant. Accomplissez des missions pour débloquer des épisodes premium.</string>
@@ -203,5 +203,16 @@
     <string name="welcome_accent_title">DramaX</string>
     <string name="welcome_description">Des milliers d\'histoires inoubliables vous attendent. Commencez à regarder dès maintenant.</string>
     <string name="get_started">Commencer</string>
-
+    <!-- Uninstall flow -->
+    <string name="uninstall_confirm_title">Votre historique et vos drames courts préférés\nvous attendent toujours</string>
+    <string name="uninstall_confirm_description">Gardez DramaX installé pour continuer les histoires,\nles récompenses et les nouveaux épisodes à tout moment.</string>
+    <string name="uninstall_try_again">Réessayer</string>
+    <string name="uninstall_still_want">Toujours désinstaller</string>
+    <string name="uninstall_survey_title">Problèmes rencontrés pendant utilisation</string>
+    <string name="uninstall_reason_feature_not_working">La fonction ne marche pas</string>
+    <string name="uninstall_reason_too_many_ads">Trop de publicités</string>
+    <string name="uninstall_reason_not_needed">Je n’en ai pas besoin</string>
+    <string name="uninstall_reason_other">Autre</string>
+    <string name="uninstall_action">Désinstaller</string>
+    <string name="uninstall_open_failed">Impossible ouvrir écran de désinstallation</string>
 </resources>

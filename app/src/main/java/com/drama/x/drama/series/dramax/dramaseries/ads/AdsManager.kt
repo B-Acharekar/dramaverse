@@ -30,6 +30,9 @@ object AdsManager {
     private val _nativeOnboardingFullscreenAdLive = MutableLiveData<NativeAdState>(NativeAdState.Idle)
     val nativeOnboardingFullscreenAdLive: LiveData<NativeAdState> = _nativeOnboardingFullscreenAdLive
 
+    private val _nativeOnboardingWelcomeAdLive = MutableLiveData<NativeAdState>(NativeAdState.Idle)
+    val nativeOnboardingWelcomeAdLive: LiveData<NativeAdState> = _nativeOnboardingWelcomeAdLive
+
     private val _nativeUninstallAdLive = MutableLiveData<NativeAdState>(NativeAdState.Idle)
     val nativeUninstallAdLive: LiveData<NativeAdState> = _nativeUninstallAdLive
 
@@ -39,6 +42,18 @@ object AdsManager {
     private var lastWelcomeBackShowMs = 0L
     private var suppressNextResumeInterstitial = false
     private var suppressNextResumeSetMs = 0L
+    private var suppressNextNativeClearOnDestroy = false
+
+    fun preserveNativeAdsForActivityRecreate() {
+        suppressNextNativeClearOnDestroy = true
+        Log.d(ADS_TAG, "native ad clear suppressed for upcoming activity recreate")
+    }
+
+    fun consumeSuppressNativeClearOnDestroy(): Boolean {
+        val suppress = suppressNextNativeClearOnDestroy
+        suppressNextNativeClearOnDestroy = false
+        return suppress
+    }
 
     fun consumeSuppressNextResumeInterstitial(): Boolean {
         val now = android.os.SystemClock.elapsedRealtime()
@@ -85,6 +100,7 @@ object AdsManager {
         loadNativeOnboardingPageOne(activity, firstVisit)
         loadNativeOnboardingPageThree(activity, firstVisit)
         loadNativeOnboardingFullscreen(activity, firstVisit)
+        loadNativeOnboardingWelcome(activity, firstVisit)
     }
 
     fun loadNativeOnboardingPageOne(activity: Activity, firstVisit: Boolean) {
@@ -115,8 +131,19 @@ object AdsManager {
             activity = activity,
             placementName = if (firstVisit) "native_onboarding_fullscreen_1_2" else "native_onboarding_fullscreen_2_2",
             config = config,
-            layoutRes = R.layout.layout_native_language_large,
+            layoutRes = R.layout.layout_native_onboarding_compact,
             liveData = _nativeOnboardingFullscreenAdLive
+        )
+    }
+
+    fun loadNativeOnboardingWelcome(activity: Activity, firstVisit: Boolean) {
+        val config = AdRemoteConfig.nativeOnboardingFourthPage(firstVisit)
+        loadNativePlacement(
+            activity = activity,
+            placementName = if (firstVisit) "native_onboarding_1_4_welcome" else "native_onboarding_2_4_welcome",
+            config = config,
+            layoutRes = R.layout.layout_native_onboarding_compact,
+            liveData = _nativeOnboardingWelcomeAdLive
         )
     }
 
@@ -305,6 +332,7 @@ object AdsManager {
         _nativeOnboardingPageOneAdLive.value?.destroyLoadedAdSafely()
         _nativeOnboardingPageThreeAdLive.value?.destroyLoadedAdSafely()
         _nativeOnboardingFullscreenAdLive.value?.destroyLoadedAdSafely()
+        _nativeOnboardingWelcomeAdLive.value?.destroyLoadedAdSafely()
         _nativeUninstallAdLive.value?.destroyLoadedAdSafely()
         _nativeSurveyUninstallAdLive.value?.destroyLoadedAdSafely()
         _nativeLanguageAdLive.value = NativeAdState.Idle
@@ -312,6 +340,7 @@ object AdsManager {
         _nativeOnboardingPageOneAdLive.value = NativeAdState.Idle
         _nativeOnboardingPageThreeAdLive.value = NativeAdState.Idle
         _nativeOnboardingFullscreenAdLive.value = NativeAdState.Idle
+        _nativeOnboardingWelcomeAdLive.value = NativeAdState.Idle
         _nativeUninstallAdLive.value = NativeAdState.Idle
         _nativeSurveyUninstallAdLive.value = NativeAdState.Idle
     }

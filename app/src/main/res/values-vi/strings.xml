@@ -16,17 +16,17 @@
     <string name="start_btn">Bắt đầu</string>
     <string name="next_btn">Tiếp theo</string>
 
-    <string name="onboarding_title_1">Khám phá</string>
-    <string name="onboarding_accent_title_1">phim ngắn hấp dẫn</string>
-    <string name="onboarding_description_1">Những câu chuyện ngắn gọn phù hợp với cuộc sống bận rộn của bạn. Thưởng thức nội dung chất lượng mọi lúc mọi nơi.</string>
+    <string name="onboarding_title_1">Khám phá phim</string>
+    <string name="onboarding_accent_title_1">ngắn tuyệt vời</string>
+    <string name="onboarding_description_1">Xem phim ngắn độc quyền với hàng nghìn tập, hoàn hảo cho mọi phút rảnh rỗi.</string>
 
-    <string name="onboarding_title_2">Khám phá</string>
-    <string name="onboarding_accent_title_2">Bộ sưu tập tuyển chọn</string>
-    <string name="onboarding_description_2">Khám phá các bộ sưu tập phim được tuyển chọn theo nhiều thể loại và chủ đề.</string>
+    <string name="onboarding_title_2">Câu chuyện bất tận</string>
+    <string name="onboarding_accent_title_2">Bộ sưu tập</string>
+    <string name="onboarding_description_2">Từ lãng mạn và kỳ ảo đến giật gân và trả thù, khám phá câu chuyện mới mỗi ngày.</string>
 
-    <string name="onboarding_title_3">Khám phá</string>
-    <string name="onboarding_accent_title_3">Bộ sưu tập tuyển chọn</string>
-    <string name="onboarding_description_3">Khám phá những bộ sưu tập phim được tuyển chọn với nhiều thể loại khác nhau.</string>
+    <string name="onboarding_title_3">Xem bất cứ lúc nào,</string>
+    <string name="onboarding_accent_title_3">ở bất cứ đâu</string>
+    <string name="onboarding_description_3">Tải tập phim và thưởng thức các bộ phim yêu thích mọi nơi, ngay cả khi ngoại tuyến.</string>
 
     <string name="onboarding_title_4">Phần thưởng &amp; Nhiệm vụ hằng ngày</string>
     <string name="onboarding_description_4">Nhận xu miễn phí mỗi ngày chỉ bằng cách xem phim. Hoàn thành nhiệm vụ để mở khóa các tập cao cấp.</string>
@@ -200,4 +200,16 @@
     <string name="welcome_accent_title">DramaX</string>
     <string name="welcome_description">Hàng nghìn câu chuyện khó quên đang chờ bạn. Hãy bắt đầu xem ngay.</string>
     <string name="get_started">Bắt đầu</string>
+    <!-- Uninstall flow -->
+    <string name="uninstall_confirm_title">Lịch sử xem và phim ngắn yêu thích của bạn\nvẫn đang chờ bạn</string>
+    <string name="uninstall_confirm_description">Giữ DramaX để tiếp tục câu chuyện,\nphần thưởng và tập mới bất cứ lúc nào.</string>
+    <string name="uninstall_try_again">Thử lại</string>
+    <string name="uninstall_still_want">Vẫn muốn gỡ cài đặt</string>
+    <string name="uninstall_survey_title">Sự cố gặp phải khi sử dụng</string>
+    <string name="uninstall_reason_feature_not_working">Tính năng không hoạt động</string>
+    <string name="uninstall_reason_too_many_ads">Quá nhiều quảng cáo</string>
+    <string name="uninstall_reason_not_needed">Tôi không cần nó</string>
+    <string name="uninstall_reason_other">Khác</string>
+    <string name="uninstall_action">Gỡ cài đặt</string>
+    <string name="uninstall_open_failed">Không thể mở màn hình gỡ cài đặt</string>
 </resources>
