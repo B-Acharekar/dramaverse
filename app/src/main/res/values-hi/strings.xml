@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">DramaVerse</string>
+    <string name="app_name">DramaX</string>
 
     <!-- Splash Screen -->
-    <string name="app_name_display">DramaVerse</string>
+    <string name="app_name_display">DramaX</string>
 
     <string name="splash_tagline">असीमित शॉर्ट ड्रामा</string>
     <string name="splash_description">रोमांचक कहानियों का आनंद लें, जो आपके हर छोटे पल के लिए बनाई गई हैं।</string>
@@ -196,7 +196,7 @@
     <string name="edit_profile_photo">प्रोफ़ाइल फ़ोटो संपादित करें</string>
 
     <string name="welcome_title">स्वागत है </string>
-    <string name="welcome_accent_title">DramaVerse</string>
+    <string name="welcome_accent_title">DramaX</string>
     <string name="welcome_description">हज़ारों अविस्मरणीय कहानियाँ आपका इंतज़ार कर रही हैं। अभी देखना शुरू करें।</string>
     <string name="get_started">शुरू करें</string>
 </resources>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/widget_delete"
+        android:shortcutDisabledMessage="@string/widget_uninstall"
+        android:shortcutId="shortcut_uninstall"
+        android:shortcutLongLabel="@string/widget_uninstall"
+        android:shortcutShortLabel="@string/widget_uninstall">
+        <intent
+            android:action="com.drama.x.drama.series.dramax.dramaseries.action.WIDGET_UNINSTALL"
+            android:targetClass="com.drama.x.drama.series.dramax.dramaseries.MainActivity"
+            android:targetPackage="com.drama.x.drama.series.dramax.dramaseries" />
+    </shortcut>
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/widget_home"
+        android:shortcutDisabledMessage="@string/widget_home"
+        android:shortcutId="shortcut_home"
+        android:shortcutLongLabel="@string/widget_home"
+        android:shortcutShortLabel="@string/widget_home">
+        <intent
+            android:action="com.drama.x.drama.series.dramax.dramaseries.action.WIDGET_HOME"
+            android:targetClass="com.drama.x.drama.series.dramax.dramaseries.MainActivity"
+            android:targetPackage="com.drama.x.drama.series.dramax.dramaseries" />
+    </shortcut>
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/widget_download"
+        android:shortcutDisabledMessage="@string/widget_my_download"
+        android:shortcutId="shortcut_downloads"
+        android:shortcutLongLabel="@string/widget_my_download"
+        android:shortcutShortLabel="@string/widget_my_download">
+        <intent
+            android:action="com.drama.x.drama.series.dramax.dramaseries.action.WIDGET_DOWNLOADS"
+            android:targetClass="com.drama.x.drama.series.dramax.dramaseries.MainActivity"
+            android:targetPackage="com.drama.x.drama.series.dramax.dramaseries" />
+    </shortcut>
+</shortcuts>

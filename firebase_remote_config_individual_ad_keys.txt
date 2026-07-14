@@ -1,0 +1,62 @@
+Use individual Firebase Remote Config parameters for ads.
+
+Global master switch:
+- ads_enabled: Boolean
+
+If ads_enabled = false, every ad placement is disabled even if its own <placement>_enabled is true.
+If ads_enabled = true, each placement still obeys its own <placement>_enabled value.
+
+For each placement, add:
+- <placement>_id: String
+- <placement>_enabled: Boolean
+- <placement>_timeout_ms: Number, optional
+- <placement>_reload_interval_seconds: Number, optional
+
+Example:
+inter_splash_id = ca-app-pub-7462273888693209/8443069556
+inter_splash_enabled = true
+inter_splash_timeout_ms = 3500
+
+Production placement IDs:
+inter_splash_id = ca-app-pub-7462273888693209/8443069556
+banner_splash_id = ca-app-pub-7462273888693209/3190742870
+native_language_1_id = ca-app-pub-7462273888693209/9564579539
+native_language_1_click_id = ca-app-pub-7462273888693209/2145254517
+native_language_2_id = ca-app-pub-7462273888693209/7206009505
+native_language_2_click_id = ca-app-pub-7462273888693209/8251497869
+native_onboarding_1_1_id = ca-app-pub-7462273888693209/5892927835
+native_onboarding_2_1_id = ca-app-pub-7462273888693209/8007955280
+native_onboarding_1_4_id = ca-app-pub-7462273888693209/6938416195
+native_onboarding_2_4_id = ca-app-pub-7462273888693209/6694873618
+native_onboarding_fullscreen_1_2_id = ca-app-pub-7462273888693209/5085288797
+native_onboarding_fullscreen_2_2_id = ca-app-pub-7462273888693209/2459125458
+inter_onboarding_id = ca-app-pub-7462273888693209/4579846163
+inter_welcome_back_id = ca-app-pub-7462273888693209/5625334529
+inter_splash_uninstall_id = ca-app-pub-7462273888693209/9673637580
+banner_splash_uninstall_id = ca-app-pub-7462273888693209/1953682821
+native_uninstall_id = ca-app-pub-7462273888693209/1146043781
+native_survey_uninstall_id = ca-app-pub-7462273888693209/9640601159
+
+Set each corresponding <placement>_enabled Boolean to true when that placement should request ads.
+
+Enable/disable Boolean keys:
+inter_splash_enabled
+banner_splash_enabled
+native_language_1_enabled
+native_language_1_click_enabled
+native_language_2_enabled
+native_language_2_click_enabled
+native_onboarding_1_1_enabled
+native_onboarding_2_1_enabled
+native_onboarding_1_4_enabled
+native_onboarding_2_4_enabled
+native_onboarding_fullscreen_1_2_enabled
+native_onboarding_fullscreen_2_2_enabled
+inter_onboarding_enabled
+inter_welcome_back_enabled
+inter_splash_uninstall_enabled
+banner_splash_uninstall_enabled
+native_uninstall_enabled
+native_survey_uninstall_enabled
+
+Set any one of these to false in Firebase Remote Config to disable that placement without changing the ad unit ID.

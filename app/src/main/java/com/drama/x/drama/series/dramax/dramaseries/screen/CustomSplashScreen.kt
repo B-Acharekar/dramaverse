@@ -1,0 +1,419 @@
+package com.drama.x.drama.series.dramax.dramaseries.screen
+
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
+import android.util.Log
+import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import androidx.core.view.WindowCompat
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.drama.x.drama.series.dramax.dramaseries.R
+import com.drama.x.drama.series.dramax.dramaseries.ads.ADS_TAG
+import com.drama.x.drama.series.dramax.dramaseries.ads.AdRemoteConfig
+import com.drama.x.drama.series.dramax.dramaseries.ads.AdsInitializationState
+import com.drama.x.drama.series.dramax.dramaseries.ads.AdsManager
+import com.drama.x.drama.series.dramax.dramaseries.ads.RemoteConfigUtils
+import com.drama.x.drama.series.dramax.dramaseries.ads.isNetworkAvailable
+import com.ads.module.ads.ERainAd
+import com.ads.module.funtion.AdCallback
+import com.facebook.shimmer.ShimmerFrameLayout
+import com.google.android.gms.ads.LoadAdError
+import kotlinx.coroutines.delay
+import java.util.concurrent.atomic.AtomicBoolean
+
+@Composable
+fun CustomSplashScreen(
+    uninstallFlow: Boolean = false,
+    onFinished: () -> Unit
+) {
+    val context = LocalContext.current
+    val activity = remember(context) { context.findActivity() }
+    val startMs = remember { SystemClock.elapsedRealtime() }
+    val hasNavigated = remember { AtomicBoolean(false) }
+    val interstitialResolved = remember { AtomicBoolean(false) }
+    val mainHandler = remember { Handler(Looper.getMainLooper()) }
+    var splashAdsConfigReady by remember { mutableStateOf(false) }
+
+    DisposableEffect(activity) {
+        if (activity == null) return@DisposableEffect onDispose {}
+        WindowCompat.setDecorFitsSystemWindows(activity.window, false)
+        activity.window.navigationBarColor = android.graphics.Color.TRANSPARENT
+        onDispose {
+            WindowCompat.setDecorFitsSystemWindows(activity.window, true)
+            activity.window.navigationBarColor = android.graphics.Color.BLACK
+        }
+    }
+
+    fun logStage(stage: String) {
+        Log.d(ADS_TAG, "$stage elapsedMs=${SystemClock.elapsedRealtime() - startMs}")
+    }
+
+    fun continueFromSplash(reason: String) {
+        mainHandler.post {
+            if (hasNavigated.compareAndSet(false, true)) {
+                Log.d(ADS_TAG, "SPLASH_NAVIGATE reason=$reason elapsedMs=${SystemClock.elapsedRealtime() - startMs}")
+                onFinished()
+            } else {
+                Log.d(ADS_TAG, "SPLASH_NAVIGATION_SKIPPED_DUPLICATE reason=$reason elapsedMs=${SystemClock.elapsedRealtime() - startMs}")
+            }
+        }
+    }
+
+    LaunchedEffect(activity) {
+        logStage("SPLASH_FLOW_START")
+        if (activity == null) {
+            continueFromSplash("missing_activity")
+            return@LaunchedEffect
+        }
+
+        AdsInitializationState.awaitMobileAdsReady(timeoutMs = 4_000L).also { ready ->
+            Log.d(ADS_TAG, "SPLASH_MOBILE_ADS_READY=$ready elapsedMs=${SystemClock.elapsedRealtime() - startMs}")
+        }
+
+        logStage("SPLASH_REMOTE_CONFIG_START")
+        val remoteResult = RemoteConfigUtils.fetchAndApply(
+            RemoteConfigUtils.configure(context.applicationContext),
+            timeoutMs = 3_000L
+        )
+        Log.d(ADS_TAG, "SPLASH_REMOTE_CONFIG_RESULT success=$remoteResult elapsedMs=${SystemClock.elapsedRealtime() - startMs}")
+        splashAdsConfigReady = true
+
+        AdsManager.loadNativeLanguage(activity, firstVisit = true)
+        AdsManager.preloadOnboardingAds(activity, firstVisit = true)
+        AdsManager.loadSplashInterstitial(
+            activity = activity,
+            uninstallFlow = uninstallFlow,
+            onLoaded = {
+                if (interstitialResolved.compareAndSet(false, true) && !hasNavigated.get()) {
+                    AdsManager.showSplashInterstitialIfReady(activity) {
+                        continueFromSplash("interstitial_closed")
+                    }
+                } else {
+                    Log.d(ADS_TAG, "SPLASH_NAVIGATION_SKIPPED_DUPLICATE reason=interstitial_loaded_after_resolution")
+                }
+            },
+            onFailed = {
+                if (interstitialResolved.compareAndSet(false, true)) {
+                    continueFromSplash("interstitial_failed_or_ineligible")
+                }
+            }
+        )
+
+        delay(30_000L)
+        if (interstitialResolved.compareAndSet(false, true) && !hasNavigated.get()) {
+            logStage("SPLASH_INTER_TIMEOUT")
+            continueFromSplash("interstitial_timeout")
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black),
+        contentAlignment = Alignment.Center
+    ) {
+        DramaXGlowBackground()
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val ringCenter = Offset(size.width / 2f, size.height * 0.47f)
+            val base = size.minDimension * 0.52f
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.16f),
+                        Color.White.copy(alpha = 0.052f),
+                        Color.Transparent
+                    ),
+                    center = ringCenter,
+                    radius = base * 1.34f
+                ),
+                radius = base * 1.34f,
+                center = ringCenter
+            )
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.11f),
+                        Color(0x2EFFA8AE),
+                        Color.Transparent
+                    ),
+                    center = ringCenter,
+                    radius = base * 0.9f
+                ),
+                radius = base * 0.9f,
+                center = ringCenter
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 24.dp, top = 44.dp, end = 24.dp, bottom = 94.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.weight(1f))
+            Image(
+                painter = painterResource(id = R.drawable.icon_2),
+                contentDescription = null,
+                modifier = Modifier.size(128.dp),
+                contentScale = ContentScale.Fit
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+            Text(
+                text = stringResource(R.string.app_name_display),
+                color = Color(0xFFFFA8AE),
+                fontSize = 36.sp,
+                fontWeight = FontWeight.ExtraBold,
+                fontStyle = FontStyle.Italic,
+                letterSpacing = 0.sp
+            )
+            Spacer(modifier = Modifier.height(30.dp))
+            Text(
+                text = stringResource(R.string.splash_tagline),
+                color = Color(0xFFE8E2E7),
+                fontSize = 17.sp,
+                lineHeight = 26.sp,
+                textAlign = TextAlign.Center,
+                letterSpacing = 0.sp,
+                fontWeight = FontWeight.Light
+            )
+            Spacer(modifier = Modifier.height(26.dp))
+//            Text(
+//                text = stringResource(R.string.splash_description),
+//                color = Color(0xFFB6959B),
+//                fontSize = 12.sp,
+//                lineHeight = 17.sp,
+//                textAlign = TextAlign.Center,
+//                fontWeight = FontWeight.SemiBold,
+//                letterSpacing = 0.sp
+//            )
+            Spacer(modifier = Modifier.height(38.dp))
+            LoadingDots()
+            Spacer(modifier = Modifier.weight(1.35f))
+        }
+
+        if (splashAdsConfigReady) {
+            SplashBanner(
+                uninstallFlow = uninstallFlow,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+private fun SplashBanner(
+    uninstallFlow: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val activity = remember(context) { context.findActivity() }
+    val config = if (uninstallFlow) AdRemoteConfig.bannerSplashUninstall else AdRemoteConfig.bannerSplash
+    val placementName = if (uninstallFlow) "banner_splash_uninstall" else "banner_splash"
+    if (activity == null || !config.canRequest || !isNetworkAvailable(context)) {
+        Log.d(ADS_TAG, "[$placementName] DISABLED enabled=${config.isEnable} id=${config.id}")
+        return
+    }
+
+    androidx.compose.ui.viewinterop.AndroidView(
+        factory = { viewContext ->
+            FrameLayout(viewContext).apply {
+                minimumHeight = 50.dpToPx(viewContext)
+                // Keep the host visible while ERain loads so QA can see the banner skeleton/shimmer.
+                visibility = View.VISIBLE
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+                val bannerContainer = FrameLayout(viewContext).apply {
+                    id = com.ads.module.R.id.banner_container
+                    minimumHeight = 50.dpToPx(viewContext)
+                    layoutParams = FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        FrameLayout.LayoutParams.WRAP_CONTENT
+                    )
+                }
+                val shimmerContainer = ShimmerFrameLayout(viewContext).apply {
+                    id = com.ads.module.R.id.shimmer_container_banner
+                    minimumHeight = 50.dpToPx(viewContext)
+                    layoutParams = FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        50.dpToPx(viewContext)
+                    )
+                    addView(FrameLayout(viewContext).apply {
+                        setBackgroundColor(android.graphics.Color.argb(70, 255, 255, 255))
+                        layoutParams = FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.MATCH_PARENT,
+                            FrameLayout.LayoutParams.MATCH_PARENT
+                        )
+                    })
+                    startShimmer()
+                }
+                addView(bannerContainer)
+                addView(shimmerContainer)
+                post {
+                    Log.d(
+                        ADS_TAG,
+                        "[$placementName] host laidOut containerWidth=$width containerHeight=$height " +
+                            "visibility=$visibility attached=$isAttachedToWindow parent=${parent?.javaClass?.simpleName}"
+                    )
+                }
+                Log.d(ADS_TAG, "[$placementName] REQUEST via ERain id=${config.id}")
+                ERainAd.getInstance().loadBannerFragment(
+                    activity,
+                    config.id,
+                    this,
+                    object : AdCallback() {
+                        override fun onAdLoaded() {
+                            visibility = View.VISIBLE
+                            post {
+                                Log.d(
+                                    ADS_TAG,
+                                    "[$placementName] LOADED via ERain containerWidth=$width " +
+                                        "containerHeight=$height visibility=$visibility attached=$isAttachedToWindow " +
+                                        "childCount=$childCount parent=${parent?.javaClass?.simpleName}"
+                                )
+                            }
+                        }
+
+                        override fun onAdFailedToLoad(error: LoadAdError?) {
+                            visibility = View.GONE
+                            Log.e(
+                                ADS_TAG,
+                                "[$placementName] FAILED via ERain code=${error?.code}, domain=${error?.domain}, " +
+                                    "message=${error?.message}, responseInfo=${error?.responseInfo}, cause=${error?.cause}"
+                            )
+                        }
+                    }
+                )
+            }
+        },
+        modifier = modifier.height(50.dp)
+    )
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
+
+private fun Int.dpToPx(context: Context): Int =
+    (this * context.resources.displayMetrics.density).toInt()
+
+@Composable
+fun DramaXGlowBackground() {
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        drawCircle(
+            brush = Brush.radialGradient(
+                listOf(Color(0xFFFFA4AD), Color(0x99FF4857), Color.Transparent)
+            ),
+            radius = size.width * 0.42f,
+            center = Offset(size.width * 0.82f, size.height * 0.14f)
+        )
+        drawCircle(
+            brush = Brush.radialGradient(
+                listOf(Color(0xFFFFB31F), Color(0xCCFF3957), Color.Transparent)
+            ),
+            radius = size.width * 0.34f,
+            center = Offset(size.width * 0.18f, size.height * 0.78f)
+        )
+    }
+}
+
+@Composable
+private fun LoadingDots() {
+    val infiniteTransition = rememberInfiniteTransition(label = "loadingDots")
+    Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+        repeat(3) { index ->
+            val scale by infiniteTransition.animateFloat(
+                initialValue = 0.72f,
+                targetValue = 1.22f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(
+                        durationMillis = 560,
+                        delayMillis = index * 150,
+                        easing = LinearEasing
+                    ),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "loadingDot$index"
+            )
+            val alpha by infiniteTransition.animateFloat(
+                initialValue = 0.42f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(
+                        durationMillis = 560,
+                        delayMillis = index * 150,
+                        easing = LinearEasing
+                    ),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "loadingDotAlpha$index"
+            )
+            Box(
+                modifier = Modifier
+                    .size(7.dp)
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                        this.alpha = alpha
+                    }
+                    .background(
+                        color = Color(0xFFFFA4AD),
+                        shape = CircleShape
+                    )
+            )
+        }
+    }
+}

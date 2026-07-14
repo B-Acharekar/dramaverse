@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">DramaVerse</string>
-    <string name="app_name_display">DramaVerse</string>
+    <string name="app_name">DramaX</string>
+    <string name="app_name_display">DramaX</string>
 
     <!-- Splash -->
     <string name="splash_tagline">D R A M E S\nC O U R T S\nI L L I M I T É S</string>
@@ -200,7 +200,7 @@
     <string name="edit_profile_photo">Modifier la photo de profil</string>
 
     <string name="welcome_title">Bienvenue sur </string>
-    <string name="welcome_accent_title">DramaVerse</string>
+    <string name="welcome_accent_title">DramaX</string>
     <string name="welcome_description">Des milliers d\'histoires inoubliables vous attendent. Commencez à regarder dès maintenant.</string>
     <string name="get_started">Commencer</string>
 

@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">DramaVerse</string>
+    <string name="app_name">DramaX</string>
 
     <!-- Splash Screen -->
-    <string name="app_name_display">DramaVerse</string>
+    <string name="app_name_display">DramaX</string>
 
     <string name="splash_tagline">د ر ا م ا ه ا ت   ق ص ي ر ة   ب ل ا   ح د و د\n</string>
     <string name="splash_description">استمتع بقصص مشوقة وسريعة، مصممة لتناسب لحظاتك اليومية.</string>
@@ -196,7 +196,7 @@
     <string name="edit_profile_photo">تعديل صورة الملف الشخصي</string>
 
     <string name="welcome_title">مرحبًا بك في </string>
-    <string name="welcome_accent_title">DramaVerse</string>
+    <string name="welcome_accent_title">DramaX</string>
     <string name="welcome_description">آلاف القصص التي لا تُنسى بانتظارك. ابدأ المشاهدة الآن.</string>
     <string name="get_started">ابدأ الآن</string>
 

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="adjust_token" translatable="false">i01gisvqvpc0</string>
+    <string name="facebook_app_id" translatable="false">1366426928774588</string>
+    <string name="facebook_client_token" translatable="false">0a7e4e9aa5118893fe8071661322579e</string>
+    <string name="tiktok_token" translatable="false">ldnikj</string>
+</resources>

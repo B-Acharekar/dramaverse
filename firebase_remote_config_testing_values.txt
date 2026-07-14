@@ -1,0 +1,60 @@
+ad_config_id = remote_testing_google_test_ads_v1
+ads_enabled = true
+
+inter_splash_id = ca-app-pub-3940256099942544/1033173712
+inter_splash_enabled = true
+inter_splash_timeout_ms = 3500
+
+banner_splash_id = ca-app-pub-3940256099942544/6300978111
+banner_splash_enabled = true
+
+native_language_1_id = ca-app-pub-3940256099942544/2247696110
+native_language_1_enabled = true
+
+native_language_1_click_id = ca-app-pub-3940256099942544/2247696110
+native_language_1_click_enabled = true
+
+native_language_2_id = ca-app-pub-3940256099942544/2247696110
+native_language_2_enabled = true
+
+native_language_2_click_id = ca-app-pub-3940256099942544/2247696110
+native_language_2_click_enabled = true
+
+native_onboarding_1_1_id = ca-app-pub-3940256099942544/2247696110
+native_onboarding_1_1_enabled = true
+
+native_onboarding_2_1_id = ca-app-pub-3940256099942544/2247696110
+native_onboarding_2_1_enabled = true
+
+native_onboarding_1_4_id = ca-app-pub-3940256099942544/2247696110
+native_onboarding_1_4_enabled = true
+
+native_onboarding_2_4_id = ca-app-pub-3940256099942544/2247696110
+native_onboarding_2_4_enabled = true
+
+native_onboarding_fullscreen_1_2_id = ca-app-pub-3940256099942544/2247696110
+native_onboarding_fullscreen_1_2_enabled = true
+
+native_onboarding_fullscreen_2_2_id = ca-app-pub-3940256099942544/2247696110
+native_onboarding_fullscreen_2_2_enabled = true
+
+inter_onboarding_id = ca-app-pub-3940256099942544/1033173712
+inter_onboarding_enabled = true
+inter_onboarding_timeout_ms = 3500
+
+inter_welcome_back_id = ca-app-pub-3940256099942544/1033173712
+inter_welcome_back_enabled = true
+inter_welcome_back_timeout_ms = 3500
+
+inter_splash_uninstall_id = ca-app-pub-3940256099942544/1033173712
+inter_splash_uninstall_enabled = true
+inter_splash_uninstall_timeout_ms = 3500
+
+banner_splash_uninstall_id = ca-app-pub-3940256099942544/6300978111
+banner_splash_uninstall_enabled = true
+
+native_uninstall_id = ca-app-pub-3940256099942544/2247696110
+native_uninstall_enabled = true
+
+native_survey_uninstall_id = ca-app-pub-3940256099942544/2247696110
+native_survey_uninstall_enabled = true

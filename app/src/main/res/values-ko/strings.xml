@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">DramaVerse</string>
+    <string name="app_name">DramaX</string>
 
     <!-- Splash Screen -->
-    <string name="app_name_display">DramaVerse</string>
+    <string name="app_name_display">DramaX</string>
 
     <string name="splash_tagline">무제한 숏드라마</string>
     <string name="splash_description">짧은 순간에도 즐길 수 있는 몰입감 넘치는 스토리를 경험하세요.</string>
@@ -196,7 +196,7 @@
     <string name="edit_profile_photo">프로필 사진 편집</string>
 
     <string name="welcome_title">환영합니다 </string>
-    <string name="welcome_accent_title">DramaVerse</string>
+    <string name="welcome_accent_title">DramaX</string>
     <string name="welcome_description">수천 편의 잊을 수 없는 이야기가 여러분을 기다리고 있습니다. 지금 바로 시청을 시작하세요.</string>
     <string name="get_started">시작하기</string>
 </resources>

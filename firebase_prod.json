@@ -1,0 +1,281 @@
+{
+  "conditions": [],
+  "parameters": {
+    "ad_config_id": {
+      "defaultValue": {
+        "value": "remote_publication_ads_v1"
+      },
+      "valueType": "STRING"
+    },
+    "ads_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "inter_splash_id": {
+      "defaultValue": {
+        "value": "ca-app-pub-7462273888693209/8443069556"
+      },
+      "valueType": "STRING"
+    },
+    "inter_splash_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "inter_splash_timeout_ms": {
+      "defaultValue": {
+        "value": "3500"
+      },
+      "valueType": "NUMBER"
+    },
+    "banner_splash_id": {
+      "defaultValue": {
+        "value": "ca-app-pub-7462273888693209/3190742870"
+      },
+      "valueType": "STRING"
+    },
+    "banner_splash_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "native_language_1_id": {
+      "defaultValue": {
+        "value": "ca-app-pub-7462273888693209/9564579539"
+      },
+      "valueType": "STRING"
+    },
+    "native_language_1_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "native_language_1_click_id": {
+      "defaultValue": {
+        "value": "ca-app-pub-7462273888693209/2145254517"
+      },
+      "valueType": "STRING"
+    },
+    "native_language_1_click_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "native_language_2_id": {
+      "defaultValue": {
+        "value": "ca-app-pub-7462273888693209/7206009505"
+      },
+      "valueType": "STRING"
+    },
+    "native_language_2_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "native_language_2_click_id": {
+      "defaultValue": {
+        "value": "ca-app-pub-7462273888693209/8251497869"
+      },
+      "valueType": "STRING"
+    },
+    "native_language_2_click_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "native_onboarding_1_1_id": {
+      "defaultValue": {
+        "value": "ca-app-pub-7462273888693209/5892927835"
+      },
+      "valueType": "STRING"
+    },
+    "native_onboarding_1_1_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "native_onboarding_2_1_id": {
+      "defaultValue": {
+        "value": "ca-app-pub-7462273888693209/8007955280"
+      },
+      "valueType": "STRING"
+    },
+    "native_onboarding_2_1_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "native_onboarding_1_4_id": {
+      "defaultValue": {
+        "value": "ca-app-pub-7462273888693209/6938416195"
+      },
+      "valueType": "STRING"
+    },
+    "native_onboarding_1_4_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "native_onboarding_2_4_id": {
+      "defaultValue": {
+        "value": "ca-app-pub-7462273888693209/6694873618"
+      },
+      "valueType": "STRING"
+    },
+    "native_onboarding_2_4_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "native_onboarding_fullscreen_1_2_id": {
+      "defaultValue": {
+        "value": "ca-app-pub-7462273888693209/5085288797"
+      },
+      "valueType": "STRING"
+    },
+    "native_onboarding_fullscreen_1_2_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "native_onboarding_fullscreen_2_2_id": {
+      "defaultValue": {
+        "value": "ca-app-pub-7462273888693209/2459125458"
+      },
+      "valueType": "STRING"
+    },
+    "native_onboarding_fullscreen_2_2_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "inter_onboarding_id": {
+      "defaultValue": {
+        "value": "ca-app-pub-7462273888693209/4579846163"
+      },
+      "valueType": "STRING"
+    },
+    "inter_onboarding_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "inter_onboarding_timeout_ms": {
+      "defaultValue": {
+        "value": "3500"
+      },
+      "valueType": "NUMBER"
+    },
+    "inter_welcome_back_id": {
+      "defaultValue": {
+        "value": "ca-app-pub-7462273888693209/5625334529"
+      },
+      "valueType": "STRING"
+    },
+    "inter_welcome_back_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "inter_welcome_back_timeout_ms": {
+      "defaultValue": {
+        "value": "3500"
+      },
+      "valueType": "NUMBER"
+    },
+    "inter_splash_uninstall_id": {
+      "defaultValue": {
+        "value": "ca-app-pub-7462273888693209/9673637580"
+      },
+      "valueType": "STRING"
+    },
+    "inter_splash_uninstall_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "inter_splash_uninstall_timeout_ms": {
+      "defaultValue": {
+        "value": "3500"
+      },
+      "valueType": "NUMBER"
+    },
+    "banner_splash_uninstall_id": {
+      "defaultValue": {
+        "value": "ca-app-pub-7462273888693209/1953682821"
+      },
+      "valueType": "STRING"
+    },
+    "banner_splash_uninstall_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "native_uninstall_id": {
+      "defaultValue": {
+        "value": "ca-app-pub-7462273888693209/1146043781"
+      },
+      "valueType": "STRING"
+    },
+    "native_uninstall_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "native_survey_uninstall_id": {
+      "defaultValue": {
+        "value": "ca-app-pub-7462273888693209/9640601159"
+      },
+      "valueType": "STRING"
+    },
+    "native_survey_uninstall_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "backend_base_url": {
+      "defaultValue": {
+        "value": "https://dramaverse-backend-lbq5.onrender.com"
+      },
+      "valueType": "STRING"
+    },
+    "delay_button_done_language": {
+      "defaultValue": {
+        "value": "false"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "height_button_cta": {
+      "defaultValue": {
+        "value": "40"
+      },
+      "valueType": "NUMBER"
+    },
+    "onesignal_app_id": {
+      "defaultValue": {
+        "value": "7e24cec6-1e9a-468c-acc5-23ca9e7baa46"
+      },
+      "valueType": "STRING"
+    }
+  }
+}
