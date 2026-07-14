@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -84,7 +85,7 @@ fun ConfirmUninstallScreen(
     UninstallBaseScreen(nativeAdState = nativeAdState, onBackHome = onBackHome) {
         Spacer(modifier = Modifier.weight(1f))
         Text(
-            text = "Your watch history and favorite short dramas\nare still waiting for you",
+            text = stringResource(R.string.uninstall_confirm_title),
             color = UninstallText,
             fontSize = 14.sp,
             lineHeight = 20.sp,
@@ -94,7 +95,7 @@ fun ConfirmUninstallScreen(
         )
         Spacer(modifier = Modifier.height(18.dp))
         Text(
-            text = "Keep DramaX installed to continue stories,\nrewards, and new episodes anytime.",
+            text = stringResource(R.string.uninstall_confirm_description),
             color = UninstallMuted,
             fontSize = 13.sp,
             lineHeight = 20.sp,
@@ -104,14 +105,14 @@ fun ConfirmUninstallScreen(
         )
         Spacer(modifier = Modifier.height(46.dp))
         RoundedActionButton(
-            text = "Try Again",
+            text = stringResource(R.string.uninstall_try_again),
             background = ButtonBrush,
             textColor = Color.White,
             onClick = onBackHome
         )
         Spacer(modifier = Modifier.height(10.dp))
         RoundedActionButton(
-            text = "Still want to uninstall",
+            text = stringResource(R.string.uninstall_still_want),
             background = DisabledButton,
             textColor = UninstallMuted,
             onClick = onStillUninstall
@@ -125,13 +126,13 @@ fun SurveyUninstallScreen(onBackHome: () -> Unit) {
     BackHandler(onBack = onBackHome)
     val context = LocalContext.current
     val activity = remember(context) { context.findActivity() }
-    var selectedReason by remember { mutableStateOf("Too many ads") }
+    var selectedReasonIndex by remember { mutableStateOf(1) }
     var nativeAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
     val reasons = listOf(
-        "Feature does not working",
-        "Too many ads",
-        "I don't need it",
-        "Other"
+        R.string.uninstall_reason_feature_not_working,
+        R.string.uninstall_reason_too_many_ads,
+        R.string.uninstall_reason_not_needed,
+        R.string.uninstall_reason_other
     )
 
     LaunchedEffect(activity) {
@@ -151,7 +152,7 @@ fun SurveyUninstallScreen(onBackHome: () -> Unit) {
         AppIconPill()
         Spacer(modifier = Modifier.height(26.dp))
         Text(
-            text = "Issues encountered during usage",
+            text = stringResource(R.string.uninstall_survey_title),
             color = UninstallText,
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
@@ -160,30 +161,30 @@ fun SurveyUninstallScreen(onBackHome: () -> Unit) {
         )
         Spacer(modifier = Modifier.height(26.dp))
         Column(verticalArrangement = Arrangement.spacedBy(22.dp)) {
-            reasons.forEach { reason ->
+            reasons.forEachIndexed { index, reason ->
                 SurveyReasonRow(
-                    text = reason,
-                    selected = selectedReason == reason,
-                    onClick = { selectedReason = reason }
+                    text = stringResource(reason),
+                    selected = selectedReasonIndex == index,
+                    onClick = { selectedReasonIndex = index }
                 )
             }
         }
         Spacer(modifier = Modifier.height(42.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             RoundedActionButton(
-                text = "Cancel",
+                text = stringResource(R.string.cancel),
                 background = DisabledButton,
                 textColor = UninstallMuted,
                 onClick = onBackHome,
                 modifier = Modifier.weight(1f)
             )
             RoundedActionButton(
-                text = "Uninstall",
+                text = stringResource(R.string.uninstall_action),
                 background = ButtonBrush,
                 textColor = Color.White,
                 onClick = {
-                    Log.d(ADS_TAG, "UNINSTALL_SURVEY_REASON selected=$selectedReason")
-                    context.openSystemUninstall()
+                    Log.d(ADS_TAG, "UNINSTALL_SURVEY_REASON selectedIndex=$selectedReasonIndex")
+                    (activity ?: context).openSystemUninstall()
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -383,12 +384,16 @@ private tailrec fun Context.findActivity(): android.app.Activity? = when (this) 
 
 private fun Context.openSystemUninstall() {
     val uninstallUri = Uri.parse("package:$packageName")
-    val uninstallIntent = Intent(Intent.ACTION_UNINSTALL_PACKAGE, uninstallUri).apply {
+    val uninstallIntent = Intent(Intent.ACTION_DELETE, uninstallUri).apply {
         putExtra(Intent.EXTRA_RETURN_RESULT, false)
-        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (this@openSystemUninstall !is android.app.Activity) {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
     }
     val fallbackIntent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, uninstallUri).apply {
-        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (this@openSystemUninstall !is android.app.Activity) {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
     }
     runCatching {
         Log.d(ADS_TAG, "UNINSTALL_SYSTEM_INTENT action=${uninstallIntent.action} package=$packageName")
@@ -398,6 +403,6 @@ private fun Context.openSystemUninstall() {
         startActivity(fallbackIntent)
     }.onFailure {
         Log.e(ADS_TAG, "UNINSTALL_SYSTEM_INTENT fallback failed", it)
-        Toast.makeText(this, "Unable to open uninstall screen", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.uninstall_open_failed), Toast.LENGTH_SHORT).show()
     }
 }

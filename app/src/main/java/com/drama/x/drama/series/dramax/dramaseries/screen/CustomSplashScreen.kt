@@ -68,6 +68,10 @@ import com.facebook.shimmer.ShimmerFrameLayout
 import com.google.android.gms.ads.LoadAdError
 import kotlinx.coroutines.delay
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
+
+private const val MIN_SPLASH_BANNER_VISIBLE_MS = 2_200L
+private const val MAX_SPLASH_BANNER_WAIT_MS = 6_000L
 
 @Composable
 fun CustomSplashScreen(
@@ -79,6 +83,8 @@ fun CustomSplashScreen(
     val startMs = remember { SystemClock.elapsedRealtime() }
     val hasNavigated = remember { AtomicBoolean(false) }
     val interstitialResolved = remember { AtomicBoolean(false) }
+    val bannerLoaded = remember { AtomicBoolean(false) }
+    val bannerVisibleSinceMs = remember { AtomicLong(0L) }
     val mainHandler = remember { Handler(Looper.getMainLooper()) }
     var splashAdsConfigReady by remember { mutableStateOf(false) }
 
@@ -107,6 +113,29 @@ fun CustomSplashScreen(
         }
     }
 
+    fun showInterstitialAfterBannerWindow(activity: Activity) {
+        fun waitUntilReadyOrTimedOut() {
+            val bannerElapsedMs = SystemClock.elapsedRealtime() - bannerVisibleSinceMs.get()
+            val minWindowElapsed = bannerElapsedMs >= MIN_SPLASH_BANNER_VISIBLE_MS
+            val maxWaitElapsed = bannerElapsedMs >= MAX_SPLASH_BANNER_WAIT_MS
+            if ((bannerLoaded.get() && minWindowElapsed) || maxWaitElapsed || hasNavigated.get()) {
+                Log.d(
+                    ADS_TAG,
+                    "SPLASH_INTER_SHOW_GATE bannerLoaded=${bannerLoaded.get()} " +
+                        "bannerElapsedMs=$bannerElapsedMs maxWaitElapsed=$maxWaitElapsed"
+                )
+                if (!hasNavigated.get()) {
+                    AdsManager.showSplashInterstitialIfReady(activity) {
+                        continueFromSplash("interstitial_closed")
+                    }
+                }
+            } else {
+                mainHandler.postDelayed({ waitUntilReadyOrTimedOut() }, 120L)
+            }
+        }
+        waitUntilReadyOrTimedOut()
+    }
+
     LaunchedEffect(activity) {
         logStage("SPLASH_FLOW_START")
         if (activity == null) {
@@ -124,6 +153,7 @@ fun CustomSplashScreen(
             timeoutMs = 3_000L
         )
         Log.d(ADS_TAG, "SPLASH_REMOTE_CONFIG_RESULT success=$remoteResult elapsedMs=${SystemClock.elapsedRealtime() - startMs}")
+        bannerVisibleSinceMs.set(SystemClock.elapsedRealtime())
         splashAdsConfigReady = true
 
         AdsManager.loadNativeLanguage(activity, firstVisit = true)
@@ -133,16 +163,23 @@ fun CustomSplashScreen(
             uninstallFlow = uninstallFlow,
             onLoaded = {
                 if (interstitialResolved.compareAndSet(false, true) && !hasNavigated.get()) {
-                    AdsManager.showSplashInterstitialIfReady(activity) {
-                        continueFromSplash("interstitial_closed")
-                    }
+                    Log.d(ADS_TAG, "SPLASH_INTER_READY waiting_for_erain_banner")
+                    showInterstitialAfterBannerWindow(activity)
                 } else {
                     Log.d(ADS_TAG, "SPLASH_NAVIGATION_SKIPPED_DUPLICATE reason=interstitial_loaded_after_resolution")
                 }
             },
             onFailed = {
                 if (interstitialResolved.compareAndSet(false, true)) {
-                    continueFromSplash("interstitial_failed_or_ineligible")
+                    val bannerElapsedMs = SystemClock.elapsedRealtime() - bannerVisibleSinceMs.get()
+                    val continueDelayMs = (MIN_SPLASH_BANNER_VISIBLE_MS - bannerElapsedMs).coerceAtLeast(0L)
+                    Log.d(
+                        ADS_TAG,
+                        "SPLASH_INTER_FAILED delayingNavigationForBannerMs=$continueDelayMs bannerElapsedMs=$bannerElapsedMs"
+                    )
+                    mainHandler.postDelayed({
+                        continueFromSplash("interstitial_failed_or_ineligible")
+                    }, continueDelayMs)
                 }
             }
         )
@@ -242,6 +279,10 @@ fun CustomSplashScreen(
         if (splashAdsConfigReady) {
             SplashBanner(
                 uninstallFlow = uninstallFlow,
+                onBannerLoaded = {
+                    bannerLoaded.set(true)
+                    Log.d(ADS_TAG, "SPLASH_BANNER_READY_FOR_INTER_GATE")
+                },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
@@ -253,6 +294,7 @@ fun CustomSplashScreen(
 @Composable
 private fun SplashBanner(
     uninstallFlow: Boolean,
+    onBannerLoaded: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -315,6 +357,7 @@ private fun SplashBanner(
                     object : AdCallback() {
                         override fun onAdLoaded() {
                             visibility = View.VISIBLE
+                            onBannerLoaded()
                             post {
                                 Log.d(
                                     ADS_TAG,
