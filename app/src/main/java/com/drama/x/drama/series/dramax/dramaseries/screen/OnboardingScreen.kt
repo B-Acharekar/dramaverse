@@ -64,6 +64,13 @@ import com.drama.x.drama.series.dramax.dramaseries.model.OnboardingPage
 import com.drama.x.drama.series.dramax.dramaseries.model.OnboardingViewModel
 import com.drama.x.drama.series.dramax.dramaseries.model.OnboardingVisual
 import kotlinx.coroutines.launch
+import android.view.LayoutInflater
+import androidx.compose.ui.viewinterop.AndroidView
+import com.ads.module.ads.wrapper.ApNativeAd
+import com.google.android.gms.ads.nativead.MediaView
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdView
+
 
 private const val FULLSCREEN_NATIVE_PAGER_INDEX = 2
 
@@ -225,7 +232,7 @@ private fun OnboardingPageContent(
                 OnboardingVisual.DramaPhone -> DramaPhoneVisual(painterResource(R.drawable.onboarding1image))
                 OnboardingVisual.Collections -> CollectionsVisual()
                 OnboardingVisual.RomancePhone -> DramaPhoneVisual(painterResource(R.drawable.onboarding3image))
-                OnboardingVisual.Welcome -> Unit // unreachable — Welcome is routed to WelcomePageContent in the pager
+                OnboardingVisual.Welcome -> Unit
             }
         }
         Spacer(modifier = Modifier.height(12.dp))
@@ -320,6 +327,51 @@ private fun OnboardingNativeAd(
     )
 }
 
+//@Composable
+//private fun OnboardingFullscreenNativeAd(
+//    state: NativeAdState,
+//    onContinue: () -> Unit
+//) {
+//    Box(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .background(Color(0xF2111113))
+//            .padding(horizontal = 18.dp, vertical = 26.dp),
+//        contentAlignment = Alignment.Center
+//    ) {
+//        Column(
+//            modifier = Modifier.fillMaxSize(),
+//            horizontalAlignment = Alignment.CenterHorizontally
+//        ) {
+//            Spacer(modifier = Modifier.height(22.dp))
+//            Text(
+//                text = "Sponsored",
+//                color = Color(0xFFB9B0B5),
+//                fontSize = 13.sp,
+//                fontWeight = FontWeight.SemiBold,
+//                letterSpacing = 0.sp
+//            )
+//            Spacer(modifier = Modifier.height(14.dp))
+//            ErainNativeAdHost(
+//                placementName = "onboarding_fullscreen_native",
+//                state = state,
+//                modifier = Modifier
+//                    .weight(1f)
+//                    .fillMaxWidth(),
+//                height = 560.dp,
+//                showFailureMessage = true
+//            )
+//            Spacer(modifier = Modifier.height(16.dp))
+//            OnboardingActionButton(
+//                label = R.string.next_btn,
+//                onClick = onContinue
+//            )
+//            Spacer(modifier = Modifier.height(18.dp))
+//        }
+//    }
+//}
+
+
 @Composable
 private fun OnboardingFullscreenNativeAd(
     state: NativeAdState,
@@ -345,15 +397,37 @@ private fun OnboardingFullscreenNativeAd(
                 letterSpacing = 0.sp
             )
             Spacer(modifier = Modifier.height(14.dp))
-            ErainNativeAdHost(
-                placementName = "onboarding_fullscreen_native",
-                state = state,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                height = 560.dp,
-                showFailureMessage = true
-            )
+
+            when (state) {
+                is NativeAdState.Loaded -> {
+                    NativeAdFullscreenView(
+                        apNativeAd = state.nativeAd,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                    )
+                }
+                is NativeAdState.Loading -> {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Loading ad…",
+                            color = Color(0xFFB9B0B5),
+                            fontSize = 13.sp
+                        )
+                    }
+                }
+                else -> {
+                    // Disabled/failed states shouldn't normally reach this composable
+                    // since showFullNativePage gates on Loading/Loaded, but guard anyway.
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
             OnboardingActionButton(
                 label = R.string.next_btn,
@@ -362,6 +436,67 @@ private fun OnboardingFullscreenNativeAd(
             Spacer(modifier = Modifier.height(18.dp))
         }
     }
+}
+
+@Composable
+private fun NativeAdFullscreenView(
+    apNativeAd: ApNativeAd,
+    modifier: Modifier = Modifier
+) {
+    val admobNativeAd = apNativeAd.admobNativeAd
+
+    if (admobNativeAd == null) {
+        return
+    }
+
+    AndroidView(
+        modifier = modifier,
+        factory = { context ->
+            LayoutInflater.from(context)
+                .inflate(R.layout.layout_native_full_screen, null) as NativeAdView
+        },
+        update = { adView ->
+            bindNativeAd(adView, admobNativeAd)
+        }
+    )
+}
+
+private fun bindNativeAd(adView: NativeAdView, nativeAd: NativeAd) {
+    val mediaView = adView.findViewById<MediaView>(R.id.ad_media)
+    val iconView = adView.findViewById<android.widget.ImageView>(R.id.ad_app_icon)
+    val headlineView = adView.findViewById<android.widget.TextView>(R.id.ad_headline)
+    val advertiserView = adView.findViewById<android.widget.TextView>(R.id.ad_advertiser)
+    val bodyView = adView.findViewById<android.widget.TextView>(R.id.ad_body)
+    val ctaView = adView.findViewById<android.widget.Button>(R.id.ad_call_to_action)
+
+    adView.mediaView = mediaView
+    adView.iconView = iconView
+    adView.headlineView = headlineView
+    adView.advertiserView = advertiserView
+    adView.bodyView = bodyView
+    adView.callToActionView = ctaView
+
+    headlineView.text = nativeAd.headline
+    bodyView.text = nativeAd.body
+    ctaView.text = nativeAd.callToAction
+
+    nativeAd.icon?.let { icon ->
+        iconView.setImageDrawable(icon.drawable)
+        iconView.visibility = android.view.View.VISIBLE
+    } ?: run {
+        iconView.visibility = android.view.View.GONE
+    }
+
+    if (nativeAd.advertiser != null) {
+        advertiserView.text = nativeAd.advertiser
+        advertiserView.visibility = android.view.View.VISIBLE
+    } else {
+        advertiserView.visibility = android.view.View.GONE
+    }
+
+    nativeAd.mediaContent?.let { mediaView.mediaContent = it }
+
+    adView.setNativeAd(nativeAd)
 }
 
 @Composable

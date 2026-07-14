@@ -3,6 +3,7 @@ package com.drama.x.drama.series.dramax.dramaseries.model
 import android.app.Application
 import android.content.Context
 import androidx.lifecycle.AndroidViewModel
+import com.drama.x.drama.series.dramax.dramaseries.data.LocaleHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,14 +45,28 @@ class LanguageViewModel(application: Application) : AndroidViewModel(application
         _uiState.update { it.copy(selectedLanguage = language) }
     }
 
+//    fun confirmLanguage(): String {
+//        val chosenLanguage = _uiState.value.selectedLanguage ?: "English"
+//        getApplication<Application>()
+//            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+//            .edit()
+//            .putString(KEY_SELECTED_LANGUAGE, chosenLanguage)
+//            .putBoolean(KEY_OPENED_LANGUAGE_BEFORE, true)
+//            .apply()
+//        return chosenLanguage
+//    }
+
     fun confirmLanguage(): String {
         val chosenLanguage = _uiState.value.selectedLanguage ?: "English"
-        getApplication<Application>()
-            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val app = getApplication<Application>()
+        app.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit()
             .putString(KEY_SELECTED_LANGUAGE, chosenLanguage)
             .putBoolean(KEY_OPENED_LANGUAGE_BEFORE, true)
             .apply()
+
+        LocaleHelper.persistLanguage(app, chosenLanguage)
+
         return chosenLanguage
     }
 }

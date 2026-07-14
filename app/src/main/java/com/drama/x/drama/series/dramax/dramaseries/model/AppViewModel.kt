@@ -102,7 +102,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             it.copy(
                 selectedLanguage = language,
                 currentStep = nextStep,
-                recreateRequested = false
+                recreateRequested = true
             )
         }
         registerDevice(language)

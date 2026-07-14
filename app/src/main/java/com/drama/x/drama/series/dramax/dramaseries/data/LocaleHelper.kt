@@ -12,18 +12,33 @@ private const val KEY_PENDING_STEP = "pending_step_after_recreate"
 
 object LocaleHelper {
 
-    // These labels are persisted from the language screen; keep them stable across releases.
+//    private val languageCodes = mapOf(
+//        "English" to "en",
+//        "Spanish" to "es",
+//        "Deutsch" to "de",
+//        "Portuguese" to "pt",
+//        "Turkish" to "tr",
+//        "Arabic" to "ar",
+//        "Hindi" to "hi",
+//        "Japanese" to "ja",
+//        "Korean" to "ko",
+//        "Chinese" to "zh"
+//    )
+
     private val languageCodes = mapOf(
         "English" to "en",
-        "Spanish" to "es",
+        "Tiếng Việt" to "vi",
+        "Español" to "es",
+        "Français" to "fr",
         "Deutsch" to "de",
-        "Portuguese" to "pt",
-        "Turkish" to "tr",
-        "Arabic" to "ar",
-        "Hindi" to "hi",
-        "Japanese" to "ja",
-        "Korean" to "ko",
-        "Chinese" to "zh"
+        "Italiano" to "it",
+        "Português" to "pt",
+        "Türkçe" to "tr",
+        "العربية" to "ar",
+        "हिन्दी" to "hi",
+        "한국어" to "ko",
+        "日本語" to "ja",
+        "中文" to "zh"
     )
 
     fun codeFor(languageName: String): String = languageCodes[languageName] ?: "en"
