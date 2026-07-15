@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -65,7 +66,6 @@ import com.drama.x.drama.series.dramax.dramaseries.model.OnboardingViewModel
 import com.drama.x.drama.series.dramax.dramaseries.model.OnboardingVisual
 import kotlinx.coroutines.launch
 import android.view.LayoutInflater
-import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.viewinterop.AndroidView
@@ -88,10 +88,10 @@ fun OnboardingScreen(
     val context = LocalContext.current
     val activity = remember(context) { context.findActivity() }
     var onboardingPageOneAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Loading) }
-    var onboardingPageThreeAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Loading) }
     var onboardingFullscreenAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Loading) }
     var onboardingWelcomeAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Loading) }
-    val showFullNativePage = false
+    val showFullNativePage = onboardingFullscreenAdState is NativeAdState.Loading ||
+        onboardingFullscreenAdState is NativeAdState.Loaded
     val pagerPageCount = uiState.pages.size + if (showFullNativePage) 1 else 0
     val pagerState = rememberPagerState(pageCount = { pagerPageCount })
 
@@ -99,7 +99,6 @@ fun OnboardingScreen(
         onEntered()
         activity?.let {
             AdsManager.loadNativeOnboardingPageOne(it, firstVisit = true)
-            AdsManager.loadNativeOnboardingPageThree(it, firstVisit = true)
             AdsManager.loadNativeOnboardingFullscreen(it, firstVisit = true)
             AdsManager.loadNativeOnboardingWelcome(it, firstVisit = true)
         }
@@ -114,10 +113,6 @@ fun OnboardingScreen(
             onboardingPageOneAdState = state
             Log.d(ADS_TAG, "ONBOARDING_NATIVE_1 observer state=${state.javaClass.simpleName}")
         }
-        val pageThreeObserver = Observer<NativeAdState> { state ->
-            onboardingPageThreeAdState = state
-            Log.d(ADS_TAG, "ONBOARDING_NATIVE_3 observer state=${state.javaClass.simpleName}")
-        }
         val fullscreenObserver = Observer<NativeAdState> { state ->
             onboardingFullscreenAdState = state
             Log.d(ADS_TAG, "ONBOARDING_FULLSCREEN_NATIVE observer state=${state.javaClass.simpleName}")
@@ -127,12 +122,10 @@ fun OnboardingScreen(
             Log.d(ADS_TAG, "ONBOARDING_NATIVE_WELCOME observer state=${state.javaClass.simpleName}")
         }
         AdsManager.nativeOnboardingPageOneAdLive.observeForever(pageOneObserver)
-        AdsManager.nativeOnboardingPageThreeAdLive.observeForever(pageThreeObserver)
         AdsManager.nativeOnboardingFullscreenAdLive.observeForever(fullscreenObserver)
         AdsManager.nativeOnboardingWelcomeAdLive.observeForever(welcomeObserver)
         onDispose {
             AdsManager.nativeOnboardingPageOneAdLive.removeObserver(pageOneObserver)
-            AdsManager.nativeOnboardingPageThreeAdLive.removeObserver(pageThreeObserver)
             AdsManager.nativeOnboardingFullscreenAdLive.removeObserver(fullscreenObserver)
             AdsManager.nativeOnboardingWelcomeAdLive.removeObserver(welcomeObserver)
         }
@@ -150,15 +143,7 @@ fun OnboardingScreen(
         ) { pageIndex ->
             if (showFullNativePage && pageIndex == FULLSCREEN_NATIVE_PAGER_INDEX) {
                 OnboardingFullscreenNativeAd(
-                    state = onboardingFullscreenAdState,
-                    onContinue = {
-                        scope.launch {
-                            pagerState.animateScrollToPage(
-                                page = pageIndex + 1,
-                                animationSpec = tween(360, easing = FastOutSlowInEasing)
-                            )
-                        }
-                    }
+                    state = onboardingFullscreenAdState
                 )
                 return@HorizontalPager
             }
@@ -196,8 +181,6 @@ fun OnboardingScreen(
                     selectedPage = selectedPage,
                     nativeAdState = when (onboardingPageIndex) {
                         0 -> onboardingPageOneAdState
-                        1 -> onboardingFullscreenAdState
-                        2 -> onboardingPageThreeAdState
                         else -> NativeAdState.Disabled("not_this_page")
                     },
                     onNext = onNext
@@ -219,21 +202,32 @@ private fun OnboardingPageContent(
     nativeAdState: NativeAdState,
     onNext: () -> Unit
 ) {
-    val pageHasNativePlacement = pageIndex in 0..2
+    val pageHasNativePlacement = pageIndex == 0
     val shouldReserveNativeSpace =
         pageHasNativePlacement && (nativeAdState is NativeAdState.Loading || nativeAdState is NativeAdState.Loaded)
+    if (shouldReserveNativeSpace) {
+        OnboardingPageWithAdContent(
+            page = page,
+            pageCount = pageCount,
+            selectedPage = selectedPage,
+            nativeAdState = nativeAdState,
+            onNext = onNext
+        )
+        return
+    }
+
     val visualHeight = when {
-        shouldReserveNativeSpace -> 205.dp
         pageHasNativePlacement -> 320.dp
-        else -> 505.dp
+        else -> 540.dp
     }
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 22.dp),
+            .padding(horizontal = 22.dp)
+            .padding(bottom = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(if (shouldReserveNativeSpace) 18.dp else 34.dp))
+        Spacer(modifier = Modifier.height(28.dp))
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -243,7 +237,7 @@ private fun OnboardingPageContent(
             when (page.visual) {
                 OnboardingVisual.DramaPhone -> DramaPhoneVisual(painterResource(R.drawable.onboarding1image))
                 OnboardingVisual.Collections -> CollectionsVisual()
-                OnboardingVisual.RomancePhone -> DramaPhoneVisual(painterResource(R.drawable.onboarding3image))
+                OnboardingVisual.RomancePhone -> RomanceVisual()
                 OnboardingVisual.Welcome -> Unit
             }
         }
@@ -262,7 +256,7 @@ private fun OnboardingPageContent(
                 .fillMaxWidth()
                 .padding(horizontal = 10.dp)
         )
-        Spacer(modifier = Modifier.weight(if (shouldReserveNativeSpace) 0.9f else 1f))
+        Spacer(modifier = Modifier.height(72.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -277,12 +271,80 @@ private fun OnboardingPageContent(
                 onClick = onNext
             )
         }
-        if (pageHasNativePlacement && nativeAdState !is NativeAdState.Disabled) {
-            OnboardingNativeAd(
-                state = nativeAdState,
-                modifier = Modifier.requiredWidth(LocalConfiguration.current.screenWidthDp.dp)
+        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(18.dp))
+    }
+}
+
+@Composable
+private fun OnboardingPageWithAdContent(
+    page: OnboardingPage,
+    pageCount: Int,
+    selectedPage: Int,
+    nativeAdState: NativeAdState,
+    onNext: () -> Unit
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .height(404.dp)
+                .padding(horizontal = 22.dp, vertical = 2.dp),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            DramaPhoneVisual(painterResource(R.drawable.onboarding1image))
+        }
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .padding(horizontal = 22.dp)
+                .padding(top = 344.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            OnboardingTitle(page)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = stringResource(page.description),
+                color = Color(0xFFC1A4A9),
+                fontSize = 14.sp,
+                lineHeight = 20.sp,
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.sp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp)
             )
         }
+
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(horizontal = 22.dp)
+                .padding(bottom = 328.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            PageIndicator(
+                pageCount = pageCount,
+                selectedPage = selectedPage,
+                modifier = Modifier.weight(1f)
+            )
+            OnboardingActionButton(
+                label = R.string.next_btn,
+                onClick = onNext
+            )
+        }
+
+        OnboardingNativeAd(
+            state = nativeAdState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .requiredWidth(LocalConfiguration.current.screenWidthDp.dp)
+        )
     }
 }
 
@@ -337,77 +399,20 @@ private fun OnboardingNativeAd(
     )
 }
 
-//@Composable
-//private fun OnboardingFullscreenNativeAd(
-//    state: NativeAdState,
-//    onContinue: () -> Unit
-//) {
-//    Box(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .background(Color(0xF2111113))
-//            .padding(horizontal = 18.dp, vertical = 26.dp),
-//        contentAlignment = Alignment.Center
-//    ) {
-//        Column(
-//            modifier = Modifier.fillMaxSize(),
-//            horizontalAlignment = Alignment.CenterHorizontally
-//        ) {
-//            Spacer(modifier = Modifier.height(22.dp))
-//            Text(
-//                text = "Sponsored",
-//                color = Color(0xFFB9B0B5),
-//                fontSize = 13.sp,
-//                fontWeight = FontWeight.SemiBold,
-//                letterSpacing = 0.sp
-//            )
-//            Spacer(modifier = Modifier.height(14.dp))
-//            ErainNativeAdHost(
-//                placementName = "onboarding_fullscreen_native",
-//                state = state,
-//                modifier = Modifier
-//                    .weight(1f)
-//                    .fillMaxWidth(),
-//                height = 560.dp,
-//                showFailureMessage = true
-//            )
-//            Spacer(modifier = Modifier.height(16.dp))
-//            OnboardingActionButton(
-//                label = R.string.next_btn,
-//                onClick = onContinue
-//            )
-//            Spacer(modifier = Modifier.height(18.dp))
-//        }
-//    }
-//}
-
-
 @Composable
 private fun OnboardingFullscreenNativeAd(
-    state: NativeAdState,
-    onContinue: () -> Unit
+    state: NativeAdState
 ) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xF2111113))
-            .padding(horizontal = 18.dp, vertical = 26.dp),
+            .background(Color(0xF2111113)),
         contentAlignment = Alignment.Center
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(22.dp))
-            Text(
-                text = "Sponsored",
-                color = Color(0xFFB9B0B5),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.sp
-            )
-            Spacer(modifier = Modifier.height(14.dp))
-
             when (state) {
                 is NativeAdState.Loaded -> {
                     NativeAdFullscreenView(
@@ -437,13 +442,6 @@ private fun OnboardingFullscreenNativeAd(
                     Spacer(modifier = Modifier.weight(1f))
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-            OnboardingActionButton(
-                label = R.string.next_btn,
-                onClick = onContinue
-            )
-            Spacer(modifier = Modifier.height(18.dp))
         }
     }
 }
@@ -604,6 +602,7 @@ private fun DramaPhoneVisual(painter: Painter) {
         Image(
             painter = painter,
             contentDescription = null,
+            contentScale = ContentScale.Fit,
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(50.dp))
@@ -613,13 +612,36 @@ private fun DramaPhoneVisual(painter: Painter) {
 
 @Composable
 private fun CollectionsVisual() {
-    Box(modifier = Modifier) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
         Image(
             painter = painterResource(R.drawable.onboarding2image),
             contentDescription = null,
+            contentScale = ContentScale.Fit,
             modifier = Modifier
                 .fillMaxSize()
+                .scale(1.06f)
                 .clip(RoundedCornerShape(26.dp))
+        )
+    }
+}
+
+@Composable
+private fun RomanceVisual() {
+    val shape = RoundedCornerShape(24.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(shape)
+            .background(Color(0xFF171116), shape)
+    ) {
+        Image(
+            painter = painterResource(R.drawable.onboarding3image),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
         )
     }
 }
@@ -654,13 +676,13 @@ private fun WelcomePageContent(
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
                 .padding(horizontal = 22.dp)
-                .padding(top = 82.dp)
+                .padding(top = 116.dp)
                 .background(Color(0x1AFFFFFF), RoundedCornerShape(28.dp))
-                .padding(horizontal = 24.dp, vertical = 12.dp),
+                .padding(horizontal = 24.dp, vertical = 18.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
-                modifier = Modifier.size(96.dp),
+                modifier = Modifier.size(106.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
@@ -711,7 +733,7 @@ private fun WelcomePageContent(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .padding(horizontal = 22.dp)
-                .padding(bottom = if (shouldReserveNativeSpace) 300.dp else 24.dp),
+                .padding(bottom = if (shouldReserveNativeSpace) 356.dp else 32.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             PageIndicator(
