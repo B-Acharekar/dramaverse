@@ -16,7 +16,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingStart="40dp">
 
             <ImageView
                 android:id="@id/ad_app_icon"
@@ -67,20 +68,20 @@
         <com.google.android.gms.ads.nativead.MediaView
             android:id="@id/ad_media"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="132dp"
             android:layout_marginTop="8dp"
-            android:layout_weight="1"
             android:minWidth="120dp"
             android:minHeight="120dp" />
 
         <Button
             android:id="@id/ad_call_to_action"
             android:layout_width="match_parent"
-            android:layout_height="40dp"
+            android:layout_height="48dp"
             android:layout_marginStart="6dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="12dp"
             android:layout_marginEnd="6dp"
             android:background="@drawable/native_onboarding_cta_background"
+            android:backgroundTint="@null"
             android:minHeight="0dp"
             android:minWidth="0dp"
             android:textColor="#FFFFFF"

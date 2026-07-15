@@ -20,10 +20,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -46,6 +49,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Observer
 import com.drama.x.drama.series.dramax.dramaseries.R
@@ -147,10 +151,15 @@ fun SurveyUninstallScreen(onBackHome: () -> Unit) {
         onDispose { AdsManager.nativeSurveyUninstallAdLive.removeObserver(observer) }
     }
 
-    UninstallBaseScreen(nativeAdState = nativeAdState, onBackHome = onBackHome) {
-        Spacer(modifier = Modifier.height(24.dp))
+    UninstallBaseScreen(
+        nativeAdState = nativeAdState,
+        onBackHome = onBackHome,
+        contentScrollable = true,
+        nativeAdHeight = 304.dp
+    ) {
+        Spacer(modifier = Modifier.height(8.dp))
         AppIconPill()
-        Spacer(modifier = Modifier.height(26.dp))
+        Spacer(modifier = Modifier.height(12.dp))
         Text(
             text = stringResource(R.string.uninstall_survey_title),
             color = UninstallText,
@@ -159,8 +168,8 @@ fun SurveyUninstallScreen(onBackHome: () -> Unit) {
             textAlign = TextAlign.Center,
             letterSpacing = 0.sp
         )
-        Spacer(modifier = Modifier.height(26.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(22.dp)) {
+        Spacer(modifier = Modifier.height(12.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(11.dp)) {
             reasons.forEachIndexed { index, reason ->
                 SurveyReasonRow(
                     text = stringResource(reason),
@@ -169,7 +178,7 @@ fun SurveyUninstallScreen(onBackHome: () -> Unit) {
                 )
             }
         }
-        Spacer(modifier = Modifier.height(42.dp))
+        Spacer(modifier = Modifier.height(18.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             RoundedActionButton(
                 text = stringResource(R.string.cancel),
@@ -189,7 +198,7 @@ fun SurveyUninstallScreen(onBackHome: () -> Unit) {
                 modifier = Modifier.weight(1f)
             )
         }
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(18.dp))
     }
 }
 
@@ -197,6 +206,8 @@ fun SurveyUninstallScreen(onBackHome: () -> Unit) {
 private fun UninstallBaseScreen(
     nativeAdState: NativeAdState,
     onBackHome: () -> Unit,
+    contentScrollable: Boolean = false,
+    nativeAdHeight: Dp = 320.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Box(
@@ -208,20 +219,34 @@ private fun UninstallBaseScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 40.dp, bottom = 12.dp),
+                .navigationBarsPadding()
+                .padding(top = 40.dp, bottom = 2.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(modifier = Modifier.fillMaxWidth()) {
                 BackCircle(onClick = onBackHome)
             }
-            Column(
-                modifier = Modifier
+            val contentModifier = if (contentScrollable) {
+                Modifier
                     .weight(1f)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+            } else {
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            }
+            Column(
+                modifier = contentModifier,
                 horizontalAlignment = Alignment.CenterHorizontally,
                 content = content
             )
-            LargeNativeAd(state = nativeAdState, modifier = Modifier.fillMaxWidth())
+            Spacer(modifier = Modifier.height(10.dp))
+            LargeNativeAd(
+                state = nativeAdState,
+                modifier = Modifier.fillMaxWidth(),
+                height = nativeAdHeight
+            )
         }
     }
 }
@@ -366,13 +391,14 @@ private fun AppIconPill() {
 @Composable
 private fun LargeNativeAd(
     state: NativeAdState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    height: Dp = 320.dp
 ) {
     ErainNativeAdHost(
         placementName = "uninstall_native",
         state = state,
         modifier = modifier,
-        height = 320.dp
+        height = height
     )
 }
 
@@ -384,7 +410,7 @@ private tailrec fun Context.findActivity(): android.app.Activity? = when (this) 
 
 private fun Context.openSystemUninstall() {
     val uninstallUri = Uri.parse("package:$packageName")
-    val uninstallIntent = Intent(Intent.ACTION_DELETE, uninstallUri).apply {
+    val uninstallIntent = Intent(Intent.ACTION_UNINSTALL_PACKAGE, uninstallUri).apply {
         putExtra(Intent.EXTRA_RETURN_RESULT, false)
         if (this@openSystemUninstall !is android.app.Activity) {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -396,7 +422,11 @@ private fun Context.openSystemUninstall() {
         }
     }
     runCatching {
-        Log.d(ADS_TAG, "UNINSTALL_SYSTEM_INTENT action=${uninstallIntent.action} package=$packageName")
+        val resolver = uninstallIntent.resolveActivity(packageManager)
+        Log.d(
+            ADS_TAG,
+            "UNINSTALL_SYSTEM_INTENT action=${uninstallIntent.action} package=$packageName resolver=$resolver"
+        )
         startActivity(uninstallIntent)
     }.recoverCatching {
         Log.w(ADS_TAG, "UNINSTALL_SYSTEM_INTENT failed; opening app details fallback", it)

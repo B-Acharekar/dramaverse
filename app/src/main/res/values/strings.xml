@@ -231,6 +231,5 @@
     <!-- Home widget / uninstall flow -->
     <string name="widget_description" translatable="false">DramaX quick actions</string>
     <string name="widget_home" translatable="false">Home</string>
-    <string name="widget_my_download" translatable="false">My download</string>
     <string name="widget_uninstall" translatable="false">Uninstall</string>
 </resources>

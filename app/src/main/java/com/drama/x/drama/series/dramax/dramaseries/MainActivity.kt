@@ -19,7 +19,6 @@ import com.drama.x.drama.series.dramax.dramaseries.ui.theme.DramaXTheme
 class MainActivity : AppCompatActivity() {
     companion object {
         const val ACTION_WIDGET_HOME = "com.drama.x.drama.series.dramax.dramaseries.action.WIDGET_HOME"
-        const val ACTION_WIDGET_DOWNLOADS = "com.drama.x.drama.series.dramax.dramaseries.action.WIDGET_DOWNLOADS"
         const val ACTION_WIDGET_UNINSTALL = "com.drama.x.drama.series.dramax.dramaseries.action.WIDGET_UNINSTALL"
     }
 

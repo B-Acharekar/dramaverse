@@ -18,8 +18,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -85,10 +87,10 @@ fun OnboardingScreen(
     val context = LocalContext.current
     val activity = remember(context) { context.findActivity() }
     var onboardingPageOneAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Loading) }
-    var onboardingPageThreeAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Loading) }
     var onboardingFullscreenAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Loading) }
     var onboardingWelcomeAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Loading) }
-    val showFullNativePage = false
+    val showFullNativePage = onboardingFullscreenAdState is NativeAdState.Loading ||
+        onboardingFullscreenAdState is NativeAdState.Loaded
     val pagerPageCount = uiState.pages.size + if (showFullNativePage) 1 else 0
     val pagerState = rememberPagerState(pageCount = { pagerPageCount })
 
@@ -96,7 +98,6 @@ fun OnboardingScreen(
         onEntered()
         activity?.let {
             AdsManager.loadNativeOnboardingPageOne(it, firstVisit = true)
-            AdsManager.loadNativeOnboardingPageThree(it, firstVisit = true)
             AdsManager.loadNativeOnboardingFullscreen(it, firstVisit = true)
             AdsManager.loadNativeOnboardingWelcome(it, firstVisit = true)
         }
@@ -111,10 +112,6 @@ fun OnboardingScreen(
             onboardingPageOneAdState = state
             Log.d(ADS_TAG, "ONBOARDING_NATIVE_1 observer state=${state.javaClass.simpleName}")
         }
-        val pageThreeObserver = Observer<NativeAdState> { state ->
-            onboardingPageThreeAdState = state
-            Log.d(ADS_TAG, "ONBOARDING_NATIVE_3 observer state=${state.javaClass.simpleName}")
-        }
         val fullscreenObserver = Observer<NativeAdState> { state ->
             onboardingFullscreenAdState = state
             Log.d(ADS_TAG, "ONBOARDING_FULLSCREEN_NATIVE observer state=${state.javaClass.simpleName}")
@@ -124,12 +121,10 @@ fun OnboardingScreen(
             Log.d(ADS_TAG, "ONBOARDING_NATIVE_WELCOME observer state=${state.javaClass.simpleName}")
         }
         AdsManager.nativeOnboardingPageOneAdLive.observeForever(pageOneObserver)
-        AdsManager.nativeOnboardingPageThreeAdLive.observeForever(pageThreeObserver)
         AdsManager.nativeOnboardingFullscreenAdLive.observeForever(fullscreenObserver)
         AdsManager.nativeOnboardingWelcomeAdLive.observeForever(welcomeObserver)
         onDispose {
             AdsManager.nativeOnboardingPageOneAdLive.removeObserver(pageOneObserver)
-            AdsManager.nativeOnboardingPageThreeAdLive.removeObserver(pageThreeObserver)
             AdsManager.nativeOnboardingFullscreenAdLive.removeObserver(fullscreenObserver)
             AdsManager.nativeOnboardingWelcomeAdLive.removeObserver(welcomeObserver)
         }
@@ -193,8 +188,6 @@ fun OnboardingScreen(
                     selectedPage = selectedPage,
                     nativeAdState = when (onboardingPageIndex) {
                         0 -> onboardingPageOneAdState
-                        1 -> onboardingFullscreenAdState
-                        2 -> onboardingPageThreeAdState
                         else -> NativeAdState.Disabled("not_this_page")
                     },
                     onNext = onNext
@@ -216,21 +209,23 @@ private fun OnboardingPageContent(
     nativeAdState: NativeAdState,
     onNext: () -> Unit
 ) {
-    val pageHasNativePlacement = pageIndex in 0..2
+    val pageHasNativePlacement = pageIndex == 0
     val shouldReserveNativeSpace =
         pageHasNativePlacement && (nativeAdState is NativeAdState.Loading || nativeAdState is NativeAdState.Loaded)
     val visualHeight = when {
-        shouldReserveNativeSpace -> 205.dp
+        shouldReserveNativeSpace -> 176.dp
         pageHasNativePlacement -> 320.dp
         else -> 505.dp
     }
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 22.dp, vertical = 16.dp),
+            .navigationBarsPadding()
+            .padding(horizontal = 22.dp)
+            .padding(top = 16.dp, bottom = if (shouldReserveNativeSpace) 2.dp else 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(if (shouldReserveNativeSpace) 18.dp else 34.dp))
+        Spacer(modifier = Modifier.height(if (shouldReserveNativeSpace) 10.dp else 34.dp))
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -259,7 +254,7 @@ private fun OnboardingPageContent(
                 .fillMaxWidth()
                 .padding(horizontal = 10.dp)
         )
-        Spacer(modifier = Modifier.weight(if (shouldReserveNativeSpace) 0.72f else 1f))
+        Spacer(modifier = Modifier.weight(if (shouldReserveNativeSpace) 0.76f else 1f))
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -275,13 +270,13 @@ private fun OnboardingPageContent(
             )
         }
         if (pageHasNativePlacement && nativeAdState !is NativeAdState.Disabled) {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             OnboardingNativeAd(
                 state = nativeAdState,
                 modifier = Modifier.fillMaxWidth()
             )
         }
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(if (shouldReserveNativeSpace) 2.dp else 20.dp))
     }
 }
 
@@ -331,7 +326,7 @@ private fun OnboardingNativeAd(
         placementName = "onboarding_page_native",
         state = state,
         modifier = modifier,
-        height = 320.dp,
+        height = 324.dp,
         showFailureMessage = true
     )
 }
@@ -394,7 +389,9 @@ private fun OnboardingFullscreenNativeAd(
         contentAlignment = Alignment.Center
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(22.dp))
@@ -438,10 +435,6 @@ private fun OnboardingFullscreenNativeAd(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            OnboardingActionButton(
-                label = R.string.next_btn,
-                onClick = onContinue
-            )
             Spacer(modifier = Modifier.height(18.dp))
         }
     }
@@ -652,8 +645,9 @@ private fun WelcomePageContent(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
+                .statusBarsPadding()
                 .padding(horizontal = 22.dp)
-                .padding(top = 82.dp)
+                .padding(top = 4.dp)
                 .background(Color(0x1AFFFFFF), RoundedCornerShape(28.dp))
                 .padding(horizontal = 24.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -709,8 +703,9 @@ private fun WelcomePageContent(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
+                .navigationBarsPadding()
                 .padding(horizontal = 22.dp)
-                .padding(bottom = if (shouldReserveNativeSpace) 356.dp else 24.dp),
+                .padding(bottom = if (shouldReserveNativeSpace) 350.dp else 24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             PageIndicator(
@@ -748,6 +743,7 @@ private fun WelcomePageContent(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
+                    .navigationBarsPadding()
                     .padding(horizontal = 22.dp)
                     .padding(bottom = 20.dp)
             )

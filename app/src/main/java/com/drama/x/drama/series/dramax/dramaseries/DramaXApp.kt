@@ -57,7 +57,6 @@ fun DramaXApp(
     LaunchedEffect(initialAction) {
         when (initialAction) {
             MainActivity.ACTION_WIDGET_HOME -> viewModel.startWidgetHome()
-            MainActivity.ACTION_WIDGET_DOWNLOADS -> viewModel.startWidgetDownloads()
             MainActivity.ACTION_WIDGET_UNINSTALL -> viewModel.startWidgetUninstallFlow()
         }
     }
@@ -123,7 +122,7 @@ fun DramaXApp(
         AppStep.Notifications -> LimitedBuildWelcomeScreen()
     }
 
-    NotificationPermissionRequester()
+    NotificationPermissionRequester(currentStep = uiState.currentStep)
 }
 
 @Composable
@@ -159,14 +158,17 @@ private fun Activity.recreateWithoutTransition() {
 }
 
 @Composable
-private fun NotificationPermissionRequester() {
+private fun NotificationPermissionRequester(currentStep: AppStep) {
     val context = LocalContext.current
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = {}
     )
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(currentStep) {
+        if (currentStep == AppStep.Splash || currentStep == AppStep.SplashUninstall) {
+            return@LaunchedEffect
+        }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             return@LaunchedEffect
         }
@@ -175,6 +177,7 @@ private fun NotificationPermissionRequester() {
         val isGranted =
             ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
         if (!isGranted) {
+            AdsManager.suppressResumeInterstitialForExternalDialog("notification_permission_dialog")
             permissionLauncher.launch(permission)
         }
     }
