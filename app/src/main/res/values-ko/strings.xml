@@ -211,4 +211,6 @@
     <string name="uninstall_reason_other">기타</string>
     <string name="uninstall_action">제거</string>
     <string name="uninstall_open_failed">제거 화면을 열 수 없습니다</string>
+
+    <string name="welcome_to_home_temp">홈에 오신 것을 환영합니다</string>
 </resources>

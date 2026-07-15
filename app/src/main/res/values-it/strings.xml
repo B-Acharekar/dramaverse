@@ -213,4 +213,5 @@
     <string name="uninstall_reason_other">Altro</string>
     <string name="uninstall_action">Disinstalla</string>
     <string name="uninstall_open_failed">Impossibile aprire la schermata di disinstallazione</string>
+    <string name="welcome_to_home_temp">Benvenuto nella Home</string>
 </resources>

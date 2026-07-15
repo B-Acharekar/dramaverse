@@ -212,4 +212,6 @@
     <string name="uninstall_reason_other">Khác</string>
     <string name="uninstall_action">Gỡ cài đặt</string>
     <string name="uninstall_open_failed">Không thể mở màn hình gỡ cài đặt</string>
+
+    <string name="welcome_to_home_temp">Chào mừng đến với Trang chủ</string>
 </resources>

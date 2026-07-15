@@ -211,4 +211,6 @@
     <string name="uninstall_reason_other">Sonstiges</string>
     <string name="uninstall_action">Deinstallieren</string>
     <string name="uninstall_open_failed">Deinstallationsseite konnte nicht geöffnet werden</string>
+
+    <string name="welcome_to_home_temp">Willkommen auf der Startseite</string>
 </resources>

@@ -215,4 +215,6 @@
     <string name="uninstall_reason_other">Autre</string>
     <string name="uninstall_action">Désinstaller</string>
     <string name="uninstall_open_failed">Impossible ouvrir écran de désinstallation</string>
+
+    <string name="welcome_to_home_temp">Bienvenue à l\'accueil</string>
 </resources>

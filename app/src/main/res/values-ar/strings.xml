@@ -211,4 +211,6 @@
     <string name="uninstall_reason_other">أخرى</string>
     <string name="uninstall_action">إلغاء التثبيت</string>
     <string name="uninstall_open_failed">تعذر فتح شاشة إلغاء التثبيت</string>
+
+    <string name="welcome_to_home_temp">مرحبًا بك في الصفحة الرئيسية</string>
 </resources>

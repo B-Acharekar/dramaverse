@@ -211,4 +211,6 @@
     <string name="uninstall_reason_other">其他</string>
     <string name="uninstall_action">卸载</string>
     <string name="uninstall_open_failed">无法打开卸载页面</string>
+
+    <string name="welcome_to_home_temp">欢迎来到首页</string>
 </resources>

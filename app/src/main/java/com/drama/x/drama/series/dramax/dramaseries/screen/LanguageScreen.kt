@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -95,8 +96,8 @@ fun LanguageScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .statusBarsPadding()
             .background(Color(0xFF161616))
+            .statusBarsPadding()
     ) {
         LanguageHeader(
             showActionButton = showActionButton,
@@ -107,8 +108,8 @@ fun LanguageScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0x61000000))
-                .padding(vertical = 5.dp)
+                .background(Color(0xFF161616))
+                .padding(top = 10.dp)
         ) {
             HorizontalDivider(
                 color = Color.Gray.copy(alpha = 0.3f)
@@ -121,7 +122,7 @@ fun LanguageScreen(
                 .weight(1f)
                 .fillMaxWidth()
                 .padding(horizontal = 11.dp),
-            contentPadding = PaddingValues(top = 12.dp, bottom = 12.dp),
+            contentPadding = PaddingValues(bottom = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(uiState.languages) { language ->
@@ -164,9 +165,9 @@ private fun LanguageHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(42.dp)
+            .wrapContentHeight()
             .padding(start = 13.dp, end = 13.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.Top
     ) {
         Text(
             text = stringResource(R.string.language_title),

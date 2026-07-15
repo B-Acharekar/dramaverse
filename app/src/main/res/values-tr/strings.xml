@@ -211,4 +211,6 @@
     <string name="uninstall_reason_other">Diğer</string>
     <string name="uninstall_action">Kaldır</string>
     <string name="uninstall_open_failed">Kaldırma ekranı açılamadı</string>
+
+    <string name="welcome_to_home_temp">Ana Sayfaya Hoş Geldiniz</string>
 </resources>

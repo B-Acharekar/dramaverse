@@ -211,4 +211,5 @@
     <string name="uninstall_reason_other">その他</string>
     <string name="uninstall_action">アンインストール</string>
     <string name="uninstall_open_failed">アンインストール画面を開けませんでした</string>
+    <string name="welcome_to_home_temp">ホームへようこそ</string>
 </resources>

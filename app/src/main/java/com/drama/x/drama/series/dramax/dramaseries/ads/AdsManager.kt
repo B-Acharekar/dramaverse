@@ -6,6 +6,7 @@ import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.ads.module.BuildConfig
 import com.drama.x.drama.series.dramax.dramaseries.R
 import com.ads.module.ads.ERainAd
 import com.ads.module.ads.wrapper.ApInterstitialAd
@@ -424,7 +425,7 @@ object AdsManager {
                     liveData.postValue(NativeAdState.Failed(error?.message.orEmpty()))
                     Log.d(ADS_TAG, "[$placementName] FAILED via ERain")
                     error?.let { logAdFailure(placementName, it) }
-                    if (allowDebugRetry && com.drama.x.drama.series.dramax.dramaseries.BuildConfig.DEBUG) {
+                    if (allowDebugRetry && BuildConfig.DEBUG) {
                         Handler(Looper.getMainLooper()).postDelayed({
                             if (!activity.isFinishing && !activity.isDestroyed) {
                                 Log.d(ADS_TAG, "[$placementName] REQUEST retry via ERain")

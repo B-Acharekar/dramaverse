@@ -211,4 +211,6 @@
     <string name="uninstall_reason_other">अन्य</string>
     <string name="uninstall_action">अनइंस्टॉल</string>
     <string name="uninstall_open_failed">अनइंस्टॉल स्क्रीन नहीं खुल सकी</string>
+
+    <string name="welcome_to_home_temp">होम में आपका स्वागत है</string>
 </resources>
