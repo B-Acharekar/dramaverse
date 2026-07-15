@@ -16,7 +16,6 @@ class DramaXWidgetProvider : AppWidgetProvider() {
         appWidgetIds.forEach { widgetId ->
             val views = RemoteViews(context.packageName, R.layout.widget_dramaverse).apply {
                 setOnClickPendingIntent(R.id.widgetHome, pendingIntent(context, MainActivity.ACTION_WIDGET_HOME, 1))
-                setOnClickPendingIntent(R.id.widgetDownloads, pendingIntent(context, MainActivity.ACTION_WIDGET_DOWNLOADS, 2))
                 setOnClickPendingIntent(R.id.widgetUninstall, pendingIntent(context, MainActivity.ACTION_WIDGET_UNINSTALL, 3))
             }
             appWidgetManager.updateAppWidget(widgetId, views)

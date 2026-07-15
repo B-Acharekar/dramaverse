@@ -75,6 +75,10 @@ object AdsManager {
         Log.d(ADS_TAG, "resume suppression set reason=$reason")
     }
 
+    fun suppressResumeInterstitialForExternalDialog(reason: String) {
+        suppressImmediateResumeInterstitial(reason)
+    }
+
     fun loadNativeLanguage(activity: Activity, firstVisit: Boolean) {
         val config = AdRemoteConfig.nativeLanguage(firstVisit)
         loadNativePlacement(
@@ -99,7 +103,6 @@ object AdsManager {
 
     fun preloadOnboardingAds(activity: Activity, firstVisit: Boolean) {
         loadNativeOnboardingPageOne(activity, firstVisit)
-        loadNativeOnboardingPageThree(activity, firstVisit)
         loadNativeOnboardingFullscreen(activity, firstVisit)
         loadNativeOnboardingWelcome(activity, firstVisit)
     }
@@ -132,7 +135,7 @@ object AdsManager {
             activity = activity,
             placementName = if (firstVisit) "native_onboarding_fullscreen_1_2" else "native_onboarding_fullscreen_2_2",
             config = config,
-            layoutRes = R.layout.layout_native_onboarding_compact,
+            layoutRes = R.layout.layout_native_full_screen,
             liveData = _nativeOnboardingFullscreenAdLive
         )
     }

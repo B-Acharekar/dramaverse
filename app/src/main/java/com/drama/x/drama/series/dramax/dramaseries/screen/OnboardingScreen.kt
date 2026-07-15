@@ -244,6 +244,7 @@ private fun OnboardingPageContent(
                 OnboardingVisual.Welcome -> Unit
             }
         }
+        Spacer(modifier = Modifier.height(12.dp))
         OnboardingTitle(page)
         Spacer(modifier = Modifier.height(16.dp))
         Text(
@@ -258,7 +259,7 @@ private fun OnboardingPageContent(
                 .fillMaxWidth()
                 .padding(horizontal = 10.dp)
         )
-//        Spacer(modifier = Modifier.weight(if (shouldReserveNativeSpace) 0.72f else 1f))
+        Spacer(modifier = Modifier.weight(if (shouldReserveNativeSpace) 0.72f else 1f))
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -280,6 +281,7 @@ private fun OnboardingPageContent(
                 modifier = Modifier.fillMaxWidth()
             )
         }
+        Spacer(modifier = Modifier.height(20.dp))
     }
 }
 

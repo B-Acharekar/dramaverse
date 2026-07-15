@@ -7,8 +7,8 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.view.WindowCompat
 import androidx.compose.animation.core.LinearEasing
@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -156,8 +157,6 @@ fun CustomSplashScreen(
         bannerVisibleSinceMs.set(SystemClock.elapsedRealtime())
         splashAdsConfigReady = true
 
-        AdsManager.loadNativeLanguage(activity, firstVisit = true)
-        AdsManager.preloadOnboardingAds(activity, firstVisit = true)
         AdsManager.loadSplashInterstitial(
             activity = activity,
             uninstallFlow = uninstallFlow,
@@ -183,6 +182,8 @@ fun CustomSplashScreen(
                 }
             }
         )
+        AdsManager.loadNativeLanguage(activity, firstVisit = true)
+        AdsManager.preloadOnboardingAds(activity, firstVisit = true)
 
         delay(30_000L)
         if (interstitialResolved.compareAndSet(false, true) && !hasNavigated.get()) {
@@ -280,12 +281,14 @@ fun CustomSplashScreen(
             SplashBanner(
                 uninstallFlow = uninstallFlow,
                 onBannerLoaded = {
+                    bannerVisibleSinceMs.set(SystemClock.elapsedRealtime())
                     bannerLoaded.set(true)
                     Log.d(ADS_TAG, "SPLASH_BANNER_READY_FOR_INTER_GATE")
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
+                    .navigationBarsPadding()
             )
         }
     }
@@ -306,82 +309,68 @@ private fun SplashBanner(
         return
     }
 
-    androidx.compose.ui.viewinterop.AndroidView(
-        factory = { viewContext ->
-            FrameLayout(viewContext).apply {
-                minimumHeight = 50.dpToPx(viewContext)
-                // Keep the host visible while ERain loads so QA can see the banner skeleton/shimmer.
-                visibility = View.VISIBLE
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                )
-                val bannerContainer = FrameLayout(viewContext).apply {
-                    id = com.ads.module.R.id.banner_container
+    Box(
+        modifier = modifier
+            .height(50.dp)
+            .background(Color(0xFF111113))
+    ) {
+        androidx.compose.ui.viewinterop.AndroidView(
+            factory = { viewContext ->
+                (LayoutInflater.from(viewContext)
+                    .inflate(R.layout.layout_splash_banner, null, false) as FrameLayout).apply {
                     minimumHeight = 50.dpToPx(viewContext)
-                    layoutParams = FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.MATCH_PARENT,
-                        FrameLayout.LayoutParams.WRAP_CONTENT
-                    )
-                }
-                val shimmerContainer = ShimmerFrameLayout(viewContext).apply {
-                    id = com.ads.module.R.id.shimmer_container_banner
-                    minimumHeight = 50.dpToPx(viewContext)
-                    layoutParams = FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.MATCH_PARENT,
-                        50.dpToPx(viewContext)
-                    )
-                    addView(FrameLayout(viewContext).apply {
-                        setBackgroundColor(android.graphics.Color.argb(70, 255, 255, 255))
-                        layoutParams = FrameLayout.LayoutParams(
-                            FrameLayout.LayoutParams.MATCH_PARENT,
-                            FrameLayout.LayoutParams.MATCH_PARENT
+                    visibility = View.VISIBLE
+                    findViewById<ShimmerFrameLayout>(com.ads.module.R.id.shimmer_container_banner)?.startShimmer()
+
+                    if (findViewById<FrameLayout>(com.ads.module.R.id.banner_container) == null) {
+                        Log.e(ADS_TAG, "[$placementName] XML missing banner_container")
+                        return@apply
+                    }
+
+                    post {
+                        Log.d(
+                            ADS_TAG,
+                            "[$placementName] XML host laidOut containerWidth=$width containerHeight=$height " +
+                                "visibility=$visibility attached=$isAttachedToWindow parent=${parent?.javaClass?.simpleName}"
                         )
-                    })
-                    startShimmer()
-                }
-                addView(bannerContainer)
-                addView(shimmerContainer)
-                post {
-                    Log.d(
-                        ADS_TAG,
-                        "[$placementName] host laidOut containerWidth=$width containerHeight=$height " +
-                            "visibility=$visibility attached=$isAttachedToWindow parent=${parent?.javaClass?.simpleName}"
-                    )
-                }
-                Log.d(ADS_TAG, "[$placementName] REQUEST via ERain id=${config.id}")
-                ERainAd.getInstance().loadBannerFragment(
-                    activity,
-                    config.id,
-                    this,
-                    object : AdCallback() {
-                        override fun onAdLoaded() {
-                            visibility = View.VISIBLE
-                            onBannerLoaded()
-                            post {
-                                Log.d(
+                    }
+                    Log.d(ADS_TAG, "[$placementName] REQUEST via ERain id=${config.id}")
+                    ERainAd.getInstance().loadBannerFragment(
+                        activity,
+                        config.id,
+                        this,
+                        object : AdCallback() {
+                            override fun onAdLoaded() {
+                                visibility = View.VISIBLE
+                                onBannerLoaded()
+                                post {
+                                    Log.d(
+                                        ADS_TAG,
+                                        "[$placementName] LOADED via ERain XML containerWidth=$width " +
+                                            "containerHeight=$height visibility=$visibility attached=$isAttachedToWindow " +
+                                            "childCount=$childCount parent=${parent?.javaClass?.simpleName}"
+                                    )
+                                }
+                            }
+
+                            override fun onAdFailedToLoad(error: LoadAdError?) {
+                                visibility = View.GONE
+                                Log.e(
                                     ADS_TAG,
-                                    "[$placementName] LOADED via ERain containerWidth=$width " +
-                                        "containerHeight=$height visibility=$visibility attached=$isAttachedToWindow " +
-                                        "childCount=$childCount parent=${parent?.javaClass?.simpleName}"
+                                    "[$placementName] FAILED via ERain code=${error?.code}, domain=${error?.domain}, " +
+                                        "message=${error?.message}, responseInfo=${error?.responseInfo}, cause=${error?.cause}"
                                 )
                             }
                         }
-
-                        override fun onAdFailedToLoad(error: LoadAdError?) {
-                            visibility = View.GONE
-                            Log.e(
-                                ADS_TAG,
-                                "[$placementName] FAILED via ERain code=${error?.code}, domain=${error?.domain}, " +
-                                    "message=${error?.message}, responseInfo=${error?.responseInfo}, cause=${error?.cause}"
-                            )
-                        }
-                    }
-                )
-            }
-        },
-        modifier = modifier.height(50.dp)
-    )
+                    )
+                }
+            },
+            modifier = Modifier
+                .align(Alignment.Center)
+                .fillMaxWidth()
+                .height(50.dp)
+        )
+    }
 }
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {

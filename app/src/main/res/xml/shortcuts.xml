@@ -26,16 +26,4 @@
             android:targetPackage="com.drama.x.drama.series.dramax.dramaseries" />
     </shortcut>
 
-    <shortcut
-        android:enabled="true"
-        android:icon="@drawable/widget_download"
-        android:shortcutDisabledMessage="@string/widget_my_download"
-        android:shortcutId="shortcut_downloads"
-        android:shortcutLongLabel="@string/widget_my_download"
-        android:shortcutShortLabel="@string/widget_my_download">
-        <intent
-            android:action="com.drama.x.drama.series.dramax.dramaseries.action.WIDGET_DOWNLOADS"
-            android:targetClass="com.drama.x.drama.series.dramax.dramaseries.MainActivity"
-            android:targetPackage="com.drama.x.drama.series.dramax.dramaseries" />
-    </shortcut>
 </shortcuts>

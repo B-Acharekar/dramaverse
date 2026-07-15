@@ -126,10 +126,6 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update { it.copy(currentStep = AppStep.Home, selectedShortFilmId = null) }
     }
 
-    fun startWidgetDownloads() {
-        _uiState.update { it.copy(currentStep = AppStep.Library, selectedShortFilmId = null) }
-    }
-
     fun startWidgetUninstallFlow() {
         _uiState.update { it.copy(currentStep = AppStep.SplashUninstall, selectedShortFilmId = null) }
     }
