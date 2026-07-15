@@ -66,6 +66,7 @@ import com.drama.x.drama.series.dramax.dramaseries.model.OnboardingViewModel
 import com.drama.x.drama.series.dramax.dramaseries.model.OnboardingVisual
 import kotlinx.coroutines.launch
 import android.view.LayoutInflater
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.viewinterop.AndroidView
@@ -193,6 +194,89 @@ fun OnboardingScreen(
 private fun Int.toOnboardingPageIndex(showFullNativePage: Boolean): Int =
     if (showFullNativePage && this > FULLSCREEN_NATIVE_PAGER_INDEX) this - 1 else this
 
+//@Composable
+//private fun OnboardingPageContent(
+//    page: OnboardingPage,
+//    pageIndex: Int,
+//    pageCount: Int,
+//    selectedPage: Int,
+//    nativeAdState: NativeAdState,
+//    onNext: () -> Unit
+//) {
+//    val pageHasNativePlacement = pageIndex == 0
+//    val shouldReserveNativeSpace =
+//        pageHasNativePlacement && (nativeAdState is NativeAdState.Loading || nativeAdState is NativeAdState.Loaded)
+//    if (shouldReserveNativeSpace) {
+//        OnboardingPageWithAdContent(
+//            page = page,
+//            pageCount = pageCount,
+//            selectedPage = selectedPage,
+//            nativeAdState = nativeAdState,
+//            onNext = onNext
+//        )
+//        return
+//    }
+//
+//    val visualHeight = when {
+//        pageHasNativePlacement -> 320.dp
+//        else -> 540.dp
+//    }
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(horizontal = 22.dp)
+//            .padding(bottom = 24.dp),
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        Spacer(modifier = Modifier.height(28.dp))
+//        Box(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(visualHeight),
+//            contentAlignment = Alignment.Center
+//        ) {
+//            when (page.visual) {
+//                OnboardingVisual.DramaPhone -> DramaPhoneVisual(painterResource(R.drawable.onboarding1image))
+//                OnboardingVisual.Collections -> CollectionsVisual()
+//                OnboardingVisual.RomancePhone -> RomanceVisual()
+//                OnboardingVisual.Welcome -> Unit
+//            }
+//        }
+//        Spacer(modifier = Modifier.height(12.dp))
+//        OnboardingTitle(page)
+//        Spacer(modifier = Modifier.height(16.dp))
+//        Text(
+//            text = stringResource(page.description),
+//            color = Color(0xFFC1A4A9),
+//            fontSize = 14.sp,
+//            lineHeight = 20.sp,
+//            textAlign = TextAlign.Center,
+//            fontWeight = FontWeight.SemiBold,
+//            letterSpacing = 0.sp,
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(horizontal = 10.dp)
+//        )
+//        Spacer(modifier = Modifier.height(72.dp))
+//        Row(
+//            modifier = Modifier.fillMaxWidth(),
+//            verticalAlignment = Alignment.CenterVertically
+//        ) {
+//            PageIndicator(
+//                pageCount = pageCount,
+//                selectedPage = selectedPage,
+//                modifier = Modifier.weight(1f)
+//            )
+//            OnboardingActionButton(
+//                label = if (pageIndex == pageCount - 1) R.string.get_started else R.string.next_btn,
+//                onClick = onNext
+//            )
+//        }
+//        Spacer(modifier = Modifier.weight(1f))
+//        Spacer(modifier = Modifier.height(18.dp))
+//    }
+//}
+
 @Composable
 private fun OnboardingPageContent(
     page: OnboardingPage,
@@ -205,33 +289,28 @@ private fun OnboardingPageContent(
     val pageHasNativePlacement = pageIndex == 0
     val shouldReserveNativeSpace =
         pageHasNativePlacement && (nativeAdState is NativeAdState.Loading || nativeAdState is NativeAdState.Loaded)
-    if (shouldReserveNativeSpace) {
-        OnboardingPageWithAdContent(
-            page = page,
-            pageCount = pageCount,
-            selectedPage = selectedPage,
-            nativeAdState = nativeAdState,
-            onNext = onNext
-        )
-        return
-    }
 
-    val visualHeight = when {
-        pageHasNativePlacement -> 320.dp
-        else -> 540.dp
-    }
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 22.dp)
-            .padding(bottom = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(28.dp))
+    // --- Image geometry is fixed. It never depends on ad state. ---
+    val imageTopPadding = 28.dp
+    val visualHeight = if (pageHasNativePlacement) 320.dp else 540.dp
+
+    // --- Everything below reacts to ad occurrence ---
+    val textTopPadding = visualHeight + 12.dp -
+            (if (shouldReserveNativeSpace) 40.dp else 0.dp)
+
+    val imagebottompadding = if(pageHasNativePlacement) 300.dp else 0.dp
+    val rowBottomPadding = if (shouldReserveNativeSpace) 300.dp else 18.dp
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Fixed image — height/position constant regardless of ad
         Box(
             modifier = Modifier
+                .align(Alignment.TopCenter)
                 .fillMaxWidth()
-                .height(visualHeight),
+                .fillMaxHeight()
+                .padding(horizontal = 22.dp)
+                .padding(bottom = imagebottompadding)
+            ,
             contentAlignment = Alignment.Center
         ) {
             when (page.visual) {
@@ -241,24 +320,39 @@ private fun OnboardingPageContent(
                 OnboardingVisual.Welcome -> Unit
             }
         }
-        Spacer(modifier = Modifier.height(12.dp))
-        OnboardingTitle(page)
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = stringResource(page.description),
-            color = Color(0xFFC1A4A9),
-            fontSize = 14.sp,
-            lineHeight = 20.sp,
-            textAlign = TextAlign.Center,
-            fontWeight = FontWeight.SemiBold,
-            letterSpacing = 0.sp,
+
+        // Title + subtitle — shifts based on ad occurrence
+        Column(
             modifier = Modifier
+                .align(Alignment.TopCenter)
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp)
-        )
-        Spacer(modifier = Modifier.height(72.dp))
+                .padding(horizontal = 22.dp)
+                .padding(top = textTopPadding),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            OnboardingTitle(page)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = stringResource(page.description),
+                color = Color(0xFFC1A4A9),
+                fontSize = 14.sp,
+                lineHeight = 20.sp,
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.sp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp)
+            )
+        }
+
+        // Indicator + button — shifts based on ad occurrence
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(horizontal = 22.dp)
+                .padding(bottom = rowBottomPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             PageIndicator(
@@ -271,8 +365,15 @@ private fun OnboardingPageContent(
                 onClick = onNext
             )
         }
-        Spacer(modifier = Modifier.weight(1f))
-        Spacer(modifier = Modifier.height(18.dp))
+
+        if (shouldReserveNativeSpace) {
+            OnboardingNativeAd(
+                state = nativeAdState,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .requiredWidth(LocalConfiguration.current.screenWidthDp.dp)
+            )
+        }
     }
 }
 
@@ -437,8 +538,6 @@ private fun OnboardingFullscreenNativeAd(
                     }
                 }
                 else -> {
-                    // Disabled/failed states shouldn't normally reach this composable
-                    // since showFullNativePage gates on Loading/Loaded, but guard anyway.
                     Spacer(modifier = Modifier.weight(1f))
                 }
             }
@@ -733,7 +832,7 @@ private fun WelcomePageContent(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .padding(horizontal = 22.dp)
-                .padding(bottom = if (shouldReserveNativeSpace) 356.dp else 32.dp),
+                .padding(bottom = if (shouldReserveNativeSpace) 300.dp else 32.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             PageIndicator(
