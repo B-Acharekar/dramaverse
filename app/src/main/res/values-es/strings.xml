@@ -1,10 +1,9 @@
 <resources>
     <string name="app_name">DramaX</string>
 
-    <!-- Splash Screen -->
     <string name="app_name_display">DramaX</string>
 
-    <string name="splash_tagline">D R A M A S   C O R T O S   I L I M I T A D O S</string>
+    <string name="splash_tagline">Series dramáticas cortas</string>
     <string name="splash_description">Disfruta historias emocionantes, creadas para tus momentos más rápidos.</string>
 
     <!-- Language screen -->

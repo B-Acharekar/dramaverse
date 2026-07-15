@@ -4,8 +4,7 @@
     <string name="app_name">DramaX</string>
     <string name="app_name_display">DramaX</string>
 
-    <!-- Splash -->
-    <string name="splash_tagline">KỊCH NGẮN\nKHÔNG GIỚI HẠN</string>
+    <string name="splash_tagline">Loạt phim ngắn</string>
     <string name="splash_description">Trải nghiệm những câu chuyện hấp dẫn, được tuyển chọn dành cho mọi khoảnh khắc của bạn.</string>
 
     <!-- Language -->

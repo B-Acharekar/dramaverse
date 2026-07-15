@@ -2,10 +2,11 @@
 <resources>
 
     <string name="app_name">DramaX</string>
-    <string name="app_name_display">DramaX</string>
 
     <!-- Splash -->
-    <string name="splash_tagline">D R A M E S\nC O U R T S\nI L L I M I T É S</string>
+    <string name="app_name_display">DramaX</string>
+
+    <string name="splash_tagline">Séries dramatiques courtes</string>
     <string name="splash_description">Découvrez des histoires captivantes, sélectionnées pour accompagner chacun de vos moments.</string>
 
     <!-- Language -->

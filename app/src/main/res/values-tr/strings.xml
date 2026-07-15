@@ -4,7 +4,7 @@
     <!-- Splash Screen -->
     <string name="app_name_display">DramaX</string>
 
-    <string name="splash_tagline">SINIRSIZ KISA DİZİLER</string>
+    <string name="splash_tagline">Kısa Drama Dizileri</string>
     <string name="splash_description">En kısa anlarınız için hazırlanmış sürükleyici hikâyelerin keyfini çıkarın.</string>
 
     <!-- Language screen -->

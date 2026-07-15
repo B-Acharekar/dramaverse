@@ -233,34 +233,34 @@ fun CustomSplashScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 24.dp, top = 44.dp, end = 24.dp, bottom = 94.dp),
+                .padding(start = 10.dp, top = 44.dp, end = 10.dp, bottom = 94.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.weight(1f))
             Image(
                 painter = painterResource(id = R.drawable.icon_2),
                 contentDescription = null,
-                modifier = Modifier.size(128.dp),
+                modifier = Modifier.size(160.dp),
                 contentScale = ContentScale.Fit
             )
             Spacer(modifier = Modifier.height(20.dp))
             Text(
                 text = stringResource(R.string.app_name_display),
                 color = Color(0xFFFFA8AE),
-                fontSize = 36.sp,
+                fontSize = 40.sp,
                 fontWeight = FontWeight.ExtraBold,
                 fontStyle = FontStyle.Italic,
                 letterSpacing = 0.sp
             )
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             Text(
                 text = stringResource(R.string.splash_tagline),
                 color = Color(0xFFE8E2E7),
-                fontSize = 17.sp,
-                lineHeight = 26.sp,
+                fontSize = 25.sp,
+                lineHeight = 15.sp,
                 textAlign = TextAlign.Center,
                 letterSpacing = 0.sp,
-                fontWeight = FontWeight.Light
+                fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(26.dp))
 //            Text(

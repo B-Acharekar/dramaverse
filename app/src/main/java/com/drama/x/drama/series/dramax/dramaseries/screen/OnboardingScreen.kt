@@ -262,7 +262,7 @@ private fun OnboardingPageContent(
                 .fillMaxWidth()
                 .padding(horizontal = 10.dp)
         )
-        Spacer(modifier = Modifier.weight(if (shouldReserveNativeSpace) 0.72f else 1f))
+        Spacer(modifier = Modifier.weight(if (shouldReserveNativeSpace) 0.9f else 1f))
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
