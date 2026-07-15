@@ -65,6 +65,9 @@ import com.drama.x.drama.series.dramax.dramaseries.model.OnboardingViewModel
 import com.drama.x.drama.series.dramax.dramaseries.model.OnboardingVisual
 import kotlinx.coroutines.launch
 import android.view.LayoutInflater
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.viewinterop.AndroidView
 import com.ads.module.ads.wrapper.ApNativeAd
 import com.google.android.gms.ads.nativead.MediaView
@@ -227,7 +230,7 @@ private fun OnboardingPageContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 22.dp, vertical = 16.dp),
+            .padding(horizontal = 22.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(if (shouldReserveNativeSpace) 18.dp else 34.dp))
@@ -275,13 +278,11 @@ private fun OnboardingPageContent(
             )
         }
         if (pageHasNativePlacement && nativeAdState !is NativeAdState.Disabled) {
-            Spacer(modifier = Modifier.height(12.dp))
             OnboardingNativeAd(
                 state = nativeAdState,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.requiredWidth(LocalConfiguration.current.screenWidthDp.dp)
             )
         }
-        Spacer(modifier = Modifier.height(20.dp))
     }
 }
 
@@ -605,7 +606,7 @@ private fun DramaPhoneVisual(painter: Painter) {
             contentDescription = null,
             modifier = Modifier
                 .fillMaxSize()
-                .clip(RoundedCornerShape(26.dp))
+                .clip(RoundedCornerShape(50.dp))
         )
     }
 }
@@ -710,7 +711,7 @@ private fun WelcomePageContent(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .padding(horizontal = 22.dp)
-                .padding(bottom = if (shouldReserveNativeSpace) 356.dp else 24.dp),
+                .padding(bottom = if (shouldReserveNativeSpace) 300.dp else 24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             PageIndicator(
@@ -747,9 +748,7 @@ private fun WelcomePageContent(
                 state = nativeAdState,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(horizontal = 22.dp)
-                    .padding(bottom = 20.dp)
+                    .requiredWidth(LocalConfiguration.current.screenWidthDp.dp)
             )
         }
     }

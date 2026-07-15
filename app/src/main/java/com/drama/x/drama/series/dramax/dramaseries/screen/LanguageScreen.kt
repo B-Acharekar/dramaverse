@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -33,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,10 +44,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drama.x.drama.series.dramax.dramaseries.R
@@ -68,6 +74,7 @@ fun LanguageScreen(
     val firstVisit = remember { viewModel.isFirstLanguageVisit }
     var selectedOnce by remember { mutableStateOf(false) }
     var nativeAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
+
 
     LaunchedEffect(activity, firstVisit) {
         activity?.let { AdsManager.loadNativeLanguage(it, firstVisit) }
@@ -92,6 +99,15 @@ fun LanguageScreen(
         }
         AdsManager.nativeLanguageClickAdLive.observeForever(observer)
         onDispose { AdsManager.nativeLanguageClickAdLive.removeObserver(observer) }
+    }
+
+    SideEffect {
+        activity?.window?.statusBarColor = Color(0xFF161616).toArgb()
+
+        activity?.let {
+            WindowCompat.getInsetsController(it.window, it.window.decorView)
+                .isAppearanceLightStatusBars = false
+        }
     }
 
     Column(
@@ -143,14 +159,14 @@ fun LanguageScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .navigationBarsPadding()
                 .padding(horizontal = 11.dp)
-                .padding(top = 8.dp, bottom = 10.dp)
+                .padding(top = 8.dp)
+
         ) {
             ErainNativeAdHost(
                 placementName = "language_native",
                 state = nativeAdState,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.requiredWidth(LocalConfiguration.current.screenWidthDp.dp),
                 height = 340.dp
             )
         }

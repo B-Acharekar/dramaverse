@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -90,18 +91,23 @@ fun ErainNativeAdHost(
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.WRAP_CONTENT
                         )
-                        minimumHeight = height.value.toInt().dpToPx(viewContext)
+                        // Explicitly zero out padding — some themes apply a default
+                        // View padding/foreground inset that shows up as unwanted
+                        // margin around the ad instead of letting it sit flush.
+                        setPadding(0, 0, 0, 0)
                         val adContainer = FrameLayout(viewContext).apply {
                             layoutParams = FrameLayout.LayoutParams(
                                 FrameLayout.LayoutParams.MATCH_PARENT,
                                 FrameLayout.LayoutParams.WRAP_CONTENT
                             )
+                            setPadding(0, 0, 0, 0)
                         }
                         val shimmer = ShimmerFrameLayout(viewContext).apply {
                             layoutParams = FrameLayout.LayoutParams(
                                 FrameLayout.LayoutParams.MATCH_PARENT,
-                                FrameLayout.LayoutParams.MATCH_PARENT
+                                FrameLayout.LayoutParams.WRAP_CONTENT
                             )
+                            setPadding(0, 0, 0, 0)
                             addView(FrameLayout(viewContext).apply {
                                 setBackgroundColor(android.graphics.Color.argb(45, 255, 255, 255))
                                 layoutParams = FrameLayout.LayoutParams(
@@ -124,13 +130,13 @@ fun ErainNativeAdHost(
                         Log.d(
                             ADS_TAG,
                             "[$placementName] DISPLAYED containerWidth=${root.width} " +
-                                "containerHeight=${root.height} attached=${root.isAttachedToWindow}"
+                                    "containerHeight=${root.height} attached=${root.isAttachedToWindow}"
                         )
                     }
                 },
                 modifier = modifier
                     .fillMaxWidth()
-                    .height(height)
+                    .wrapContentHeight()
             )
         }
     }
@@ -156,9 +162,6 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
     is ContextWrapper -> baseContext.findActivity()
     else -> null
 }
-
-private fun Int.dpToPx(context: Context): Int =
-    (this * context.resources.displayMetrics.density).toInt()
 
 @Composable
 private fun AdSkeleton(
