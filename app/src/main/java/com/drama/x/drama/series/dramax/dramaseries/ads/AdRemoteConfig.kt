@@ -12,6 +12,16 @@ object AdRemoteConfig {
     private const val DEBUG_ASSET = "ad_config_debug.json"
     private const val RELEASE_ASSET = "ad_config.json"
 
+    private val falseVersionDisabledPlacements = setOf(
+        "native_onboarding_1_1",
+        "native_onboarding_2_1",
+        "native_onboarding_1_4",
+        "native_onboarding_2_4",
+        "native_onboarding_fullscreen_1_2",
+        "native_onboarding_fullscreen_2_2",
+        "inter_onboarding"
+    )
+
     val placementNames = listOf(
         "inter_splash",
         "banner_splash",
@@ -45,22 +55,31 @@ object AdRemoteConfig {
 
     val interSplash: AdUnitConfig get() = activeConfig.placement("inter_splash")
     val bannerSplash: AdUnitConfig get() = activeConfig.placement("banner_splash")
-    val interOnboarding: AdUnitConfig get() = activeConfig.placement("inter_onboarding")
+    val interOnboarding: AdUnitConfig get() = placement("inter_onboarding")
     val interWelcomeBack: AdUnitConfig get() = activeConfig.placement("inter_welcome_back")
     val interSplashUninstall: AdUnitConfig get() = activeConfig.placement("inter_splash_uninstall")
     val bannerSplashUninstall: AdUnitConfig get() = activeConfig.placement("banner_splash_uninstall")
     val nativeUninstall: AdUnitConfig get() = activeConfig.placement("native_uninstall")
     val nativeSurveyUninstall: AdUnitConfig get() = activeConfig.placement("native_survey_uninstall")
     fun nativeLanguage(firstVisit: Boolean): AdUnitConfig =
-        activeConfig.placement(if (firstVisit) "native_language_1" else "native_language_2")
+        placement(if (firstVisit) "native_language_1" else "native_language_2")
     fun nativeLanguageClick(firstVisit: Boolean): AdUnitConfig =
-        activeConfig.placement(if (firstVisit) "native_language_1_click" else "native_language_2_click")
+        placement(if (firstVisit) "native_language_1_click" else "native_language_2_click")
     fun nativeOnboardingFirstPage(firstVisit: Boolean): AdUnitConfig =
-        activeConfig.placement(if (firstVisit) "native_onboarding_1_1" else "native_onboarding_2_1")
+        placement(if (firstVisit) "native_onboarding_1_1" else "native_onboarding_2_1")
     fun nativeOnboardingFourthPage(firstVisit: Boolean): AdUnitConfig =
-        activeConfig.placement(if (firstVisit) "native_onboarding_1_4" else "native_onboarding_2_4")
+        placement(if (firstVisit) "native_onboarding_1_4" else "native_onboarding_2_4")
     fun nativeOnboardingFull(firstVisit: Boolean): AdUnitConfig =
-        activeConfig.placement(if (firstVisit) "native_onboarding_fullscreen_1_2" else "native_onboarding_fullscreen_2_2")
+        placement(if (firstVisit) "native_onboarding_fullscreen_1_2" else "native_onboarding_fullscreen_2_2")
+
+    private fun placement(name: String): AdUnitConfig {
+        val config = activeConfig.placement(name)
+        return if (!BuildConfig.ENABLE_ONBOARDING_ADS_FOR_LIVE && name in falseVersionDisabledPlacements) {
+            config.copy(isEnable = false)
+        } else {
+            config
+        }
+    }
 
     fun initializeFromAssets(context: Context) {
         val assetName = if (BuildConfig.DEBUG) DEBUG_ASSET else RELEASE_ASSET

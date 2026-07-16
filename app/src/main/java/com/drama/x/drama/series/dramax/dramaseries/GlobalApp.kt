@@ -8,6 +8,7 @@ import com.ads.module.ads.ERainAd
 import com.ads.module.application.AdsMultiDexApplication
 import com.ads.module.config.AdjustConfig
 import com.ads.module.config.ERainAdConfig
+import com.ads.module.util.SharePreferenceUtils
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.ads.MobileAds
@@ -45,11 +46,19 @@ class GlobalApp : AdsMultiDexApplication() {
         }
 
         val erainAdConfig = ERainAdConfig(this, environment).apply {
-            adjustConfig = AdjustConfig(true, getString(R.string.adjust_token))
+            adjustConfig = AdjustConfig(
+                !BuildConfig.FORCE_ERAIN_NON_ORGANIC_FOR_AD_TEST,
+                getString(R.string.adjust_token)
+            )
             facebookClientToken = getString(R.string.facebook_client_token)
             adjustTokenTiktok = getString(R.string.tiktok_token)
             intervalInterstitialAd = 35
             idAdResume = ""
+        }
+
+        if (BuildConfig.FORCE_ERAIN_NON_ORGANIC_FOR_AD_TEST) {
+            SharePreferenceUtils.setIsOrganic(this, false)
+            Log.d(TAG, "ERAIN_ORGANIC_FORCED value=false reason=debug_onboarding_ad_test")
         }
 
         ERainAd.getInstance().init(this, erainAdConfig)
@@ -57,7 +66,8 @@ class GlobalApp : AdsMultiDexApplication() {
         Admob.getInstance().setOpenActivityAfterShowInterAds(true)
         Log.d(
             TAG,
-            "ERAIN_INIT_COMPLETED environment=$environment adjust=true facebook=true tiktok=true"
+            "ERAIN_INIT_COMPLETED environment=$environment " +
+                "adjust=${!BuildConfig.FORCE_ERAIN_NON_ORGANIC_FOR_AD_TEST} facebook=true tiktok=true"
         )
     }
 

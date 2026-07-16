@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.ads.module.BuildConfig
+import com.drama.x.drama.series.dramax.dramaseries.BuildConfig as AppBuildConfig
 import com.drama.x.drama.series.dramax.dramaseries.R
 import com.ads.module.ads.ERainAd
 import com.ads.module.ads.wrapper.ApInterstitialAd
@@ -108,7 +109,19 @@ object AdsManager {
     }
 
     fun loadNativeOnboardingPageOne(activity: Activity, firstVisit: Boolean) {
-        val config = AdRemoteConfig.nativeOnboardingFirstPage(firstVisit)
+        val sdkShouldDisplay = if (firstVisit) {
+            ERainAd.getInstance().getShouldDisplayNativeOnboardingNormal1()
+        } else {
+            ERainAd.getInstance().getShouldDisplayNativeOnboardingNormal2()
+        }
+        Log.d(
+            ADS_TAG,
+            "ERAIN_GATE native_onboarding_page_one firstVisit=$firstVisit " +
+                "buildEnabled=${AppBuildConfig.ENABLE_ONBOARDING_ADS_FOR_LIVE} sdkShouldDisplay=$sdkShouldDisplay"
+        )
+        val config = AdRemoteConfig.nativeOnboardingFirstPage(firstVisit).withSdkDisplayGate(
+            AppBuildConfig.ENABLE_ONBOARDING_ADS_FOR_LIVE && sdkShouldDisplay
+        )
         loadNativePlacement(
             activity = activity,
             placementName = if (firstVisit) "native_onboarding_1_1" else "native_onboarding_2_1",
@@ -119,7 +132,15 @@ object AdsManager {
     }
 
     fun loadNativeOnboardingPageThree(activity: Activity, firstVisit: Boolean) {
-        val config = AdRemoteConfig.nativeOnboardingFourthPage(firstVisit)
+        val sdkShouldDisplay = ERainAd.getInstance().getShouldDisplayNativeOnboardingNormal2()
+        Log.d(
+            ADS_TAG,
+            "ERAIN_GATE native_onboarding_page_three firstVisit=$firstVisit " +
+                "buildEnabled=${AppBuildConfig.ENABLE_ONBOARDING_ADS_FOR_LIVE} sdkShouldDisplay=$sdkShouldDisplay"
+        )
+        val config = AdRemoteConfig.nativeOnboardingFourthPage(firstVisit).withSdkDisplayGate(
+            AppBuildConfig.ENABLE_ONBOARDING_ADS_FOR_LIVE && sdkShouldDisplay
+        )
         loadNativePlacement(
             activity = activity,
             placementName = if (firstVisit) "native_onboarding_1_4" else "native_onboarding_2_4",
@@ -130,7 +151,19 @@ object AdsManager {
     }
 
     fun loadNativeOnboardingFullscreen(activity: Activity, firstVisit: Boolean) {
-        val config = AdRemoteConfig.nativeOnboardingFull(firstVisit)
+        val sdkShouldDisplay = if (firstVisit) {
+            ERainAd.getInstance().getShouldDisplayNativeOnboardingFull1()
+        } else {
+            ERainAd.getInstance().getShouldDisplayNativeOnboardingFull2()
+        }
+        Log.d(
+            ADS_TAG,
+            "ERAIN_GATE native_onboarding_fullscreen firstVisit=$firstVisit " +
+                "buildEnabled=${AppBuildConfig.ENABLE_ONBOARDING_ADS_FOR_LIVE} sdkShouldDisplay=$sdkShouldDisplay"
+        )
+        val config = AdRemoteConfig.nativeOnboardingFull(firstVisit).withSdkDisplayGate(
+            AppBuildConfig.ENABLE_ONBOARDING_ADS_FOR_LIVE && sdkShouldDisplay
+        )
         loadNativePlacement(
             activity = activity,
             placementName = if (firstVisit) "native_onboarding_fullscreen_1_2" else "native_onboarding_fullscreen_2_2",
@@ -141,7 +174,15 @@ object AdsManager {
     }
 
     fun loadNativeOnboardingWelcome(activity: Activity, firstVisit: Boolean) {
-        val config = AdRemoteConfig.nativeOnboardingFourthPage(firstVisit)
+        val sdkShouldDisplay = ERainAd.getInstance().getShouldDisplayNativeOnboardingNormal2()
+        Log.d(
+            ADS_TAG,
+            "ERAIN_GATE native_onboarding_welcome firstVisit=$firstVisit " +
+                "buildEnabled=${AppBuildConfig.ENABLE_ONBOARDING_ADS_FOR_LIVE} sdkShouldDisplay=$sdkShouldDisplay"
+        )
+        val config = AdRemoteConfig.nativeOnboardingFourthPage(firstVisit).withSdkDisplayGate(
+            AppBuildConfig.ENABLE_ONBOARDING_ADS_FOR_LIVE && sdkShouldDisplay
+        )
         loadNativePlacement(
             activity = activity,
             placementName = if (firstVisit) "native_onboarding_1_4_welcome" else "native_onboarding_2_4_welcome",
@@ -178,13 +219,32 @@ object AdsManager {
         timeoutMs: Long = 6_000L,
         onFinished: () -> Unit
     ) {
-        Log.d(ADS_TAG, "$placementName decision enabled=${config.isEnable} id=${config.id.maskAdUnit()}")
-        if (!config.canRequest || !isNetworkAvailable(activity)) {
-            Log.d(ADS_TAG, "$placementName skipped canRequest=${config.canRequest} network=${isNetworkAvailable(activity)}")
+        val sdkShouldDisplayInterOnboarding = if (placementName == "inter_onboarding") {
+            ERainAd.getInstance().getShouldDisplayInterOnboarding()
+        } else {
+            true
+        }
+        if (placementName == "inter_onboarding") {
+            Log.d(
+                ADS_TAG,
+                "ERAIN_GATE inter_onboarding buildEnabled=${AppBuildConfig.ENABLE_ONBOARDING_ADS_FOR_LIVE} " +
+                    "sdkShouldDisplay=$sdkShouldDisplayInterOnboarding"
+            )
+        }
+        val gatedConfig = if (placementName == "inter_onboarding") {
+            config.withSdkDisplayGate(
+                AppBuildConfig.ENABLE_ONBOARDING_ADS_FOR_LIVE && sdkShouldDisplayInterOnboarding
+            )
+        } else {
+            config
+        }
+        Log.d(ADS_TAG, "$placementName decision enabled=${gatedConfig.isEnable} id=${gatedConfig.id.maskAdUnit()}")
+        if (!gatedConfig.canRequest || !isNetworkAvailable(activity)) {
+            Log.d(ADS_TAG, "$placementName skipped canRequest=${gatedConfig.canRequest} network=${isNetworkAvailable(activity)}")
             onFinished()
             return
         }
-        val effectiveTimeoutMs = maxOf(timeoutMs, config.timeoutMs)
+        val effectiveTimeoutMs = maxOf(timeoutMs, gatedConfig.timeoutMs)
         var finished = false
         fun finishOnce(reason: String) {
             if (finished) return
@@ -196,7 +256,7 @@ object AdsManager {
         Handler(Looper.getMainLooper()).postDelayed({ finishOnce("timeout") }, effectiveTimeoutMs)
         ERainAd.getInstance().getInterstitialAds(
             activity,
-            config.id,
+            gatedConfig.id,
             object : AdCallback() {
                 override fun onApInterstitialLoad(interstitialAd: ApInterstitialAd?) {
                     if (finished) return
@@ -238,6 +298,9 @@ object AdsManager {
             }
         )
     }
+
+    private fun AdUnitConfig.withSdkDisplayGate(shouldDisplay: Boolean): AdUnitConfig =
+        if (shouldDisplay) this else copy(isEnable = false)
 
     fun showWelcomeBackInterstitial(activity: Activity) {
         val now = android.os.SystemClock.elapsedRealtime()

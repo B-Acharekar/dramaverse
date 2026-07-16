@@ -81,6 +81,7 @@ import com.ads.module.ads.wrapper.ApNativeAd
 import com.google.android.gms.ads.nativead.MediaView
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdView
+import com.drama.x.drama.series.dramax.dramaseries.BuildConfig as AppBuildConfig
 
 
 private const val FULLSCREEN_NATIVE_PAGER_INDEX = 2
@@ -123,9 +124,16 @@ fun OnboardingScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val activity = remember(context) { context.findActivity() }
-    var onboardingPageOneAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Loading) }
-    var onboardingFullscreenAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Loading) }
-    var onboardingWelcomeAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Loading) }
+    val initialOnboardingAdState = remember {
+        if (AppBuildConfig.ENABLE_ONBOARDING_ADS_FOR_LIVE) {
+            NativeAdState.Loading
+        } else {
+            NativeAdState.Disabled("onboarding_ads_disabled_for_false_version")
+        }
+    }
+    var onboardingPageOneAdState by remember { mutableStateOf<NativeAdState>(initialOnboardingAdState) }
+    var onboardingFullscreenAdState by remember { mutableStateOf<NativeAdState>(initialOnboardingAdState) }
+    var onboardingWelcomeAdState by remember { mutableStateOf<NativeAdState>(initialOnboardingAdState) }
     val showFullNativePage = onboardingFullscreenAdState is NativeAdState.Loading ||
             onboardingFullscreenAdState is NativeAdState.Loaded
     val pagerPageCount = uiState.pages.size + if (showFullNativePage) 1 else 0
@@ -133,6 +141,9 @@ fun OnboardingScreen(
 
     LaunchedEffect(Unit) {
         onEntered()
+        if (!AppBuildConfig.ENABLE_ONBOARDING_ADS_FOR_LIVE) {
+            return@LaunchedEffect
+        }
         activity?.let {
             AdsManager.loadNativeOnboardingPageOne(it, firstVisit = true)
             AdsManager.loadNativeOnboardingFullscreen(it, firstVisit = true)
@@ -247,13 +258,13 @@ private fun OnboardingPageContent(
 
     // --- Image geometry scales with screen height, keeping the same
     //     proportion of the screen it originally occupied. ---
-    val visualHeight = (if (pageHasNativePlacement) 320.dp else 540.dp).h(scale)
+    val visualHeight = (if (shouldReserveNativeSpace) 320.dp else 540.dp).h(scale)
 
     // --- Everything below reacts to ad occurrence, still screen-relative ---
     val textTopPadding = visualHeight + 12.dp.h(scale) -
             (if (shouldReserveNativeSpace) 40.dp.h(scale) else 0.dp)
 
-    val imagebottompadding = if (pageHasNativePlacement) 320.dp.h(scale) else 0.dp
+    val imagebottompadding = if (shouldReserveNativeSpace) 320.dp.h(scale) else 0.dp
     val rowBottomPadding = if (shouldReserveNativeSpace) 320.dp.h(scale) else 18.dp.h(scale)
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -746,10 +757,16 @@ private fun WelcomePageContent(
         // Frosted glass card — truly centered on screen, scales with screen height
         Column(
             modifier = Modifier
-                .align(Alignment.TopCenter)
+                .align(if (shouldReserveNativeSpace) Alignment.TopCenter else Alignment.Center)
                 .fillMaxWidth()
                 .padding(horizontal = 22.dp.w(scale))
-                .padding(top = 116.dp.h(scale))
+                .then(
+                    if (shouldReserveNativeSpace) {
+                        Modifier.padding(top = 116.dp.h(scale))
+                    } else {
+                        Modifier.padding(bottom = 86.dp.h(scale))
+                    }
+                )
                 .background(Color(0x1AFFFFFF), RoundedCornerShape(28.dp))
                 .padding(horizontal = 24.dp.w(scale), vertical = 18.dp.h(scale)),
             horizontalAlignment = Alignment.CenterHorizontally
