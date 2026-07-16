@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,6 +36,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,6 +54,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
@@ -66,8 +69,12 @@ import com.drama.x.drama.series.dramax.dramaseries.model.OnboardingViewModel
 import com.drama.x.drama.series.dramax.dramaseries.model.OnboardingVisual
 import kotlinx.coroutines.launch
 import android.view.LayoutInflater
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.viewinterop.AndroidView
 import com.ads.module.ads.wrapper.ApNativeAd
@@ -77,6 +84,34 @@ import com.google.android.gms.ads.nativead.NativeAdView
 
 
 private const val FULLSCREEN_NATIVE_PAGER_INDEX = 2
+
+private val ReferenceWidth = 360.dp   // baseline design width
+private val ReferenceHeight = 780.dp  // baseline design height
+
+private data class ScreenScale(
+    val widthScale: Float,
+    val heightScale: Float
+)
+
+private val LocalScreenScale = staticCompositionLocalOf { ScreenScale(1f, 1f) }
+
+@Composable
+private fun rememberScreenScale(): ScreenScale {
+    val configuration = LocalConfiguration.current
+    // Clamp so extreme devices (small feature phones / huge tablets) don't
+    // blow the layout up or shrink it into unreadability.
+    val widthScale = (configuration.screenWidthDp / ReferenceWidth.value)
+        .coerceIn(0.80f, 1.35f)
+    val heightScale = (configuration.screenHeightDp / ReferenceHeight.value)
+        .coerceIn(0.78f, 1.40f)
+    return ScreenScale(widthScale, heightScale)
+}
+
+/** Scale a Dp against the current screen's height ratio. */
+private fun Dp.h(scale: ScreenScale): Dp = this * scale.heightScale
+
+/** Scale a Dp against the current screen's width ratio. */
+private fun Dp.w(scale: ScreenScale): Dp = this * scale.widthScale
 
 @Composable
 fun OnboardingScreen(
@@ -92,7 +127,7 @@ fun OnboardingScreen(
     var onboardingFullscreenAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Loading) }
     var onboardingWelcomeAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Loading) }
     val showFullNativePage = onboardingFullscreenAdState is NativeAdState.Loading ||
-        onboardingFullscreenAdState is NativeAdState.Loaded
+            onboardingFullscreenAdState is NativeAdState.Loaded
     val pagerPageCount = uiState.pages.size + if (showFullNativePage) 1 else 0
     val pagerState = rememberPagerState(pageCount = { pagerPageCount })
 
@@ -132,60 +167,62 @@ fun OnboardingScreen(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF111113))
-    ) {
-        OnboardingGlowBackground()
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.fillMaxSize()
-        ) { pageIndex ->
-            if (showFullNativePage && pageIndex == FULLSCREEN_NATIVE_PAGER_INDEX) {
-                OnboardingFullscreenNativeAd(
-                    state = onboardingFullscreenAdState
-                )
-                return@HorizontalPager
-            }
+    CompositionLocalProvider(LocalScreenScale provides rememberScreenScale()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF111113))
+        ) {
+            OnboardingGlowBackground()
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()
+            ) { pageIndex ->
+                if (showFullNativePage && pageIndex == FULLSCREEN_NATIVE_PAGER_INDEX) {
+                    OnboardingFullscreenNativeAd(
+                        state = onboardingFullscreenAdState
+                    )
+                    return@HorizontalPager
+                }
 
-            val onboardingPageIndex = pageIndex.toOnboardingPageIndex(showFullNativePage)
-            val page = uiState.pages[onboardingPageIndex]
-            val selectedPage = pagerState.currentPage.toOnboardingPageIndex(showFullNativePage)
-            val onNext: () -> Unit = {
-                if (pagerState.currentPage == pagerPageCount - 1) {
-                    onFinished()
-                } else {
-                    scope.launch {
-                        pagerState.animateScrollToPage(
-                            page = pagerState.currentPage + 1,
-                            animationSpec = tween(360, easing = FastOutSlowInEasing)
-                        )
+                val onboardingPageIndex = pageIndex.toOnboardingPageIndex(showFullNativePage)
+                val page = uiState.pages[onboardingPageIndex]
+                val selectedPage = pagerState.currentPage.toOnboardingPageIndex(showFullNativePage)
+                val onNext: () -> Unit = {
+                    if (pagerState.currentPage == pagerPageCount - 1) {
+                        onFinished()
+                    } else {
+                        scope.launch {
+                            pagerState.animateScrollToPage(
+                                page = pagerState.currentPage + 1,
+                                animationSpec = tween(360, easing = FastOutSlowInEasing)
+                            )
+                        }
                     }
                 }
-            }
 
-            if (page.visual == OnboardingVisual.Welcome) {
-                WelcomePageContent(
-                    page = page,
-                    pageIndex = onboardingPageIndex,
-                    pageCount = uiState.pages.size,
-                    selectedPage = selectedPage,
-                    nativeAdState = onboardingWelcomeAdState,
-                    onNext = onNext
-                )
-            } else {
-                OnboardingPageContent(
-                    page = page,
-                    pageIndex = onboardingPageIndex,
-                    pageCount = uiState.pages.size,
-                    selectedPage = selectedPage,
-                    nativeAdState = when (onboardingPageIndex) {
-                        0 -> onboardingPageOneAdState
-                        else -> NativeAdState.Disabled("not_this_page")
-                    },
-                    onNext = onNext
-                )
+                if (page.visual == OnboardingVisual.Welcome) {
+                    WelcomePageContent(
+                        page = page,
+                        pageIndex = onboardingPageIndex,
+                        pageCount = uiState.pages.size,
+                        selectedPage = selectedPage,
+                        nativeAdState = onboardingWelcomeAdState,
+                        onNext = onNext
+                    )
+                } else {
+                    OnboardingPageContent(
+                        page = page,
+                        pageIndex = onboardingPageIndex,
+                        pageCount = uiState.pages.size,
+                        selectedPage = selectedPage,
+                        nativeAdState = when (onboardingPageIndex) {
+                            0 -> onboardingPageOneAdState
+                            else -> NativeAdState.Disabled("not_this_page")
+                        },
+                        onNext = onNext
+                    )
+                }
             }
         }
     }
@@ -193,89 +230,6 @@ fun OnboardingScreen(
 
 private fun Int.toOnboardingPageIndex(showFullNativePage: Boolean): Int =
     if (showFullNativePage && this > FULLSCREEN_NATIVE_PAGER_INDEX) this - 1 else this
-
-//@Composable
-//private fun OnboardingPageContent(
-//    page: OnboardingPage,
-//    pageIndex: Int,
-//    pageCount: Int,
-//    selectedPage: Int,
-//    nativeAdState: NativeAdState,
-//    onNext: () -> Unit
-//) {
-//    val pageHasNativePlacement = pageIndex == 0
-//    val shouldReserveNativeSpace =
-//        pageHasNativePlacement && (nativeAdState is NativeAdState.Loading || nativeAdState is NativeAdState.Loaded)
-//    if (shouldReserveNativeSpace) {
-//        OnboardingPageWithAdContent(
-//            page = page,
-//            pageCount = pageCount,
-//            selectedPage = selectedPage,
-//            nativeAdState = nativeAdState,
-//            onNext = onNext
-//        )
-//        return
-//    }
-//
-//    val visualHeight = when {
-//        pageHasNativePlacement -> 320.dp
-//        else -> 540.dp
-//    }
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .padding(horizontal = 22.dp)
-//            .padding(bottom = 24.dp),
-//        horizontalAlignment = Alignment.CenterHorizontally
-//    ) {
-//        Spacer(modifier = Modifier.height(28.dp))
-//        Box(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .height(visualHeight),
-//            contentAlignment = Alignment.Center
-//        ) {
-//            when (page.visual) {
-//                OnboardingVisual.DramaPhone -> DramaPhoneVisual(painterResource(R.drawable.onboarding1image))
-//                OnboardingVisual.Collections -> CollectionsVisual()
-//                OnboardingVisual.RomancePhone -> RomanceVisual()
-//                OnboardingVisual.Welcome -> Unit
-//            }
-//        }
-//        Spacer(modifier = Modifier.height(12.dp))
-//        OnboardingTitle(page)
-//        Spacer(modifier = Modifier.height(16.dp))
-//        Text(
-//            text = stringResource(page.description),
-//            color = Color(0xFFC1A4A9),
-//            fontSize = 14.sp,
-//            lineHeight = 20.sp,
-//            textAlign = TextAlign.Center,
-//            fontWeight = FontWeight.SemiBold,
-//            letterSpacing = 0.sp,
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(horizontal = 10.dp)
-//        )
-//        Spacer(modifier = Modifier.height(72.dp))
-//        Row(
-//            modifier = Modifier.fillMaxWidth(),
-//            verticalAlignment = Alignment.CenterVertically
-//        ) {
-//            PageIndicator(
-//                pageCount = pageCount,
-//                selectedPage = selectedPage,
-//                modifier = Modifier.weight(1f)
-//            )
-//            OnboardingActionButton(
-//                label = if (pageIndex == pageCount - 1) R.string.get_started else R.string.next_btn,
-//                onClick = onNext
-//            )
-//        }
-//        Spacer(modifier = Modifier.weight(1f))
-//        Spacer(modifier = Modifier.height(18.dp))
-//    }
-//}
 
 @Composable
 private fun OnboardingPageContent(
@@ -286,31 +240,31 @@ private fun OnboardingPageContent(
     nativeAdState: NativeAdState,
     onNext: () -> Unit
 ) {
+    val scale = LocalScreenScale.current
     val pageHasNativePlacement = pageIndex == 0
     val shouldReserveNativeSpace =
         pageHasNativePlacement && (nativeAdState is NativeAdState.Loading || nativeAdState is NativeAdState.Loaded)
 
-    // --- Image geometry is fixed. It never depends on ad state. ---
-    val imageTopPadding = 28.dp
-    val visualHeight = if (pageHasNativePlacement) 320.dp else 540.dp
+    // --- Image geometry scales with screen height, keeping the same
+    //     proportion of the screen it originally occupied. ---
+    val visualHeight = (if (pageHasNativePlacement) 320.dp else 540.dp).h(scale)
 
-    // --- Everything below reacts to ad occurrence ---
-    val textTopPadding = visualHeight + 12.dp -
-            (if (shouldReserveNativeSpace) 40.dp else 0.dp)
+    // --- Everything below reacts to ad occurrence, still screen-relative ---
+    val textTopPadding = visualHeight + 12.dp.h(scale) -
+            (if (shouldReserveNativeSpace) 40.dp.h(scale) else 0.dp)
 
-    val imagebottompadding = if(pageHasNativePlacement) 300.dp else 0.dp
-    val rowBottomPadding = if (shouldReserveNativeSpace) 300.dp else 18.dp
+    val imagebottompadding = if (pageHasNativePlacement) 320.dp.h(scale) else 0.dp
+    val rowBottomPadding = if (shouldReserveNativeSpace) 320.dp.h(scale) else 18.dp.h(scale)
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Fixed image — height/position constant regardless of ad
+        // Fixed image — height/position constant relative to screen size
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
                 .fillMaxHeight()
-                .padding(horizontal = 22.dp)
-                .padding(bottom = imagebottompadding)
-            ,
+                .padding(horizontal = 22.dp.w(scale))
+                .padding(bottom = imagebottompadding),
             contentAlignment = Alignment.Center
         ) {
             when (page.visual) {
@@ -326,12 +280,12 @@ private fun OnboardingPageContent(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
-                .padding(horizontal = 22.dp)
+                .padding(horizontal = 22.dp.w(scale))
                 .padding(top = textTopPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             OnboardingTitle(page)
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp.h(scale)))
             Text(
                 text = stringResource(page.description),
                 color = Color(0xFFC1A4A9),
@@ -342,7 +296,7 @@ private fun OnboardingPageContent(
                 letterSpacing = 0.sp,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 10.dp)
+                    .padding(horizontal = 10.dp.w(scale))
             )
         }
 
@@ -351,7 +305,7 @@ private fun OnboardingPageContent(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(horizontal = 22.dp)
+                .padding(horizontal = 22.dp.w(scale))
                 .padding(bottom = rowBottomPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -385,13 +339,14 @@ private fun OnboardingPageWithAdContent(
     nativeAdState: NativeAdState,
     onNext: () -> Unit
 ) {
+    val scale = LocalScreenScale.current
     Box(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
-                .height(404.dp)
-                .padding(horizontal = 22.dp, vertical = 2.dp),
+                .height(404.dp.h(scale))
+                .padding(horizontal = 22.dp.w(scale), vertical = 2.dp.h(scale)),
             contentAlignment = Alignment.TopCenter
         ) {
             DramaPhoneVisual(painterResource(R.drawable.onboarding1image))
@@ -401,12 +356,12 @@ private fun OnboardingPageWithAdContent(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
-                .padding(horizontal = 22.dp)
-                .padding(top = 344.dp),
+                .padding(horizontal = 22.dp.w(scale))
+                .padding(top = 344.dp.h(scale)),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             OnboardingTitle(page)
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp.h(scale)))
             Text(
                 text = stringResource(page.description),
                 color = Color(0xFFC1A4A9),
@@ -417,7 +372,7 @@ private fun OnboardingPageWithAdContent(
                 letterSpacing = 0.sp,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 10.dp)
+                    .padding(horizontal = 10.dp.w(scale))
             )
         }
 
@@ -425,8 +380,8 @@ private fun OnboardingPageWithAdContent(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(horizontal = 22.dp)
-                .padding(bottom = 328.dp),
+                .padding(horizontal = 22.dp.w(scale))
+                .padding(bottom = 328.dp.h(scale)),
             verticalAlignment = Alignment.CenterVertically
         ) {
             PageIndicator(
@@ -491,11 +446,12 @@ private fun OnboardingNativeAd(
     state: NativeAdState,
     modifier: Modifier = Modifier
 ) {
+    val scale = LocalScreenScale.current
     ErainNativeAdHost(
         placementName = "onboarding_page_native",
         state = state,
         modifier = modifier,
-        height = 320.dp,
+        height = 320.dp.h(scale),
         showFailureMessage = true
     )
 }
@@ -612,16 +568,17 @@ private fun PageIndicator(
     selectedPage: Int,
     modifier: Modifier = Modifier
 ) {
+    val scale = LocalScreenScale.current
     Row(
-        modifier = modifier.padding(start = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(7.dp),
+        modifier = modifier.padding(start = 4.dp.w(scale)),
+        horizontalArrangement = Arrangement.spacedBy(7.dp.w(scale)),
         verticalAlignment = Alignment.CenterVertically
     ) {
         repeat(pageCount) { index ->
             Box(
                 modifier = Modifier
-                    .height(5.dp)
-                    .width(if (selectedPage == index) 27.dp else 5.dp)
+                    .height(5.dp.h(scale))
+                    .width(if (selectedPage == index) 27.dp.w(scale) else 5.dp.w(scale))
                     .background(
                         color = if (selectedPage == index) Color.White else Color(0xFF3C3C3F),
                         shape = CircleShape
@@ -636,15 +593,20 @@ private fun OnboardingActionButton(
     label: Int,
     onClick: () -> Unit
 ) {
+    val scale = LocalScreenScale.current
     Box(
         modifier = Modifier
-            .height(44.dp)
-            .width(112.dp)
-            .background( brush = Brush.horizontalGradient(
-                listOf(Color(0xFF86011D),
-                    Color(0xFF140105))
-            ),
-                shape = RoundedCornerShape(24.dp))
+            .height(44.dp.h(scale))
+            .width(112.dp.w(scale))
+            .background(
+                brush = Brush.horizontalGradient(
+                    listOf(
+                        Color(0xFF86011D),
+                        Color(0xFF140105)
+                    )
+                ),
+                shape = RoundedCornerShape(24.dp)
+            )
             .clip(RoundedCornerShape(24.dp))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
@@ -729,22 +691,33 @@ private fun CollectionsVisual() {
 
 @Composable
 private fun RomanceVisual() {
+    val painter = painterResource(R.drawable.onboarding3image)
     val shape = RoundedCornerShape(24.dp)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .clip(shape)
-            .background(Color(0xFF171116), shape)
+            .background(Color.Transparent, shape),
+        contentAlignment = Alignment.TopCenter
     ) {
+        val intrinsicSize = painter.intrinsicSize
+        val aspectRatio = if (intrinsicSize.width > 0f && intrinsicSize.height > 0f) {
+            intrinsicSize.width / intrinsicSize.height
+        } else {
+            1f
+        }
         Image(
-            painter = painterResource(R.drawable.onboarding3image),
+            painter = painter,
             contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .fillMaxSize()
+                .aspectRatio(aspectRatio)   // CHANGED — replaces wrapContentSize(); sizes the layout to the actual fitted dimensions
+                .clip(RoundedCornerShape(16.dp))
         )
     }
 }
-
 private tailrec fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()
@@ -760,6 +733,7 @@ private fun WelcomePageContent(
     nativeAdState: NativeAdState,
     onNext: () -> Unit
 ) {
+    val scale = LocalScreenScale.current
     val shouldReserveNativeSpace = nativeAdState is NativeAdState.Loading || nativeAdState is NativeAdState.Loaded
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -769,19 +743,19 @@ private fun WelcomePageContent(
             contentScale = ContentScale.FillWidth
         )
 
-        // Frosted glass card — truly centered on screen
+        // Frosted glass card — truly centered on screen, scales with screen height
         Column(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
-                .padding(horizontal = 22.dp)
-                .padding(top = 116.dp)
+                .padding(horizontal = 22.dp.w(scale))
+                .padding(top = 116.dp.h(scale))
                 .background(Color(0x1AFFFFFF), RoundedCornerShape(28.dp))
-                .padding(horizontal = 24.dp, vertical = 18.dp),
+                .padding(horizontal = 24.dp.w(scale), vertical = 18.dp.h(scale)),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
-                modifier = Modifier.size(106.dp),
+                modifier = Modifier.size(106.dp.h(scale)),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
@@ -791,7 +765,7 @@ private fun WelcomePageContent(
                 )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(20.dp.h(scale)))
 
             Text(
                 text = stringResource(page.title),
@@ -813,7 +787,7 @@ private fun WelcomePageContent(
                 letterSpacing = 0.sp
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp.h(scale)))
 
             Text(
                 text = stringResource(page.description),
@@ -831,8 +805,8 @@ private fun WelcomePageContent(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(horizontal = 22.dp)
-                .padding(bottom = if (shouldReserveNativeSpace) 300.dp else 32.dp),
+                .padding(horizontal = 22.dp.w(scale))
+                .padding(bottom = if (shouldReserveNativeSpace) 320.dp.h(scale) else 32.dp.h(scale)),
             verticalAlignment = Alignment.CenterVertically
         ) {
             PageIndicator(
@@ -842,17 +816,19 @@ private fun WelcomePageContent(
             )
             Box(
                 modifier = Modifier
-                    .height(46.dp)
+                    .height(46.dp.h(scale))
                     .background(
                         brush = Brush.horizontalGradient(
-                            listOf(Color(0xFF86011D),
-                                Color(0xFF140105))
+                            listOf(
+                                Color(0xFF86011D),
+                                Color(0xFF140105)
+                            )
                         ),
                         shape = RoundedCornerShape(24.dp)
                     )
                     .clip(RoundedCornerShape(24.dp))
                     .clickable(onClick = onNext)
-                    .padding(horizontal = 26.dp),
+                    .padding(horizontal = 26.dp.w(scale)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(

@@ -115,6 +115,7 @@ fun LanguageScreen(
             .fillMaxSize()
             .background(Color(0xFF161616))
             .statusBarsPadding()
+            .navigationBarsPadding()
     ) {
         LanguageHeader(
             showActionButton = showActionButton,
