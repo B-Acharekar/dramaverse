@@ -98,6 +98,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun onLanguageFinished(language: String) {
         val nextStep = if (prefs.getBoolean(KEY_ONBOARDING_DONE, false)) AppStep.Home else AppStep.Onboarding
         LocaleHelper.persistLanguage(appContext, language)
+        LocaleHelper.persistPendingStep(appContext, nextStep.name)
         _uiState.update {
             it.copy(
                 selectedLanguage = language,

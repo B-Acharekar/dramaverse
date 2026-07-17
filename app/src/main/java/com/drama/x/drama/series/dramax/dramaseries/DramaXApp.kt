@@ -47,6 +47,7 @@ fun DramaXApp(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    var onboardingFinishInProgress by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.recreateRequested) {
         if (uiState.recreateRequested) {
@@ -92,6 +93,10 @@ fun DramaXApp(
         AppStep.Onboarding -> OnboardingScreen(
             onEntered = viewModel::onOnboardingEntered,
             onFinished = {
+                if (onboardingFinishInProgress) {
+                    return@OnboardingScreen
+                }
+                onboardingFinishInProgress = true
                 val activity = context.findActivity()
                 if (activity == null) {
                     viewModel.onOnboardingFinished()
@@ -101,6 +106,7 @@ fun DramaXApp(
                         placementName = "inter_onboarding",
                         config = AdRemoteConfig.interOnboarding,
                         timeoutMs = 12_000L,
+                        bypassInterstitialInterval = true,
                         onFinished = viewModel::onOnboardingFinished
                     )
                 }

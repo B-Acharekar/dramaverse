@@ -74,7 +74,7 @@
     </entry>
     <entry>
         <key>inter_onboarding_enabled</key>
-        <value>false</value>
+        <value>true</value>
     </entry>
     <entry>
         <key>inter_welcome_back_enabled</key>

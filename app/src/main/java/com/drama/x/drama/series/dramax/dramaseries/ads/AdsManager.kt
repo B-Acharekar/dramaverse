@@ -217,6 +217,7 @@ object AdsManager {
         placementName: String,
         config: AdUnitConfig,
         timeoutMs: Long = 6_000L,
+        bypassInterstitialInterval: Boolean = false,
         onFinished: () -> Unit
     ) {
         val sdkShouldDisplayInterOnboarding = if (placementName == "inter_onboarding") {
@@ -246,6 +247,7 @@ object AdsManager {
         }
         val effectiveTimeoutMs = maxOf(timeoutMs, gatedConfig.timeoutMs)
         var finished = false
+        var hasDisplayed = false
         fun finishOnce(reason: String) {
             if (finished) return
             finished = true
@@ -253,7 +255,13 @@ object AdsManager {
             onFinished()
         }
         Log.d(ADS_TAG, "$placementName REQUEST via ERain timeoutMs=$effectiveTimeoutMs")
-        Handler(Looper.getMainLooper()).postDelayed({ finishOnce("timeout") }, effectiveTimeoutMs)
+        Handler(Looper.getMainLooper()).postDelayed({
+            if (hasDisplayed) {
+                Log.d(ADS_TAG, "$placementName timeout ignored after display")
+            } else {
+                finishOnce("timeout")
+            }
+        }, effectiveTimeoutMs)
         ERainAd.getInstance().getInterstitialAds(
             activity,
             gatedConfig.id,
@@ -265,30 +273,44 @@ object AdsManager {
                         return
                     }
                     Log.d(ADS_TAG, "$placementName loaded via ERain")
-                    ERainAd.getInstance().forceShowInterstitial(
-                        activity,
-                        interstitialAd,
-                        object : AdCallback() {
-                            override fun onInterstitialShow() {
-                                suppressImmediateResumeInterstitial("${placementName}_show")
-                                Log.d(ADS_TAG, "$placementName displayed via ERain")
-                            }
+                    val erainConfig = ERainAd.getInstance().adConfig
+                    val originalInterval = erainConfig.intervalInterstitialAd
+                    if (bypassInterstitialInterval) {
+                        erainConfig.intervalInterstitialAd = 0
+                        Log.d(ADS_TAG, "$placementName temporarily bypassing interstitial interval original=$originalInterval")
+                    }
+                    try {
+                        ERainAd.getInstance().forceShowInterstitial(
+                            activity,
+                            interstitialAd,
+                            object : AdCallback() {
+                                override fun onInterstitialShow() {
+                                    hasDisplayed = true
+                                    suppressImmediateResumeInterstitial("${placementName}_show")
+                                    Log.d(ADS_TAG, "$placementName displayed via ERain")
+                                }
 
-                            override fun onNextAction() {
-                                finishOnce("next_action")
-                            }
+                                override fun onNextAction() {
+                                    Log.d(ADS_TAG, "$placementName next_action ignored hasDisplayed=$hasDisplayed")
+                                }
 
-                            override fun onAdClosed() {
-                                finishOnce("closed")
-                            }
+                                override fun onAdClosed() {
+                                    finishOnce("closed")
+                                }
 
-                            override fun onAdFailedToShow(error: AdError?) {
-                                Log.e(ADS_TAG, "$placementName failed_to_show via ERain message=${error?.message}")
-                                finishOnce("show_failed")
-                            }
-                        },
-                        true
-                    )
+                                override fun onAdFailedToShow(error: AdError?) {
+                                    Log.e(ADS_TAG, "$placementName failed_to_show via ERain message=${error?.message}")
+                                    finishOnce("show_failed")
+                                }
+                            },
+                            true
+                        )
+                    } finally {
+                        if (bypassInterstitialInterval) {
+                            erainConfig.intervalInterstitialAd = originalInterval
+                            Log.d(ADS_TAG, "$placementName restored interstitial interval=$originalInterval")
+                        }
+                    }
                 }
 
                 override fun onAdFailedToLoad(error: LoadAdError?) {
