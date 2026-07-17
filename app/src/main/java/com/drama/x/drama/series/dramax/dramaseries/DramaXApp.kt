@@ -123,7 +123,7 @@ fun DramaXApp(
         AppStep.Notifications -> LimitedBuildWelcomeScreen()
     }
 
-    NotificationPermissionRequester(currentStep = uiState.currentStep)
+//    NotificationPermissionRequester(currentStep = uiState.currentStep)
 }
 
 @Composable
@@ -143,6 +143,7 @@ private fun LimitedBuildWelcomeScreen() {
             letterSpacing = 0.sp
         )
     }
+    NotificationPermissionRequester()
 }
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {
@@ -158,18 +159,41 @@ private fun Activity.recreateWithoutTransition() {
     overridePendingTransition(0, 0)
 }
 
+//@Composable
+//private fun NotificationPermissionRequester(currentStep: AppStep) {
+//    val context = LocalContext.current
+//    val permissionLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.RequestPermission(),
+//        onResult = {}
+//    )
+//
+//    LaunchedEffect(currentStep) {
+//        if (currentStep == AppStep.Splash || currentStep == AppStep.SplashUninstall) {
+//            return@LaunchedEffect
+//        }
+//        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+//            return@LaunchedEffect
+//        }
+//
+//        val permission = Manifest.permission.POST_NOTIFICATIONS
+//        val isGranted =
+//            ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+//        if (!isGranted) {
+//            AdsManager.suppressResumeInterstitialForExternalDialog("notification_permission_dialog")
+//            permissionLauncher.launch(permission)
+//        }
+//    }
+//}
+
 @Composable
-private fun NotificationPermissionRequester(currentStep: AppStep) {
+private fun NotificationPermissionRequester() {
     val context = LocalContext.current
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = {}
     )
 
-    LaunchedEffect(currentStep) {
-        if (currentStep == AppStep.Splash || currentStep == AppStep.SplashUninstall) {
-            return@LaunchedEffect
-        }
+    LaunchedEffect(Unit) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             return@LaunchedEffect
         }

@@ -68,14 +68,21 @@ fun LanguageScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
-    val showActionButton = !delayDoneAfterSelection || uiState.selectedLanguage != null
+//    val showActionButton = !delayDoneAfterSelection || uiState.selectedLanguage != null
     val context = androidx.compose.ui.platform.LocalContext.current
     val activity = remember(context) { context.findActivity() }
     val firstVisit = remember { viewModel.isFirstLanguageVisit }
+
     var selectedOnce by remember { mutableStateOf(false) }
+    var showActionButton by remember { mutableStateOf(false) }
     var nativeAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
 
-
+    LaunchedEffect(selectedOnce) {
+        if (selectedOnce) {
+            kotlinx.coroutines.delay(3_000L)
+            showActionButton = true
+        }
+    }
     LaunchedEffect(activity, firstVisit) {
         activity?.let { AdsManager.loadNativeLanguage(it, firstVisit) }
     }

@@ -37,7 +37,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
@@ -75,6 +74,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.viewinterop.AndroidView
 import com.ads.module.ads.wrapper.ApNativeAd
@@ -138,6 +138,11 @@ fun OnboardingScreen(
             onboardingFullscreenAdState is NativeAdState.Loaded
     val pagerPageCount = uiState.pages.size + if (showFullNativePage) 1 else 0
     val pagerState = rememberPagerState(pageCount = { pagerPageCount })
+
+
+    //ad height
+    var adHeight by remember { mutableStateOf(0.dp) }
+
 
     LaunchedEffect(Unit) {
         onEntered()
@@ -242,6 +247,114 @@ fun OnboardingScreen(
 private fun Int.toOnboardingPageIndex(showFullNativePage: Boolean): Int =
     if (showFullNativePage && this > FULLSCREEN_NATIVE_PAGER_INDEX) this - 1 else this
 
+//@Composable
+//private fun OnboardingPageContent(
+//    page: OnboardingPage,
+//    pageIndex: Int,
+//    pageCount: Int,
+//    selectedPage: Int,
+//    nativeAdState: NativeAdState,
+//    onNext: () -> Unit
+//) {
+//    val scale = LocalScreenScale.current
+//    val pageHasNativePlacement = pageIndex == 0
+//    val shouldReserveNativeSpace =
+//        pageHasNativePlacement && (nativeAdState is NativeAdState.Loading || nativeAdState is NativeAdState.Loaded)
+//
+//    // --- Image geometry scales with screen height, keeping the same
+//    //     proportion of the screen it originally occupied. ---
+//    val visualHeight = (if (shouldReserveNativeSpace) 320.dp else 540.dp).h(scale)
+//
+//    // --- Everything below reacts to ad occurrence, still screen-relative ---
+//    val textTopPadding = visualHeight -
+//            (if (shouldReserveNativeSpace) 40.dp.h(scale) else 0.dp)
+//
+//    val imagebottompadding = if (shouldReserveNativeSpace) 320.dp.h(scale) else 0.dp
+//    val rowBottomPadding = if (shouldReserveNativeSpace) 320.dp.h(scale) else 18.dp.h(scale)
+//
+//    Box(modifier = Modifier.fillMaxSize()) {
+//        Column() {
+//            // Fixed image — height/position constant relative to screen size
+//            Box(
+//                modifier = Modifier
+////                    .align(Alignment.TopCenter)
+//                    .fillMaxWidth()
+//                    .weight(1f)
+//                    .padding(horizontal = 22.dp.w(scale)),
+//                contentAlignment = Alignment.Center
+//            ) {
+//                when (page.visual) {
+//                    OnboardingVisual.DramaPhone -> DramaPhoneVisual(painterResource(R.drawable.onboarding1image))
+//                    OnboardingVisual.Collections -> CollectionsVisual()
+//                    OnboardingVisual.RomancePhone -> RomanceVisual()
+//                    OnboardingVisual.Welcome -> Unit
+//                }
+//                // Title + subtitle — shifts based on ad occurrence
+//                Column(
+//                    modifier = Modifier
+//                        .align(Alignment.BottomCenter)
+//                        .fillMaxWidth()
+//                        .padding(horizontal = 22.dp.w(scale))
+////                    .padding(top = textTopPadding)
+//                    ,
+//                    horizontalAlignment = Alignment.CenterHorizontally
+//                ) {
+//                    OnboardingTitle(page)
+//                    Spacer(modifier = Modifier.height(16.dp.h(scale)))
+//                    Text(
+//                        text = stringResource(page.description),
+//                        color = Color(0xFFC1A4A9),
+//                        fontSize = 14.sp,
+//                        lineHeight = 20.sp,
+//                        textAlign = TextAlign.Center,
+//                        fontWeight = FontWeight.SemiBold,
+//                        letterSpacing = 0.sp,
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(horizontal = 10.dp.w(scale))
+//                    )
+//                }
+//            }
+//
+//            Column(
+////                modifier = Modifier.align(Alignment.BottomCenter)
+//            ){
+//                // Indicator + button — shifts based on ad occurrence
+//                Row(
+//                    modifier = Modifier
+////                    .align(Alignment.BottomCenter)
+//                        .fillMaxWidth()
+//                        .padding(horizontal = 22.dp.w(scale))
+////                    .padding(bottom = rowBottomPadding)
+//                    ,
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//                    PageIndicator(
+//                        pageCount = pageCount,
+//                        selectedPage = selectedPage,
+//                        modifier = Modifier.weight(1f)
+//                    )
+//                    OnboardingActionButton(
+//                        label = if (pageIndex == pageCount - 1) R.string.get_started else R.string.next_btn,
+//                        onClick = onNext
+//                    )
+//                }
+//
+//                if (shouldReserveNativeSpace) {
+//                    OnboardingNativeAd(
+//                        state = nativeAdState,
+//                        modifier = Modifier
+////                        .align(Alignment.BottomCenter)
+//                            .requiredWidth(LocalConfiguration.current.screenWidthDp.dp)
+//                    )
+//                }
+//            }
+//        }
+//
+//    }
+//}
+
+
 @Composable
 private fun OnboardingPageContent(
     page: OnboardingPage,
@@ -256,88 +369,82 @@ private fun OnboardingPageContent(
     val shouldReserveNativeSpace =
         pageHasNativePlacement && (nativeAdState is NativeAdState.Loading || nativeAdState is NativeAdState.Loaded)
 
-    // --- Image geometry scales with screen height, keeping the same
-    //     proportion of the screen it originally occupied. ---
-    val visualHeight = (if (shouldReserveNativeSpace) 320.dp else 540.dp).h(scale)
+    Column(modifier = Modifier.fillMaxSize()) {
 
-    // --- Everything below reacts to ad occurrence, still screen-relative ---
-    val textTopPadding = visualHeight + 12.dp.h(scale) -
-            (if (shouldReserveNativeSpace) 40.dp.h(scale) else 0.dp)
-
-    val imagebottompadding = if (shouldReserveNativeSpace) 320.dp.h(scale) else 0.dp
-    val rowBottomPadding = if (shouldReserveNativeSpace) 320.dp.h(scale) else 18.dp.h(scale)
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Fixed image — height/position constant relative to screen size
+        // --- Section 1: visual media (enlarged) with title+desc overlapped at the bottom ---
         Box(
             modifier = Modifier
-                .align(Alignment.TopCenter)
                 .fillMaxWidth()
-                .fillMaxHeight()
-                .padding(horizontal = 22.dp.w(scale))
-                .padding(bottom = imagebottompadding),
+                .weight(1f),
             contentAlignment = Alignment.Center
         ) {
-            when (page.visual) {
-                OnboardingVisual.DramaPhone -> DramaPhoneVisual(painterResource(R.drawable.onboarding1image))
-                OnboardingVisual.Collections -> CollectionsVisual()
-                OnboardingVisual.RomancePhone -> RomanceVisual()
-                OnboardingVisual.Welcome -> Unit
+            // Image gets its own tighter padding → appears bigger
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 8.dp.w(scale)),
+                contentAlignment = Alignment.Center
+            ) {
+                when (page.visual) {
+                    OnboardingVisual.DramaPhone -> DramaPhoneVisual(painterResource(R.drawable.onboarding1image))
+                    OnboardingVisual.Collections -> CollectionsVisual()
+                    OnboardingVisual.RomancePhone -> RomanceVisual()
+                    OnboardingVisual.Welcome -> Unit
+                }
+            }
+
+            // Text keeps its original padding/size, unaffected by the image's enlargement
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(horizontal = 22.dp.w(scale)),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                OnboardingTitle(page)
+                Spacer(modifier = Modifier.height(16.dp.h(scale)))
+                Text(
+                    text = stringResource(page.description),
+                    color = Color(0xFFC1A4A9),
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp.w(scale))
+                )
             }
         }
 
-        // Title + subtitle — shifts based on ad occurrence
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .fillMaxWidth()
-                .padding(horizontal = 22.dp.w(scale))
-                .padding(top = textTopPadding),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            OnboardingTitle(page)
-            Spacer(modifier = Modifier.height(16.dp.h(scale)))
-            Text(
-                text = stringResource(page.description),
-                color = Color(0xFFC1A4A9),
-                fontSize = 14.sp,
-                lineHeight = 20.sp,
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.sp,
+        // --- Section 2: indicator + button (and native ad, when reserved) ---
+        Column {
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 10.dp.w(scale))
-            )
-        }
+                    .padding(horizontal = 22.dp.w(scale))
+                    .padding(bottom = if(!shouldReserveNativeSpace) 18.dp else 0.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                PageIndicator(
+                    pageCount = pageCount,
+                    selectedPage = selectedPage,
+                    modifier = Modifier.weight(1f)
+                )
+                OnboardingActionButton(
+                    label = if (pageIndex == pageCount - 1) R.string.get_started else R.string.next_btn,
+                    onClick = onNext
+                )
+            }
 
-        // Indicator + button — shifts based on ad occurrence
-        Row(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(horizontal = 22.dp.w(scale))
-                .padding(bottom = rowBottomPadding),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            PageIndicator(
-                pageCount = pageCount,
-                selectedPage = selectedPage,
-                modifier = Modifier.weight(1f)
-            )
-            OnboardingActionButton(
-                label = if (pageIndex == pageCount - 1) R.string.get_started else R.string.next_btn,
-                onClick = onNext
-            )
-        }
-
-        if (shouldReserveNativeSpace) {
-            OnboardingNativeAd(
-                state = nativeAdState,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .requiredWidth(LocalConfiguration.current.screenWidthDp.dp)
-            )
+            if (shouldReserveNativeSpace) {
+                OnboardingNativeAd(
+                    state = nativeAdState,
+                    modifier = Modifier
+                        .requiredWidth(LocalConfiguration.current.screenWidthDp.dp)
+                )
+            }
         }
     }
 }
@@ -392,7 +499,7 @@ private fun OnboardingPageWithAdContent(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .padding(horizontal = 22.dp.w(scale))
-                .padding(bottom = 328.dp.h(scale)),
+                .padding(bottom = 320.dp.h(scale)),
             verticalAlignment = Alignment.CenterVertically
         ) {
             PageIndicator(
@@ -817,53 +924,58 @@ private fun WelcomePageContent(
             )
         }
 
-        // Indicator + button — pinned to the bottom, independent of the card's position
-        Row(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(horizontal = 22.dp.w(scale))
-                .padding(bottom = if (shouldReserveNativeSpace) 320.dp.h(scale) else 32.dp.h(scale)),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            PageIndicator(
-                pageCount = pageCount,
-                selectedPage = selectedPage,
-                modifier = Modifier.weight(1f)
-            )
-            Box(
+        Column(
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ){
+            // Indicator + button — pinned to the bottom, independent of the card's position
+            Row(
                 modifier = Modifier
-                    .height(46.dp.h(scale))
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            listOf(
-                                Color(0xFF86011D),
-                                Color(0xFF140105)
-                            )
-                        ),
-                        shape = RoundedCornerShape(24.dp)
-                    )
-                    .clip(RoundedCornerShape(24.dp))
-                    .clickable(onClick = onNext)
-                    .padding(horizontal = 26.dp.w(scale)),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(horizontal = 22.dp.w(scale))
+                    .padding(bottom = if(!shouldReserveNativeSpace) 18.dp else 0.dp)
+                    ,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = stringResource(if (pageIndex == pageCount - 1) R.string.get_started else R.string.next_btn),
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 0.sp
+                PageIndicator(
+                    pageCount = pageCount,
+                    selectedPage = selectedPage,
+                    modifier = Modifier.weight(1f)
+                )
+                Box(
+                    modifier = Modifier
+                        .height(46.dp.h(scale))
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                listOf(
+                                    Color(0xFF86011D),
+                                    Color(0xFF140105)
+                                )
+                            ),
+                            shape = RoundedCornerShape(24.dp)
+                        )
+                        .clip(RoundedCornerShape(24.dp))
+                        .clickable(onClick = onNext)
+                        .padding(horizontal = 26.dp.w(scale)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(if (pageIndex == pageCount - 1) R.string.get_started else R.string.next_btn),
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = 0.sp
+                    )
+                }
+            }
+            if (shouldReserveNativeSpace) {
+                OnboardingNativeAd(
+                    state = nativeAdState,
+                    modifier = Modifier
+                        .requiredWidth(LocalConfiguration.current.screenWidthDp.dp)
                 )
             }
         }
-        if (shouldReserveNativeSpace) {
-            OnboardingNativeAd(
-                state = nativeAdState,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .requiredWidth(LocalConfiguration.current.screenWidthDp.dp)
-            )
-        }
+
     }
 }
+
