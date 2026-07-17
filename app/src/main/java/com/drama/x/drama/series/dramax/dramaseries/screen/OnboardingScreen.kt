@@ -40,7 +40,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -48,7 +47,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
@@ -404,8 +402,7 @@ private fun OnboardingPageContent(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
-                .clipToBounds(),
+                .weight(1f),
             contentAlignment = Alignment.Center
         ) {
             // Image gets its own tighter padding → appears bigger
@@ -846,7 +843,6 @@ private fun DramaPhoneVisual(
             modifier = Modifier
                 .requiredWidth(imageWidth)
                 .requiredHeight(imageHeight)
-                .graphicsLayer { translationY = bottomExtensionPx.toFloat() }
                 .clip(RoundedCornerShape(50.dp))
         )
     }
