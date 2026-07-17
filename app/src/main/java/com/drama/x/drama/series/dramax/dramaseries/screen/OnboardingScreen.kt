@@ -77,6 +77,10 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowCompat.getInsetsController
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.ads.module.ads.wrapper.ApNativeAd
 import com.google.android.gms.ads.nativead.MediaView
 import com.google.android.gms.ads.nativead.NativeAd
@@ -124,6 +128,24 @@ fun OnboardingScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val activity = remember(context) { context.findActivity() }
+
+    // Hide system nav bar
+    DisposableEffect(activity) {
+        val window = activity?.window
+        if (window != null) {
+            val controller = getInsetsController(window, window.decorView)
+            controller.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.hide(WindowInsetsCompat.Type.navigationBars())
+        }
+        onDispose {
+            if (window != null) {
+                val controller = getInsetsController(window, window.decorView)
+                controller.show(WindowInsetsCompat.Type.navigationBars())
+            }
+        }
+    }
+
     val initialOnboardingAdState = remember {
         if (AppBuildConfig.ENABLE_ONBOARDING_ADS_FOR_LIVE) {
             NativeAdState.Loading
@@ -869,7 +891,7 @@ private fun WelcomePageContent(
                 .padding(horizontal = 22.dp.w(scale))
                 .then(
                     if (shouldReserveNativeSpace) {
-                        Modifier.padding(top = 116.dp.h(scale))
+                        Modifier.padding(top = 120.dp.h(scale))
                     } else {
                         Modifier.padding(bottom = 86.dp.h(scale))
                     }
@@ -932,8 +954,7 @@ private fun WelcomePageContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 22.dp.w(scale))
-                    .padding(bottom = if(!shouldReserveNativeSpace) 18.dp else 0.dp)
-                    ,
+                    .padding(bottom = if(!shouldReserveNativeSpace) 18.dp else 2.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 PageIndicator(

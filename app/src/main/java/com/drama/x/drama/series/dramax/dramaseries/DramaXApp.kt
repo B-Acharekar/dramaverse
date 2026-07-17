@@ -16,9 +16,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -126,12 +130,40 @@ fun DramaXApp(
 //    NotificationPermissionRequester(currentStep = uiState.currentStep)
 }
 
+//@Composable
+//private fun LimitedBuildWelcomeScreen() {
+//    Box(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .background(Color(0xFF111113)),
+//        contentAlignment = Alignment.Center
+//    ) {
+//        Text(
+//            text = stringResource(R.string.welcome_to_home_temp),
+//            color = Color.White,
+//            fontSize = 26.sp,
+//            fontWeight = FontWeight.ExtraBold,
+//            textAlign = TextAlign.Center,
+//            letterSpacing = 0.sp
+//        )
+//    }
+//    NotificationPermissionRequester()
+//}
+
+
 @Composable
 private fun LimitedBuildWelcomeScreen() {
+    var isFullyLoaded by remember { mutableStateOf(false) }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF111113)),
+            .background(Color(0xFF111113))
+            .onGloballyPositioned {
+                if (!isFullyLoaded) {
+                    isFullyLoaded = true
+                }
+            },
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -143,7 +175,9 @@ private fun LimitedBuildWelcomeScreen() {
             letterSpacing = 0.sp
         )
     }
-    NotificationPermissionRequester()
+    if (isFullyLoaded) {
+        NotificationPermissionRequester()
+    }
 }
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {
