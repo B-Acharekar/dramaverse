@@ -47,6 +47,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
@@ -395,6 +396,12 @@ private fun OnboardingPageContent(
     val shouldReserveNativeSpace =
         pageHasNativePlacement && (nativeAdState is NativeAdState.Loading || nativeAdState is NativeAdState.Loaded)
     var subtitleAreaHeightPx by remember { mutableStateOf(0) }
+    val subtitleAreaHeight = with(LocalDensity.current) { subtitleAreaHeightPx.toDp() }
+    val controlsTopSpacer = if (page.visual == OnboardingVisual.DramaPhone) {
+        subtitleAreaHeight
+    } else {
+        0.dp
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
 
@@ -428,6 +435,13 @@ private fun OnboardingPageContent(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
+                    .graphicsLayer {
+                        translationY = if (page.visual == OnboardingVisual.DramaPhone) {
+                            subtitleAreaHeightPx.toFloat()
+                        } else {
+                            0f
+                        }
+                    }
                     .padding(horizontal = 22.dp.w(scale)),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -455,6 +469,7 @@ private fun OnboardingPageContent(
 
         // --- Section 2: indicator + button (and native ad, when reserved) ---
         Column {
+            Spacer(modifier = Modifier.height(controlsTopSpacer))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -843,6 +858,7 @@ private fun DramaPhoneVisual(
             modifier = Modifier
                 .requiredWidth(imageWidth)
                 .requiredHeight(imageHeight)
+                .graphicsLayer { translationY = bottomExtensionPx.toFloat() }
                 .clip(RoundedCornerShape(50.dp))
         )
     }
