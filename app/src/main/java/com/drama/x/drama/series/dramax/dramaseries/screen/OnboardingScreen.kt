@@ -12,6 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -46,8 +47,10 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -71,11 +74,13 @@ import android.view.LayoutInflater
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.viewinterop.AndroidView
 import com.ads.module.ads.wrapper.ApNativeAd
 import com.google.android.gms.ads.nativead.MediaView
@@ -368,6 +373,7 @@ private fun OnboardingPageContent(
     val pageHasNativePlacement = pageIndex == 0
     val shouldReserveNativeSpace =
         pageHasNativePlacement && (nativeAdState is NativeAdState.Loading || nativeAdState is NativeAdState.Loaded)
+    var subtitleAreaHeightPx by remember { mutableStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
 
@@ -386,7 +392,10 @@ private fun OnboardingPageContent(
                 contentAlignment = Alignment.Center
             ) {
                 when (page.visual) {
-                    OnboardingVisual.DramaPhone -> DramaPhoneVisual(painterResource(R.drawable.onboarding1image))
+                    OnboardingVisual.DramaPhone -> DramaPhoneVisual(
+                        painter = painterResource(R.drawable.onboarding1image),
+                        bottomExtensionPx = subtitleAreaHeightPx
+                    )
                     OnboardingVisual.Collections -> CollectionsVisual()
                     OnboardingVisual.RomancePhone -> RomanceVisual()
                     OnboardingVisual.Welcome -> Unit
@@ -402,19 +411,24 @@ private fun OnboardingPageContent(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 OnboardingTitle(page)
-                Spacer(modifier = Modifier.height(16.dp.h(scale)))
-                Text(
-                    text = stringResource(page.description),
-                    color = Color(0xFFC1A4A9),
-                    fontSize = 14.sp,
-                    lineHeight = 20.sp,
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.sp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 10.dp.w(scale))
-                )
+                Column(
+                    modifier = Modifier.onSizeChanged { subtitleAreaHeightPx = it.height },
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(16.dp.h(scale)))
+                    Text(
+                        text = stringResource(page.description),
+                        color = Color(0xFFC1A4A9),
+                        fontSize = 14.sp,
+                        lineHeight = 20.sp,
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 0.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 10.dp.w(scale))
+                    )
+                }
             }
         }
 
@@ -776,14 +790,39 @@ private fun OnboardingGlowBackground() {
 }
 
 @Composable
-private fun DramaPhoneVisual(painter: Painter) {
-    Box(modifier = Modifier.fillMaxSize()) {
+private fun DramaPhoneVisual(
+    painter: Painter,
+    bottomExtensionPx: Int = 0
+) {
+    val density = LocalDensity.current
+    BoxWithConstraints(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        val intrinsicSize = painter.intrinsicSize
+        val aspectRatio = if (intrinsicSize.width > 0f && intrinsicSize.height > 0f) {
+            intrinsicSize.width / intrinsicSize.height
+        } else {
+            1f
+        }
+        val heightAtFullWidth = maxWidth / aspectRatio
+        val baseHeight = if (heightAtFullWidth <= maxHeight) {
+            heightAtFullWidth
+        } else {
+            maxHeight
+        }
+        val bottomExtension = with(density) { bottomExtensionPx.toDp() }
+        val imageHeight = baseHeight + bottomExtension
+        val imageWidth = imageHeight * aspectRatio
+
         Image(
             painter = painter,
             contentDescription = null,
             contentScale = ContentScale.Fit,
             modifier = Modifier
-                .fillMaxSize()
+                .requiredWidth(imageWidth)
+                .requiredHeight(imageHeight)
+                .graphicsLayer { translationY = bottomExtensionPx.toFloat() }
                 .clip(RoundedCornerShape(50.dp))
         )
     }
