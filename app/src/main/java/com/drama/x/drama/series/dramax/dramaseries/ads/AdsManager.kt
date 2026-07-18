@@ -326,7 +326,7 @@ object AdsManager {
 
     fun showWelcomeBackInterstitial(activity: Activity) {
         val now = android.os.SystemClock.elapsedRealtime()
-        if (now - lastWelcomeBackShowMs < 35_000L) {
+        if (now - lastWelcomeBackShowMs < 15_000L) {
             Log.d(ADS_TAG, "inter_welcome_back skipped cooldown elapsedMs=${now - lastWelcomeBackShowMs}")
             return
         }
