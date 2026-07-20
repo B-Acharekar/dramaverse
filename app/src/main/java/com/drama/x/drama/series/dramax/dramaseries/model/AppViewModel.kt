@@ -50,7 +50,9 @@ data class AppUiState(
     val selectedLanguage: String? = null,
     val selectedShortFilmId: Int? = null,
     val searchQuery: String = "",
-    val recreateRequested: Boolean = false
+    val recreateRequested: Boolean = false,
+    val isFirstLaunch: Boolean = true
+
 )
 
 class AppViewModel(application: Application) : AndroidViewModel(application) {
@@ -67,36 +69,67 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         applyRemoteValues(remoteConfig)
     }
 
+//    fun onSplashFinished() {
+//        RemoteConfigUtils.applyCached(remoteConfig)
+//        // Language selection triggers Activity recreation; this pending step restores the intended screen.
+//        val onboardingDone = prefs.getBoolean(KEY_ONBOARDING_DONE, false)
+//        LocaleHelper.consumePendingStep(appContext)?.let { pending ->
+//            val pendingStep = runCatching { AppStep.valueOf(pending) }.getOrNull()
+//            val restoredStep = when {
+//                pendingStep == AppStep.Home && onboardingDone -> AppStep.Home
+//                pendingStep == AppStep.Profile && onboardingDone -> AppStep.Profile
+//                pendingStep == AppStep.Onboarding && !onboardingDone -> AppStep.Onboarding
+//                else -> null
+//            }
+//            if (restoredStep != null) {
+//                val language = LocaleHelper.persistedLanguageName(appContext) ?: _uiState.value.selectedLanguage ?: "English"
+//                _uiState.update { it.copy(currentStep = restoredStep, selectedLanguage = language) }
+//                registerDevice(language)
+//                return
+//            }
+//        }
+//        if (onboardingDone) {
+//            val language = LocaleHelper.persistedLanguageName(appContext) ?: "English"
+//            _uiState.update { it.copy(currentStep = AppStep.Home, selectedLanguage = language) }
+//            registerDevice(language)
+//        } else {
+//            _uiState.update { it.copy(currentStep = AppStep.Language) }
+//        }
+//    }
+
+    //for skipping the splash and onboarding inter from the second launch onward.
+
     fun onSplashFinished() {
         RemoteConfigUtils.applyCached(remoteConfig)
-        // Language selection triggers Activity recreation; this pending step restores the intended screen.
-        val onboardingDone = prefs.getBoolean(KEY_ONBOARDING_DONE, false)
+        // QA build: always show Language + Onboarding, every launch.
         LocaleHelper.consumePendingStep(appContext)?.let { pending ->
             val pendingStep = runCatching { AppStep.valueOf(pending) }.getOrNull()
-            val restoredStep = when {
-                pendingStep == AppStep.Home && onboardingDone -> AppStep.Home
-                pendingStep == AppStep.Profile && onboardingDone -> AppStep.Profile
-                pendingStep == AppStep.Onboarding && !onboardingDone -> AppStep.Onboarding
-                else -> null
-            }
-            if (restoredStep != null) {
+            if (pendingStep == AppStep.Onboarding) {
                 val language = LocaleHelper.persistedLanguageName(appContext) ?: _uiState.value.selectedLanguage ?: "English"
-                _uiState.update { it.copy(currentStep = restoredStep, selectedLanguage = language) }
+                _uiState.update { it.copy(currentStep = AppStep.Onboarding, selectedLanguage = language) }
                 registerDevice(language)
                 return
             }
         }
-        if (onboardingDone) {
-            val language = LocaleHelper.persistedLanguageName(appContext) ?: "English"
-            _uiState.update { it.copy(currentStep = AppStep.Home, selectedLanguage = language) }
-            registerDevice(language)
-        } else {
-            _uiState.update { it.copy(currentStep = AppStep.Language) }
-        }
+        _uiState.update { it.copy(currentStep = AppStep.Language) }
     }
 
+//    fun onLanguageFinished(language: String) {
+//        val nextStep = if (prefs.getBoolean(KEY_ONBOARDING_DONE, false)) AppStep.Home else AppStep.Onboarding
+//        LocaleHelper.persistLanguage(appContext, language)
+//        LocaleHelper.persistPendingStep(appContext, nextStep.name)
+//        _uiState.update {
+//            it.copy(
+//                selectedLanguage = language,
+//                currentStep = nextStep,
+//                recreateRequested = true
+//            )
+//        }
+//        registerDevice(language)
+//    }
+
     fun onLanguageFinished(language: String) {
-        val nextStep = if (prefs.getBoolean(KEY_ONBOARDING_DONE, false)) AppStep.Home else AppStep.Onboarding
+        val nextStep = AppStep.Onboarding
         LocaleHelper.persistLanguage(appContext, language)
         LocaleHelper.persistPendingStep(appContext, nextStep.name)
         _uiState.update {
