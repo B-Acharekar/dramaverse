@@ -27,8 +27,8 @@ android {
         buildConfigField("String", "PLAY_SERVICES_ADS_VERSION", "\"25.3.0\"")
         buildConfigField("String", "GDPR_MODULE_VERSION", "\"not_configured\"")
         buildConfigField("boolean", "FORCE_LOCAL_AD_CONFIG", "false")
-        buildConfigField("boolean", "ENABLE_ONBOARDING_ADS_FOR_LIVE", "false")
-        buildConfigField("boolean", "FORCE_ERAIN_NON_ORGANIC_FOR_AD_TEST", "false")
+        buildConfigField("boolean", "ENABLE_ONBOARDING_ADS_FOR_LIVE", "true")
+        buildConfigField("boolean", "FORCE_ERAIN_NON_ORGANIC_FOR_AD_TEST", "true")
     }
 
     buildTypes {
@@ -38,8 +38,8 @@ android {
             }
             manifestPlaceholders["ad_app_id"] = "ca-app-pub-7462273888693209~7397581193"
             buildConfigField("boolean", "FORCE_LOCAL_AD_CONFIG", "false")
-            buildConfigField("boolean", "ENABLE_ONBOARDING_ADS_FOR_LIVE", "false")
-            buildConfigField("boolean", "FORCE_ERAIN_NON_ORGANIC_FOR_AD_TEST", "false")
+            buildConfigField("boolean", "ENABLE_ONBOARDING_ADS_FOR_LIVE", "true")
+            buildConfigField("boolean", "FORCE_ERAIN_NON_ORGANIC_FOR_AD_TEST", "true")
         }
     }
     compileOptions {

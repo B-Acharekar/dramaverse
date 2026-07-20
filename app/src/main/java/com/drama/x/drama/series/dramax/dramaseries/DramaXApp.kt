@@ -8,10 +8,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
@@ -19,26 +15,30 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.drama.x.drama.series.dramax.dramaseries.model.AppStep
-import com.drama.x.drama.series.dramax.dramaseries.model.AppViewModel
-import com.drama.x.drama.series.dramax.dramaseries.screen.CustomSplashScreen
-import com.drama.x.drama.series.dramax.dramaseries.screen.LanguageScreen
-import com.drama.x.drama.series.dramax.dramaseries.screen.OnboardingScreen
-import com.drama.x.drama.series.dramax.dramaseries.screen.ConfirmUninstallScreen
-import com.drama.x.drama.series.dramax.dramaseries.screen.SurveyUninstallScreen
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdRemoteConfig
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdsManager
+import com.drama.x.drama.series.dramax.dramaseries.ads.isNetworkAvailable
+import com.drama.x.drama.series.dramax.dramaseries.model.AppStep
+import com.drama.x.drama.series.dramax.dramaseries.model.AppViewModel
+import com.drama.x.drama.series.dramax.dramaseries.screen.ConfirmUninstallScreen
+import com.drama.x.drama.series.dramax.dramaseries.screen.CustomSplashScreen
+import com.drama.x.drama.series.dramax.dramaseries.screen.EpisodeScreen
+import com.drama.x.drama.series.dramax.dramaseries.screen.HomeScreen
+import com.drama.x.drama.series.dramax.dramaseries.screen.LanguageScreen
+import com.drama.x.drama.series.dramax.dramaseries.screen.LibraryScreen
+import com.drama.x.drama.series.dramax.dramaseries.screen.NoInternetScreen
+import com.drama.x.drama.series.dramax.dramaseries.screen.NotificationScreen
+import com.drama.x.drama.series.dramax.dramaseries.screen.OnboardingScreen
+import com.drama.x.drama.series.dramax.dramaseries.screen.PlannerScreen
+import com.drama.x.drama.series.dramax.dramaseries.screen.ProfileScreen
+import com.drama.x.drama.series.dramax.dramaseries.screen.RewardScreen
+import com.drama.x.drama.series.dramax.dramaseries.screen.SearchResultsScreen
+import com.drama.x.drama.series.dramax.dramaseries.screen.ShortsScreen
+import com.drama.x.drama.series.dramax.dramaseries.screen.SurveyUninstallScreen
+import kotlinx.coroutines.delay
 
 @Composable
 fun DramaXApp(
@@ -48,6 +48,14 @@ fun DramaXApp(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     var onboardingFinishInProgress by remember { mutableStateOf(false) }
+    var hasNetwork by remember(context) { mutableStateOf(isNetworkAvailable(context)) }
+
+    LaunchedEffect(context) {
+        while (true) {
+            hasNetwork = isNetworkAvailable(context)
+            delay(35_000L)
+        }
+    }
 
     LaunchedEffect(uiState.recreateRequested) {
         if (uiState.recreateRequested) {
@@ -65,6 +73,15 @@ fun DramaXApp(
             MainActivity.ACTION_WIDGET_HOME -> viewModel.startWidgetHome()
             MainActivity.ACTION_WIDGET_UNINSTALL -> viewModel.startWidgetUninstallFlow()
         }
+    }
+
+    if (!hasNetwork) {
+        NoInternetScreen(
+            onRetry = {
+                hasNetwork = isNetworkAvailable(context)
+            }
+        )
+        return
     }
 
     when (uiState.currentStep) {
@@ -122,68 +139,104 @@ fun DramaXApp(
             onBackHome = viewModel::openHome
         )
 
-        // Full product surfaces are intentionally disabled for the current ads/onboarding/uninstall QA build.
-        AppStep.Home,
-        AppStep.Shorts,
-        AppStep.Library,
-        AppStep.Search,
-        AppStep.Rewards,
-        AppStep.Profile,
-        AppStep.Planner,
-        AppStep.Notifications -> LimitedBuildWelcomeScreen()
-    }
+        AppStep.Home -> HomeScreen(
+            backendBaseUrl = uiState.backendBaseUrl,
+            onOpenShorts = viewModel::openEpisodes,
+            onLibrary = viewModel::openLibrary,
+            onSearch = viewModel::openSearch,
+            onRewards = viewModel::openRewards,
+            onNotifications = viewModel::openNotifications,
+            onProfile = viewModel::openProfile
+        )
 
-//    NotificationPermissionRequester(currentStep = uiState.currentStep)
-}
+        AppStep.Shorts -> ShortsScreen(
+            backendBaseUrl = uiState.backendBaseUrl,
+            initialFilmId = null,
+            onBack = viewModel::openHome,
+            onWatchFull = viewModel::openEpisodes,
+            onHome = viewModel::openHome,
+            onLibrary = viewModel::openLibrary,
+            onRewards = viewModel::openRewards,
+            onProfile = viewModel::openProfile
+        )
 
-//@Composable
-//private fun LimitedBuildWelcomeScreen() {
-//    Box(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .background(Color(0xFF111113)),
-//        contentAlignment = Alignment.Center
-//    ) {
-//        Text(
-//            text = stringResource(R.string.welcome_to_home_temp),
-//            color = Color.White,
-//            fontSize = 26.sp,
-//            fontWeight = FontWeight.ExtraBold,
-//            textAlign = TextAlign.Center,
-//            letterSpacing = 0.sp
-//        )
-//    }
-//    NotificationPermissionRequester()
-//}
+        AppStep.Episodes -> EpisodeScreen(
+            backendBaseUrl = uiState.backendBaseUrl,
+            filmId = uiState.selectedShortFilmId,
+            onBack = viewModel::openHome,
+            onHome = viewModel::openHome,
+            onShorts = { viewModel.openShorts() },
+            onLibrary = viewModel::openLibrary,
+            onRewards = viewModel::openRewards,
+            onProfile = viewModel::openProfile
+        )
 
+        AppStep.Library -> LibraryScreen(
+            backendBaseUrl = uiState.backendBaseUrl,
+            onHome = viewModel::openHome,
+            onShorts = { viewModel.openShorts() },
+            onOpenShorts = viewModel::openEpisodes,
+            onSearch = viewModel::openSearch,
+            onRewards = viewModel::openRewards,
+            onPlanner = viewModel::openPlanner,
+            onProfile = viewModel::openProfile
+        )
 
-@Composable
-private fun LimitedBuildWelcomeScreen() {
-    var isFullyLoaded by remember { mutableStateOf(false) }
+        AppStep.Search -> SearchResultsScreen(
+            backendBaseUrl = uiState.backendBaseUrl,
+            query = uiState.searchQuery,
+            onBack = viewModel::openHome,
+            onHome = viewModel::openHome,
+            onShorts = { viewModel.openShorts() },
+            onLibrary = viewModel::openLibrary,
+            onOpenShorts = viewModel::openEpisodes,
+            onSearch = viewModel::openSearch,
+            onRewards = viewModel::openRewards,
+            onProfile = viewModel::openProfile
+        )
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF111113))
-            .onGloballyPositioned {
-                if (!isFullyLoaded) {
-                    isFullyLoaded = true
-                }
-            },
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = stringResource(R.string.welcome_to_home_temp),
-            color = Color.White,
-            fontSize = 26.sp,
-            fontWeight = FontWeight.ExtraBold,
-            textAlign = TextAlign.Center,
-            letterSpacing = 0.sp
+        AppStep.Rewards -> RewardScreen(
+            backendBaseUrl = uiState.backendBaseUrl,
+            onHome = viewModel::openHome,
+            onShorts = { viewModel.openShorts() },
+            onLibrary = viewModel::openLibrary,
+            onProfile = viewModel::openProfile
+        )
+
+        AppStep.Profile -> ProfileScreen(
+            backendBaseUrl = uiState.backendBaseUrl,
+            currentLanguage = uiState.selectedLanguage ?: "English",
+            onHome = viewModel::openHome,
+            onShorts = { viewModel.openShorts() },
+            onLibrary = viewModel::openLibrary,
+            onRewards = viewModel::openRewards,
+            onLanguage = viewModel::openLanguage,
+            onWatchHistory = viewModel::openLibrary,
+            onMyWatchlist = viewModel::openLibrary
+        )
+
+        AppStep.Planner -> PlannerScreen(
+            backendBaseUrl = uiState.backendBaseUrl,
+            onBack = viewModel::openLibrary,
+            onHome = viewModel::openHome,
+            onShorts = { viewModel.openShorts() },
+            onLibrary = viewModel::openLibrary,
+            onRewards = viewModel::openRewards,
+            onProfile = viewModel::openProfile
+        )
+
+        AppStep.Notifications -> NotificationScreen(
+            backendBaseUrl = uiState.backendBaseUrl,
+            onBack = viewModel::openHome,
+            onHome = viewModel::openHome,
+            onShorts = { viewModel.openShorts() },
+            onLibrary = viewModel::openLibrary,
+            onRewards = viewModel::openRewards,
+            onProfile = viewModel::openProfile
         )
     }
-    if (isFullyLoaded) {
-        NotificationPermissionRequester()
-    }
+
+    NotificationPermissionRequester(currentStep = uiState.currentStep)
 }
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {
@@ -199,41 +252,18 @@ private fun Activity.recreateWithoutTransition() {
     overridePendingTransition(0, 0)
 }
 
-//@Composable
-//private fun NotificationPermissionRequester(currentStep: AppStep) {
-//    val context = LocalContext.current
-//    val permissionLauncher = rememberLauncherForActivityResult(
-//        contract = ActivityResultContracts.RequestPermission(),
-//        onResult = {}
-//    )
-//
-//    LaunchedEffect(currentStep) {
-//        if (currentStep == AppStep.Splash || currentStep == AppStep.SplashUninstall) {
-//            return@LaunchedEffect
-//        }
-//        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-//            return@LaunchedEffect
-//        }
-//
-//        val permission = Manifest.permission.POST_NOTIFICATIONS
-//        val isGranted =
-//            ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
-//        if (!isGranted) {
-//            AdsManager.suppressResumeInterstitialForExternalDialog("notification_permission_dialog")
-//            permissionLauncher.launch(permission)
-//        }
-//    }
-//}
-
 @Composable
-private fun NotificationPermissionRequester() {
+private fun NotificationPermissionRequester(currentStep: AppStep) {
     val context = LocalContext.current
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = {}
     )
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(currentStep) {
+        if (currentStep != AppStep.Home) {
+            return@LaunchedEffect
+        }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             return@LaunchedEffect
         }

@@ -143,4 +143,4 @@ private fun JSONObject.firstBoolean(vararg keys: String): Boolean {
     return false
 }
 
-private fun String.trimEndSlash(): String = trim().trimEnd('/').ifBlank { "https://dramaverse-backend-lbq5.onrender.com" }
+private fun String.trimEndSlash(): String = trim().trimEnd('/').ifBlank { "https://drama-verse-backend.vercel.app" }

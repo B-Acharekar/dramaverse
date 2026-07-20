@@ -117,6 +117,7 @@ fun ShortsScreen(
     backendBaseUrl: String,
     initialFilmId: Int?,
     onBack: () -> Unit,
+    onWatchFull: (Int?) -> Unit,
     onHome: () -> Unit,
     onLibrary: () -> Unit,
     onRewards: () -> Unit,
@@ -136,18 +137,6 @@ fun ShortsScreen(
 
     LaunchedEffect(backendBaseUrl, initialFilmId) {
         viewModel.loadInitial(backendBaseUrl, initialFilmId)
-    }
-
-    LaunchedEffect(initialFilmId, uiState.items.size) {
-        val isGenericFeed = initialFilmId == null || initialFilmId == 0
-        if (!isGenericFeed || uiState.items.size <= 1) return@LaunchedEffect
-        while (true) {
-            delay(10_000)
-            val nextPage = (pagerState.currentPage + 1).coerceAtMost(uiState.items.lastIndex)
-            if (nextPage != pagerState.currentPage) {
-                pagerState.animateScrollToPage(nextPage)
-            }
-        }
     }
 
     LaunchedEffect(pagerState.currentPage, uiState.items.size) {
@@ -262,6 +251,17 @@ fun ShortsScreen(
                             1.5f -> 2f
                             else -> 1f
                         }
+                    },
+                    onEpisodeSelected = { index, item, episodeNumber ->
+                        viewModel.playEpisode(
+                            backendBaseUrl = backendBaseUrl,
+                            itemIndex = index,
+                            currentItem = item,
+                            episodeNumber = episodeNumber
+                        )
+                    },
+                    onWatchFull = { item ->
+                        onWatchFull(item.film.id.takeIf { it != 0 })
                     }
                 )
             }
@@ -271,6 +271,209 @@ fun ShortsScreen(
                 selected = "Shorts",
                 onHome = onHome,
                 onShorts = {},
+                onLibrary = onLibrary,
+                onRewards = onRewards,
+                onProfile = onProfile,
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
+        }
+    }
+}
+
+@Composable
+fun EpisodeScreen(
+    backendBaseUrl: String,
+    filmId: Int?,
+    onBack: () -> Unit,
+    onHome: () -> Unit,
+    onShorts: () -> Unit,
+    onLibrary: () -> Unit,
+    onRewards: () -> Unit,
+    onProfile: () -> Unit,
+    viewModel: ShortsViewModel = viewModel(key = "episode_screen_${filmId ?: 0}")
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val item = uiState.items.firstOrNull()
+    val totalEpisodes = item?.film?.episodeTotal?.coerceAtLeast(1) ?: 1
+    val pagerState = rememberPagerState { totalEpisodes }
+    var controlsVisible by remember { mutableStateOf(true) }
+    var isPlaying by remember { mutableStateOf(true) }
+    var showPlaybackOptions by remember { mutableStateOf(false) }
+    var showFeedbackForm by remember { mutableStateOf(false) }
+    var autoNext by remember { mutableStateOf(false) }
+    var autoUnlock by remember { mutableStateOf(false) }
+    var ccEnabled by remember { mutableStateOf(true) }
+    var playbackSpeed by remember { mutableStateOf(1f) }
+
+    LaunchedEffect(backendBaseUrl, filmId) {
+        viewModel.loadEpisodeInitial(backendBaseUrl, filmId)
+    }
+
+    var initialEpisodeSynced by remember(filmId) { mutableStateOf(false) }
+
+    LaunchedEffect(item?.film?.id, item?.episodeNumber) {
+        val currentItem = item ?: return@LaunchedEffect
+        if (!initialEpisodeSynced) {
+            pagerState.scrollToPage((currentItem.episodeNumber - 1).coerceIn(0, totalEpisodes - 1))
+            initialEpisodeSynced = true
+        }
+        controlsVisible = true
+        isPlaying = true
+        showPlaybackOptions = false
+        showFeedbackForm = false
+        ccEnabled = currentItem.subtitleTracks.isNotEmpty()
+    }
+
+    LaunchedEffect(pagerState.currentPage, item?.film?.id, initialEpisodeSynced) {
+        val currentItem = item ?: return@LaunchedEffect
+        if (!initialEpisodeSynced) return@LaunchedEffect
+        val targetEpisode = pagerState.currentPage + 1
+        if (targetEpisode != currentItem.episodeNumber) {
+            viewModel.playEpisode(
+                backendBaseUrl = backendBaseUrl,
+                itemIndex = 0,
+                currentItem = currentItem,
+                episodeNumber = targetEpisode
+            )
+        }
+    }
+
+    LaunchedEffect(controlsVisible, isPlaying, showPlaybackOptions, showFeedbackForm, item?.episodeNumber) {
+        if (controlsVisible && isPlaying && !showPlaybackOptions && !showFeedbackForm) {
+            delay(8000)
+            controlsVisible = false
+            showPlaybackOptions = false
+            showFeedbackForm = false
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(ShortsBackground)
+    ) {
+        if (item == null) {
+            ShortsSkeleton()
+        } else {
+            VerticalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize(),
+                pageSpacing = 0.dp
+            ) { page ->
+                val pageEpisode = page + 1
+                ShortsPage(
+                    item = item.copy(episodeNumber = pageEpisode),
+                    itemIndex = 0,
+                    isActive = page == pagerState.currentPage,
+                    backendBaseUrl = backendBaseUrl,
+                    controlsVisible = controlsVisible,
+                    isPlaying = isPlaying && pageEpisode == item.episodeNumber,
+                    showPlaybackOptions = showPlaybackOptions,
+                    showFeedbackForm = showFeedbackForm,
+                    autoNext = autoNext,
+                    autoUnlock = autoUnlock,
+                    ccEnabled = ccEnabled,
+                    playbackSpeed = playbackSpeed,
+                    onBack = onBack,
+                    onTogglePlay = {
+                        controlsVisible = true
+                        if (pageEpisode == item.episodeNumber) {
+                            isPlaying = !isPlaying
+                        }
+                    },
+                    onFeedbackClick = {
+                        controlsVisible = true
+                        showFeedbackForm = !showFeedbackForm
+                        showPlaybackOptions = false
+                    },
+                    onOptionsClick = {
+                        controlsVisible = true
+                        showPlaybackOptions = !showPlaybackOptions
+                        showFeedbackForm = false
+                    },
+                    onClosePopups = {
+                        showPlaybackOptions = false
+                        showFeedbackForm = false
+                    },
+                    onAutoUnlockChange = { enabled ->
+                        autoUnlock = enabled
+                    },
+                    onAutoNextChange = { enabled ->
+                        autoNext = enabled
+                    },
+                    onSubmitFeedback = { currentItem, message ->
+                        viewModel.sendFeedback(
+                            backendBaseUrl = backendBaseUrl,
+                            filmId = currentItem.film.id,
+                            episodeNumber = currentItem.episodeNumber,
+                            message = message
+                        )
+                    },
+                    onLikeClick = { currentItem, liked ->
+                        viewModel.setEpisodeLike(
+                            backendBaseUrl = backendBaseUrl,
+                            filmId = currentItem.film.id,
+                            episodeNumber = currentItem.episodeNumber,
+                            liked = liked
+                        )
+                    },
+                    onReminderClick = { currentItem, enabled ->
+                        viewModel.setReminder(
+                            backendBaseUrl = backendBaseUrl,
+                            film = currentItem.film,
+                            enabled = enabled
+                        )
+                    },
+                    onEpisodeFinished = { index, currentItem, position, duration ->
+                        viewModel.completeEpisodeAndMaybePlayNext(
+                            backendBaseUrl = backendBaseUrl,
+                            itemIndex = index,
+                            item = currentItem,
+                            progressSeconds = (position / 1000).toInt(),
+                            durationSeconds = duration.takeIf { it > 0L }?.let { (it / 1000).toInt() },
+                            autoNext = autoNext,
+                            autoUnlock = autoUnlock
+                        )
+                    },
+                    onToggleCc = { ccEnabled = !ccEnabled },
+                    onCycleSpeed = {
+                        playbackSpeed = when (playbackSpeed) {
+                            1f -> 1.25f
+                            1.25f -> 1.5f
+                            1.5f -> 2f
+                            else -> 1f
+                        }
+                    },
+                    onEpisodeSelected = { index, currentItem, episodeNumber ->
+                        viewModel.playEpisode(
+                            backendBaseUrl = backendBaseUrl,
+                            itemIndex = index,
+                            currentItem = currentItem,
+                            episodeNumber = episodeNumber
+                        )
+                    },
+                    onWatchFull = null
+                )
+                if (pageEpisode != item.episodeNumber) {
+                    LoadingBackdrop(
+                        item = item.copy(episodeNumber = pageEpisode),
+                        showLoader = page == pagerState.currentPage,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+            LaunchedEffect(item.episodeNumber) {
+                val episodePage = (item.episodeNumber - 1).coerceIn(0, totalEpisodes - 1)
+                if (pagerState.currentPage != episodePage) {
+                    pagerState.scrollToPage(episodePage)
+                }
+            }
+        }
+        if (controlsVisible) {
+            BottomNavigationBar(
+                selected = "Shorts",
+                onHome = onHome,
+                onShorts = onShorts,
                 onLibrary = onLibrary,
                 onRewards = onRewards,
                 onProfile = onProfile,
@@ -307,7 +510,9 @@ private fun ShortsPage(
     onReminderClick: (ShortsItem, Boolean) -> Unit,
     onEpisodeFinished: (Int, ShortsItem, Long, Long) -> Unit,
     onToggleCc: () -> Unit,
-    onCycleSpeed: () -> Unit
+    onCycleSpeed: () -> Unit,
+    onEpisodeSelected: (Int, ShortsItem, Int) -> Unit,
+    onWatchFull: ((ShortsItem) -> Unit)?
 ) {
     var videoReady by remember(item.playUrl) { mutableStateOf(false) }
     var reminderOn by remember(item.film.id) { mutableStateOf(false) }
@@ -495,6 +700,7 @@ private fun ShortsPage(
                     item = item,
                     positionMs = positionMs,
                     durationMs = durationMs,
+                    onWatchFull = onWatchFull,
                     onSeekTo = { targetMs ->
                         positionMs = targetMs
                         pendingSeekMs = targetMs
@@ -568,7 +774,11 @@ private fun ShortsPage(
                 currentEpisode = item.episodeNumber,
                 totalEpisodes = item.film.episodeTotal,
                 modifier = Modifier.align(Alignment.BottomCenter),
-                onDismiss = { showEpisodeOptions = false }
+                onDismiss = { showEpisodeOptions = false },
+                onSelectEpisode = { episodeNumber ->
+                    showEpisodeOptions = false
+                    onEpisodeSelected(itemIndex, item, episodeNumber)
+                }
             )
         }
     }
@@ -646,6 +856,7 @@ private fun ShortsCaption(
     item: ShortsItem,
     positionMs: Long,
     durationMs: Long,
+    onWatchFull: ((ShortsItem) -> Unit)?,
     onSeekTo: (Long) -> Unit
 ) {
     val safeDuration = durationMs.takeIf { it > 0L && it < Long.MAX_VALUE / 2 } ?: 0L
@@ -712,6 +923,24 @@ private fun ShortsCaption(
                 letterSpacing = 0.sp,
                 modifier = Modifier.clickable { descriptionExpanded = !descriptionExpanded }
             )
+        }
+        if (onWatchFull != null && item.film.id != 0) {
+            Spacer(Modifier.height(10.dp))
+            Button(
+                onClick = { onWatchFull(item) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Pink,
+                    contentColor = Color.White
+                ),
+                modifier = Modifier.height(40.dp)
+            ) {
+                Text(
+                    stringResource(R.string.watch_full),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 0.sp
+                )
+            }
         }
         Spacer(Modifier.height(12.dp))
         ThinSeekBar(
@@ -983,7 +1212,8 @@ private fun EpisodeOptionsSheet(
     currentEpisode: Int,
     totalEpisodes: Int,
     modifier: Modifier,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onSelectEpisode: (Int) -> Unit
 ) {
     val episodes = remember(totalEpisodes) { (1..totalEpisodes.coerceAtLeast(1)).toList() }
     Column(
@@ -1024,7 +1254,9 @@ private fun EpisodeOptionsSheet(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(10.dp))
                         .background(if (selected) Color(0x33F5C65B) else Color(0x14111114))
-                        .clickable { onDismiss() }
+                        .clickable {
+                            if (selected) onDismiss() else onSelectEpisode(episode)
+                        }
                         .padding(horizontal = 12.dp, vertical = 11.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {

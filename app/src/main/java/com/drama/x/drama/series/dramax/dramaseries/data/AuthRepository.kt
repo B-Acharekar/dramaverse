@@ -12,7 +12,7 @@ import java.util.UUID
 private const val PREFS_NAME = "dramaverse_auth"
 private const val KEY_DEVICE_ID = "device_id"
 private const val KEY_AUTH_TOKEN = "auth_token"
-private const val DEFAULT_BACKEND_URL = "https://dramaverse-backend-lbq5.onrender.com"
+private const val DEFAULT_BACKEND_URL = "https://drama-verse-backend.vercel.app"
 
 data class DeviceAuthResult(
     val deviceId: String,

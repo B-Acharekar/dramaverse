@@ -77,4 +77,4 @@ private fun HttpURLConnection.readJson(path: String): JSONObject {
 }
 
 private fun String.trimEndSlash(): String =
-    trim().trimEnd('/').ifBlank { "https://dramaverse-backend-lbq5.onrender.com" }
+    trim().trimEnd('/').ifBlank { "https://drama-verse-backend.vercel.app" }

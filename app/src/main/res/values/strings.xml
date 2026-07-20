@@ -16,6 +16,10 @@
     <!-- Language screen -->
     <string name="language_title">Language</string>
     <string name="done">DONE</string>
+    <string name="no_internet_title">No internet connection</string>
+    <string name="no_internet_description">Please check your connection and try again.</string>
+    <string name="retry_now">Retry Now</string>
+    <string name="retrying_connection">Checking again every 35 seconds</string>
 
     <!-- Onboarding screen -->
     <string name="start_btn">Start</string>
@@ -133,6 +137,7 @@
 
     <string name="view_more">View more</string>
     <string name="view_less">View less</string>
+    <string name="watch_full">Watch full</string>
 
     <!-- Playback Options -->
     <string name="playback_options">Playback options</string>

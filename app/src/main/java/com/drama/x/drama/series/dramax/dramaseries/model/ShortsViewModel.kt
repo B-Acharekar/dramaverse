@@ -74,6 +74,47 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun loadEpisodeInitial(backendBaseUrl: String, filmId: Int?) {
+        if (filmId == null || filmId == 0) {
+            _uiState.update { ShortsUiState(isLoading = false, errorMessage = "Unable to load episodes.") }
+            return
+        }
+        if (
+            _uiState.value.items.size == 1 &&
+            currentBackendBaseUrl == backendBaseUrl &&
+            currentInitialFilmId == filmId
+        ) return
+        currentBackendBaseUrl = backendBaseUrl
+        currentInitialFilmId = filmId
+        nextPage = 1
+        viewModelScope.launch {
+            _uiState.update { ShortsUiState(isLoading = true) }
+            val selectedItem = withContext(Dispatchers.IO) {
+                repository.loadPlayback(
+                    backendBaseUrl = backendBaseUrl,
+                    filmId = filmId,
+                    language = selectedLanguageCode()
+                )
+            }.getOrElse { error ->
+                _uiState.update {
+                    ShortsUiState(
+                        isLoading = false,
+                        errorMessage = error.message ?: "Unable to load episodes."
+                    )
+                }
+                return@launch
+            }
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    items = listOf(selectedItem),
+                    errorMessage = null
+                )
+            }
+            loadEpisodeList(backendBaseUrl, filmId)
+        }
+    }
+
     fun loadMoreIfNeeded(currentIndex: Int, backendBaseUrl: String) {
         val state = _uiState.value
         if (state.isLoadingMore || state.items.isEmpty()) return

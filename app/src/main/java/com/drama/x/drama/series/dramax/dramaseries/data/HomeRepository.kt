@@ -863,6 +863,6 @@ private fun fallbackItems(): List<DramaItem> = listOf(
     DramaItem(8, "Vengeance Sweetness", "A masked betrayal becomes a dangerous romance.", "", "4.7", 58, "Thriller")
 )
 
-private fun String.trimEndSlash(): String = trim().trimEnd('/').ifBlank { "https://dramaverse-backend-lbq5.onrender.com" }
+private fun String.trimEndSlash(): String = trim().trimEnd('/').ifBlank { "https://drama-verse-backend.vercel.app" }
 
 private fun Int.floorMod(other: Int): Int = ((this % other) + other) % other
