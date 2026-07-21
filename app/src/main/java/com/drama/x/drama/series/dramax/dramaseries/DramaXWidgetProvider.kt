@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import android.view.View
 import android.widget.RemoteViews
 
 class DramaXWidgetProvider : AppWidgetProvider() {
@@ -16,7 +17,12 @@ class DramaXWidgetProvider : AppWidgetProvider() {
         appWidgetIds.forEach { widgetId ->
             val views = RemoteViews(context.packageName, R.layout.widget_dramaverse).apply {
                 setOnClickPendingIntent(R.id.widgetHome, pendingIntent(context, MainActivity.ACTION_WIDGET_HOME, 1))
-                setOnClickPendingIntent(R.id.widgetUninstall, pendingIntent(context, MainActivity.ACTION_WIDGET_UNINSTALL, 3))
+                if (WidgetUninstallGate.shouldDisplay()) {
+                    setViewVisibility(R.id.widgetUninstall, View.VISIBLE)
+                    setOnClickPendingIntent(R.id.widgetUninstall, pendingIntent(context, MainActivity.ACTION_WIDGET_UNINSTALL, 3))
+                } else {
+                    setViewVisibility(R.id.widgetUninstall, View.GONE)
+                }
             }
             appWidgetManager.updateAppWidget(widgetId, views)
         }
