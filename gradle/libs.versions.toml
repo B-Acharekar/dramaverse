@@ -14,7 +14,12 @@ googleServices = "4.4.4"
 media3 = "1.8.0"
 appcompat = "1.7.1"
 splashscreen = "1.0.1"
-playServicesAds = "25.3.0"
+playServicesAds = "25.4.0"
+applovinMediation = "13.6.3.0"
+vungleMediation = "7.7.4.2"
+devConfig = "1.0.7-partner"
+moduleUpdateGdpr = "2.0.2"
+playReviewKtx = "2.0.2"
 multidex = "2.0.1"
 shimmer = "0.5.0"
 erainStudio = "1.8"
@@ -48,6 +53,11 @@ androidx-media3-ui = { group = "androidx.media3", name = "media3-ui", version.re
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
 play-services-ads = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "playServicesAds" }
+applovin-mediation = { group = "com.google.ads.mediation", name = "applovin", version.ref = "applovinMediation" }
+vungle-mediation = { group = "com.google.ads.mediation", name = "vungle", version.ref = "vungleMediation" }
+dev-config = { group = "com.github.Infinity-Technologies-Global", name = "DevConfig", version.ref = "devConfig" }
+module-update-gdpr = { group = "com.github.Infinity-Technologies-Global", name = "Module-Update-GDPR", version.ref = "moduleUpdateGdpr" }
+play-review-ktx = { group = "com.google.android.play", name = "review-ktx", version.ref = "playReviewKtx" }
 androidx-multidex = { group = "androidx.multidex", name = "multidex", version.ref = "multidex" }
 facebook-shimmer = { group = "com.facebook.shimmer", name = "shimmer", version.ref = "shimmer" }
 erain-studio = { group = "com.github.trongluan99", name = "ERain-Studio", version.ref = "erainStudio" }

@@ -4,8 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
-import android.os.SystemClock
-import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -22,11 +20,6 @@ class MainActivity : AppCompatActivity() {
         const val ACTION_WIDGET_HOME = "com.drama.x.drama.series.dramax.dramaseries.action.WIDGET_HOME"
         const val ACTION_WIDGET_UNINSTALL = "com.drama.x.drama.series.dramax.dramaseries.action.WIDGET_UNINSTALL"
     }
-
-    private var hasResumedOnce = false
-    private var returnedFromBackground = false
-    private var backgroundedAtMs = 0L
-
 
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(LocaleHelper.wrap(newBase))
@@ -50,37 +43,6 @@ class MainActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         recreate()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        val suppressResumeAd = AdsManager.consumeSuppressNextResumeInterstitial()
-        val backgroundElapsedMs =
-            if (backgroundedAtMs > 0L) SystemClock.elapsedRealtime() - backgroundedAtMs else 0L
-        val eligibleBackgroundReturn = returnedFromBackground || backgroundElapsedMs >= 700L
-        Log.d(
-            "DramaXAds",
-            "MAIN_ON_RESUME hasResumedOnce=$hasResumedOnce returnedFromBackground=$returnedFromBackground " +
-                "backgroundElapsedMs=$backgroundElapsedMs suppressResumeAd=$suppressResumeAd"
-        )
-        if (hasResumedOnce && eligibleBackgroundReturn && !suppressResumeAd) {
-            AdsManager.showWelcomeBackInterstitial(this)
-        }
-        hasResumedOnce = true
-        returnedFromBackground = false
-        backgroundedAtMs = 0L
-    }
-
-    override fun onPause() {
-        backgroundedAtMs = SystemClock.elapsedRealtime()
-        Log.d("DramaXAds", "MAIN_ON_PAUSE backgroundedAtMs=$backgroundedAtMs")
-        super.onPause()
-    }
-
-    override fun onStop() {
-        Log.d("DramaXAds", "MAIN_ON_STOP markReturnedFromBackground=true")
-        returnedFromBackground = true
-        super.onStop()
     }
 
     override fun onDestroy() {

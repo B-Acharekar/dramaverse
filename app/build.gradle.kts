@@ -8,6 +8,10 @@ plugins {
     alias(libs.plugins.google.services)
 }
 
+val erainStudioVersion = libs.versions.erainStudio.get()
+val playServicesAdsVersion = libs.versions.playServicesAds.get()
+val gdprModuleVersion = libs.versions.moduleUpdateGdpr.get()
+
 android {
     namespace = "com.drama.x.drama.series.dramax.dramaseries"
     compileSdk = 37
@@ -23,23 +27,23 @@ android {
         multiDexEnabled = true
         manifestPlaceholders["ad_app_id"] = "ca-app-pub-3940256099942544~3347511713"
 
-        buildConfigField("String", "ERAIN_STUDIO_VERSION", "\"1.8\"")
-        buildConfigField("String", "PLAY_SERVICES_ADS_VERSION", "\"25.3.0\"")
-        buildConfigField("String", "GDPR_MODULE_VERSION", "\"not_configured\"")
-        buildConfigField("boolean", "FORCE_LOCAL_AD_CONFIG", "false")
-        buildConfigField("boolean", "ENABLE_ONBOARDING_ADS_FOR_LIVE", "false")
-        buildConfigField("boolean", "FORCE_ERAIN_NON_ORGANIC_FOR_AD_TEST", "false")
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "ERAIN_STUDIO_VERSION", "\"$erainStudioVersion\"")
+            buildConfigField("String", "PLAY_SERVICES_ADS_VERSION", "\"$playServicesAdsVersion\"")
+            buildConfigField("String", "GDPR_MODULE_VERSION", "\"$gdprModuleVersion\"")
+        }
+
         release {
             optimization {
                 enable = false
             }
             manifestPlaceholders["ad_app_id"] = "ca-app-pub-7462273888693209~7397581193"
-            buildConfigField("boolean", "FORCE_LOCAL_AD_CONFIG", "false")
-            buildConfigField("boolean", "ENABLE_ONBOARDING_ADS_FOR_LIVE", "false")
-            buildConfigField("boolean", "FORCE_ERAIN_NON_ORGANIC_FOR_AD_TEST", "false")
+            buildConfigField("String", "ERAIN_STUDIO_VERSION", "\"$erainStudioVersion\"")
+            buildConfigField("String", "PLAY_SERVICES_ADS_VERSION", "\"$playServicesAdsVersion\"")
+            buildConfigField("String", "GDPR_MODULE_VERSION", "\"$gdprModuleVersion\"")
         }
     }
     compileOptions {
@@ -80,6 +84,11 @@ dependencies {
     implementation(libs.onesignal)
     implementation(libs.androidx.appcompat)
     implementation(libs.play.services.ads)
+    implementation(libs.applovin.mediation)
+    implementation(libs.vungle.mediation)
+    implementation(libs.dev.config)
+    implementation(libs.module.update.gdpr)
+    implementation(libs.play.review.ktx)
     implementation(libs.androidx.multidex)
     implementation(libs.facebook.shimmer)
     implementation(libs.erain.studio)

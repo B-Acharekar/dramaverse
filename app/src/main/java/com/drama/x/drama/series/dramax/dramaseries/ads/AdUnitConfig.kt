@@ -4,7 +4,8 @@ data class AdUnitConfig(
     val id: String = "",
     val isEnable: Boolean = false,
     val timeoutMs: Long = 0L,
-    val reloadIntervalSeconds: Int = 0
+    val reloadIntervalSeconds: Int = 0,
+    val enableUaCheck: Boolean = false
 ) {
     val canRequest: Boolean
         get() = isEnable && id.isNotBlank()

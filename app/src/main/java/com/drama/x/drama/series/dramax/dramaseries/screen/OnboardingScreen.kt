@@ -90,7 +90,6 @@ import com.ads.module.ads.wrapper.ApNativeAd
 import com.google.android.gms.ads.nativead.MediaView
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdView
-import com.drama.x.drama.series.dramax.dramaseries.BuildConfig as AppBuildConfig
 
 
 private const val FULLSCREEN_NATIVE_PAGER_INDEX = 2
@@ -151,16 +150,9 @@ fun OnboardingScreen(
         }
     }
 
-    val initialOnboardingAdState = remember {
-        if (AppBuildConfig.ENABLE_ONBOARDING_ADS_FOR_LIVE) {
-            NativeAdState.Loading
-        } else {
-            NativeAdState.Disabled("onboarding_ads_disabled_for_false_version")
-        }
-    }
-    var onboardingPageOneAdState by remember { mutableStateOf<NativeAdState>(initialOnboardingAdState) }
-    var onboardingFullscreenAdState by remember { mutableStateOf<NativeAdState>(initialOnboardingAdState) }
-    var onboardingWelcomeAdState by remember { mutableStateOf<NativeAdState>(initialOnboardingAdState) }
+    var onboardingPageOneAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
+    var onboardingFullscreenAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
+    var onboardingWelcomeAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
     val showFullNativePage = onboardingFullscreenAdState is NativeAdState.Loading ||
             onboardingFullscreenAdState is NativeAdState.Loaded
     val pagerPageCount = uiState.pages.size + if (showFullNativePage) 1 else 0
@@ -173,9 +165,6 @@ fun OnboardingScreen(
 
     LaunchedEffect(Unit) {
         onEntered()
-        if (!AppBuildConfig.ENABLE_ONBOARDING_ADS_FOR_LIVE) {
-            return@LaunchedEffect
-        }
         activity?.let {
             AdsManager.loadNativeOnboardingPageOne(it, firstVisit = true)
             AdsManager.loadNativeOnboardingFullscreen(it, firstVisit = true)

@@ -1,31 +1,43 @@
 package com.drama.x.drama.series.dramax.dramaseries
 
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.util.Log
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdRemoteConfig
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdsInitializationState
+import com.drama.x.drama.series.dramax.dramaseries.ads.ResumeAdsEntryRule
 import com.ads.module.admob.Admob
+import com.ads.module.admob.AppOpenManager
 import com.ads.module.ads.ERainAd
 import com.ads.module.application.AdsMultiDexApplication
 import com.ads.module.config.AdjustConfig
 import com.ads.module.config.ERainAdConfig
-import com.ads.module.util.SharePreferenceUtils
-import com.google.android.gms.common.ConnectionResult
-import com.google.android.gms.common.GoogleApiAvailability
+import com.drama.x.drama.series.dramax.dramaseries.devconfig.DevConfig
 import com.google.android.gms.ads.MobileAds
 
 private const val TAG = "DramaXAds"
 
 class GlobalApp : AdsMultiDexApplication() {
+    companion object {
+        @SuppressLint("StaticFieldLeak")
+        var currentActivity: Activity? = null
+    }
+
     override fun onCreate() {
         Log.d(TAG, "APP_INIT_START")
         super.onCreate()
 
-        warnIfGooglePlayServicesOutdated()
         Log.d(TAG, "MOBILE_ADS_INIT_REQUESTED")
         MobileAds.initialize(this) {
             Log.d(TAG, "MOBILE_ADS_INIT_COMPLETED")
             AdsInitializationState.markMobileAdsReady()
         }
+        DevConfig.init(
+            context = this,
+            nkhStudioVersion = BuildConfig.ERAIN_STUDIO_VERSION,
+            playServicesAdsVersion = BuildConfig.PLAY_SERVICES_ADS_VERSION,
+            gdprModuleVersion = BuildConfig.GDPR_MODULE_VERSION
+        )
 
         /*
          * Ad config must be available before Splash makes decisions. Debug reads Google
@@ -35,6 +47,13 @@ class GlobalApp : AdsMultiDexApplication() {
         Log.d(TAG, "LOCAL_AD_CONFIG_READY")
 
         initAds()
+
+        val lifecycleObserver = if (ResumeAdsEntryRule.shouldShowWelcomeOnResume()) {
+            AppLifecycleObserver()
+        } else {
+            null
+        }
+        registerActivityLifecycleCallbacks(AppActivityLifecycleCallbacks(lifecycleObserver))
     }
 
     private fun initAds() {
@@ -47,35 +66,24 @@ class GlobalApp : AdsMultiDexApplication() {
 
         val erainAdConfig = ERainAdConfig(this, environment).apply {
             adjustConfig = AdjustConfig(
-                !BuildConfig.FORCE_ERAIN_NON_ORGANIC_FOR_AD_TEST,
+                true,
                 getString(R.string.adjust_token)
             )
             facebookClientToken = getString(R.string.facebook_client_token)
-            adjustTokenTiktok = getString(R.string.tiktok_token)
-            intervalInterstitialAd = 15
+            adjustTokenTiktok = getString(R.string.event_token)
+            intervalInterstitialAd = 35
             idAdResume = ""
-        }
-
-        if (BuildConfig.FORCE_ERAIN_NON_ORGANIC_FOR_AD_TEST) {
-            SharePreferenceUtils.setIsOrganic(this, false)
-            Log.d(TAG, "ERAIN_ORGANIC_FORCED value=false reason=debug_onboarding_ad_test")
         }
 
         ERainAd.getInstance().init(this, erainAdConfig)
         Admob.getInstance().setDisableAdResumeWhenClickAds(true)
         Admob.getInstance().setOpenActivityAfterShowInterAds(true)
+        AppOpenManager.getInstance().disableAppResumeWithActivity(MainActivity::class.java)
         Log.d(
             TAG,
             "ERAIN_INIT_COMPLETED environment=$environment " +
-                "adjust=${!BuildConfig.FORCE_ERAIN_NON_ORGANIC_FOR_AD_TEST} facebook=true tiktok=true"
+                "adjust=true facebook=true tiktok=true"
         )
     }
 
-    private fun warnIfGooglePlayServicesOutdated() {
-        val availability = GoogleApiAvailability.getInstance()
-        val status = availability.isGooglePlayServicesAvailable(this)
-        if (status != ConnectionResult.SUCCESS) {
-            Log.w(TAG, "GOOGLE_PLAY_SERVICES_UNAVAILABLE_OR_OUTDATED status=$status")
-        }
-    }
 }

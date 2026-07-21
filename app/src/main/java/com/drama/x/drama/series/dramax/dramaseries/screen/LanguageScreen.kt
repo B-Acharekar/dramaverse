@@ -3,6 +3,7 @@ package com.drama.x.drama.series.dramax.dramaseries.screen
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -58,6 +59,8 @@ import com.drama.x.drama.series.dramax.dramaseries.R
 import com.drama.x.drama.series.dramax.dramaseries.ads.ADS_TAG
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdsManager
 import com.drama.x.drama.series.dramax.dramaseries.ads.NativeAdState
+import com.drama.x.drama.series.dramax.dramaseries.devconfig.DevConfig
+import com.drama.x.drama.series.dramax.dramaseries.devconfig.setOnAdminAdToggleListener
 import com.drama.x.drama.series.dramax.dramaseries.model.LanguageViewModel
 
 @Composable
@@ -76,6 +79,13 @@ fun LanguageScreen(
     var selectedOnce by remember { mutableStateOf(false) }
     var showActionButton by remember { mutableStateOf(false) }
     var nativeAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
+    var showDevConfig by remember { mutableStateOf(false) }
+    var showDevChecklist by remember { mutableStateOf(false) }
+
+    if (showDevChecklist) {
+        DevConfig.ChecklistScreen(onBack = { showDevChecklist = false })
+        return
+    }
 
     LaunchedEffect(selectedOnce) {
         if (selectedOnce) {
@@ -126,6 +136,7 @@ fun LanguageScreen(
     ) {
         LanguageHeader(
             showActionButton = showActionButton,
+            onDevConfigOpen = { showDevConfig = true },
             onActionClick = {
                 onContinue(viewModel.confirmLanguage())
             }
@@ -179,11 +190,28 @@ fun LanguageScreen(
             )
         }
     }
+
+    if (showDevConfig) {
+        DevConfig.SettingDialog(
+            onDismiss = { showDevConfig = false },
+            onShowChecklist = {
+                showDevConfig = false
+                showDevChecklist = true
+            },
+            onApply = { changed ->
+                showDevConfig = false
+                if (changed) {
+                    activity?.restartAppFromLauncher()
+                }
+            }
+        )
+    }
 }
 
 @Composable
 private fun LanguageHeader(
     showActionButton: Boolean,
+    onDevConfigOpen: () -> Unit,
     onActionClick: () -> Unit
 ) {
     val bgBrush = Brush.horizontalGradient(
@@ -205,7 +233,8 @@ private fun LanguageHeader(
             color = Color.White,
             fontSize = 17.sp,
             fontWeight = FontWeight.Bold,
-            letterSpacing = 0.sp
+            letterSpacing = 0.sp,
+            modifier = Modifier.setOnAdminAdToggleListener(onDevConfigOpen)
         )
         Spacer(modifier = Modifier.weight(1f))
         if (showActionButton) {
@@ -312,4 +341,11 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()
     else -> null
+}
+
+private fun Activity.restartAppFromLauncher() {
+    val launchIntent = packageManager.getLaunchIntentForPackage(packageName) ?: return
+    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+    startActivity(launchIntent)
+    finish()
 }

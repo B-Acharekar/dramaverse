@@ -13,8 +13,6 @@ import kotlin.coroutines.resume
 
 private const val TAG = "DramaXAds"
 private const val RC_AD_REMOTE_CONFIG = "ad_remote_config"
-private const val RC_PROD_PROFILE = "prod"
-private const val RC_TESTING_PROFILE = "testing"
 
 object RemoteConfigUtils {
     @Volatile
@@ -45,11 +43,8 @@ object RemoteConfigUtils {
                 }
             }
         } ?: false
-        val profileKey = selectedAdProfileKey()
-        if (!AdRemoteConfig.applyRemoteProfileJson(config.getString(profileKey), profileKey)) {
-            if (!AdRemoteConfig.applyRemoteValues(config)) {
-                AdRemoteConfig.applyRemoteJson(config.getString(RC_AD_REMOTE_CONFIG))
-            }
+        if (!BuildConfig.DEBUG) {
+            AdRemoteConfig.applyRemoteJson(config.getString(RC_AD_REMOTE_CONFIG))
         }
         Log.d(TAG, "Remote Config fetch/apply completed success=$activated")
         return activated
@@ -57,14 +52,8 @@ object RemoteConfigUtils {
 
     fun applyCached(config: FirebaseRemoteConfig?) {
         config ?: return
-        val profileKey = selectedAdProfileKey()
-        if (!AdRemoteConfig.applyRemoteProfileJson(config.getString(profileKey), profileKey)) {
-            if (!AdRemoteConfig.applyRemoteValues(config)) {
-                AdRemoteConfig.applyRemoteJson(config.getString(RC_AD_REMOTE_CONFIG))
-            }
+        if (!BuildConfig.DEBUG) {
+            AdRemoteConfig.applyRemoteJson(config.getString(RC_AD_REMOTE_CONFIG))
         }
     }
-
-    private fun selectedAdProfileKey(): String =
-        if (BuildConfig.DEBUG) RC_TESTING_PROFILE else RC_PROD_PROFILE
 }
