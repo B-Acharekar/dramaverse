@@ -11,6 +11,22 @@ object AdRemoteConfig {
     private const val DEBUG_ASSET = "ad_config_debug.json"
     private const val RELEASE_ASSET = "ad_config.json"
 
+    private const val DEV_PREFS_NAME = "dev_config"
+    private const val DEV_KEY_UNLIMITED_ADS = "unlimited_ads"
+
+
+    private val unlimitedAdsGatedPlacements = setOf(
+        "native_onboarding_1_1",
+        "native_onboarding_2_1",
+        "native_onboarding_1_4",
+        "native_onboarding_2_4",
+        "native_onboarding_fullscreen_1_2",
+        "native_onboarding_fullscreen_2_2"
+    )
+
+    @Volatile
+    private var appContext: Context? = null
+
     val placementNames = listOf(
         "inter_splash",
         "banner_splash",
@@ -61,9 +77,30 @@ object AdRemoteConfig {
     fun nativeOnboardingFull(firstVisit: Boolean): AdUnitConfig =
         placement(if (firstVisit) "native_onboarding_fullscreen_1_2" else "native_onboarding_fullscreen_2_2")
 
-    private fun placement(name: String): AdUnitConfig = activeConfig.placement(name)
+    fun placement(name: String): AdUnitConfig {
+        val base = activeConfig.placement(name)
+        return if (name in unlimitedAdsGatedPlacements) {
+            val overrideEnabled = isUnlimitedAdsEnabled()
+            if (base.isEnable != overrideEnabled) {
+                Log.d(
+                    TAG,
+                    "$name isEnable overridden by unlimitedAds toggle: json=${base.isEnable} -> $overrideEnabled"
+                )
+            }
+            base.copy(isEnable = overrideEnabled)
+        } else {
+            base
+        }
+    }
+
+    private fun isUnlimitedAdsEnabled(): Boolean {
+        val ctx = appContext ?: return false
+        return ctx.getSharedPreferences(DEV_PREFS_NAME, Context.MODE_PRIVATE)
+            .getBoolean(DEV_KEY_UNLIMITED_ADS, false)
+    }
 
     fun initializeFromAssets(context: Context) {
+        appContext = context.applicationContext
         val assetName = if (BuildConfig.DEBUG) DEBUG_ASSET else RELEASE_ASSET
         runCatching {
             context.assets.open(assetName).bufferedReader().use { it.readText() }
@@ -117,7 +154,7 @@ object AdRemoteConfig {
         Log.d(TAG, "$prefix config ID=${activeConfig.configId.ifBlank { "unknown" }}")
         Log.d(TAG, "ads_enabled=${activeConfig.adsEnabled}")
         placementNames.forEach { name ->
-            val item = activeConfig.placement(name)
+            val item = placement(name)
             Log.d(TAG, "$name enabled=${item.isEnable} enableUaCheck=${item.enableUaCheck} id=${item.id.maskAdUnit()}")
         }
     }

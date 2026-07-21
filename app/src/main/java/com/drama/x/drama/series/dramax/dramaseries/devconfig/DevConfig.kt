@@ -349,8 +349,13 @@ object DevConfig {
         val sdkRows = sdkRows()
         val trackingRows = trackingRows(context)
         val mediationRows = mediationRows()
+
+//        val placementRows = AdRemoteConfig.placementNames.map { name ->
+//            name to adConfig.placement(name)
+//        }
+
         val placementRows = AdRemoteConfig.placementNames.map { name ->
-            name to adConfig.placement(name)
+            name to AdRemoteConfig.placement(name)
         }
 
         Column(

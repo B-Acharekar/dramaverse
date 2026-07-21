@@ -67,6 +67,7 @@ import com.ads.module.ads.ERainAd
 import com.ads.module.funtion.AdCallback
 import com.facebook.shimmer.ShimmerFrameLayout
 import com.google.android.gms.ads.LoadAdError
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
@@ -137,6 +138,61 @@ fun CustomSplashScreen(
         waitUntilReadyOrTimedOut()
     }
 
+//    LaunchedEffect(activity) {
+//        logStage("SPLASH_FLOW_START")
+//        if (activity == null) {
+//            continueFromSplash("missing_activity")
+//            return@LaunchedEffect
+//        }
+//
+//        AdsInitializationState.awaitMobileAdsReady(timeoutMs = 4_000L).also { ready ->
+//            Log.d(ADS_TAG, "SPLASH_MOBILE_ADS_READY=$ready elapsedMs=${SystemClock.elapsedRealtime() - startMs}")
+//        }
+//
+//        logStage("SPLASH_REMOTE_CONFIG_START")
+//        val remoteResult = RemoteConfigUtils.fetchAndApply(
+//            RemoteConfigUtils.configure(context.applicationContext),
+//            timeoutMs = 3_000L
+//        )
+//        Log.d(ADS_TAG, "SPLASH_REMOTE_CONFIG_RESULT success=$remoteResult elapsedMs=${SystemClock.elapsedRealtime() - startMs}")
+//        bannerVisibleSinceMs.set(SystemClock.elapsedRealtime())
+//        splashAdsConfigReady = true
+//
+//        AdsManager.loadSplashInterstitial(
+//            activity = activity,
+//            uninstallFlow = uninstallFlow,
+//            onLoaded = {
+//                if (interstitialResolved.compareAndSet(false, true) && !hasNavigated.get()) {
+//                    Log.d(ADS_TAG, "SPLASH_INTER_READY waiting_for_erain_banner")
+//                    showInterstitialAfterBannerWindow(activity)
+//                } else {
+//                    Log.d(ADS_TAG, "SPLASH_NAVIGATION_SKIPPED_DUPLICATE reason=interstitial_loaded_after_resolution")
+//                }
+//            },
+//            onFailed = {
+//                if (interstitialResolved.compareAndSet(false, true)) {
+//                    val bannerElapsedMs = SystemClock.elapsedRealtime() - bannerVisibleSinceMs.get()
+//                    val continueDelayMs = (MIN_SPLASH_BANNER_VISIBLE_MS - bannerElapsedMs).coerceAtLeast(0L)
+//                    Log.d(
+//                        ADS_TAG,
+//                        "SPLASH_INTER_FAILED delayingNavigationForBannerMs=$continueDelayMs bannerElapsedMs=$bannerElapsedMs"
+//                    )
+//                    mainHandler.postDelayed({
+//                        continueFromSplash("interstitial_failed_or_ineligible")
+//                    }, continueDelayMs)
+//                }
+//            }
+//        )
+//        AdsManager.loadNativeLanguage(activity, firstVisit = true)
+//        AdsManager.preloadOnboardingAds(activity, firstVisit = true)
+//
+//        delay(30_000L)
+//        if (interstitialResolved.compareAndSet(false, true) && !hasNavigated.get()) {
+//            logStage("SPLASH_INTER_TIMEOUT")
+//            continueFromSplash("interstitial_timeout")
+//        }
+//    }
+
     LaunchedEffect(activity) {
         logStage("SPLASH_FLOW_START")
         if (activity == null) {
@@ -144,18 +200,34 @@ fun CustomSplashScreen(
             return@LaunchedEffect
         }
 
-        AdsInitializationState.awaitMobileAdsReady(timeoutMs = 4_000L).also { ready ->
-            Log.d(ADS_TAG, "SPLASH_MOBILE_ADS_READY=$ready elapsedMs=${SystemClock.elapsedRealtime() - startMs}")
-        }
-
-        logStage("SPLASH_REMOTE_CONFIG_START")
-        val remoteResult = RemoteConfigUtils.fetchAndApply(
-            RemoteConfigUtils.configure(context.applicationContext),
-            timeoutMs = 3_000L
-        )
-        Log.d(ADS_TAG, "SPLASH_REMOTE_CONFIG_RESULT success=$remoteResult elapsedMs=${SystemClock.elapsedRealtime() - startMs}")
+        // Show the banner immediately using whatever ad config is already
+        // active (loaded from local assets at app startup via
+        // AdRemoteConfig.initializeFromAssets). No need to wait for anything.
         bannerVisibleSinceMs.set(SystemClock.elapsedRealtime())
         splashAdsConfigReady = true
+
+        // Mobile Ads SDK init and Remote Config fetch no longer block the banner.
+        // Run them in parallel instead of sequentially to shrink the interstitial
+        // gate too.
+        val mobileAdsReadyDeferred = async {
+            AdsInitializationState.awaitMobileAdsReady(timeoutMs = 4_000L).also { ready ->
+                Log.d(ADS_TAG, "SPLASH_MOBILE_ADS_READY=$ready elapsedMs=${SystemClock.elapsedRealtime() - startMs}")
+            }
+        }
+        val remoteConfigDeferred = async {
+            logStage("SPLASH_REMOTE_CONFIG_START")
+            val remoteResult = RemoteConfigUtils.fetchAndApply(
+                RemoteConfigUtils.configure(context.applicationContext),
+                timeoutMs = 3_000L
+            )
+            Log.d(ADS_TAG, "SPLASH_REMOTE_CONFIG_RESULT success=$remoteResult elapsedMs=${SystemClock.elapsedRealtime() - startMs}")
+            remoteResult
+        }
+
+        // Interstitial/native/onboarding loads still wait on mobile ads readiness,
+        // since those genuinely need the SDK initialized — but this now runs
+        // concurrently with the remote config fetch instead of after it.
+        mobileAdsReadyDeferred.await()
 
         AdsManager.loadSplashInterstitial(
             activity = activity,
@@ -184,6 +256,10 @@ fun CustomSplashScreen(
         )
         AdsManager.loadNativeLanguage(activity, firstVisit = true)
         AdsManager.preloadOnboardingAds(activity, firstVisit = true)
+
+        // Let remote config finish in the background; don't block navigation on it,
+        // it will simply update AdRemoteConfig in place whenever it lands.
+        remoteConfigDeferred
 
         delay(30_000L)
         if (interstitialResolved.compareAndSet(false, true) && !hasNavigated.get()) {

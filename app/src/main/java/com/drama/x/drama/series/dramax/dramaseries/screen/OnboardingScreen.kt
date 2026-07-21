@@ -463,7 +463,7 @@ private fun OnboardingPageContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 22.dp.w(scale))
-                    .padding(bottom = if(!shouldReserveNativeSpace) 18.dp else 0.dp),
+                    .padding(bottom = if(!shouldReserveNativeSpace) 18.dp else 5.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 PageIndicator(
