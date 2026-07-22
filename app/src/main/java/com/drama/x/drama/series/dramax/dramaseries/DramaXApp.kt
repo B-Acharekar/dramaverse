@@ -114,12 +114,14 @@ fun DramaXApp(
         )
 
         AppStep.ConfirmUninstall -> ConfirmUninstallScreen(
-            onBackHome = viewModel::openHome,
+            autoRedirectAfterAdReady = uiState.widgetUninstallAutoRedirect,
+            onAdReadyForAutoRedirect = viewModel::onWidgetUninstallConfirmAdReady,
+            onBackHome = viewModel::returnFromUninstallPrompt,
             onStillUninstall = viewModel::openSurveyUninstall
         )
 
         AppStep.SurveyUninstall -> SurveyUninstallScreen(
-            onBackHome = viewModel::openHome
+            onBackHome = viewModel::returnFromUninstallPrompt
         )
 
         // Full product surfaces are intentionally disabled for the current ads/onboarding/uninstall QA build.

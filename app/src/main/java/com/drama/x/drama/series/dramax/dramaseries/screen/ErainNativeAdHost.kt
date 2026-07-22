@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.util.Log
+import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.compose.animation.core.LinearEasing
@@ -21,7 +22,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -95,12 +95,16 @@ fun ErainNativeAdHost(
                         // View padding/foreground inset that shows up as unwanted
                         // margin around the ad instead of letting it sit flush.
                         setPadding(0, 0, 0, 0)
+                        layoutDirection = View.LAYOUT_DIRECTION_LTR
+                        textDirection = View.TEXT_DIRECTION_LTR
                         val adContainer = FrameLayout(viewContext).apply {
                             layoutParams = FrameLayout.LayoutParams(
                                 FrameLayout.LayoutParams.MATCH_PARENT,
                                 FrameLayout.LayoutParams.WRAP_CONTENT
                             )
                             setPadding(0, 0, 0, 0)
+                            layoutDirection = View.LAYOUT_DIRECTION_LTR
+                            textDirection = View.TEXT_DIRECTION_LTR
                         }
                         val shimmer = ShimmerFrameLayout(viewContext).apply {
                             layoutParams = FrameLayout.LayoutParams(
@@ -136,7 +140,7 @@ fun ErainNativeAdHost(
                 },
                 modifier = modifier
                     .fillMaxWidth()
-                    .wrapContentHeight()
+                    .height(height)
             )
         }
     }
@@ -155,6 +159,18 @@ private fun populateErainNative(
     }
     Log.d(ADS_TAG, "[$placementName] POPULATE via ERain")
     ERainAd.getInstance().populateNativeAdView(activity, state.nativeAd, adContainer, shimmer)
+    adContainer.forceLtrRecursively()
+    adContainer.post { adContainer.forceLtrRecursively() }
+}
+
+private fun View.forceLtrRecursively() {
+    layoutDirection = View.LAYOUT_DIRECTION_LTR
+    textDirection = View.TEXT_DIRECTION_LTR
+    if (this is ViewGroup) {
+        for (index in 0 until childCount) {
+            getChildAt(index).forceLtrRecursively()
+        }
+    }
 }
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {

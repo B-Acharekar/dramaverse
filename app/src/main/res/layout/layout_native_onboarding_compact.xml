@@ -4,18 +4,21 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/native_onboarding_background"
+    android:layoutDirection="ltr"
     android:padding="10dp">
 
     <!-- Large native card used on onboarding pages 1 and 3. Keep NativeAdView root so Google owns clicks. -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layoutDirection="ltr"
         android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
+            android:layoutDirection="ltr"
             android:orientation="horizontal"
             android:paddingStart="40dp">
 
@@ -31,6 +34,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="7dp"
                 android:layout_weight="1"
+                android:layoutDirection="ltr"
                 android:orientation="vertical">
 
                 <TextView

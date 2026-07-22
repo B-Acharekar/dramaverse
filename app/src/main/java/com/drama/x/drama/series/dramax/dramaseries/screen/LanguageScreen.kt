@@ -186,7 +186,7 @@ fun LanguageScreen(
                 placementName = "language_native",
                 state = nativeAdState,
                 modifier = Modifier.requiredWidth(LocalConfiguration.current.screenWidthDp.dp),
-                height = 340.dp
+                height = 300.dp
             )
         }
     }

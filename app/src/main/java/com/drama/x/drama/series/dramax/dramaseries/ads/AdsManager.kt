@@ -460,7 +460,11 @@ object AdsManager {
         )
     }
 
-    fun showSplashInterstitialIfReady(activity: Activity, onClosed: () -> Unit = {}) {
+    fun showSplashInterstitialIfReady(
+        activity: Activity,
+        waitForAdClosed: Boolean = false,
+        onClosed: () -> Unit = {}
+    ) {
         val ad = splashInterstitial
         if (ad == null) {
             onClosed()

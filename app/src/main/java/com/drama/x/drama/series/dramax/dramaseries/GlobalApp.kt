@@ -71,7 +71,7 @@ class GlobalApp : AdsMultiDexApplication() {
             )
             facebookClientToken = getString(R.string.facebook_client_token)
             adjustTokenTiktok = getString(R.string.event_token)
-            intervalInterstitialAd = 35
+            intervalInterstitialAd = 15
             idAdResume = ""
         }
 

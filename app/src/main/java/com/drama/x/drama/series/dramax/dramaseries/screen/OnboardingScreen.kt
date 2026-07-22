@@ -71,9 +71,10 @@ import com.drama.x.drama.series.dramax.dramaseries.model.OnboardingViewModel
 import com.drama.x.drama.series.dramax.dramaseries.model.OnboardingVisual
 import kotlinx.coroutines.launch
 import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -82,10 +83,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowCompat.getInsetsController
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import com.ads.module.ads.wrapper.ApNativeAd
 import com.google.android.gms.ads.nativead.MediaView
 import com.google.android.gms.ads.nativead.NativeAd
@@ -132,23 +129,6 @@ fun OnboardingScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val activity = remember(context) { context.findActivity() }
-
-    // Hide system nav bar
-    DisposableEffect(activity) {
-        val window = activity?.window
-        if (window != null) {
-            val controller = getInsetsController(window, window.decorView)
-            controller.systemBarsBehavior =
-                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            controller.hide(WindowInsetsCompat.Type.navigationBars())
-        }
-        onDispose {
-            if (window != null) {
-                val controller = getInsetsController(window, window.decorView)
-                controller.show(WindowInsetsCompat.Type.navigationBars())
-            }
-        }
-    }
 
     var onboardingPageOneAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
     var onboardingFullscreenAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
@@ -208,7 +188,7 @@ fun OnboardingScreen(
             OnboardingGlowBackground()
             HorizontalPager(
                 state = pagerState,
-                modifier = Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()
+                modifier = Modifier.fillMaxSize().statusBarsPadding()
             ) { pageIndex ->
                 if (showFullNativePage && pageIndex == FULLSCREEN_NATIVE_PAGER_INDEX) {
                     OnboardingFullscreenNativeAd(
@@ -608,7 +588,7 @@ private fun OnboardingNativeAd(
         placementName = "onboarding_page_native",
         state = state,
         modifier = modifier,
-        height = 320.dp.h(scale),
+        height = 300.dp.h(scale),
         showFailureMessage = true
     )
 }
@@ -672,13 +652,25 @@ private fun NativeAdFullscreenView(
     AndroidView(
         modifier = modifier,
         factory = { context ->
-            LayoutInflater.from(context)
-                .inflate(R.layout.layout_native_full_screen, null) as NativeAdView
+            (LayoutInflater.from(context)
+                .inflate(R.layout.layout_native_full_screen, null) as NativeAdView)
+                .also { it.forceLtrRecursively() }
         },
         update = { adView ->
+            adView.forceLtrRecursively()
             bindNativeAd(adView, admobNativeAd)
         }
     )
+}
+
+private fun View.forceLtrRecursively() {
+    layoutDirection = View.LAYOUT_DIRECTION_LTR
+    textDirection = View.TEXT_DIRECTION_LTR
+    if (this is ViewGroup) {
+        for (index in 0 until childCount) {
+            getChildAt(index).forceLtrRecursively()
+        }
+    }
 }
 
 private fun bindNativeAd(adView: NativeAdView, nativeAd: NativeAd) {

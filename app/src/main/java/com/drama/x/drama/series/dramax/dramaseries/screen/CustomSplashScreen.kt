@@ -127,7 +127,10 @@ fun CustomSplashScreen(
                         "bannerElapsedMs=$bannerElapsedMs maxWaitElapsed=$maxWaitElapsed"
                 )
                 if (!hasNavigated.get()) {
-                    AdsManager.showSplashInterstitialIfReady(activity) {
+                    AdsManager.showSplashInterstitialIfReady(
+                        activity = activity,
+                        waitForAdClosed = uninstallFlow
+                    ) {
                         continueFromSplash("interstitial_closed")
                     }
                 }
