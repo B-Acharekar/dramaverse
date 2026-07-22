@@ -47,6 +47,7 @@ class GlobalApp : AdsMultiDexApplication() {
         Log.d(TAG, "LOCAL_AD_CONFIG_READY")
 
         initAds()
+        DramaXWidgetProvider.refresh(this)
 
         val lifecycleObserver = if (ResumeAdsEntryRule.shouldShowWelcomeOnResume()) {
             AppLifecycleObserver()

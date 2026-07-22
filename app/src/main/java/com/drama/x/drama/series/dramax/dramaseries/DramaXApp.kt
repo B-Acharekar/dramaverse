@@ -114,8 +114,6 @@ fun DramaXApp(
         )
 
         AppStep.ConfirmUninstall -> ConfirmUninstallScreen(
-            autoRedirectAfterAdReady = uiState.widgetUninstallAutoRedirect,
-            onAdReadyForAutoRedirect = viewModel::onWidgetUninstallConfirmAdReady,
             onBackHome = viewModel::returnFromUninstallPrompt,
             onStillUninstall = viewModel::openSurveyUninstall
         )

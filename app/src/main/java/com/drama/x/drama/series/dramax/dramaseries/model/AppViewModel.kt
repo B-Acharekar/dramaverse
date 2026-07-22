@@ -1,13 +1,13 @@
 package com.drama.x.drama.series.dramax.dramaseries.model
 
 import android.app.Application
-import android.content.Context
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.drama.x.drama.series.dramax.dramaseries.data.AuthRepository
 import com.drama.x.drama.series.dramax.dramaseries.data.HomeRepository
 import com.drama.x.drama.series.dramax.dramaseries.data.LocaleHelper
+import com.drama.x.drama.series.dramax.dramaseries.ads.AdsManager
 import com.drama.x.drama.series.dramax.dramaseries.ads.RemoteConfigUtils
 import com.google.firebase.FirebaseApp
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
@@ -23,8 +23,6 @@ private const val RC_DELAY_DONE_LANGUAGE = "delay_button_done_language"
 private const val RC_ONESIGNAL_APP_ID = "onesignal_app_id"
 private const val RC_BACKEND_BASE_URL = "backend_base_url"
 private const val DEFAULT_BACKEND_URL = "https://dramaverse-backend-lbq5.onrender.com"
-private const val PREFS_NAME = "dramaverse_onboarding"
-private const val KEY_ONBOARDING_DONE = "onboarding_done"
 
 enum class AppStep {
     Splash,
@@ -51,8 +49,7 @@ data class AppUiState(
     val selectedShortFilmId: Int? = null,
     val searchQuery: String = "",
     val recreateRequested: Boolean = false,
-    val isFirstLaunch: Boolean = true,
-    val widgetUninstallAutoRedirect: Boolean = false
+    val isFirstLaunch: Boolean = true
 
 )
 
@@ -60,7 +57,6 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val appContext = application.applicationContext
     private val authRepository = AuthRepository(application.applicationContext)
     private val homeRepository = HomeRepository(application.applicationContext, authRepository)
-    private val prefs = application.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val remoteConfig = RemoteConfigUtils.configure(application.applicationContext)
     private val _uiState = MutableStateFlow(AppUiState())
     val uiState: StateFlow<AppUiState> = _uiState.asStateFlow()
@@ -92,20 +88,18 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
         // Every other splash finish — including every fresh app open — always
         // starts the user back at Language.
-        _uiState.update { it.copy(currentStep = AppStep.Language, widgetUninstallAutoRedirect = false) }
+        _uiState.update { it.copy(currentStep = AppStep.Language) }
     }
 
     fun onLanguageFinished(language: String) {
         val nextStep = AppStep.Onboarding
-        cancelWidgetUninstallRedirect()
         LocaleHelper.persistLanguage(appContext, language)
         pendingPostLanguageRecreate = true
         _uiState.update {
             it.copy(
                 selectedLanguage = language,
                 currentStep = nextStep,
-                recreateRequested = true,
-                widgetUninstallAutoRedirect = false
+                recreateRequested = true
             )
         }
         registerDevice(language)
@@ -120,40 +114,25 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun onOnboardingFinished() {
-        prefs.edit().putBoolean(KEY_ONBOARDING_DONE, true).apply()
-        _uiState.update { it.copy(currentStep = AppStep.Home, widgetUninstallAutoRedirect = false) }
+        _uiState.update { it.copy(currentStep = AppStep.Home) }
     }
 
     fun startWidgetHome() {
-        cancelWidgetUninstallRedirect()
         _uiState.update {
             it.copy(
                 currentStep = AppStep.Home,
-                selectedShortFilmId = null,
-                widgetUninstallAutoRedirect = false
+                selectedShortFilmId = null
             )
         }
     }
 
     fun startWidgetUninstallFlow() {
-        cancelWidgetUninstallRedirect()
+        pendingPostLanguageRecreate = false
+        AdsManager.clearUninstallAds()
         _uiState.update {
             it.copy(
                 currentStep = AppStep.SplashUninstall,
-                selectedShortFilmId = null,
-                widgetUninstallAutoRedirect = true
-            )
-        }
-    }
-
-    fun onWidgetUninstallConfirmAdReady() {
-        val state = _uiState.value
-        if (!state.widgetUninstallAutoRedirect || state.currentStep != AppStep.ConfirmUninstall) return
-        _uiState.update {
-            it.copy(
-                currentStep = AppStep.Language,
-                selectedShortFilmId = null,
-                widgetUninstallAutoRedirect = false
+                selectedShortFilmId = null
             )
         }
     }
@@ -163,33 +142,24 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun openSurveyUninstall() {
-        cancelWidgetUninstallRedirect()
-        _uiState.update { it.copy(currentStep = AppStep.SurveyUninstall, widgetUninstallAutoRedirect = false) }
+        _uiState.update { it.copy(currentStep = AppStep.SurveyUninstall) }
     }
 
     fun openHome() {
-        cancelWidgetUninstallRedirect()
         _uiState.update {
             it.copy(
                 currentStep = AppStep.Home,
-                selectedShortFilmId = null,
-                widgetUninstallAutoRedirect = false
+                selectedShortFilmId = null
             )
         }
     }
 
     fun returnFromUninstallPrompt() {
-        cancelWidgetUninstallRedirect()
-        val destination = if (prefs.getBoolean(KEY_ONBOARDING_DONE, false)) {
-            AppStep.Home
-        } else {
-            AppStep.Language
-        }
+        pendingPostLanguageRecreate = false
         _uiState.update {
             it.copy(
-                currentStep = destination,
-                selectedShortFilmId = null,
-                widgetUninstallAutoRedirect = false
+                currentStep = AppStep.Language,
+                selectedShortFilmId = null
             )
         }
     }
@@ -198,29 +168,28 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update {
             it.copy(
                 currentStep = AppStep.Shorts,
-                selectedShortFilmId = filmId,
-                widgetUninstallAutoRedirect = false
+                selectedShortFilmId = filmId
             )
         }
     }
     fun openProfile() {
-        _uiState.update { it.copy(currentStep = AppStep.Profile, selectedShortFilmId = null, widgetUninstallAutoRedirect = false) }
+        _uiState.update { it.copy(currentStep = AppStep.Profile, selectedShortFilmId = null) }
     }
 
     fun openLibrary() {
-        _uiState.update { it.copy(currentStep = AppStep.Library, selectedShortFilmId = null, widgetUninstallAutoRedirect = false) }
+        _uiState.update { it.copy(currentStep = AppStep.Library, selectedShortFilmId = null) }
     }
 
     fun openRewards() {
-        _uiState.update { it.copy(currentStep = AppStep.Rewards, selectedShortFilmId = null, widgetUninstallAutoRedirect = false) }
+        _uiState.update { it.copy(currentStep = AppStep.Rewards, selectedShortFilmId = null) }
     }
 
     fun openPlanner() {
-        _uiState.update { it.copy(currentStep = AppStep.Planner, selectedShortFilmId = null, widgetUninstallAutoRedirect = false) }
+        _uiState.update { it.copy(currentStep = AppStep.Planner, selectedShortFilmId = null) }
     }
 
     fun openNotifications() {
-        _uiState.update { it.copy(currentStep = AppStep.Notifications, selectedShortFilmId = null, widgetUninstallAutoRedirect = false) }
+        _uiState.update { it.copy(currentStep = AppStep.Notifications, selectedShortFilmId = null) }
     }
 
     fun openSearch(query: String) {
@@ -230,14 +199,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             it.copy(
                 currentStep = AppStep.Search,
                 selectedShortFilmId = null,
-                searchQuery = trimmed,
-                widgetUninstallAutoRedirect = false
+                searchQuery = trimmed
             )
         }
-    }
-
-    private fun cancelWidgetUninstallRedirect() {
-        _uiState.update { it.copy(widgetUninstallAutoRedirect = false) }
     }
 
     private fun applyRemoteValues(config: FirebaseRemoteConfig?) {

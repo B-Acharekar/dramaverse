@@ -44,7 +44,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ads.module.util.SharePreferenceUtils
+import com.drama.x.drama.series.dramax.dramaseries.AppShortcutController
 import com.drama.x.drama.series.dramax.dramaseries.BuildConfig
+import com.drama.x.drama.series.dramax.dramaseries.DramaXWidgetProvider
 import com.drama.x.drama.series.dramax.dramaseries.R
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdRemoteConfig
 import com.google.android.gms.ads.MobileAds
@@ -66,7 +68,7 @@ object DevConfig {
         this.erainStudioVersion = nkhStudioVersion
         this.playServicesAdsVersion = playServicesAdsVersion
         this.gdprModuleVersion = gdprModuleVersion
-        context.applicationContext
+        resetUnlimitedAds(context.applicationContext)
     }
 
     fun resetOrganic(context: Context) {
@@ -86,6 +88,18 @@ object DevConfig {
             .putBoolean(KEY_UNLIMITED_ADS, enabled)
             .apply()
         SharePreferenceUtils.setIsOrganic(appContext, !enabled)
+        DramaXWidgetProvider.refresh(appContext)
+        AppShortcutController.syncUninstallShortcut(appContext, enabled)
+    }
+
+    private fun resetUnlimitedAds(context: Context) {
+        context
+            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean(KEY_UNLIMITED_ADS, false)
+            .apply()
+        SharePreferenceUtils.setIsOrganic(context, true)
+        AppShortcutController.syncUninstallShortcut(context, enabled = false)
     }
 
     private fun sdkRows(): List<Pair<String, String>> = listOf(

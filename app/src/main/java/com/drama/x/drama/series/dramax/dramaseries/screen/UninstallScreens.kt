@@ -5,7 +5,6 @@ import android.content.ContextWrapper
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import android.view.ViewTreeObserver
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
@@ -40,7 +39,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -60,7 +58,6 @@ import com.drama.x.drama.series.dramax.dramaseries.R
 import com.drama.x.drama.series.dramax.dramaseries.ads.ADS_TAG
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdsManager
 import com.drama.x.drama.series.dramax.dramaseries.ads.NativeAdState
-import kotlinx.coroutines.delay
 
 private val UninstallBackground = Color(0xFF111113)
 private val UninstallText = Color(0xFFF5EEF1)
@@ -71,8 +68,6 @@ private val ButtonBrush = Brush.horizontalGradient(listOf(Color(0xFF86011D), Col
 
 @Composable
 fun ConfirmUninstallScreen(
-    autoRedirectAfterAdReady: Boolean = false,
-    onAdReadyForAutoRedirect: () -> Unit = {},
     onBackHome: () -> Unit,
     onStillUninstall: () -> Unit
 ) {
@@ -80,26 +75,9 @@ fun ConfirmUninstallScreen(
     val context = LocalContext.current
     val activity = remember(context) { context.findActivity() }
     var nativeAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
-    var hasWindowFocus by remember {
-        mutableStateOf(activity?.window?.decorView?.hasWindowFocus() == true)
-    }
 
     LaunchedEffect(activity) {
         activity?.let { AdsManager.loadNativeUninstall(it) }
-    }
-    DisposableEffect(activity) {
-        val decorView = activity?.window?.decorView ?: return@DisposableEffect onDispose {}
-        hasWindowFocus = decorView.hasWindowFocus()
-        val listener = ViewTreeObserver.OnWindowFocusChangeListener { focused ->
-            hasWindowFocus = focused
-            Log.d(ADS_TAG, "UNINSTALL_CONFIRM_WINDOW_FOCUS focused=$focused")
-        }
-        decorView.viewTreeObserver.addOnWindowFocusChangeListener(listener)
-        onDispose {
-            if (decorView.viewTreeObserver.isAlive) {
-                decorView.viewTreeObserver.removeOnWindowFocusChangeListener(listener)
-            }
-        }
     }
     DisposableEffect(Unit) {
         val observer = Observer<NativeAdState> { state ->
@@ -108,13 +86,6 @@ fun ConfirmUninstallScreen(
         }
         AdsManager.nativeUninstallAdLive.observeForever(observer)
         onDispose { AdsManager.nativeUninstallAdLive.removeObserver(observer) }
-    }
-    LaunchedEffect(autoRedirectAfterAdReady, nativeAdState, hasWindowFocus) {
-        if (autoRedirectAfterAdReady && nativeAdState.isResolved() && hasWindowFocus) {
-            withFrameNanos { }
-            delay(2_000L)
-            onAdReadyForAutoRedirect()
-        }
     }
 
     UninstallBaseScreen(nativeAdState = nativeAdState, onBackHome = onBackHome) {
@@ -155,9 +126,6 @@ fun ConfirmUninstallScreen(
         Spacer(modifier = Modifier.weight(1.2f))
     }
 }
-
-private fun NativeAdState.isResolved(): Boolean =
-    this is NativeAdState.Loaded || this is NativeAdState.Failed || this is NativeAdState.Disabled
 
 @Composable
 fun SurveyUninstallScreen(onBackHome: () -> Unit) {

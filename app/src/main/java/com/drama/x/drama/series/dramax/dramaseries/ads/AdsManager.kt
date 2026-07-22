@@ -518,6 +518,13 @@ object AdsManager {
         _nativeSurveyUninstallAdLive.value = NativeAdState.Idle
     }
 
+    fun clearUninstallAds() {
+        _nativeUninstallAdLive.value?.destroyLoadedAdSafely()
+        _nativeSurveyUninstallAdLive.value?.destroyLoadedAdSafely()
+        _nativeUninstallAdLive.value = NativeAdState.Idle
+        _nativeSurveyUninstallAdLive.value = NativeAdState.Idle
+    }
+
     private fun loadNativePlacement(
         activity: Activity,
         placementName: String,

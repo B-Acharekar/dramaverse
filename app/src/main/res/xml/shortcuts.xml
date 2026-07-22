@@ -2,19 +2,6 @@
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
     <shortcut
         android:enabled="true"
-        android:icon="@drawable/widget_delete"
-        android:shortcutDisabledMessage="@string/widget_uninstall"
-        android:shortcutId="shortcut_uninstall"
-        android:shortcutLongLabel="@string/widget_uninstall"
-        android:shortcutShortLabel="@string/widget_uninstall">
-        <intent
-            android:action="com.drama.x.drama.series.dramax.dramaseries.action.WIDGET_UNINSTALL"
-            android:targetClass="com.drama.x.drama.series.dramax.dramaseries.MainActivity"
-            android:targetPackage="com.drama.x.drama.series.dramax.dramaseries" />
-    </shortcut>
-
-    <shortcut
-        android:enabled="true"
         android:icon="@drawable/widget_home"
         android:shortcutDisabledMessage="@string/widget_home"
         android:shortcutId="shortcut_home"

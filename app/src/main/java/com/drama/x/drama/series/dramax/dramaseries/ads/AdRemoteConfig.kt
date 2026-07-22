@@ -21,7 +21,8 @@ object AdRemoteConfig {
         "native_onboarding_1_4",
         "native_onboarding_2_4",
         "native_onboarding_fullscreen_1_2",
-        "native_onboarding_fullscreen_2_2"
+        "native_onboarding_fullscreen_2_2",
+        "inter_onboarding"
     )
 
     @Volatile
