@@ -48,6 +48,13 @@ fun DramaXApp(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     var onboardingFinishInProgress by remember { mutableStateOf(false) }
+    val currentStep = when {
+        initialAction == MainActivity.ACTION_WIDGET_UNINSTALL && uiState.currentStep == AppStep.Splash ->
+            AppStep.SplashUninstall
+        initialAction == MainActivity.ACTION_WIDGET_HOME && uiState.currentStep == AppStep.Splash ->
+            AppStep.Home
+        else -> uiState.currentStep
+    }
 
     LaunchedEffect(uiState.recreateRequested) {
         if (uiState.recreateRequested) {
@@ -67,7 +74,7 @@ fun DramaXApp(
         }
     }
 
-    when (uiState.currentStep) {
+    when (currentStep) {
         AppStep.Splash -> CustomSplashScreen(
             onFinished = {
                 viewModel.onSplashFinished()
