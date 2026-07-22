@@ -68,7 +68,7 @@ object DevConfig {
         this.erainStudioVersion = nkhStudioVersion
         this.playServicesAdsVersion = playServicesAdsVersion
         this.gdprModuleVersion = gdprModuleVersion
-        resetUnlimitedAds(context.applicationContext)
+        ensureUnlimitedAdsDefault(context.applicationContext)
     }
 
     fun resetOrganic(context: Context) {
@@ -92,14 +92,16 @@ object DevConfig {
         AppShortcutController.syncUninstallShortcut(appContext, enabled)
     }
 
-    private fun resetUnlimitedAds(context: Context) {
-        context
-            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .edit()
-            .putBoolean(KEY_UNLIMITED_ADS, false)
-            .apply()
-        SharePreferenceUtils.setIsOrganic(context, true)
-        AppShortcutController.syncUninstallShortcut(context, enabled = false)
+    private fun ensureUnlimitedAdsDefault(context: Context) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        if (!prefs.contains(KEY_UNLIMITED_ADS)) {
+            prefs.edit().putBoolean(KEY_UNLIMITED_ADS, false).apply()
+            SharePreferenceUtils.setIsOrganic(context, true)
+        }
+        AppShortcutController.syncUninstallShortcut(
+            context = context,
+            enabled = prefs.getBoolean(KEY_UNLIMITED_ADS, false)
+        )
     }
 
     private fun sdkRows(): List<Pair<String, String>> = listOf(

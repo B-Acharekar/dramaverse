@@ -158,7 +158,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         pendingPostLanguageRecreate = false
         _uiState.update {
             it.copy(
-                currentStep = AppStep.Language,
+                currentStep = AppStep.Home,
                 selectedShortFilmId = null
             )
         }
