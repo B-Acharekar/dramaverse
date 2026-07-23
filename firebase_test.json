@@ -147,7 +147,7 @@
     },
     "backend_base_url": {
       "defaultValue": {
-        "value": "https://dramaverse-backend-lbq5.onrender.com"
+        "value": "https://drama-verse-backend.vercel.app/"
       },
       "valueType": "STRING"
     },

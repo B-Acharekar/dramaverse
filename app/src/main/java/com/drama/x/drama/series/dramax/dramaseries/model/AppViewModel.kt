@@ -21,8 +21,7 @@ import kotlinx.coroutines.launch
 private const val TAG = "DramaX"
 private const val RC_DELAY_DONE_LANGUAGE = "delay_button_done_language"
 private const val RC_ONESIGNAL_APP_ID = "onesignal_app_id"
-private const val RC_BACKEND_BASE_URL = "backend_base_url"
-private const val DEFAULT_BACKEND_URL = "https://dramaverse-backend-lbq5.onrender.com"
+private const val DEFAULT_BACKEND_URL = "https://drama-verse-backend.vercel.app/"
 
 enum class AppStep {
     Splash,
@@ -206,11 +205,10 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun applyRemoteValues(config: FirebaseRemoteConfig?) {
         config ?: return
-        val backendUrl = config.getString(RC_BACKEND_BASE_URL).ifBlank { DEFAULT_BACKEND_URL }
         _uiState.update {
             it.copy(
                 delayDoneLanguage = config.getBoolean(RC_DELAY_DONE_LANGUAGE),
-                backendBaseUrl = backendUrl
+                backendBaseUrl = DEFAULT_BACKEND_URL
             )
         }
 

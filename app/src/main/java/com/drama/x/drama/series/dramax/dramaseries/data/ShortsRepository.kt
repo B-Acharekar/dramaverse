@@ -468,7 +468,7 @@ private fun String.isSubtitleContainerKey(): Boolean =
     lowercase() in setOf("subtitles", "subtitle", "tracks", "captions", "items", "data")
 
 private fun String.trimEndSlash(): String =
-    trim().trimEnd('/').ifBlank { "https://dramaverse-backend-lbq5.onrender.com" }
+    trim().trimEnd('/').ifBlank { "https://drama-verse-backend.vercel.app/" }
 
 private fun String.normalizeMediaUrl(backendBaseUrl: String): String {
     if (isBlank()) return ""
