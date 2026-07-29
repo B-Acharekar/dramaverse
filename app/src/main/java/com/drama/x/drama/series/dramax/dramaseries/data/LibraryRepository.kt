@@ -36,6 +36,7 @@ class LibraryRepository(
 ) {
     private val cacheStore = LibraryCacheStore(context.applicationContext)
     private val savedWatchListStore = SavedWatchListStore(context.applicationContext)
+    private val savedWatchHistoryStore = SavedWatchHistoryStore(context.applicationContext)
 
     suspend fun loadCachedLibrary(): LibraryFeed? = withContext(Dispatchers.IO) {
         withLocalWatchList(cacheStore.readFeed())
@@ -44,19 +45,25 @@ class LibraryRepository(
     private fun withLocalWatchList(feed: LibraryFeed?): LibraryFeed? {
         val localWatchListItems = savedWatchListStore.readItems()
             .filterNot { it.looksLikePlaceholder() }
+        val localWatchHistoryItems = savedWatchHistoryStore.readItems()
         if (feed == null) {
-            return localWatchListItems.takeIf { it.isNotEmpty() }?.let {
+            return if (localWatchListItems.isNotEmpty() || localWatchHistoryItems.isNotEmpty()) {
                 LibraryFeed(
-                    watchList = it.distinctFilms(),
-                    watchHistory = emptyList(),
+                    watchList = localWatchListItems.distinctFilms(),
+                    watchHistory = localWatchHistoryItems,
                     topStars = emptyList(),
                     recommended = emptyList(),
                     similarFilms = emptyList()
                 )
+            } else {
+                null
             }
         }
         // Local saves are merged into cached data so Library reflects new saves before backend refresh finishes.
-        return feed.copy(watchList = (localWatchListItems + feed.watchList).distinctFilms())
+        return feed.copy(
+            watchList = (localWatchListItems + feed.watchList).distinctFilms(),
+            watchHistory = feed.watchHistory.mergeLocalWatchHistory(localWatchHistoryItems)
+        )
     }
 
     suspend fun loadLibrary(
@@ -88,6 +95,7 @@ class LibraryRepository(
                 }
 
                 val historyItems = parseContinueWatching(history.await())
+                    .mergeLocalWatchHistory(savedWatchHistoryStore.readItems())
                 val watchListJson = watchList.await()
                 val localWatchListItems = savedWatchListStore.readItems()
                 val watchListItems = (localWatchListItems + collectDramaItems(watchListJson))

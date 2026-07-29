@@ -52,6 +52,12 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     fun loadHome(backendBaseUrl: String) {
         val language = LocaleHelper.persistedLanguageCode(appContext)
+        _uiState.update {
+            it.copy(
+                savedFilmIds = repository.savedWatchListIds(),
+                savedFilms = repository.savedWatchListItems()
+            )
+        }
         val hasFeed = _uiState.value.feed != null
         if (!hasFeed) {
             viewModelScope.launch {

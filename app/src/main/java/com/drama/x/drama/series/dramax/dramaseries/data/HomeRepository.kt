@@ -69,14 +69,17 @@ class HomeRepository(
     }
     private val cacheStore = HomeCacheStore(context.applicationContext)
     private val savedWatchListStore = SavedWatchListStore(context.applicationContext)
+    private val savedWatchHistoryStore = SavedWatchHistoryStore(context.applicationContext)
 
     fun savedWatchListIds(): Set<Int> = savedWatchListStore.savedIds()
 
     fun savedWatchListItems(): List<DramaItem> = savedWatchListStore.readItems()
 
+    fun savedWatchHistoryItems(): List<ContinueWatchingItem> = savedWatchHistoryStore.readItems()
+
     fun cachedCatalogItems(): List<DramaItem> {
         val feed = _prefetchedFeed.value ?: cacheStore.readFeedForCurrentWindow()
-        return feed?.allCatalogItems().orEmpty()
+        return feed?.let(::withLocalWatchState)?.allCatalogItems().orEmpty()
     }
 
     suspend fun loadHome(
@@ -84,10 +87,11 @@ class HomeRepository(
         language: String = "en"
     ): Result<HomeFeed?> = withContext(Dispatchers.IO) {
         runCatching {
-            _prefetchedFeed.value?.let { return@runCatching it }
+            _prefetchedFeed.value?.let { return@runCatching withLocalWatchState(it) }
             cacheStore.readFeedForCurrentWindow()?.let { cached ->
-                _prefetchedFeed.value = cached
-                return@runCatching cached
+                val merged = withLocalWatchState(cached)
+                _prefetchedFeed.value = merged
+                return@runCatching merged
             }
             val token = authRepository.authToken()
                 ?: authRepository.registerDevice(backendBaseUrl, language).getOrThrow().token
@@ -97,7 +101,7 @@ class HomeRepository(
                 fetchHomeFeed(backendBaseUrl, language, token, timeoutMillis = 2200)
             }?.let { rawFeed ->
                 cacheStore.writeRawFeed(rawFeed)
-                cacheStore.displayFeedForToday(rawFeed).also { displayFeed ->
+                withLocalWatchState(cacheStore.displayFeedForToday(rawFeed)).also { displayFeed ->
                     _prefetchedFeed.value = displayFeed
                     cacheStore.writeDisplayFeed(displayFeed)
                 }
@@ -116,7 +120,7 @@ class HomeRepository(
 
             val rawFeed = fetchHomeFeed(backendBaseUrl, language, token, timeoutMillis = 9000)
             cacheStore.writeRawFeed(rawFeed)
-            val displayFeed = cacheStore.displayFeedForToday(rawFeed)
+            val displayFeed = withLocalWatchState(cacheStore.displayFeedForToday(rawFeed))
             cacheStore.writeDisplayFeed(displayFeed)
             displayFeed.also { _prefetchedFeed.value = it }
         }
@@ -139,7 +143,7 @@ class HomeRepository(
                 timeoutMillis = 5000,
                 page = 1
             )
-            parseContinueWatching(historyJson)
+            parseContinueWatching(historyJson).mergeLocalWatchHistory(savedWatchHistoryStore.readItems())
         }
     }
 
@@ -234,6 +238,12 @@ class HomeRepository(
                 )
             }.also { _prefetchedFeed.value = it }
         }
+    }
+
+    private fun withLocalWatchState(feed: HomeFeed): HomeFeed {
+        return feed.copy(
+            continueWatching = feed.continueWatching.mergeLocalWatchHistory(savedWatchHistoryStore.readItems())
+        )
     }
 }
 

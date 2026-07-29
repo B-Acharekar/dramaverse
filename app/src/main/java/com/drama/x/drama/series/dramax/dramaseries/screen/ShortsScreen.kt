@@ -254,6 +254,14 @@ fun ShortsScreen(
                             autoUnlock = autoUnlock
                         )
                     },
+                    onProgressCheckpoint = { item, position, duration ->
+                        viewModel.saveWatchProgress(
+                            backendBaseUrl = backendBaseUrl,
+                            item = item,
+                            progressSeconds = (position / 1000).toInt(),
+                            durationSeconds = duration.takeIf { it > 0L }?.let { (it / 1000).toInt() }
+                        )
+                    },
                     onToggleCc = { ccEnabled = !ccEnabled },
                     onCycleSpeed = {
                         playbackSpeed = when (playbackSpeed) {
@@ -306,6 +314,7 @@ private fun ShortsPage(
     onLikeClick: (ShortsItem, Boolean) -> Unit,
     onReminderClick: (ShortsItem, Boolean) -> Unit,
     onEpisodeFinished: (Int, ShortsItem, Long, Long) -> Unit,
+    onProgressCheckpoint: (ShortsItem, Long, Long) -> Unit,
     onToggleCc: () -> Unit,
     onCycleSpeed: () -> Unit
 ) {
@@ -315,6 +324,7 @@ private fun ShortsPage(
     var positionMs by remember(item.playUrl) { mutableStateOf(0L) }
     var durationMs by remember(item.playUrl) { mutableStateOf(0L) }
     var finishHandled by remember(item.playUrl) { mutableStateOf(false) }
+    var lastProgressSaveMs by remember(item.playUrl) { mutableStateOf(0L) }
     var pendingSeekMs by remember(item.playUrl) { mutableStateOf<Long?>(null) }
     var subtitleText by remember(item.playUrl) { mutableStateOf("") }
     var feedbackText by remember(item.playUrl) { mutableStateOf("") }
@@ -359,6 +369,10 @@ private fun ShortsPage(
                 onProgress = { position, duration ->
                     positionMs = position
                     durationMs = duration
+                    if (position >= 10_000L && position - lastProgressSaveMs >= 5_000L) {
+                        lastProgressSaveMs = position
+                        onProgressCheckpoint(item, position, duration)
+                    }
                 },
                 onEnded = {
                     if (!finishHandled) {

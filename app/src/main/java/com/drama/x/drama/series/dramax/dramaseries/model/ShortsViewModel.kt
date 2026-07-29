@@ -8,6 +8,7 @@ import com.drama.x.drama.series.dramax.dramaseries.data.AuthRepository
 import com.drama.x.drama.series.dramax.dramaseries.data.DramaItem
 import com.drama.x.drama.series.dramax.dramaseries.data.EpisodeInfo
 import com.drama.x.drama.series.dramax.dramaseries.data.LocaleHelper
+import com.drama.x.drama.series.dramax.dramaseries.data.SavedWatchHistoryStore
 import com.drama.x.drama.series.dramax.dramaseries.data.SavedWatchListStore
 import com.drama.x.drama.series.dramax.dramaseries.data.ShortsItem
 import com.drama.x.drama.series.dramax.dramaseries.data.ShortsRepository
@@ -33,6 +34,7 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
     private val appContext = application.applicationContext
     private val repository = ShortsRepository(AuthRepository(application.applicationContext))
     private val savedWatchListStore = SavedWatchListStore(application.applicationContext)
+    private val savedWatchHistoryStore = SavedWatchHistoryStore(application.applicationContext)
     private val _uiState = MutableStateFlow(ShortsUiState())
     val uiState: StateFlow<ShortsUiState> = _uiState.asStateFlow()
     private var nextPage = 1
@@ -195,6 +197,13 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
         autoUnlock: Boolean
     ) {
         if (item.film.id == 0) return
+        savedWatchHistoryStore.save(
+            film = item.film,
+            episodeNumber = item.episodeNumber,
+            progressSeconds = progressSeconds,
+            durationSeconds = durationSeconds,
+            completed = true
+        )
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 repository.saveWatchProgress(
@@ -262,6 +271,13 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
         durationSeconds: Int?
     ) {
         if (item.film.id == 0 || progressSeconds < 10) return
+        savedWatchHistoryStore.save(
+            film = item.film,
+            episodeNumber = item.episodeNumber,
+            progressSeconds = progressSeconds,
+            durationSeconds = durationSeconds,
+            completed = false
+        )
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 repository.saveWatchProgress(
