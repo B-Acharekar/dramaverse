@@ -35,6 +35,8 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DeleteOutline
@@ -90,7 +92,7 @@ fun LibraryScreen(
     onHome: () -> Unit,
     onShorts: () -> Unit,
     onOpenShorts: (Int?) -> Unit,
-    onSearch: (String) -> Unit,
+    onSearch: (String) -> Unit = {},
     onRewards: () -> Unit,
     onPlanner: () -> Unit,
     onProfile:() -> Unit,
@@ -135,7 +137,7 @@ fun LibraryScreen(
 private fun LibraryContent(
     feed: LibraryFeed,
     errorMessage: String?,
-    onSearch: (String) -> Unit,
+    onSearch: (String) -> Unit = {},
     onOpenShorts: (Int?) -> Unit,
     onPlanner: () -> Unit
 ) {
@@ -148,7 +150,9 @@ private fun LibraryContent(
         contentPadding = PaddingValues(bottom = 104.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        item { LibraryTopHeader(onSearch) }
+        if (mode == MyListMode.Overview) {
+            item { LibraryTopHeader(onSearchClick = onSearch) }
+        }
         if (errorMessage != null) {
             item {
                 Text(
@@ -169,14 +173,7 @@ private fun LibraryContent(
                         onAction = { mode = MyListMode.History }
                     )
                 }
-                if (history.isEmpty()) {
-                    item {
-                        MyListEmptyMessage(
-                            title = "Nothing watched yet",
-                            body = "Watch something for a few seconds and your history will appear here."
-                        )
-                    }
-                } else {
+                if (!history.isEmpty()) {
                     item {
                         LazyRow(
                             contentPadding = PaddingValues(horizontal = 18.dp),
@@ -276,12 +273,24 @@ private fun LibraryContent(
 }
 
 @Composable
-private fun LibraryTopHeader(onSearch: (String) -> Unit) {
+private fun LibraryTopHeader( onSearchClick: (String) -> Unit = {},
+                              modifier: Modifier = Modifier) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    DramaXTopAppBar(
-        topInset = topInset,
-        onSearchClick = { onSearch("hot") }
-    )
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(64.dp + topInset)
+            .background(Color(0xFF0C0808))
+            .padding(top = topInset)
+            .border(width = 1.dp, color = Color(0x1AFFFFFF))
+            .padding(start = 36.dp, end = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        Spacer(modifier = Modifier.weight(1f))
+        AppHeaderIcon(Icons.Filled.Search, {onSearchClick("")}, Modifier.size(18.dp))
+        Spacer(modifier = Modifier.width(16.dp))
+    }
 }
 
 @Composable
@@ -316,15 +325,22 @@ private fun MyListAllHeader(
 ) {
     Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = Color.White,
+                modifier = Modifier
+                    .size(20.dp)
+                    .clickable(onClick = onBack)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
             Text(
                 title,
                 color = Color.White,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = 0.sp,
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable(onClick = onBack)
+                modifier = Modifier.weight(1f)
             )
             Icon(Icons.Filled.DeleteOutline, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
         }

@@ -59,6 +59,20 @@ import kotlinx.coroutines.withContext
 import com.drama.x.drama.series.dramax.dramaseries.R
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdsManager
 import com.drama.x.drama.series.dramax.dramaseries.data.LocaleHelper
+import com.drama.x.drama.series.dramax.dramaseries.model.LanguageViewModel
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+
+
+
+
 
 private val BgColor = Color(0xFF131315)
 private val CardColor = Color(0xFF1A171A)
@@ -107,22 +121,13 @@ fun ProfileScreen(
 //    isVipGold: Boolean = true,
     stats: ProfileStats = ProfileStats(),
     currentLanguage: String = "English (US)",
-    bannerImageUrl: String? = null,
     avatarImageUrl: String? = null,
     onHome: () -> Unit = {},
     onShorts: () -> Unit = {},
     onLibrary: () -> Unit = {},
-    onEditAvatar: () -> Unit = {},
     onRewards:() -> Unit = {},
-//    onSubscription: () -> Unit = {},
-//    onWallet: () -> Unit = {},
-//    onDownloads: () -> Unit = {},
-    onEditProfile: () -> Unit = {},
     onWatchHistory: () -> Unit = {},
     onMyWatchlist: () -> Unit = {},
-    onLanguage: () -> Unit = {},
-    onSettings: () -> Unit = {},
-    onHelpCenter: () -> Unit = {},
     onRateUs: () -> Unit = {},
     onPrivacyPolicy: () -> Unit = {},
     viewModel: ProfileViewModel = viewModel()
@@ -210,7 +215,6 @@ fun ProfileScreen(
                         subtitle = displayedLanguage,
                         onClick = {
                             showLanguageDialog = true
-                            onLanguage()
                         }
                     )
                 }
@@ -236,8 +240,7 @@ fun ProfileScreen(
     }
 
     if (showLanguageDialog) {
-        LanguagePickerDialog(
-            currentLanguage = displayedLanguage,
+        LanguageChangeDialog(
             onDismiss = { showLanguageDialog = false }
         )
     }
@@ -901,73 +904,6 @@ private fun LocalFileImage(
 }
 
 
-@Composable
-fun LanguagePickerDialog(
-    currentLanguage: String,
-    onDismiss: () -> Unit
-) {
-    val context = LocalContext.current
-    val languages = remember {
-        listOf(
-            "English",
-            "Spanish",
-            "Deutsch",
-            "Portuguese",
-            "Turkish",
-            "Arabic",
-            "Hindi",
-            "Japanese",
-            "Korean",
-            "Chinese"
-        )
-    }
-    var selectedLanguage by remember { mutableStateOf(currentLanguage) }
-    val listState = rememberLazyListState()
-
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            decorFitsSystemWindows = false
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .background(Color(0xFF161616))
-        ) {
-            LanguagePickerHeader(
-                onDoneClick = {
-                    LocaleHelper.persistLanguage(context, selectedLanguage)
-                    LocaleHelper.persistPendingStep(context, "Profile")
-                    onDismiss()
-                    context.findActivity()?.let { activity ->
-                        AdsManager.preserveNativeAdsForActivityRecreate()
-                        activity.recreate()
-                    }
-                }
-            )
-
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 11.5.dp),
-                contentPadding = PaddingValues(top = 7.5.dp, bottom = 7.5.dp),
-                verticalArrangement = Arrangement.spacedBy(7.5.dp)
-            ) {
-                items(languages) { language ->
-                    LanguagePickerItem(
-                        name = language,
-                        selected = selectedLanguage == language,
-                        onClick = { selectedLanguage = language }
-                    )
-                }
-            }
-        }
-    }
-}
 
 @Composable
 private fun LanguagePickerHeader(
@@ -1074,15 +1010,7 @@ private fun LanguagePickerSelectionRing(selected: Boolean) {
     }
 }
 
-/** Unwraps a possibly-decorated Context (e.g. from [LocaleHelper.wrap]) down to its hosting Activity. */
-private fun Context.findActivity(): Activity? {
-    var current = this
-    while (current is ContextWrapper) {
-        if (current is Activity) return current
-        current = current.baseContext
-    }
-    return null
-}
+
 
 private fun Context.shareApp() {
     val shareIntent = Intent(Intent.ACTION_SEND)
@@ -1108,3 +1036,70 @@ private fun ProfileStats.watchTimeLabel(): String {
     val remainingMinutes = minutesWatched % 60
     return if (remainingMinutes > 0) "${hoursWatched}h ${remainingMinutes}m" else "${hoursWatched}h"
 }
+
+
+@Composable
+fun LanguageChangeDialog(
+    onDismiss: () -> Unit,
+    viewModel: LanguageViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val listState = rememberLazyListState()
+    val context = LocalContext.current
+    val activity = context as? Activity
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF161616))
+                .statusBarsPadding()
+                .navigationBarsPadding()
+        ) {
+            LanguageHeader(
+                showActionButton = true,
+                onDevConfigOpen = {},
+                onActionClick = {
+                    uiState.selectedLanguage?.let { chosen ->
+                        LocaleHelper.persistLanguage(context, chosen)
+                        LocaleHelper.persistPendingStep(context, "Profile")
+                        (activity as? Activity)?.let {
+                            AdsManager.preserveNativeAdsForActivityRecreate()
+                            it.recreate()
+                        }
+                    }
+                    onDismiss()
+                }
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF161616))
+                    .padding(top = 10.dp)
+            ) {
+                HorizontalDivider(color = Color.Gray.copy(alpha = 0.3f))
+            }
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(horizontal = 11.dp),
+                contentPadding = PaddingValues(top = 12.dp, bottom = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(uiState.languages) { language ->
+                    LanguageItem(
+                        name = language,
+                        selected = uiState.selectedLanguage == language,
+                        onClick = { viewModel.selectLanguage(language) }
+                    )
+                }
+            }
+        }
+    }
+}
+

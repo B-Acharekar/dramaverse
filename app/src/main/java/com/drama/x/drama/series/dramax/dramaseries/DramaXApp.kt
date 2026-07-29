@@ -183,7 +183,6 @@ fun DramaXApp(
             onShorts = { viewModel.openShorts(null) },
             onLibrary = viewModel::openLibrary,
             onRewards = viewModel::openRewards,
-            onLanguage = { viewModel.openHome() }
         )
 
         AppStep.Planner -> PlannerScreen(

@@ -209,7 +209,7 @@ fun LanguageScreen(
 }
 
 @Composable
-private fun LanguageHeader(
+internal fun LanguageHeader(
     showActionButton: Boolean,
     onDevConfigOpen: () -> Unit,
     onActionClick: () -> Unit
@@ -259,7 +259,7 @@ private fun LanguageHeader(
 }
 
 @Composable
-private fun LanguageItem(
+internal fun LanguageItem(
     name: String,
     selected: Boolean,
     onClick: () -> Unit
@@ -320,7 +320,7 @@ private fun SelectionRing(selected: Boolean) {
     }
 }
 
-private fun flagForLanguage(name: String): String = when (name) {
+internal fun flagForLanguage(name: String): String = when (name) {
     "English" -> "\uD83C\uDDFA\uD83C\uDDF8"
     "Tiếng Việt" -> "\uD83C\uDDFB\uD83C\uDDF3"
     "Español" -> "\uD83C\uDDEA\uD83C\uDDF8"

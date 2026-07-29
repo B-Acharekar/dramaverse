@@ -739,7 +739,7 @@ private fun HeaderAssetLogo() {
 }
 
 @Composable
-private fun AppHeaderIcon(icon: ImageVector, onClick: () -> Unit, modifier: Modifier) {
+internal fun AppHeaderIcon(icon: ImageVector, onClick: () -> Unit, modifier: Modifier) {
     Box(
         modifier = Modifier
             .size(28.dp)
