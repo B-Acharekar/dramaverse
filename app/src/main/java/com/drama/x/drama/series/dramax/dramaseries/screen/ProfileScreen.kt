@@ -60,9 +60,9 @@ import com.drama.x.drama.series.dramax.dramaseries.R
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdsManager
 import com.drama.x.drama.series.dramax.dramaseries.data.LocaleHelper
 
-private val BgColor = Color(0xFF0E0B10)
-private val CardColor = Color(0xFF17141B)
-private val DividerColor = Color(0xFF2A2530)
+private val BgColor = Color(0xFF131315)
+private val CardColor = Color(0xFF1A171A)
+private val DividerColor = Color(0xFF252226)
 private val GoldColor = Color(0xFFF4B93B)
 private val TextPrimary = Color(0xFFF5F3F7)
 private val TextSecondary = Color(0xFF9C96A5)
@@ -71,9 +71,9 @@ private val AvatarRingGradient = Brush.sweepGradient(
     listOf(Color(0xFFF4B93B), Color(0xFFE05C8A), Color(0xFF9B5DE5), Color(0xFFF4B93B))
 )
 
-private val RosePrimary = Color(0xFFF2C4CE)      // row titles + icon tint
-private val RoseMuted = Color(0xFFC79AA6)        // subtitles, section labels, chevrons
-private val RoseIconBg = Color(0x29F2C4CE)       // translucent circular icon backdrop
+private val RosePrimary = Color(0xFFF0D0D8)
+private val RoseMuted = Color(0xFFA78993)
+private val RoseIconBg = Color(0x29F2C4CE)
 
 data class ProfileStats(
     val coins: Int = 1240,
@@ -175,75 +175,63 @@ fun ProfileScreen(
                 onHome = onHome,
                 onShorts = onShorts,
                 onLibrary = onLibrary,
-                onRewards = onRewards,
-                onProfile = {}
+            onRewards = onRewards,
+            onProfile = {}
             )
         }
     ) { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
+                .padding(innerPadding),
+            contentPadding = PaddingValues(bottom = 24.dp)
         ) {
-            ProfileHeader(
-                userName = dynamicUserName,
-//                isVipGold = isVipGold,
-                bannerImageUrl = bannerImageUrl,
-                bannerFilePath = mediaState.bannerFilePath,
-                bannerPreset = mediaState.bannerPresetIndex?.let { presetAvatars.getOrNull(it) },
-                isSavingBanner = mediaState.isSavingBanner,
-                avatarImageUrl = dynamicAvatarUrl,
-                avatarFilePath = mediaState.avatarFilePath,
-                avatarPreset = mediaState.avatarPresetIndex?.let { presetAvatars.getOrNull(it) },
-                isSavingAvatar = mediaState.isSavingAvatar,
-                onEditAvatar = {
-                    showTargetDialog = true
-                    onEditAvatar()
+            item {
+                val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+                DramaXTopAppBar(topInset = topInset)
+            }
+            item { ProfileStatsPanel(stats = dynamicStats) }
+
+            item { SectionLabel("ACCOUNT ACTIVITY") }
+            item {
+                SettingsCard {
+                    SettingsRow(Icons.Outlined.History, R.string.watch_history, onClick = onWatchHistory)
+                    RowDivider()
+                    SettingsRow(Icons.Outlined.BookmarkBorder, R.string.my_watchlist, onClick = onMyWatchlist)
                 }
-            )
-
-            StatsRow(stats = dynamicStats)
-
-//            QuickActionsRow(
-//                onSubscription = onSubscription,
-//                onWallet = onWallet,
-//                onDownloads = onDownloads
-//            )
-
-            SectionLabel(stringResource(R.string.account_settings))
-            SettingsCard {
-//                SettingsRow(Icons.Outlined.Edit, R.string.edit_profile, onClick = onEditProfile)
-                SettingsRow(Icons.Outlined.History, R.string.watch_history, onClick = onWatchHistory)
-                RowDivider()
-                SettingsRow(Icons.Outlined.BookmarkBorder, R.string.my_watchlist, onClick = onMyWatchlist)
             }
 
-            SectionLabel(stringResource(R.string.preferences_support))
-            SettingsCard {
-                SettingsRow(
-                    Icons.Outlined.Language,
-                    R.string.language_title,
-                    subtitle = displayedLanguage,
-                    onClick = { showLanguageDialog = true }
-                )
-//                SettingsRow(Icons.Outlined.Settings, R.string.settings, onClick = onSettings)
+            item { SectionLabel("PREFERENCES & SUPPORT") }
+            item {
+                SettingsCard {
+                    SettingsRow(
+                        Icons.Outlined.Language,
+                        R.string.language_title,
+                        subtitle = displayedLanguage,
+                        onClick = {
+                            showLanguageDialog = true
+                            onLanguage()
+                        }
+                    )
+                }
             }
 
-            SectionLabel(stringResource(R.string.privacy))
-            SettingsCard {
-                SettingsRow(Icons.Outlined.StarBorder, R.string.rate_us, onClick = {
-                    showRateDialog = true
-                    onRateUs()
-                })
-                RowDivider()
-                SettingsRow(Icons.Outlined.Shield, R.string.privacy_policy, onClick = {
-                    showPrivacyDialog = true
-                    onPrivacyPolicy()
-                })
+            item { SectionLabel("PRIVACY") }
+            item {
+                SettingsCard {
+                    SettingsRow(Icons.Outlined.Share, titleText = "Share App", onClick = { context.shareApp() })
+                    RowDivider()
+                    SettingsRow(Icons.Outlined.StarBorder, R.string.rate_us, onClick = {
+                        showRateDialog = true
+                        onRateUs()
+                    })
+                    RowDivider()
+                    SettingsRow(Icons.Outlined.AlternateEmail, R.string.privacy_policy, onClick = {
+                        showPrivacyDialog = true
+                        onPrivacyPolicy()
+                    })
+                }
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 
@@ -255,25 +243,11 @@ fun ProfileScreen(
     }
 
     if (showRateDialog) {
-        AlertDialog(
-            onDismissRequest = { showRateDialog = false },
-            containerColor = CardColor,
-            title = { Text(stringResource(R.string.rate_us), color = TextPrimary, fontWeight = FontWeight.Bold) },
-            text = { Text("Enjoying DramaX? Rate the app on the Play Store.", color = TextSecondary) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showRateDialog = false
-                        context.openPlayStoreRating()
-                    }
-                ) {
-                    Text("Rate Now", color = GoldColor)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showRateDialog = false }) {
-                    Text(stringResource(R.string.cancel), color = TextSecondary)
-                }
+        RateUsDialog(
+            onDismiss = { showRateDialog = false },
+            onRate = {
+                showRateDialog = false
+                context.openPlayStoreRating()
             }
         )
     }
@@ -413,6 +387,132 @@ fun ProfileScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun ProfileStatsPanel(stats: ProfileStats) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(78.dp)
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFF19161A), Color(0xFF121113))
+                )
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            StatItem(value = stats.watchTimeLabel(), label = stringResource(R.string.watched))
+            Spacer(modifier = Modifier.width(36.dp))
+            StatDivider()
+            Spacer(modifier = Modifier.width(36.dp))
+            StatItem(value = stats.episodesWatched.toString(), label = stringResource(R.string.episodes_cap))
+        }
+    }
+}
+
+@Composable
+private fun RateUsDialog(
+    onDismiss: () -> Unit,
+    onRate: () -> Unit
+) {
+    var rating by remember { mutableStateOf(4) }
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xB8000000))
+                .clickable(onClick = onDismiss),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 40.dp)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(Color.White)
+                    .clickable(onClick = {})
+                    .padding(horizontal = 24.dp, vertical = 20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier.size(104.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Star,
+                        contentDescription = null,
+                        tint = Color(0xFFFFA11F),
+                        modifier = Modifier.size(96.dp)
+                    )
+                    Icon(
+                        imageVector = Icons.Filled.Star,
+                        contentDescription = null,
+                        tint = Color(0xFFFFF071),
+                        modifier = Modifier.size(74.dp)
+                    )
+                }
+                Text(
+                    text = "Enjoying Dramax?",
+                    color = Color.Black,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 0.sp
+                )
+                Text(
+                    text = "Your review will improve the\nquality of this application",
+                    color = Color(0xFF787174),
+                    fontSize = 14.sp,
+                    lineHeight = 18.sp,
+                    textAlign = TextAlign.Center,
+                    letterSpacing = 0.sp
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    repeat(5) { index ->
+                        Icon(
+                            imageVector = Icons.Filled.Star,
+                            contentDescription = null,
+                            tint = if (index < rating) Color(0xFFFFC533) else Color(0xFFC8CBCC),
+                            modifier = Modifier
+                                .size(25.dp)
+                                .clickable { rating = index + 1 }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                Button(
+                    onClick = onRate,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(46.dp),
+                    shape = RoundedCornerShape(50),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF3F59))
+                ) {
+                    Text("Rate us", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp),
+                    shape = RoundedCornerShape(50),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF0F0F0))
+                ) {
+                    Text("Not Now", color = Color.Black, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
     }
 }
 
@@ -695,10 +795,10 @@ private fun SectionLabel(text: String) {
     Text(
         text = text,
         color = RoseMuted,
-        fontSize = 12.sp,
+        fontSize = 10.sp,
         fontWeight = FontWeight.SemiBold,
-        letterSpacing = 1.5.sp,
-        modifier = Modifier.padding(start = 20.dp, top = 28.dp, bottom = 4.dp)
+        letterSpacing = 1.6.sp,
+        modifier = Modifier.padding(start = 24.dp, top = 26.dp, bottom = 10.dp)
     )
 }
 
@@ -707,7 +807,7 @@ private fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 24.dp)
     ) {
         content()
     }
@@ -716,32 +816,28 @@ private fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
 @Composable
 private fun SettingsRow(
     icon: ImageVector,
-    title: Int,
+    title: Int? = null,
+    titleText: String? = null,
     subtitle: String? = null,
     onClick: () -> Unit
 ) {
+    val label = titleText ?: title?.let { stringResource(it) }.orEmpty()
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
+            .heightIn(min = 54.dp)
+            .clip(RoundedCornerShape(8.dp))
             .clickable { onClick() }
-            .padding(horizontal = 4.dp, vertical = 12.dp),
+            .padding(vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(38.dp)
-                .clip(CircleShape)
-                .background(RoseIconBg),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(imageVector = icon, contentDescription = null, tint = RosePrimary, modifier = Modifier.size(18.dp))
-        }
-        Spacer(modifier = Modifier.width(14.dp))
+        Icon(imageVector = icon, contentDescription = null, tint = RosePrimary, modifier = Modifier.size(20.dp))
+        Spacer(modifier = Modifier.width(20.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = stringResource(title), color = RosePrimary, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+            Text(text = label, color = TextPrimary, fontSize = 15.sp, fontWeight = FontWeight.Medium, letterSpacing = 0.sp)
             if (subtitle != null) {
-                Text(text = subtitle, color = RoseMuted, fontSize = 12.sp)
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(text = subtitle, color = RoseMuted, fontSize = 11.sp, letterSpacing = 0.sp)
             }
         }
         Icon(
@@ -986,6 +1082,16 @@ private fun Context.findActivity(): Activity? {
         current = current.baseContext
     }
     return null
+}
+
+private fun Context.shareApp() {
+    val shareIntent = Intent(Intent.ACTION_SEND)
+        .setType("text/plain")
+        .putExtra(
+            Intent.EXTRA_TEXT,
+            "Watch short dramas on DramaX: https://play.google.com/store/apps/details?id=$packageName"
+        )
+    startActivity(Intent.createChooser(shareIntent, "Share DramaX"))
 }
 
 private fun Context.openPlayStoreRating() {

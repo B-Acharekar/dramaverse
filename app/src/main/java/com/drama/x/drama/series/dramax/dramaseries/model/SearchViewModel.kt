@@ -16,6 +16,7 @@ data class SearchUiState(
     val isLoading: Boolean = false,
     val query: String = "",
     val results: List<DramaItem> = emptyList(),
+    val recommendations: List<DramaItem> = emptyList(),
     val errorMessage: String? = null
 )
 
@@ -30,7 +31,15 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         if (trimmed.isBlank()) return
         if (_uiState.value.query == trimmed && _uiState.value.results.isNotEmpty()) return
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, query = trimmed, errorMessage = null) }
+            val localRecommendations = repository.recommendedFilms()
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    query = trimmed,
+                    recommendations = localRecommendations,
+                    errorMessage = null
+                )
+            }
             repository.searchFilms(
                 backendBaseUrl = backendBaseUrl,
                 query = trimmed,
@@ -38,12 +47,24 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             )
                 .onSuccess { results ->
                     _uiState.update {
-                        it.copy(isLoading = false, query = trimmed, results = results, errorMessage = null)
+                        it.copy(
+                            isLoading = false,
+                            query = trimmed,
+                            results = results,
+                            recommendations = repository.recommendedFilms(results),
+                            errorMessage = null
+                        )
                     }
                 }
                 .onFailure { error ->
                     _uiState.update {
-                        it.copy(isLoading = false, query = trimmed, errorMessage = error.message ?: "Unable to search.")
+                        it.copy(
+                            isLoading = false,
+                            query = trimmed,
+                            results = repository.localSearch(trimmed),
+                            recommendations = repository.recommendedFilms(),
+                            errorMessage = error.message ?: "Unable to search."
+                        )
                     }
                 }
         }

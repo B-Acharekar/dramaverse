@@ -72,6 +72,13 @@ class HomeRepository(
 
     fun savedWatchListIds(): Set<Int> = savedWatchListStore.savedIds()
 
+    fun savedWatchListItems(): List<DramaItem> = savedWatchListStore.readItems()
+
+    fun cachedCatalogItems(): List<DramaItem> {
+        val feed = _prefetchedFeed.value ?: cacheStore.readFeedForCurrentWindow()
+        return feed?.allCatalogItems().orEmpty()
+    }
+
     suspend fun loadHome(
         backendBaseUrl: String,
         language: String = "en"
@@ -228,6 +235,12 @@ class HomeRepository(
             }.also { _prefetchedFeed.value = it }
         }
     }
+}
+
+fun HomeFeed.allCatalogItems(): List<DramaItem> {
+    return (listOf(hero, topRated) + trending + moreLikeThis + continueWatching.map { it.film })
+        .filter { it.title.isNotBlank() }
+        .distinctBy { it.stableKey() }
 }
 
 private suspend fun fetchHomeFeed(

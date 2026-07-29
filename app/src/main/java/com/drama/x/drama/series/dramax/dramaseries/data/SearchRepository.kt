@@ -10,7 +10,8 @@ import java.net.URLEncoder
 import java.net.URL
 
 class SearchRepository(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val homeRepository: HomeRepository
 ) {
     suspend fun searchFilms(
         backendBaseUrl: String,
@@ -28,15 +29,50 @@ class SearchRepository(
                 val encoded = URLEncoder.encode(trimmed, "UTF-8")
                 getClientJson(backendBaseUrl, "client/search", language, token, "query=$encoded")
             }
-            collectDramaItems(json)
+            val remoteItems = collectDramaItems(json)
                 .filter { it.title.isNotBlank() }
                 .distinctBy { it.id.takeIf { id -> id != 0 } ?: it.title }
+            if (trimmed.equals("hot", ignoreCase = true)) {
+                (remoteItems + recommendedFilms())
+                    .distinctBy { it.stableSearchKey() }
+                    .take(12)
+            } else {
+                (remoteItems + localSearch(trimmed))
+                    .distinctBy { it.stableSearchKey() }
+                    .filter { it.matches(trimmed) }
+            }
         }
+    }
+
+    fun localSearch(query: String): List<DramaItem> {
+        val trimmed = query.trim()
+        if (trimmed.isBlank() || trimmed.equals("hot", ignoreCase = true)) return recommendedFilms()
+        return homeRepository.cachedCatalogItems()
+            .filter { it.matches(trimmed) }
+            .sortedWith(
+                compareByDescending<DramaItem> { it.title.contains(trimmed, ignoreCase = true) }
+                    .thenByDescending { it.rating.toFloatOrNull() ?: 0f }
+                    .thenBy { it.title }
+            )
+    }
+
+    fun recommendedFilms(excluding: List<DramaItem> = emptyList()): List<DramaItem> {
+        val excludedKeys = excluding.map { it.stableSearchKey() }.toSet()
+        return homeRepository.cachedCatalogItems()
+            .filterNot { it.stableSearchKey() in excludedKeys }
+            .sortedWith(
+                compareByDescending<DramaItem> { it.likeCount }
+                    .thenByDescending { it.rating.toFloatOrNull() ?: 0f }
+                    .thenByDescending { it.episodeTotal }
+            )
     }
 }
 
 fun SearchRepository(context: Context): SearchRepository =
-    SearchRepository(AuthRepository(context.applicationContext))
+    SearchRepository(
+        AuthRepository(context.applicationContext),
+        HomeRepository(context.applicationContext, AuthRepository(context.applicationContext))
+    )
 
 private fun getClientJson(
     backendBaseUrl: String,
@@ -144,3 +180,12 @@ private fun JSONObject.firstBoolean(vararg keys: String): Boolean {
 }
 
 private fun String.trimEndSlash(): String = trim().trimEnd('/').ifBlank { "https://drama-verse-backend.vercel.app/" }
+
+private fun DramaItem.matches(query: String): Boolean {
+    val terms = query.trim().lowercase().split(Regex("\\s+")).filter { it.isNotBlank() }
+    if (terms.isEmpty()) return true
+    val haystack = listOf(title, description, genre, rating).joinToString(" ").lowercase()
+    return terms.all { term -> haystack.contains(term) }
+}
+
+private fun DramaItem.stableSearchKey(): Any = id.takeIf { it != 0 } ?: title.lowercase()

@@ -21,7 +21,8 @@ data class HomeUiState(
     val errorMessage: String? = null,
     val selectedMood: String? = null,
     val isMoodLoading: Boolean = false,
-    val savedFilmIds: Set<Int> = emptySet()
+    val savedFilmIds: Set<Int> = emptySet(),
+    val savedFilms: List<DramaItem> = emptyList()
 )
 
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
@@ -34,7 +35,12 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
-        _uiState.update { it.copy(savedFilmIds = repository.savedWatchListIds()) }
+        _uiState.update {
+            it.copy(
+                savedFilmIds = repository.savedWatchListIds(),
+                savedFilms = repository.savedWatchListItems()
+            )
+        }
         viewModelScope.launch {
             HomeRepository.prefetchedFeed.collectLatest { feed ->
                 if (feed != null) {
@@ -170,6 +176,11 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update { state ->
             state.copy(
                 savedFilmIds = if (enabled) state.savedFilmIds + filmId else state.savedFilmIds - filmId,
+                savedFilms = if (enabled) {
+                    (listOf(film) + state.savedFilms).distinctBy { it.id }
+                } else {
+                    state.savedFilms.filterNot { it.id == filmId }
+                },
                 errorMessage = null
             )
         }
@@ -183,6 +194,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.update {
                     it.copy(
                         savedFilmIds = if (enabled) it.savedFilmIds - filmId else it.savedFilmIds + filmId,
+                        savedFilms = repository.savedWatchListItems(),
                         errorMessage = error.message ?: "Unable to update watch list."
                     )
                 }

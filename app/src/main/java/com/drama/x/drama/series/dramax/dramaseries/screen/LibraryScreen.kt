@@ -3,6 +3,7 @@ package com.drama.x.drama.series.dramax.dramaseries.screen
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,12 +13,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -31,8 +36,12 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -50,10 +59,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -70,6 +81,8 @@ private val Panel = Color(0xFF151318)
 private val Pink = Color(0xFFFF3E68)
 private val SoftPink = Color(0xFFFFC0C9)
 private val Gold = Color(0xFFF5C65B)
+
+private enum class MyListMode { Overview, History, Favorites }
 
 @Composable
 fun LibraryScreen(
@@ -126,10 +139,14 @@ private fun LibraryContent(
     onOpenShorts: (Int?) -> Unit,
     onPlanner: () -> Unit
 ) {
+    var mode by remember { mutableStateOf(MyListMode.Overview) }
+    val history = feed.watchHistory
+    val favorites = feed.watchList
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 104.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item { LibraryTopHeader(onSearch) }
         if (errorMessage != null) {
@@ -143,52 +160,116 @@ private fun LibraryContent(
                 )
             }
         }
-        feed.watchHistory.firstOrNull()?.let { continueItem ->
-            item { FeaturedContinueCard(continueItem, onOpenShorts) }
-        }
-        item {
-            AnimatedLibrarySection {
-                LibraryFilmRail(
-                    title = stringResource(R.string.watch_list),
-                    subtitle = stringResource(R.string.library_watch_list_subtitle),
-                    items = feed.watchList,
-                    emptyText = stringResource(R.string.library_watch_list_empty),
-                    actionLabel = "Schedule",
-                    onAction = onPlanner,
-                    onOpenShorts = onOpenShorts
-                )
-            }
-        }
-        if (feed.watchHistory.size > 1) {
-            item {
-                AnimatedLibrarySection {
-                    WatchHistorySection(
-                        title = stringResource(R.string.continue_watching),
-                        items = feed.watchHistory.drop(1),
-                        onOpenShorts = onOpenShorts
+        when (mode) {
+            MyListMode.Overview -> {
+                item {
+                    MyListSectionHeader(
+                        title = "History watching",
+                        action = "SEE ALL".takeIf { history.isNotEmpty() },
+                        onAction = { mode = MyListMode.History }
                     )
                 }
+                if (history.isEmpty()) {
+                    item {
+                        MyListEmptyMessage(
+                            title = "Nothing watched yet",
+                            body = "Watch something for a few seconds and your history will appear here."
+                        )
+                    }
+                } else {
+                    item {
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = 18.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(history.take(8)) { item ->
+                                MyListHistoryPreviewCard(item = item, onOpenShorts = onOpenShorts)
+                            }
+                        }
+                    }
+                }
+
+                item {
+                    MyListSectionHeader(
+                        title = "My Favorites",
+                        action = "SEE ALL".takeIf { favorites.isNotEmpty() },
+                        onAction = { mode = MyListMode.Favorites }
+                    )
+                }
+                if (favorites.isEmpty()) {
+                    item {
+                        MyListEmptyMessage(
+                            title = "No favorites yet",
+                            body = "Bookmark dramas you like and they will be saved here."
+                        )
+                    }
+                } else {
+                    items(favorites.take(6)) { film ->
+                        FavoriteListCard(film = film, onOpenShorts = onOpenShorts)
+                    }
+                }
             }
-        }
-        item {
-            AnimatedLibrarySection {
-                LibraryGridSection(
-                    title = stringResource(R.string.similar_films),
-                    items = feed.similarFilms,
-                    onOpenShorts = onOpenShorts
-                )
+
+            MyListMode.History -> {
+                item {
+                    MyListAllHeader(
+                        title = "History watching",
+                        meta = "${history.size} ITEMS WATCHED",
+                        action = "Select All",
+                        onBack = { mode = MyListMode.Overview }
+                    )
+                }
+                if (history.isEmpty()) {
+                    item {
+                        MyListEmptyMessage(
+                            title = "Nothing watched yet",
+                            body = "Watch something and your full history will show here."
+                        )
+                    }
+                } else {
+                    items(history.chunked(3)) { rowItems ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 18.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            rowItems.forEach { item ->
+                                MyListHistoryGridCard(
+                                    item = item,
+                                    onOpenShorts = onOpenShorts,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            repeat(3 - rowItems.size) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
             }
-        }
-        if (feed.topStars.isNotEmpty()) {
-            item { AnimatedLibrarySection { TopStarsSection(feed.topStars, onOpenShorts) } }
-        }
-        item {
-            AnimatedLibrarySection {
-                LibraryGridSection(
-                    title = stringResource(R.string.recommended_for_you),
-                    items = feed.recommended,
-                    onOpenShorts = onOpenShorts
-                )
+
+            MyListMode.Favorites -> {
+                item {
+                    MyListAllHeader(
+                        title = "My Favorites",
+                        meta = "${favorites.size} ITEMS",
+                        action = null,
+                        onBack = { mode = MyListMode.Overview }
+                    )
+                }
+                if (favorites.isEmpty()) {
+                    item {
+                        MyListEmptyMessage(
+                            title = "No favorites yet",
+                            body = "Bookmark dramas you like and they will be saved here."
+                        )
+                    }
+                } else {
+                    items(favorites) { film ->
+                        FavoriteListCard(film = film, onOpenShorts = onOpenShorts)
+                    }
+                }
             }
         }
     }
@@ -196,69 +277,224 @@ private fun LibraryContent(
 
 @Composable
 private fun LibraryTopHeader(onSearch: (String) -> Unit) {
-    var searchText by remember { mutableStateOf("") }
-    val focusManager = LocalFocusManager.current
-    fun submitSearch() {
-        val query = searchText.trim()
-        if (query.isNotBlank()) {
-            focusManager.clearFocus()
-            onSearch(query)
-        }
-    }
-    Box(
+    val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    DramaXTopAppBar(
+        topInset = topInset,
+        onSearchClick = { onSearch("hot") }
+    )
+}
+
+@Composable
+private fun MyListSectionHeader(title: String, action: String?, onAction: () -> Unit) {
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(154.dp)
-            .background(
-                Brush.verticalGradient(
-                    listOf(Color(0xFF050506), Color(0xF309090B), Color(0x8809090B), Color.Transparent)
-                )
-            )
+            .padding(start = 18.dp, end = 18.dp, top = 6.dp, bottom = 2.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.TopCenter)
-                .padding(start = 18.dp, end = 18.dp, top = 28.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.nav_library), color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
-                Text(stringResource(R.string.library_subtitle), color = Color(0xFFCDB5BC), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+        Text(title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+        Spacer(modifier = Modifier.weight(1f))
+        if (action != null) {
+            Text(
+                action,
+                color = Color.White,
+                fontSize = 8.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 0.sp,
+                modifier = Modifier.clickable(onClick = onAction)
+            )
+        }
+    }
+}
+
+@Composable
+private fun MyListAllHeader(
+    title: String,
+    meta: String,
+    action: String?,
+    onBack: () -> Unit
+) {
+    Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 4.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                title,
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.sp,
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(onClick = onBack)
+            )
+            Icon(Icons.Filled.DeleteOutline, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(meta, color = Color(0xFFCDB5BC), fontSize = 9.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+            Spacer(modifier = Modifier.weight(1f))
+            if (action != null) {
+                Text(action, color = Gold, fontSize = 9.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
             }
         }
-        Row(
+    }
+}
+
+@Composable
+private fun MyListHistoryPreviewCard(item: ContinueWatchingItem, onOpenShorts: (Int?) -> Unit) {
+    val film = item.film
+    Column(
+        modifier = Modifier
+            .width(112.dp)
+            .clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
+    ) {
+        Box(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(horizontal = 18.dp, vertical = 16.dp)
                 .fillMaxWidth()
-                .height(52.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xD017151A))
-                .border(1.dp, Color(0x35FFFFFF), RoundedCornerShape(16.dp))
-                .padding(horizontal = 15.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .height(146.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Panel)
         ) {
-            Icon(Icons.Filled.Search, contentDescription = null, tint = Color(0xFFF2E3E7), modifier = Modifier.size(19.dp))
-            Spacer(modifier = Modifier.width(9.dp))
-            BasicTextField(
-                value = searchText,
-                onValueChange = { searchText = it },
-                singleLine = true,
-                textStyle = TextStyle(color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { submitSearch() }),
-                modifier = Modifier.weight(1f),
-                decorationBox = { innerTextField ->
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
-                        if (searchText.isBlank()) {
-                            Text(stringResource(R.string.search_films_hint), color = Color(0xFF9B858E), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
-                        }
-                        innerTextField()
-                    }
-                }
+            NetworkDramaImage(film.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, film.title)
+            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xC909090B)))))
+            ProgressPill(
+                text = stringResource(R.string.episode_progress, item.episodeNumber, film.episodeTotal.coerceAtLeast(item.episodeNumber)),
+                modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp)
+            )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth(item.progressFraction.takeIf { it > 0f } ?: 0.04f)
+                    .height(3.dp)
+                    .background(Pink)
             )
         }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(film.title, color = Color.White, fontSize = 11.sp, lineHeight = 13.sp, fontWeight = FontWeight.ExtraBold, maxLines = 2, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
+        Text("Ep ${item.episodeNumber} of ${film.episodeTotal.coerceAtLeast(item.episodeNumber)}", color = Color(0xFFCDB5BC), fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+    }
+}
+
+@Composable
+private fun MyListHistoryGridCard(
+    item: ContinueWatchingItem,
+    onOpenShorts: (Int?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val film = item.film
+    Column(
+        modifier = modifier.clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(0.70f)
+                .clip(RoundedCornerShape(7.dp))
+                .background(Panel)
+        ) {
+            NetworkDramaImage(film.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, film.title)
+            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xC909090B)))))
+            Box(
+                modifier = Modifier
+                    .padding(5.dp)
+                    .size(18.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(Pink),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Filled.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(12.dp))
+            }
+            ProgressPill(
+                text = stringResource(R.string.episode_progress, item.episodeNumber, film.episodeTotal.coerceAtLeast(item.episodeNumber)),
+                modifier = Modifier.align(Alignment.BottomEnd).padding(5.dp)
+            )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth(item.progressFraction.takeIf { it > 0f } ?: 0.04f)
+                    .height(3.dp)
+                    .background(Pink)
+            )
+        }
+        Spacer(modifier = Modifier.height(5.dp))
+        Text(film.title, color = Color.White, fontSize = 10.sp, lineHeight = 12.sp, fontWeight = FontWeight.ExtraBold, maxLines = 2, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
+        Text("Ep ${item.episodeNumber} of ${film.episodeTotal.coerceAtLeast(item.episodeNumber)}", color = Color(0xFFCDB5BC), fontSize = 8.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+    }
+}
+
+@Composable
+private fun FavoriteListCard(film: DramaItem, onOpenShorts: (Int?) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 18.dp, vertical = 3.dp)
+            .height(92.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFF1F1F1F))
+            .clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        NetworkDramaImage(
+            imageUrl = film.imageUrl,
+            modifier = Modifier
+                .width(74.dp)
+                .height(76.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .background(Panel),
+            contentScale = ContentScale.Crop,
+            seed = film.title
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(film.title, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
+            Text(film.genre.ifBlank { "Drama" }, color = Color(0xFFCDB5BC), fontSize = 9.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
+            Text("${film.episodeTotal.coerceAtLeast(1)} Episodes", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
+            Spacer(modifier = Modifier.height(5.dp))
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Pink)
+                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = Color.White, modifier = Modifier.size(11.dp))
+                Spacer(modifier = Modifier.width(3.dp))
+                Text("Play", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+            }
+        }
+        Icon(Icons.Filled.Share, contentDescription = null, tint = Color(0xFFBCAFB4), modifier = Modifier.size(16.dp))
+    }
+}
+
+@Composable
+private fun ProgressPill(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text,
+        color = Color.White,
+        fontSize = 7.sp,
+        fontWeight = FontWeight.Black,
+        letterSpacing = 0.sp,
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xB0000000))
+            .padding(horizontal = 5.dp, vertical = 2.dp)
+    )
+}
+
+@Composable
+private fun MyListEmptyMessage(title: String, body: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 18.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color(0xFF1C1C1E))
+            .padding(horizontal = 18.dp, vertical = 18.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center, letterSpacing = 0.sp)
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(body, color = Color(0xFFCDB5BC), fontSize = 12.sp, lineHeight = 17.sp, textAlign = TextAlign.Center, letterSpacing = 0.sp)
     }
 }
 
