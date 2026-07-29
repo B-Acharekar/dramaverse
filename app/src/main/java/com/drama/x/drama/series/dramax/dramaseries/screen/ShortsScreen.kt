@@ -1,13 +1,19 @@
 package com.drama.x.drama.series.dramax.dramaseries.screen
 
+import android.content.Context
 import android.net.Uri
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.content.pm.ResolveInfo
 import android.view.LayoutInflater
 import android.view.View
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.drawable.Drawable
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.Image
@@ -20,6 +26,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,7 +36,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -41,11 +53,17 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.filled.Feedback
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -62,6 +80,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -74,6 +93,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.TextStyle
@@ -82,6 +102,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drama.x.drama.series.dramax.dramaseries.R
 import com.drama.x.drama.series.dramax.dramaseries.data.ShortsItem
@@ -99,12 +121,13 @@ import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.ui.PlayerView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.URL
 
 private val ShortsBackground = Color(0xFF050507)
 private val Gold = Color(0xFFF5C65B)
-private val Pink = Color(0xFFFF4D73)
+private val Pink = Color(0xFFFF5168)
 
 private data class SubtitleCue(
     val startMs: Long,
@@ -123,6 +146,9 @@ fun ShortsScreen(
     onProfile:() -> Unit,
     viewModel: ShortsViewModel = viewModel()
 ) {
+
+    BackHandler(onBack = onBack)
+
     val uiState by viewModel.uiState.collectAsState()
     val pagerState = rememberPagerState { uiState.items.size.coerceAtLeast(1) }
     var controlsVisible by remember { mutableStateOf(true) }
@@ -133,6 +159,7 @@ fun ShortsScreen(
     var autoUnlock by remember { mutableStateOf(false) }
     var ccEnabled by remember { mutableStateOf(true) }
     var playbackSpeed by remember { mutableStateOf(1f) }
+
 
     LaunchedEffect(backendBaseUrl, initialFilmId) {
         viewModel.loadInitial(backendBaseUrl, initialFilmId)
@@ -346,6 +373,10 @@ private fun ShortsPage(
     val removedFromListText = stringResource(R.string.removed_from_list)
     val feedbackSentText = stringResource(R.string.feedback_sent)
     val hasPopup = showPlaybackOptions || showFeedbackForm || showSubtitleOptions || showEpisodeOptions
+    var subtitleSize by remember(item.playUrl) { mutableStateOf(SubtitleSize.SMALL) }
+    var selectedReportReason by remember(item.playUrl) { mutableStateOf("") }
+    var showShareSheet by remember(item.film.id) { mutableStateOf(false) }
+
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (!isActive || item.playUrl.isBlank()) {
@@ -473,7 +504,7 @@ private fun ShortsPage(
                     Icons.Filled.Share,
                     R.string.share,
                     Color.White,
-                    onClick = { context.shareShort(item) }
+                    onClick = { showShareSheet = true }
                 )
                 SideAction(
                     Icons.Filled.VideoLibrary,
@@ -544,24 +575,24 @@ private fun ShortsPage(
                 autoUnlock = autoUnlock,
                 onAutoNextChange = onAutoNextChange,
                 onAutoUnlockChange = onAutoUnlockChange,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
+                onDismiss = { onClosePopups() }
             )
         }
 
         if (showFeedbackForm && controlsVisible) {
             FeedbackFormSheet(
-                value = feedbackText,
-                onValueChange = { feedbackText = it },
+                filmTitle = item.film.title,
+                episodeNumber = item.episodeNumber,
+                thumbnailUrl = item.film.imageUrl,
+                selectedReason = selectedReportReason,
+                onReasonSelected = { selectedReportReason = it },
                 onSubmit = {
-                    if (feedbackText.isNotBlank()) {
-                        onSubmitFeedback(item, feedbackText)
-                        Toast.makeText(context, feedbackSentText, Toast.LENGTH_SHORT).show()
-                        feedbackText = ""
-                        onClosePopups()
-                    }
+                    onSubmitFeedback(item, selectedReportReason)
+                    Toast.makeText(context, feedbackSentText, Toast.LENGTH_SHORT).show()
+                    selectedReportReason = ""
+                    onClosePopups()
                 },
-                modifier = Modifier.align(Alignment.BottomCenter)
+                onDismiss = { onClosePopups() }
             )
         }
 
@@ -569,11 +600,19 @@ private fun ShortsPage(
             SubtitleOptionsSheet(
                 tracks = item.subtitleTracks,
                 selectedUrl = selectedSubtitleUrl,
+                subtitleSize = subtitleSize,
                 onSelect = { track ->
                     selectedSubtitleUrl = track.url
+                },
+                onSizeChange = { size ->
+                    subtitleSize = size
+                },
+                onSave = {
                     showSubtitleOptions = false
                 },
-                modifier = Modifier.align(Alignment.BottomCenter)
+                onDismiss = {
+                    showSubtitleOptions = false
+                }
             )
         }
 
@@ -581,8 +620,14 @@ private fun ShortsPage(
             EpisodeOptionsSheet(
                 currentEpisode = item.episodeNumber,
                 totalEpisodes = item.film.episodeTotal,
-                modifier = Modifier.align(Alignment.BottomCenter),
+                modifier = Modifier.align(Alignment.Center),
                 onDismiss = { showEpisodeOptions = false }
+            )
+        }
+        if (showShareSheet) {
+            ShareOptionsSheet(
+                shareText = buildShareText(item, context),
+                onDismiss = { showShareSheet = false }
             )
         }
     }
@@ -857,211 +902,6 @@ private fun LoadingBackdrop(
     }
 }
 
-@Composable
-private fun FeedbackOptionsSheet(
-    autoNext: Boolean,
-    autoUnlock: Boolean,
-    onAutoNextChange: (Boolean) -> Unit,
-    onAutoUnlockChange: (Boolean) -> Unit,
-    modifier: Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp))
-            .background(Color(0xF2141217))
-            .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp))
-            .padding(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 98.dp)
-    ) {
-        Text(stringResource(R.string.playback_options), color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
-        Spacer(Modifier.height(12.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.auto_next_episode), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
-                Text(stringResource(R.string.auto_next_episode_desc), color = Color(0xFFC8B6BC), fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
-            }
-            Switch(checked = autoNext, onCheckedChange = onAutoNextChange)
-        }
-        Spacer(Modifier.height(14.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.auto_unlock_episodes), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
-                Text(stringResource(R.string.auto_unlock_episodes_desc), color = Color(0xFFC8B6BC), fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
-            }
-            Switch(checked = autoUnlock, onCheckedChange = onAutoUnlockChange)
-        }
-    }
-}
-
-@Composable
-private fun FeedbackFormSheet(
-    value: String,
-    onValueChange: (String) -> Unit,
-    onSubmit: () -> Unit,
-    modifier: Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 18.dp)
-            .imePadding()
-            .padding(top = 18.dp, bottom = 98.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .background(Color(0xF2141217))
-            .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(18.dp))
-            .padding(14.dp)
-    ) {
-        Text(stringResource(R.string.send_feedback), color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
-        Spacer(Modifier.height(10.dp))
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            minLines = 3,
-            maxLines = 5,
-            textStyle = TextStyle(color = Color.White, letterSpacing = 0.sp),
-            placeholder = {
-                Text(stringResource(R.string.feedback_hint), color = Color(0xFF9D8A91), letterSpacing = 0.sp)
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(12.dp))
-        Button(
-            onClick = onSubmit,
-            enabled = value.isNotBlank(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Pink,
-                contentColor = Color.White,
-                disabledContainerColor = Color(0x553A3035),
-                disabledContentColor = Color(0xFF8F7D84)
-            ),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(stringResource(R.string.submit), fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
-        }
-    }
-}
-
-@Composable
-private fun SubtitleOptionsSheet(
-    tracks: List<SubtitleTrack>,
-    selectedUrl: String,
-    onSelect: (SubtitleTrack) -> Unit,
-    modifier: Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 18.dp, vertical = 98.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xF2141217))
-            .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(16.dp))
-            .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        Text(
-            stringResource(R.string.subtitles),
-            color = Color.White,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.ExtraBold,
-            letterSpacing = 0.sp
-        )
-        tracks.forEach { track ->
-            val selected = track.url == selectedUrl
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(if (selected) Color(0x33F5C65B) else Color.Transparent)
-                    .clickable { onSelect(track) }
-                    .padding(horizontal = 12.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    track.label,
-                    color = if (selected) Gold else Color(0xFFE8D7DC),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 0.sp,
-                    modifier = Modifier.weight(1f)
-                )
-                if (selected) {
-                    Text(stringResource(R.string.subtitle_on), color = Gold, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun EpisodeOptionsSheet(
-    currentEpisode: Int,
-    totalEpisodes: Int,
-    modifier: Modifier,
-    onDismiss: () -> Unit
-) {
-    val episodes = remember(totalEpisodes) { (1..totalEpisodes.coerceAtLeast(1)).toList() }
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 18.dp, vertical = 98.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .background(Color(0xF2141217))
-            .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(18.dp))
-            .padding(14.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                stringResource(R.string.episodes),
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = 0.sp,
-                modifier = Modifier.weight(1f)
-            )
-            Text(
-                "$currentEpisode/$totalEpisodes",
-                color = Color(0xFFCDB8BF),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 0.sp
-            )
-        }
-        Spacer(Modifier.height(12.dp))
-        LazyColumn(
-            modifier = Modifier.height(260.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(episodes) { episode ->
-                val selected = episode == currentEpisode
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(if (selected) Color(0x33F5C65B) else Color(0x14111114))
-                        .clickable { onDismiss() }
-                        .padding(horizontal = 12.dp, vertical = 11.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        stringResource(R.string.episode_title,episode),
-                        color = if (selected) Gold else Color.White,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = 0.sp,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        if (selected) stringResource(R.string.playing) else stringResource(R.string.free),
-                        color = if (selected) Gold else Color(0xFFCDB8BF),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 0.sp
-                    )
-                }
-            }
-        }
-    }
-}
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
@@ -1411,8 +1251,8 @@ private fun formatPlaybackTime(milliseconds: Long): String {
     return "$minutes:${seconds.toString().padStart(2, '0')}"
 }
 
-private fun android.content.Context.shareShort(item: ShortsItem) {
-    val text = buildString {
+private fun buildShareText(item: ShortsItem, context: android.content.Context): String {
+    return buildString {
         append("Watch ")
         append(item.film.title.ifBlank { "this DramaX short" })
         append(" Episode ")
@@ -1420,13 +1260,8 @@ private fun android.content.Context.shareShort(item: ShortsItem) {
         append(" on DramaX.")
         append("\n\n")
         append("Get the app: https://play.google.com/store/apps/details?id=")
-        append(packageName)
+        append(context.packageName)
     }
-    val intent = Intent(Intent.ACTION_SEND)
-        .setType("text/plain")
-        .putExtra(Intent.EXTRA_SUBJECT, item.film.title)
-        .putExtra(Intent.EXTRA_TEXT, text)
-    startActivity(Intent.createChooser(intent, getString(R.string.share)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
 }
 
 private fun subtitleMimeType(url: String): String {
@@ -1475,4 +1310,897 @@ private fun SkeletonPiece(
             .clip(shape)
             .background(Color(0xFF242027))
     )
+}
+
+private const val EPISODES_PER_PAGE = 30
+private const val EPISODES_PER_ROW = 5
+
+@Composable
+private fun EpisodeOptionsSheet(
+    currentEpisode: Int,
+    totalEpisodes: Int,
+    unlockedThrough: Int = currentEpisode,
+    onEpisodeSelected: (Int) -> Unit = {},
+    modifier: Modifier,
+    onDismiss: () -> Unit
+) {
+    val safeTotal = totalEpisodes.coerceAtLeast(1)
+    var page by remember { mutableStateOf((currentEpisode - 1) / EPISODES_PER_PAGE) }
+    val pageStart = page * EPISODES_PER_PAGE + 1
+    val pageEnd = (pageStart + EPISODES_PER_PAGE - 1).coerceAtMost(safeTotal)
+    val episodes = remember(page, safeTotal) { (pageStart..pageEnd).toList() }
+    val hasNextPage = pageEnd < safeTotal
+    val hasPrevPage = page > 0
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(0.86f)
+                .clip(RoundedCornerShape(26.dp))
+                .background(Color(0xFF16121A))
+                .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(26.dp))
+                .padding(20.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(R.string.episodes),
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    "$currentEpisode/$safeTotal",
+                    color = Color(0xFF9D8A91),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+            Spacer(Modifier.height(18.dp))
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(EPISODES_PER_ROW),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(episodes) { episode ->
+                    EpisodeCell(
+                        episode = episode,
+                        isPlaying = episode == currentEpisode,
+                        isLocked = episode > unlockedThrough,
+                        onClick = {
+                            onEpisodeSelected(episode)
+                            onDismiss()
+                        }
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(18.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                if (hasPrevPage) {
+                    PagerPill(
+                        text = "Episodes ${(page - 1) * EPISODES_PER_PAGE + 1} - ${page * EPISODES_PER_PAGE}",
+                        leading = true,
+                        onClick = { page-- }
+                    )
+                    if (hasNextPage) Spacer(Modifier.width(10.dp))
+                }
+                if (hasNextPage) {
+                    PagerPill(
+                        text = "Episodes ${pageEnd + 1} - ${(pageEnd + EPISODES_PER_PAGE).coerceAtMost(safeTotal)}",
+                        leading = false,
+                        onClick = { page++ }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EpisodeCell(
+    episode: Int,
+    isPlaying: Boolean,
+    isLocked: Boolean,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .aspectRatio(0.92f)
+            .clip(RoundedCornerShape(14.dp))
+            .background(if (isPlaying) Color(0x33F5C65B) else Color(0xFF211D25))
+            .then(
+                if (isPlaying)
+                    Modifier.border(1.5.dp, Gold, RoundedCornerShape(14.dp))
+                else Modifier
+            )
+            .clickable(onClick = onClick)
+            .padding(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Spacer(Modifier.weight(1f))
+            if (isLocked) {
+                Icon(
+                    Icons.Filled.Lock,
+                    contentDescription = null,
+                    tint = Color(0xFF6B6470),
+                    modifier = Modifier.size(12.dp)
+                )
+            }
+        }
+        Spacer(Modifier.weight(1f))
+        Text(
+            episode.toString(),
+            color = if (isPlaying) Gold else if (isLocked) Color(0xFF9D8FA0) else Color.White,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.ExtraBold
+        )
+        if (isPlaying) {
+            Text(
+                "PLAYING",
+                color = Gold,
+                fontSize = 8.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 0.5.sp
+            )
+        } else {
+            Spacer(Modifier.height(10.dp))
+        }
+        Spacer(Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun PagerPill(
+    text: String,
+    leading: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(Color(0xFF262129))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (leading) {
+            Icon(Icons.Filled.ChevronLeft, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(4.dp))
+        }
+        Text(text, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+        if (!leading) {
+            Spacer(Modifier.width(4.dp))
+            Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+        }
+    }
+}
+
+
+enum class SubtitleSize { SMALL, MEDIUM, LARGE }
+
+@Composable
+private fun SubtitleOptionsSheet(
+    tracks: List<SubtitleTrack>,
+    selectedUrl: String,
+    subtitleSize: SubtitleSize = SubtitleSize.SMALL,
+    onSelect: (SubtitleTrack) -> Unit,
+    onSizeChange: (SubtitleSize) -> Unit = {},
+    onSave: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    var pendingUrl by remember(selectedUrl) { mutableStateOf(selectedUrl) }
+    var pendingSize by remember(subtitleSize) { mutableStateOf(subtitleSize) }
+    val listState = rememberLazyListState()
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(0.86f)
+                .clip(RoundedCornerShape(26.dp))
+                .background(Color(0xFF16121A))
+                .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(26.dp))
+                .padding(horizontal = 20.dp, vertical = 20.dp)
+        ) {
+            // Header
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(R.string.subtitles),
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    Icons.Filled.Close,
+                    contentDescription = null,
+                    tint = Color(0xFF8F8791),
+                    modifier = Modifier
+                        .size(22.dp)
+                        .clickable(onClick = onDismiss)
+                )
+            }
+            Spacer(Modifier.height(18.dp))
+
+            // Size selector
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                SizeOption(
+                    label = "Small",
+                    glyphSize = 15.sp,
+                    selected = pendingSize == SubtitleSize.SMALL,
+                    onClick = { pendingSize = SubtitleSize.SMALL; onSizeChange(SubtitleSize.SMALL) }
+                )
+                SizeOption(
+                    label = "Medium",
+                    glyphSize = 19.sp,
+                    selected = pendingSize == SubtitleSize.MEDIUM,
+                    onClick = { pendingSize = SubtitleSize.MEDIUM; onSizeChange(SubtitleSize.MEDIUM) }
+                )
+                SizeOption(
+                    label = "Large",
+                    glyphSize = 24.sp,
+                    selected = pendingSize == SubtitleSize.LARGE,
+                    onClick = { pendingSize = SubtitleSize.LARGE; onSizeChange(SubtitleSize.LARGE) }
+                )
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            // Language list with a thin scroll indicator on the right, like the mock
+            Row(modifier = Modifier.fillMaxWidth()) {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(300.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(tracks) { track ->
+                        val selected = track.url == pendingUrl
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(if (selected) Color(0xFF2A2530) else Color.Transparent)
+                                .clickable {
+                                    pendingUrl = track.url
+                                    onSelect(track)
+                                }
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                track.label,
+                                color = if (selected) Gold else Color.White,
+                                fontSize = 15.sp,
+                                fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.SemiBold,
+                                modifier = Modifier.weight(1f)
+                            )
+                            RadioDot(selected = selected)
+                        }
+                    }
+                }
+                Spacer(Modifier.width(8.dp))
+                Box(
+                    modifier = Modifier
+                        .width(3.dp)
+                        .height(300.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(Color(0x33FFFFFF))
+                ) {
+                    val itemCount = tracks.size.coerceAtLeast(1)
+                    val visibleFraction = (5f / itemCount).coerceIn(0.15f, 1f)
+                    val firstVisible = listState.firstVisibleItemIndex
+                    val scrollFraction = if (itemCount <= 1) 0f else firstVisible / (itemCount - 1).toFloat()
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height((300.dp.value * visibleFraction).dp)
+                            .padding(top = (300.dp.value * (1f - visibleFraction) * scrollFraction).dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(Gold)
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            // Save button
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(Pink)
+                    .clickable(onClick = onSave),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    stringResource(R.string.save),
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.ExtraBold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SizeOption(
+    label: String,
+    glyphSize: androidx.compose.ui.unit.TextUnit,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.clickable(onClick = onClick)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(58.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .then(
+                    if (selected)
+                        Modifier.border(1.5.dp, Gold, RoundedCornerShape(14.dp))
+                    else Modifier
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            // Overlapping "Aa" glyphs to mimic the mock's stacked icon
+            Box {
+                Text(
+                    "A",
+                    color = Gold,
+                    fontSize = glyphSize,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier.padding(end = 10.dp, bottom = 6.dp)
+                )
+                Text(
+                    "A",
+                    color = Gold,
+                    fontSize = (glyphSize.value * 1.35f).sp,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier.padding(start = 10.dp)
+                )
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            label,
+            color = Color.White,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+@Composable
+private fun RadioDot(selected: Boolean) {
+    Box(
+        modifier = Modifier
+            .size(20.dp)
+            .clip(CircleShape)
+            .background(if (selected) Gold else Color(0xFF3A3540)),
+        contentAlignment = Alignment.Center
+    ) {
+        if (selected) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF16121A))
+            )
+        }
+    }
+}
+
+
+private val ReportReasons = listOf(
+    "Episode error",
+    "Paid film too long",
+    "Low Quality",
+    "Subtitle missing",
+    "Inaccurate Subtitle",
+    "Other"
+)
+
+@Composable
+private fun FeedbackFormSheet(
+    filmTitle: String,
+    episodeNumber: Int,
+    thumbnailUrl: String,
+    selectedReason: String,
+    onReasonSelected: (String) -> Unit,
+    onSubmit: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(0.86f)
+                .clip(RoundedCornerShape(26.dp))
+                .background(Color(0xFF16121A))
+                .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(26.dp))
+                .padding(20.dp)
+        ) {
+            // Header
+            Row(verticalAlignment = Alignment.Top) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Report an Issue",
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Help us improve your viewing experience",
+                        color = Color(0xFF8F8791),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Icon(
+                    Icons.Filled.Close,
+                    contentDescription = null,
+                    tint = Color(0xFF8F8791),
+                    modifier = Modifier
+                        .size(22.dp)
+                        .clickable(onClick = onDismiss)
+                )
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            // Film thumbnail + title/episode
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                ShortsThumbnail(
+                    imageUrl = thumbnailUrl,
+                    modifier = Modifier
+                        .size(76.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                )
+                Spacer(Modifier.width(14.dp))
+                Column {
+                    Text(
+                        filmTitle,
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        stringResource(R.string.episode_title, episodeNumber),
+                        color = Color(0xFFB7ABB2),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(22.dp))
+
+            Text(
+                "Please select a reason",
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(Modifier.height(10.dp))
+
+            Column {
+                ReportReasons.forEach { reason ->
+                    val selected = reason == selectedReason
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onReasonSelected(reason) }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            reason,
+                            color = if (selected) Color(0xFFFF5168) else Color.White,
+                            fontSize = 15.sp,
+                            fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.SemiBold,
+                            modifier = Modifier.weight(1f)
+                        )
+                        ReasonRadio(selected = selected)
+                    }
+                    if (reason != ReportReasons.last()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(Color(0x14FFFFFF))
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(22.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(if (selectedReason.isNotBlank()) Color(0xFFFF5168) else Color(0x553A3035))
+                    .clickable(enabled = selectedReason.isNotBlank(), onClick = onSubmit),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    stringResource(R.string.submit),
+                    color = if (selectedReason.isNotBlank()) Color.White else Color(0xFF8F7D84),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.ExtraBold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReasonRadio(selected: Boolean) {
+    Box(
+        modifier = Modifier
+            .size(24.dp)
+            .clip(CircleShape)
+            .background(if (selected) Color(0xFFFF5168) else Color.Transparent)
+            .border(
+                width = if (selected) 0.dp else 1.5.dp,
+                color = if (selected) Color.Transparent else Color(0xFF4A4550),
+                shape = CircleShape
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        if (selected) {
+            Icon(
+                Icons.Filled.Check,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(14.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun FeedbackOptionsSheet(
+    autoNext: Boolean,
+    autoUnlock: Boolean,
+    onAutoNextChange: (Boolean) -> Unit,
+    onAutoUnlockChange: (Boolean) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(0.86f)
+                .clip(RoundedCornerShape(26.dp))
+                .background(Color(0xFF16121A))
+                .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(26.dp))
+                .padding(20.dp)
+        ) {
+            Text(
+                stringResource(R.string.playback_options),
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.ExtraBold
+            )
+
+            Spacer(Modifier.height(20.dp))
+
+            PlaybackToggleRow(
+                title = stringResource(R.string.auto_next_episode),
+                description = stringResource(R.string.auto_next_episode_desc),
+                checked = autoNext,
+                onCheckedChange = onAutoNextChange
+            )
+
+            Spacer(Modifier.height(20.dp))
+
+            PlaybackToggleRow(
+                title = stringResource(R.string.auto_unlock_episodes),
+                description = stringResource(R.string.auto_unlock_episodes_desc),
+                checked = autoUnlock,
+                onCheckedChange = onAutoUnlockChange
+            )
+        }
+    }
+}
+
+@Composable
+private fun PlaybackToggleRow(
+    title: String,
+    description: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(verticalAlignment = Alignment.Top) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                title,
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                description,
+                color = Color(0xFF8F8791),
+                fontSize = 13.sp,
+                lineHeight = 18.sp,
+                fontWeight = FontWeight.Normal
+            )
+        }
+        Spacer(Modifier.width(12.dp))
+        PillSwitch(
+            checked = checked,
+            onCheckedChange = onCheckedChange
+        )
+    }
+}
+
+@Composable
+private fun PillSwitch(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    val thumbOffset by animateDpAsState(targetValue = if (checked) 18.dp else 2.dp, label = "switchThumb")
+    Box(
+        modifier = Modifier
+            .width(42.dp)
+            .height(24.dp)
+            .clip(RoundedCornerShape(50))
+            .background(if (checked) Color(0xFF4A4550) else Color(0xFF2A2530))
+            .clickable { onCheckedChange(!checked) },
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(start = thumbOffset)
+                .size(20.dp)
+                .clip(CircleShape)
+                .background(Color(0xFFB7ABB2))
+        )
+    }
+}
+
+
+private data class InstalledShareApp(
+    val label: String,
+    val packageName: String,
+    val activityName: String,
+    val icon: android.graphics.Bitmap?
+)
+
+
+@Composable
+private fun ShareOptionsSheet(
+    shareText: String,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
+    val copiedText = "copied to clipboard"
+
+    val shareApps by produceState<List<InstalledShareApp>>(initialValue = emptyList(), shareText) {
+        value = withContext(Dispatchers.IO) { context.resolveShareApps(shareText) }
+    }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(0.86f)
+                .clip(RoundedCornerShape(26.dp))
+                .background(Color(0xFF16121A))
+                .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(26.dp))
+                .padding(20.dp)
+        ) {
+            Text(
+                "share text",
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.ExtraBold
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            // Share text preview card with copy icon
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFF211D25))
+                    .padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    shareText,
+                    color = Color(0xFFE5D2D7),
+                    fontSize = 13.sp,
+                    lineHeight = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(Modifier.width(8.dp))
+                Icon(
+                    Icons.Filled.ContentCopy,
+                    contentDescription = null,
+                    tint = Color(0xFFCDB8BF),
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clickable {
+                            scope.launch {
+                                clipboard.setClipEntry(
+                                    androidx.compose.ui.platform.ClipEntry(
+                                        android.content.ClipData.newPlainText("share_text", shareText)
+                                    )
+                                )
+                                android.widget.Toast
+                                    .makeText(context, copiedText, android.widget.Toast.LENGTH_SHORT)
+                                    .show()
+                            }
+                        }
+                )
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            if (shareApps.isEmpty()) {
+                Text(
+                    "Loading share apps",
+                    color = Color(0xFF8F8791),
+                    fontSize = 13.sp
+                )
+            } else {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                    items(shareApps, key = { it.packageName + it.activityName }) { app ->
+                        InstalledShareAppIcon(
+                            app = app,
+                            onClick = {
+                                context.shareViaComponent(shareText, app)
+                                onDismiss()
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun InstalledShareAppIcon(
+    app: InstalledShareApp,
+    onClick: () -> Unit
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(64.dp)) {
+        Box(
+            modifier = Modifier
+                .size(54.dp)
+                .clip(CircleShape)
+                .background(Color(0xFF2E2A31))
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            if (app.icon != null) {
+                androidx.compose.foundation.Image(
+                    bitmap = app.icon.asImageBitmap(),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(54.dp)
+                        .clip(CircleShape)
+                )
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            app.label,
+            color = Color(0xFFE5D2D7),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+    }
+}
+
+/**
+ * Mirrors what the system share sheet does internally: query PackageManager
+ * for all activities that can handle ACTION_SEND / text/plain, in the same
+ * order the OS would rank them (queryIntentActivities already returns a
+ * priority-sorted list based on usage/relevance on most OEM skins).
+ */
+private fun Context.resolveShareApps(shareText: String): List<InstalledShareApp> {
+    val sendIntent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_TEXT, shareText)
+    }
+    val resolveInfos: List<ResolveInfo> = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        packageManager.queryIntentActivities(
+            sendIntent,
+            PackageManager.ResolveInfoFlags.of(0L)
+        )
+    } else {
+        @Suppress("DEPRECATION")
+        packageManager.queryIntentActivities(sendIntent, 0)
+    }
+
+    return resolveInfos
+        .distinctBy { it.activityInfo.packageName + it.activityInfo.name }
+        .mapNotNull { resolveInfo ->
+            runCatching {
+                val label = resolveInfo.loadLabel(packageManager).toString()
+                val drawable: Drawable = resolveInfo.loadIcon(packageManager)
+                InstalledShareApp(
+                    label = label,
+                    packageName = resolveInfo.activityInfo.packageName,
+                    activityName = resolveInfo.activityInfo.name,
+                    icon = drawable.toBitmapSafely()
+                )
+            }.getOrNull()
+        }
+}
+
+private fun Drawable.toBitmapSafely(): android.graphics.Bitmap? = runCatching {
+    val width = intrinsicWidth.coerceAtLeast(1)
+    val height = intrinsicHeight.coerceAtLeast(1)
+    val bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
+    val canvas = android.graphics.Canvas(bitmap)
+    setBounds(0, 0, canvas.width, canvas.height)
+    draw(canvas)
+    bitmap
+}.getOrNull()
+
+private fun Context.shareViaComponent(shareText: String, app: InstalledShareApp) {
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_TEXT, shareText)
+        setClassName(app.packageName, app.activityName)
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    try {
+        startActivity(intent)
+    } catch (e: android.content.ActivityNotFoundException) {
+        val fallback = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, shareText)
+        }
+        startActivity(Intent.createChooser(fallback, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
 }

@@ -233,4 +233,8 @@
 
     <string name="welcome_to_home_temp">Welcome to Home</string>
 
+    <string name="report_an_issue">Report an Issue</string>
+    <string name="report_an_issue_subtitle">Help us improve your viewing experience</string>
+
+
 </resources>

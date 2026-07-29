@@ -65,11 +65,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -689,7 +692,7 @@ fun DramaXTopAppBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         HeaderAssetLogo()
-        Spacer(modifier = Modifier.width(9.dp))
+        Spacer(modifier = Modifier.width(1.dp))
         Text(
             text = "ramaX",
             color = SoftPink,
@@ -803,7 +806,18 @@ private fun CompactPosterCard(
             .aspectRatio(0.562f)
             .clip(RoundedCornerShape(8.dp))
             .background(Color(0xFF1F2937))
-            .border(1.dp, Color(0xFF3A3034), RoundedCornerShape(8.dp))
+            .border(
+                width = 1.dp,
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        Color(0x6BFF0000),
+                        Color(0x6BF4BE4E)
+                    ),
+                    start = Offset(0f, 0f),
+                    end = Offset.Infinite
+                ),
+                shape = RoundedCornerShape(8.dp)
+            )
             .clickable { onOpenShorts(item.id.takeIf { it != 0 }) }
     ) {
         NetworkDramaImage(item.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, item.title)
@@ -883,7 +897,18 @@ private fun TallPosterCard(
             .aspectRatio(0.663f)
             .clip(RoundedCornerShape(12.dp))
             .background(Color(0xFF282A2B))
-            .border(1.dp, if (badge == "NEW") Gold else Pink, RoundedCornerShape(12.dp))
+            .border(
+                width = 1.dp,
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        Color(0x6BFF0000),
+                        Color(0x6BF4BE4E)
+                    ),
+                    start = Offset(0f, 0f),
+                    end = Offset.Infinite
+                ),
+                shape = RoundedCornerShape(8.dp)
+            )
             .clickable { onOpenShorts(item.id.takeIf { it != 0 }) }
     ) {
         NetworkDramaImage(item.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, item.title)
@@ -961,25 +986,76 @@ private fun RankingHeroRow(rank: Int, item: DramaItem, onOpenShorts: (Int?) -> U
             .clickable { onOpenShorts(item.id.takeIf { it != 0 }) },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            rank.toString(),
-            color = when (rank) {
-                1 -> Color(0xFFE7133D)
-                2 -> Color(0xFF9CA3AF)
-                else -> Color(0xFFB45309)
-            },
-            fontSize = 58.sp,
-            fontWeight = FontWeight.Black,
-            letterSpacing = 0.sp,
-            modifier = Modifier.width(54.dp)
-        )
+        val (textBrush, strokeColor) = when (rank) {
+            1 -> Pair(
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color(0x66FF4D6D),
+                        Color(0xFFFF4D6D)
+                    )
+                ),
+                Color(0xFFFF0000)
+            )
+
+            2 -> Pair(
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFF6B7280),
+                        Color(0xFF6B7280)
+                    )
+                ),
+                Color(0xFFFFFFFF)
+            )
+
+            else -> Pair(
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFF9A3412),
+                        Color(0xFF9A3412)
+                    )
+                ),
+                Color(0xFFFF8000)
+            )
+        }
+
+        Box(
+            modifier = Modifier.width(54.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            // Border
+            Text(
+                text = rank.toString(),
+                fontSize = 58.sp,
+                fontWeight = FontWeight.Black,
+                fontStyle = FontStyle.Italic,
+                style = TextStyle(
+                    color = strokeColor,
+                    drawStyle = Stroke(width = 1f)
+                )
+            )
+
+            // Gradient fill
+            Text(
+                text = rank.toString(),
+                fontSize = 58.sp,
+                fontWeight = FontWeight.Black,
+                fontStyle = FontStyle.Italic,
+                style = TextStyle(
+                    brush = textBrush
+                )
+            )
+        }
         Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight()
                 .clip(RoundedCornerShape(12.dp))
                 .background(CardPanel)
-                .border(1.dp, Pink, RoundedCornerShape(12.dp))
+                .border(1.dp, brush = Brush.linearGradient(
+                    colors = listOf(Color(0x6BFF0000),
+                        Color(0x6BF4BE4E)
+                    )
+                ), RoundedCornerShape(12.dp))
         ) {
             NetworkDramaImage(item.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, item.title)
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xE6000000)))))
@@ -1048,17 +1124,19 @@ private fun ToolPill(icon: ImageVector, label: String, onClick: () -> Unit) {
 
 @Composable
 private fun CornerBadge(text: String, color: Color, modifier: Modifier = Modifier) {
-    Text(
-        text = text,
-        color = if (color == Color(0xFFEAB308)) Color.Black else Color.White,
-        fontSize = 8.sp,
-        fontWeight = FontWeight.Black,
-        letterSpacing = 0.sp,
-        modifier = modifier
-            .clip(RoundedCornerShape(4.dp))
-            .background(color)
-            .padding(horizontal = 5.dp, vertical = 2.dp)
-    )
+    Row() {
+        Text(
+            text = text,
+            color = Color.White,
+            fontSize = 8.sp,
+            fontWeight = FontWeight.Black,
+            letterSpacing = 0.sp,
+            modifier = modifier
+                .clip(RoundedCornerShape(4.dp))
+                .background(color)
+                .padding(horizontal = 5.dp, vertical = 2.dp)
+        )
+    }
 }
 
 @Composable
@@ -1274,11 +1352,14 @@ private fun SortOptionRow(label: String, selected: Boolean, onClick: () -> Unit)
 
 @Composable
 private fun ContinueWatching(items: List<ContinueWatchingItem>, onOpenShorts: (Int?) -> Unit) {
-    SectionHeader(title = stringResource(R.string.continue_watching), action = stringResource(R.string.see_all))
-    if (items.isEmpty()) {
-        EmptyContinueWatching(onOpenShorts)
-        return
+    if(!items.isEmpty()){
+        SectionHeader(title = stringResource(R.string.continue_watching), action = stringResource(R.string.see_all))
     }
+
+//    if (items.isEmpty()) {
+//        EmptyContinueWatching(onOpenShorts)
+//        return
+//    }
     LazyRow(
         contentPadding = PaddingValues(horizontal = 18.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -1655,7 +1736,12 @@ private fun GeneratedPoster(seed: String, modifier: Modifier) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xAA050507))))
+                .background(Brush.linearGradient(colors = listOf(
+                    Color(0x6BFF0000),
+                    Color(0x6BF4BE4E)
+                ),
+                    start = Offset(0f, 0f),
+                    end = Offset.Infinite))
         )
     }
 }

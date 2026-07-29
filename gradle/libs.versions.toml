@@ -24,6 +24,7 @@ multidex = "2.0.1"
 shimmer = "0.5.0"
 erainStudio = "1.8"
 constraintlayout = "2.2.1"
+foundation = "1.11.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -63,6 +64,7 @@ facebook-shimmer = { group = "com.facebook.shimmer", name = "shimmer", version.r
 erain-studio = { group = "com.github.trongluan99", name = "ERain-Studio", version.ref = "erainStudio" }
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
