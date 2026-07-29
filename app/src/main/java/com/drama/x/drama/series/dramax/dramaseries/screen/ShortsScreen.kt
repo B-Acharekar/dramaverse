@@ -35,6 +35,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -58,11 +59,13 @@ import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.filled.Feedback
+import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Button
@@ -129,6 +132,8 @@ private val ShortsBackground = Color(0xFF050507)
 private val Gold = Color(0xFFF5C65B)
 private val Pink = Color(0xFFFF5168)
 
+private const val DAILY_UNLOCK_LIMIT = 7
+
 private data class SubtitleCue(
     val startMs: Long,
     val endMs: Long,
@@ -159,6 +164,31 @@ fun ShortsScreen(
     var autoUnlock by remember { mutableStateOf(false) }
     var ccEnabled by remember { mutableStateOf(true) }
     var playbackSpeed by remember { mutableStateOf(1f) }
+
+    var dailyUnlocksUsed by remember { mutableStateOf(0) }
+    var unlockedEpisodeKeys by remember { mutableStateOf(setOf<String>()) }
+
+    LaunchedEffect(pagerState.currentPage, uiState.items.size) {
+        val currentItem = uiState.items.getOrNull(pagerState.currentPage)
+        val currentLocked = currentItem?.isPaywalled() == true
+        controlsVisible = true
+        isPlaying = !currentLocked
+        showPlaybackOptions = false
+        showFeedbackForm = false
+        ccEnabled = currentItem?.subtitleTracks?.isNotEmpty() != false
+        viewModel.ensurePlayback(pagerState.currentPage, backendBaseUrl)
+        viewModel.loadMoreIfNeeded(pagerState.currentPage, backendBaseUrl)
+    }
+
+    LaunchedEffect(controlsVisible, isPlaying, showPlaybackOptions, showFeedbackForm, pagerState.currentPage, uiState.items.size) {
+        val currentLocked = uiState.items.getOrNull(pagerState.currentPage)?.isPaywalled() == true
+        if (controlsVisible && isPlaying && !showPlaybackOptions && !showFeedbackForm && !currentLocked) {
+            delay(8000)
+            controlsVisible = false
+            showPlaybackOptions = false
+            showFeedbackForm = false
+        }
+    }
 
 
     LaunchedEffect(backendBaseUrl, initialFilmId) {
@@ -297,6 +327,21 @@ fun ShortsScreen(
                             1.5f -> 2f
                             else -> 1f
                         }
+                    },
+                    dailyUnlocksUsed = dailyUnlocksUsed,
+                    dailyUnlockLimit = DAILY_UNLOCK_LIMIT,
+                    isEpisodeUnlockedLocally = { filmId, episodeNumber ->
+                        unlockedEpisodeKeys.contains("$filmId:$episodeNumber")
+                    },
+                    onWatchAdToUnlock = { targetItem, onDone ->
+                        dailyUnlocksUsed++
+                        unlockedEpisodeKeys = unlockedEpisodeKeys + "${targetItem.film.id}:${targetItem.episodeNumber}"
+                        viewModel.unlockEpisode(
+                            backendBaseUrl = backendBaseUrl,
+                            filmId = targetItem.film.id,
+                            episodeNumber = targetItem.episodeNumber
+                        )
+                        onDone()
                     }
                 )
             }
@@ -343,7 +388,11 @@ private fun ShortsPage(
     onEpisodeFinished: (Int, ShortsItem, Long, Long) -> Unit,
     onProgressCheckpoint: (ShortsItem, Long, Long) -> Unit,
     onToggleCc: () -> Unit,
-    onCycleSpeed: () -> Unit
+    onCycleSpeed: () -> Unit,
+    dailyUnlocksUsed: Int,
+    dailyUnlockLimit: Int,
+    isEpisodeUnlockedLocally: (filmId: Int, episodeNumber: Int) -> Boolean,
+    onWatchAdToUnlock: (ShortsItem, onDone: () -> Unit) -> Unit,
 ) {
     var videoReady by remember(item.playUrl) { mutableStateOf(false) }
     var reminderOn by remember(item.film.id) { mutableStateOf(false) }
@@ -377,9 +426,17 @@ private fun ShortsPage(
     var selectedReportReason by remember(item.playUrl) { mutableStateOf("") }
     var showShareSheet by remember(item.film.id) { mutableStateOf(false) }
 
+    var showUnlockDialog by remember(item.film.id, item.episodeNumber) { mutableStateOf(false) }
+    var showDailyLimitDialog by remember { mutableStateOf(false) }
+    var isWatchingAd by remember(item.film.id, item.episodeNumber) { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    val isLocked = item.isLocked && !isEpisodeUnlockedLocally(item.film.id, item.episodeNumber)
+    android.util.Log.d("ShortsLock", "ep=${item.episodeNumber} rawLocked=${item.isLocked} computed=$isLocked")
+
 
     Box(modifier = Modifier.fillMaxSize()) {
-        if (!isActive || item.playUrl.isBlank()) {
+        if (!isActive || item.playUrl.isBlank() || isLocked) {
             LoadingBackdrop(
                 item = item,
                 showLoader = isActive,
@@ -425,10 +482,26 @@ private fun ShortsPage(
             }
         }
 
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .clickable(onClick = onTogglePlay)
+//        )
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .clickable(onClick = onTogglePlay)
+                .clickable(onClick = {
+                    if (isLocked) {
+                        if (dailyUnlocksUsed >= dailyUnlockLimit) {
+                            showDailyLimitDialog = true
+                        } else {
+                            showUnlockDialog = true
+                        }
+                    } else {
+                        onTogglePlay()
+                    }
+                })
         )
 
         if (controlsVisible) {
@@ -506,33 +579,35 @@ private fun ShortsPage(
                     Color.White,
                     onClick = { showShareSheet = true }
                 )
-                SideAction(
-                    Icons.Filled.VideoLibrary,
-                    R.string.episodes,
-                    Color.White,
-                    onClick = { showEpisodeOptions = true }
-                )
-                SideAction(
-                    Icons.Filled.ClosedCaption,
-                    R.string.cc,
-                    if (ccEnabled && item.subtitleUrl.isNotBlank()) Gold else Color.White,
-                    onClick = {
-                        if (item.subtitleTracks.size > 1) {
-                            if (!ccEnabled && selectedSubtitleUrl.isBlank()) {
-                                selectedSubtitleUrl = item.subtitleTracks.firstOrNull()?.url.orEmpty()
+                if (!isLocked) {
+                    SideAction(
+                        Icons.Filled.VideoLibrary,
+                        R.string.episodes,
+                        Color.White,
+                        onClick = { showEpisodeOptions = true }
+                    )
+                    SideAction(
+                        Icons.Filled.ClosedCaption,
+                        R.string.cc,
+                        if (ccEnabled && item.subtitleUrl.isNotBlank()) Gold else Color.White,
+                        onClick = {
+                            if (item.subtitleTracks.size > 1) {
+                                if (!ccEnabled && selectedSubtitleUrl.isBlank()) {
+                                    selectedSubtitleUrl = item.subtitleTracks.firstOrNull()?.url.orEmpty()
+                                }
+                                if (!ccEnabled) onToggleCc()
+                                showSubtitleOptions = !showSubtitleOptions
+                            } else {
+                                if (!ccEnabled && selectedSubtitleUrl.isBlank()) {
+                                    selectedSubtitleUrl = item.subtitleTracks.firstOrNull()?.url.orEmpty()
+                                }
+                                onToggleCc()
+                                showSubtitleOptions = false
                             }
-                            if (!ccEnabled) onToggleCc()
-                            showSubtitleOptions = !showSubtitleOptions
-                        } else {
-                            if (!ccEnabled && selectedSubtitleUrl.isBlank()) {
-                                selectedSubtitleUrl = item.subtitleTracks.firstOrNull()?.url.orEmpty()
-                            }
-                            onToggleCc()
-                            showSubtitleOptions = false
                         }
-                    }
-                )
-                SideTextAction(speedLabel(playbackSpeed), R.string.speed, onCycleSpeed)
+                    )
+                    SideTextAction(speedLabel(playbackSpeed), R.string.speed, onCycleSpeed)
+                }
             }
 
             Box(modifier = Modifier.align(Alignment.BottomStart)) {
@@ -540,9 +615,17 @@ private fun ShortsPage(
                     item = item,
                     positionMs = positionMs,
                     durationMs = durationMs,
+                    isLocked = isLocked,
                     onSeekTo = { targetMs ->
                         positionMs = targetMs
                         pendingSeekMs = targetMs
+                    },
+                    onWatchNowClick = {
+                        if (dailyUnlocksUsed >= dailyUnlockLimit) {
+                            showDailyLimitDialog = true
+                        } else {
+                            showUnlockDialog = true
+                        }
                     }
                 )
             }
@@ -630,6 +713,41 @@ private fun ShortsPage(
                 onDismiss = { showShareSheet = false }
             )
         }
+        if (showUnlockDialog) {
+            UnlockEpisodeDialog(
+                posterUrl = item.film.imageUrl,
+                episodeNumber = item.episodeNumber,
+                dailyUnlocksUsed = dailyUnlocksUsed,
+                dailyUnlockLimit = dailyUnlockLimit,
+                isLoading = isWatchingAd,
+                onWatchAd = {
+                    isWatchingAd = true
+                    scope.launch {
+                        // TODO: replace this delay with the actual rewarded-ad flow.
+                        // Call onWatchAdToUnlock only once the ad SDK reports a completed view.
+                        delay(1500)
+                        onWatchAdToUnlock(item) {
+                            isWatchingAd = false
+                            showUnlockDialog = false
+                        }
+                    }
+                },
+                onDismiss = {
+                    if (!isWatchingAd) showUnlockDialog = false
+                }
+            )
+        }
+
+        if (showDailyLimitDialog) {
+            DailyLimitReachedDialog(
+                dailyUnlockLimit = dailyUnlockLimit,
+                onBrowseFreeEpisodes = {
+                    showDailyLimitDialog = false
+                    showEpisodeOptions = true
+                },
+                onDismiss = { showDailyLimitDialog = false }
+            )
+        }
     }
 }
 
@@ -705,7 +823,9 @@ private fun ShortsCaption(
     item: ShortsItem,
     positionMs: Long,
     durationMs: Long,
-    onSeekTo: (Long) -> Unit
+    isLocked: Boolean,
+    onSeekTo: (Long) -> Unit,
+    onWatchNowClick: () -> Unit
 ) {
     val safeDuration = durationMs.takeIf { it > 0L && it < Long.MAX_VALUE / 2 } ?: 0L
     var descriptionExpanded by remember(item.film.id, item.episodeNumber) { mutableStateOf(false) }
@@ -717,7 +837,7 @@ private fun ShortsCaption(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 18.dp, end = 86.dp, bottom = 104.dp)
+            .padding(start = 18.dp, end = if (isLocked) 18.dp else 86.dp, bottom = 104.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
@@ -773,20 +893,39 @@ private fun ShortsCaption(
             )
         }
         Spacer(Modifier.height(12.dp))
-        ThinSeekBar(
-            progress = if (safeDuration > 0L) sliderPosition / safeDuration.toFloat() else 0f,
-            onSeekFraction = { fraction ->
-                val targetMs = (safeDuration * fraction).toLong().coerceIn(0L, safeDuration)
-                sliderPosition = targetMs.toFloat()
-                onSeekTo(targetMs)
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(4.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(formatPlaybackTime(sliderPosition.toLong()), color = Color(0xFFE8D7DC), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
-            Spacer(Modifier.weight(1f))
-            Text(formatPlaybackTime(safeDuration), color = Color(0xFFE8D7DC), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
+        if (isLocked) {
+            Box(
+                modifier = Modifier
+                    .width(140.dp)
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(Pink)
+                    .clickable(onClick = onWatchNowClick),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    stringResource(R.string.watch_now),
+                    color = Color.White,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.ExtraBold
+                )
+            }
+        } else {
+            ThinSeekBar(
+                progress = if (safeDuration > 0L) sliderPosition / safeDuration.toFloat() else 0f,
+                onSeekFraction = { fraction ->
+                    val targetMs = (safeDuration * fraction).toLong().coerceIn(0L, safeDuration)
+                    sliderPosition = targetMs.toFloat()
+                    onSeekTo(targetMs)
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(4.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(formatPlaybackTime(sliderPosition.toLong()), color = Color(0xFFE8D7DC), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
+                Spacer(Modifier.weight(1f))
+                Text(formatPlaybackTime(safeDuration), color = Color(0xFFE8D7DC), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
+            }
         }
     }
 }
@@ -1262,6 +1401,10 @@ private fun buildShareText(item: ShortsItem, context: android.content.Context): 
         append("Get the app: https://play.google.com/store/apps/details?id=")
         append(context.packageName)
     }
+}
+
+private fun ShortsItem.isPaywalled(): Boolean {
+    return isLocked
 }
 
 private fun subtitleMimeType(url: String): String {
@@ -2202,5 +2345,246 @@ private fun Context.shareViaComponent(shareText: String, app: InstalledShareApp)
             putExtra(Intent.EXTRA_TEXT, shareText)
         }
         startActivity(Intent.createChooser(fallback, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+}
+
+@Composable
+private fun UnlockEpisodeDialog(
+    posterUrl: String,
+    episodeNumber: Int,
+    dailyUnlocksUsed: Int,
+    dailyUnlockLimit: Int,
+    isLoading: Boolean,
+    onWatchAd: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(0.82f)
+                .clip(RoundedCornerShape(26.dp))
+                .background(Color(0xFF16121A))
+                .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(26.dp))
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                Icon(
+                    Icons.Filled.Close,
+                    contentDescription = null,
+                    tint = Color(0xFF8F8791),
+                    modifier = Modifier
+                        .size(22.dp)
+                        .clip(CircleShape)
+                        .background(Color(0x33000000))
+                        .clickable(enabled = !isLoading, onClick = onDismiss)
+                        .padding(3.dp)
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .width(150.dp)
+                    .aspectRatio(0.72f)
+                    .clip(RoundedCornerShape(14.dp))
+            ) {
+                ShortsThumbnail(posterUrl, Modifier.fillMaxSize())
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color(0xFFE12E3E))
+                        .padding(vertical = 5.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "EP $episodeNumber",
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(18.dp))
+
+            Text(
+                stringResource(R.string.unlock_episode_title, episodeNumber),
+                color = Color.White,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                stringResource(R.string.unlock_episode_desc),
+                color = Color(0xFF9D8A91),
+                fontSize = 13.sp,
+                lineHeight = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(Modifier.height(14.dp))
+
+            Text(
+                stringResource(R.string.daily_progress, dailyUnlocksUsed, dailyUnlockLimit),
+                color = Color(0xFF7A7178),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(if (isLoading) Color(0x553A3035) else Pink)
+                    .clickable(enabled = !isLoading, onClick = onWatchAd),
+                contentAlignment = Alignment.Center
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(22.dp)
+                    )
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Filled.PlayArrow,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clip(CircleShape)
+                                .background(Color(0x33FFFFFF))
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            stringResource(R.string.watch_ad),
+                            color = Color.White,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(14.dp))
+
+            Text(
+                stringResource(R.string.unlock_permanent_note),
+                color = Color(0xFF7A7178),
+                fontSize = 11.sp,
+                lineHeight = 15.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+private fun DailyLimitReachedDialog(
+    dailyUnlockLimit: Int,
+    onBrowseFreeEpisodes: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(0.82f)
+                .clip(RoundedCornerShape(26.dp))
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(Color(0xFF3A1216), Color(0xFF16121A)),
+                        radius = 340f
+                    )
+                )
+                .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(26.dp))
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                Icon(
+                    Icons.Filled.Close,
+                    contentDescription = null,
+                    tint = Color(0xFF8F8791),
+                    modifier = Modifier
+                        .size(22.dp)
+                        .clip(CircleShape)
+                        .background(Color(0x33000000))
+                        .clickable(onClick = onDismiss)
+                        .padding(3.dp)
+                )
+            }
+
+            Spacer(Modifier.height(6.dp))
+
+            Icon(
+                Icons.Filled.HourglassEmpty,
+                contentDescription = null,
+                tint = Color(0xFFF08A3C),
+                modifier = Modifier.size(56.dp)
+            )
+
+            Spacer(Modifier.height(18.dp))
+
+            Text(
+                stringResource(R.string.daily_limit_title),
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                stringResource(R.string.daily_limit_desc, dailyUnlockLimit),
+                color = Color(0xFFCDB8BF),
+                fontSize = 13.sp,
+                lineHeight = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(Modifier.height(22.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(Pink)
+                    .clickable(onClick = onBrowseFreeEpisodes),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        stringResource(R.string.browse_free_episodes),
+                        color = Color.White,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Icon(
+                        Icons.Filled.Explore,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+        }
     }
 }

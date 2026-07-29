@@ -236,5 +236,13 @@
     <string name="report_an_issue">Report an Issue</string>
     <string name="report_an_issue_subtitle">Help us improve your viewing experience</string>
 
+    <string name="unlock_episode_title">Unlock Episode %1$d to Continue Watching</string>
+    <string name="unlock_episode_desc">Watch an ad to permanently unlock this episode and continue the story.</string>
+    <string name="daily_progress">Daily Progress: %1$d/%2$d</string>
+    <string name="watch_ad">Watch Ad</string>
+    <string name="unlock_permanent_note">Episodes unlocked with ads are yours forever.</string>
+    <string name="daily_limit_title">Daily Free Unlock Limit Reached</string>
+    <string name="daily_limit_desc">You\'ve used all %1$d free unlocks today. More free unlocks will be available tomorrow.</string>
+    <string name="browse_free_episodes">Browse Free Episodes</string>
 
 </resources>

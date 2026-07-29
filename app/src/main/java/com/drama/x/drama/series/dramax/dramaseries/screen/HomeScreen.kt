@@ -2,6 +2,7 @@ package com.drama.x.drama.series.dramax.dramaseries.screen
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -78,7 +79,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.drama.x.drama.series.dramax.dramaseries.R
 import com.drama.x.drama.series.dramax.dramaseries.data.ContinueWatchingItem
 import com.drama.x.drama.series.dramax.dramaseries.data.DramaItem
 import com.drama.x.drama.series.dramax.dramaseries.data.HomeFeed
@@ -87,6 +87,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.net.URL
+import com.drama.x.drama.series.dramax.dramaseries.R
+
+
 
 private val HomeBackground = Color(0xFF09090B)
 private val Panel = Color(0xFF151318)
@@ -827,7 +830,7 @@ private fun CompactPosterCard(
                 .background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xD9000000))))
         )
         if (item.isPremium || item.rating.toFloatOrNull()?.let { it >= 4.8f } == true) {
-            CornerBadge("HOT", Pink, Modifier.align(Alignment.TopStart).padding(5.dp))
+            CornerBadge("HOT", Pink, icon = R.drawable.fire, modifier = Modifier.align(Alignment.TopStart).padding(5.dp))
         }
         Column(
             modifier = Modifier
@@ -918,12 +921,39 @@ private fun TallPosterCard(
                 .background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xEE000000))))
         )
         if (badge != null) {
-            val badgeColor = when (badge) {
-                "NEW" -> Color(0xFFEAB308)
-                "TRENDING" -> Color(0xFF54D84A)
-                else -> Pink
+            val badgeColor: Color
+            val badgeIcon: Int
+
+            when (badge) {
+                "NEW" -> {
+                    badgeColor = Color(0xFFEAB308)
+                    badgeIcon = R.drawable.sticker
+                }
+
+                "TRENDING" -> {
+                    badgeColor = Color(0xFF54D84A)
+                    badgeIcon = R.drawable.trend
+                }
+
+                "HOT" -> {
+                    badgeColor = Pink
+                    badgeIcon = R.drawable.fire
+                }
+
+                else -> {
+                    badgeColor = Pink
+                    badgeIcon = R.drawable.ic_star
+                }
             }
-            CornerBadge(badge, badgeColor, Modifier.align(Alignment.TopEnd).padding(7.dp))
+
+            CornerBadge(
+                text = badge,
+                color = badgeColor,
+                icon = badgeIcon,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(7.dp)
+            )
         }
         Column(
             modifier = Modifier
@@ -1059,7 +1089,7 @@ private fun RankingHeroRow(rank: Int, item: DramaItem, onOpenShorts: (Int?) -> U
         ) {
             NetworkDramaImage(item.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, item.title)
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xE6000000)))))
-            CornerBadge("TOP $rank", Color(0xFF374151), Modifier.align(Alignment.BottomStart).padding(start = 10.dp, bottom = 40.dp))
+            CornerBadge("TOP $rank", Color(0xFF374151), icon = null, modifier =  Modifier.align(Alignment.BottomStart).padding(start = 10.dp, bottom = 40.dp))
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -1123,18 +1153,35 @@ private fun ToolPill(icon: ImageVector, label: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun CornerBadge(text: String, color: Color, modifier: Modifier = Modifier) {
-    Row() {
+fun CornerBadge(
+    text: String,
+    color: Color,
+    @DrawableRes icon: Int?,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(color)
+            .padding(horizontal = 5.dp, vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        icon?.let {
+            Image(
+                painter = painterResource(it),
+                contentDescription = null,
+                modifier = Modifier.size(10.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(3.dp))
+
         Text(
             text = text,
             color = Color.White,
             fontSize = 8.sp,
             fontWeight = FontWeight.Black,
-            letterSpacing = 0.sp,
-            modifier = modifier
-                .clip(RoundedCornerShape(4.dp))
-                .background(color)
-                .padding(horizontal = 5.dp, vertical = 2.dp)
+            letterSpacing = 0.sp
         )
     }
 }

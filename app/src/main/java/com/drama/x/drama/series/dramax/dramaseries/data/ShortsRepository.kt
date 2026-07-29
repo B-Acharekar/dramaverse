@@ -12,7 +12,7 @@ data class SubtitleTrack(
 
 data class ShortsItem(
     val film: DramaItem,
-    val episodeNumber: Int = 1,
+    val episodeNumber: Int = 12,
     val playUrl: String = "",
     val subtitleUrl: String = "",
     val subtitleTracks: List<SubtitleTrack> = emptyList(),
@@ -48,7 +48,7 @@ class ShortsRepository(
     suspend fun loadPlayback(
         backendBaseUrl: String,
         filmId: Int,
-        episodeNumber: Int = 1,
+        episodeNumber: Int = 12,
         language: String = "en"
     ): Result<ShortsItem> = runCatching {
         val token = authRepository.authToken()
