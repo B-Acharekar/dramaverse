@@ -802,6 +802,7 @@ fun DramaXTopAppBar(
     topInset: androidx.compose.ui.unit.Dp = 0.dp,
     onSearchClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
+    showActions: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -825,9 +826,11 @@ fun DramaXTopAppBar(
             letterSpacing = 0.sp
         )
         Spacer(modifier = Modifier.weight(1f))
-        AppHeaderIcon(Icons.Filled.Search, onSearchClick, Modifier.size(18.dp))
-        Spacer(modifier = Modifier.width(16.dp))
-        AppHeaderIcon(Icons.Filled.Notifications, onNotificationsClick, Modifier.size(width = 16.dp, height = 20.dp))
+        if (showActions) {
+            AppHeaderIcon(Icons.Filled.Search, onSearchClick, Modifier.size(18.dp))
+            Spacer(modifier = Modifier.width(16.dp))
+            AppHeaderIcon(Icons.Filled.Notifications, onNotificationsClick, Modifier.size(width = 16.dp, height = 20.dp))
+        }
     }
 }
 

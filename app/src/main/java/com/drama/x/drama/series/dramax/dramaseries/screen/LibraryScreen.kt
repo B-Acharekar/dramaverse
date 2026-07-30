@@ -357,28 +357,11 @@ private fun MyListNativeAd(
 private fun LibraryTopHeader(onSearchClick: (String) -> Unit = {},
                               modifier: Modifier = Modifier) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    Row(
+    DramaXTopAppBar(
+        topInset = topInset,
+        showActions = false,
         modifier = modifier
-            .fillMaxWidth()
-            .height(64.dp + topInset)
-            .background(Color(0xFF0C0808))
-            .padding(top = topInset)
-            .border(width = 1.dp, color = Color(0x1AFFFFFF))
-            .padding(start = 18.dp, end = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Add "My List" title
-        Text(
-            "My List",
-            color = Color.White,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.ExtraBold,
-            letterSpacing = 0.sp
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        AppHeaderIcon(Icons.Filled.Search, {onSearchClick("")}, Modifier.size(18.dp))
-        Spacer(modifier = Modifier.width(16.dp))
-    }
+    )
 }
 
 @Composable

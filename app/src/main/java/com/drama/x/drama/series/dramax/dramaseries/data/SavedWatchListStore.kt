@@ -79,7 +79,12 @@ private fun DramaItem.isInvalidSavedFilm(): Boolean {
         "thriller",
         "mystery",
         "historical drama",
-        "toxic love"
+        "toxic love",
+        "revenge storeis",
+        "revenge stories",
+        "love after marriage",
+        "the second chance",
+        "contract love"
     )
     return title.isBlank() ||
         normalizedTitle in blockedTitles ||

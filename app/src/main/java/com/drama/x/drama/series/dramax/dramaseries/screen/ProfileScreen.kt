@@ -1018,25 +1018,10 @@ private fun LanguagePickerSelectionRing(selected: Boolean) {
 @Composable
 private fun ProfileTopBar() {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp + topInset)
-            .background(Color(0xFF0C0808))
-            .padding(top = topInset)
-            .border(width = 1.dp, color = Color(0x1AFFFFFF))
-            .padding(horizontal = 18.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "Profile",
-            color = Color.White,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.ExtraBold,
-            letterSpacing = 0.sp
-        )
-        Spacer(modifier = Modifier.weight(1f))
-    }
+    DramaXTopAppBar(
+        topInset = topInset,
+        showActions = false
+    )
 }
 
 

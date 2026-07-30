@@ -186,6 +186,7 @@ fun ShortsScreen(
 
     var dailyUnlocksUsed by remember { mutableStateOf(0) }
     var unlockedEpisodeKeys by remember { mutableStateOf(setOf<String>()) }
+    var episodeModeKeys by remember { mutableStateOf(setOf<String>()) }
     var nativeShortVideoAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
 
     LaunchedEffect(activity, uiState.items.size) {
@@ -258,10 +259,13 @@ fun ShortsScreen(
                         isActive = page == pagerState.currentPage
                     )
 
-                    is ShortsFeedPage.Video -> ShortsPage(
+                    is ShortsFeedPage.Video -> {
+                        val isEpisodeModeForItem = episodeModeKeys.contains(feedPage.item.episodeKey())
+                        ShortsPage(
                         item = feedPage.item,
                         itemIndex = feedPage.itemIndex,
                         isActive = page == pagerState.currentPage,
+                        isEpisodeMode = isEpisodeModeForItem,
                         backendBaseUrl = backendBaseUrl,
                         controlsVisible = controlsVisible,
                         isPlaying = isPlaying,
@@ -271,7 +275,7 @@ fun ShortsScreen(
                         autoUnlock = autoUnlock,
                         ccEnabled = ccEnabled,
                         playbackSpeed = playbackSpeed,
-                        bottomReservedPadding = 78.dp + bottomBannerPadding,
+                        bottomReservedPadding = if (isEpisodeModeForItem) 0.dp else 78.dp + bottomBannerPadding,
                         onBack = onBack,
                         onTogglePlay = {
                             controlsVisible = true
@@ -354,7 +358,7 @@ fun ShortsScreen(
                             unlockedEpisodeKeys.contains("$filmId:$episodeNumber")
                         },
                         onUnlockedEpisodeReady = { targetItem ->
-                            // Resume playback after unlock
+                            episodeModeKeys = episodeModeKeys + targetItem.episodeKey()
                             isPlaying = true
                             viewModel.playEpisode(
                                 backendBaseUrl = backendBaseUrl,
@@ -394,10 +398,13 @@ fun ShortsScreen(
                             }
                         }
                     )
+                    }
                 }
             }
         }
-        if (controlsVisible && currentFeedPage is ShortsFeedPage.Video) {
+        val currentVideoItem = currentVideoPage?.item
+        val isCurrentEpisodeMode = currentVideoItem?.let { episodeModeKeys.contains(it.episodeKey()) } == true
+        if (controlsVisible && currentFeedPage is ShortsFeedPage.Video && !isCurrentEpisodeMode) {
             BottomNavigationBar(
                 selected = "Shorts",
                 onHome = onHome,
@@ -410,7 +417,7 @@ fun ShortsScreen(
                     .padding(bottom = bottomBannerPadding)
             )
         }
-        if (bottomBannerVisible && currentFeedPage is ShortsFeedPage.Video) {
+        if (bottomBannerVisible && currentFeedPage is ShortsFeedPage.Video && !isCurrentEpisodeMode) {
             AppBottomBanner(modifier = Modifier.align(Alignment.BottomCenter))
         }
     }
@@ -432,6 +439,8 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
     else -> null
 }
 
+private fun ShortsItem.episodeKey(): String = "${film.id}:${episodeNumber}"
+
 @Composable
 private fun ShortVideoNativeFullscreenAd(
     state: NativeAdState,
@@ -447,7 +456,8 @@ private fun ShortVideoNativeFullscreenAd(
                 placementName = "native_shortvideo_fullscreen",
                 state = state,
                 modifier = Modifier.fillMaxSize(),
-                height = maxHeight
+                height = maxHeight,
+                fillAvailableHeight = true
             )
         }
     }
@@ -459,6 +469,7 @@ private fun ShortsPage(
     item: ShortsItem,
     itemIndex: Int,
     isActive: Boolean,
+    isEpisodeMode: Boolean,
     backendBaseUrl: String,
     controlsVisible: Boolean,
     isPlaying: Boolean,
@@ -533,9 +544,6 @@ private fun ShortsPage(
             item
         }
     }
-    android.util.Log.d("ShortsLock", "ep=${item.episodeNumber} rawLocked=${item.isLocked} computed=$isLocked")
-
-
     Box(modifier = Modifier.fillMaxSize()) {
         if (!isActive || item.playUrl.isBlank()) {
             LoadingBackdrop(
@@ -626,6 +634,7 @@ private fun ShortsPage(
         if (controlsVisible) {
             ShortsTopBar(
                 item = item,
+                showActions = isEpisodeMode,
                 onBack = onBack,
                 onFeedbackClick = onFeedbackClick,
                 onOptionsClick = onOptionsClick
@@ -665,6 +674,14 @@ private fun ShortsPage(
                     Color.White,
                     onClick = { showShareSheet = true }
                 )
+                if (isEpisodeMode) {
+                    SideAction(
+                        Icons.Filled.VideoLibrary,
+                        R.string.episodes,
+                        Color.White,
+                        onClick = { showEpisodeOptions = true }
+                    )
+                }
                 SideAction(
                     Icons.Filled.ClosedCaption,
                     R.string.cc,
@@ -685,6 +702,13 @@ private fun ShortsPage(
                         }
                     }
                 )
+                if (isEpisodeMode) {
+                    SideTextAction(
+                        value = speedLabel(playbackSpeed),
+                        label = "Speed",
+                        onClick = onCycleSpeed
+                    )
+                }
             }
 
             Box(modifier = Modifier.align(Alignment.BottomStart)) {
@@ -693,6 +717,7 @@ private fun ShortsPage(
                     positionMs = positionMs,
                     durationMs = durationMs,
                     isLocked = isLocked,
+                    isEpisodeMode = isEpisodeMode,
                     bottomReservedPadding = bottomReservedPadding,
                     onSeekTo = { targetMs ->
                         positionMs = targetMs
@@ -786,6 +811,23 @@ private fun ShortsPage(
                 currentEpisode = item.episodeNumber,
                 totalEpisodes = item.film.episodeTotal,
                 unlockedThrough = maxOf(item.episodeNumber, FREE_SHORTS_PREVIEW_EPISODES),
+                onEpisodeSelected = { episode ->
+                    val targetItem = item.copy(
+                        episodeNumber = episode,
+                        isLocked = episode > FREE_SHORTS_PREVIEW_EPISODES
+                    )
+                    if (episode > FREE_SHORTS_PREVIEW_EPISODES &&
+                        !isEpisodeUnlockedLocally(item.film.id, episode)
+                    ) {
+                        if (dailyUnlocksUsed >= dailyUnlockLimit) {
+                            showDailyLimitDialog = true
+                        } else {
+                            unlockTargetItem = targetItem
+                        }
+                    } else {
+                        onUnlockedEpisodeReady(targetItem)
+                    }
+                },
                 modifier = Modifier.align(Alignment.Center),
                 onDismiss = { showEpisodeOptions = false }
             )
@@ -836,6 +878,7 @@ private fun ShortsPage(
 @Composable
 private fun ShortsTopBar(
     item: ShortsItem,
+    showActions: Boolean,
     onBack: () -> Unit,
     onFeedbackClick: () -> Unit,
     onOptionsClick: () -> Unit
@@ -856,6 +899,36 @@ private fun ShortsTopBar(
         ) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = Color(0xFFE5E1E4), modifier = Modifier.size(24.dp))
         }
+        Spacer(Modifier.weight(1f))
+        if (showActions) {
+            HeaderCircleAction(
+                icon = Icons.Filled.ClosedCaption,
+                onClick = onFeedbackClick
+            )
+            Spacer(Modifier.width(8.dp))
+            HeaderCircleAction(
+                icon = Icons.Filled.MoreVert,
+                onClick = onOptionsClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun HeaderCircleAction(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .background(Color(0x66131315))
+            .border(1.dp, Color(0x14FFFFFF), CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(icon, contentDescription = null, tint = Color(0xFFE5E1E4), modifier = Modifier.size(20.dp))
     }
 }
 
@@ -882,6 +955,7 @@ private fun ShortsCaption(
     positionMs: Long,
     durationMs: Long,
     isLocked: Boolean,
+    isEpisodeMode: Boolean,
     bottomReservedPadding: Dp,
     onSeekTo: (Long) -> Unit,
     onWatchNowClick: () -> Unit
@@ -948,21 +1022,50 @@ private fun ShortsCaption(
             )
         }
         Spacer(Modifier.height(10.dp))
-        Box(
-            modifier = Modifier
-                .width(170.dp)
-                .height(40.dp)
-                .clip(RoundedCornerShape(50))
-                .background(Pink)
-                .clickable(onClick = onWatchNowClick),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                stringResource(R.string.watch_now),
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold
+        if (isEpisodeMode) {
+            ThinSeekBar(
+                progress = if (durationMs > 0L) positionMs.toFloat() / durationMs.toFloat() else 0f,
+                onSeekFraction = { fraction ->
+                    if (durationMs > 0L) onSeekTo((durationMs * fraction).toLong())
+                },
+                modifier = Modifier.fillMaxWidth()
             )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    formatPlaybackTime(positionMs),
+                    color = Color(0x99E5BDBE),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.sp
+                )
+                Text(
+                    formatPlaybackTime(durationMs),
+                    color = Color(0x99E5BDBE),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.sp
+                )
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .width(170.dp)
+                    .height(40.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(Pink)
+                    .clickable(onClick = onWatchNowClick),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    stringResource(R.string.watch_now),
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
     }
 }
@@ -1354,6 +1457,15 @@ private fun SideTextAction(
     label: Int,
     onClick: () -> Unit = {}
 ) {
+    SideTextAction(value = value, label = stringResource(label), onClick = onClick)
+}
+
+@Composable
+private fun SideTextAction(
+    value: String,
+    label: String,
+    onClick: () -> Unit = {}
+) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             modifier = Modifier
@@ -1367,7 +1479,7 @@ private fun SideTextAction(
             Text(value, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
         }
         Spacer(Modifier.height(4.dp))
-        Text(stringResource(label), color = Color(0xFFF2D7DD), fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+        Text(label, color = Color(0xFFF2D7DD), fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
     }
 }
 

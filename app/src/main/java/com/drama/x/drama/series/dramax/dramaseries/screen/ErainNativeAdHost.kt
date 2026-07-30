@@ -50,6 +50,7 @@ fun ErainNativeAdHost(
     state: NativeAdState,
     modifier: Modifier = Modifier,
     height: Dp = 320.dp,
+    fillAvailableHeight: Boolean = false,
     showFailureMessage: Boolean = false
 ) {
     val context = LocalContext.current
@@ -90,7 +91,7 @@ fun ErainNativeAdHost(
                     FrameLayout(viewContext).apply {
                         layoutParams = ViewGroup.LayoutParams(
                             ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.WRAP_CONTENT
+                            if (fillAvailableHeight) ViewGroup.LayoutParams.MATCH_PARENT else ViewGroup.LayoutParams.WRAP_CONTENT
                         )
                         // Explicitly zero out padding — some themes apply a default
                         // View padding/foreground inset that shows up as unwanted
@@ -101,7 +102,7 @@ fun ErainNativeAdHost(
                         val adContainer = FrameLayout(viewContext).apply {
                             layoutParams = FrameLayout.LayoutParams(
                                 FrameLayout.LayoutParams.MATCH_PARENT,
-                                FrameLayout.LayoutParams.WRAP_CONTENT
+                                if (fillAvailableHeight) FrameLayout.LayoutParams.MATCH_PARENT else FrameLayout.LayoutParams.WRAP_CONTENT
                             )
                             setPadding(0, 0, 0, 0)
                             layoutDirection = View.LAYOUT_DIRECTION_LTR
@@ -110,7 +111,7 @@ fun ErainNativeAdHost(
                         val shimmer = ShimmerFrameLayout(viewContext).apply {
                             layoutParams = FrameLayout.LayoutParams(
                                 FrameLayout.LayoutParams.MATCH_PARENT,
-                                FrameLayout.LayoutParams.WRAP_CONTENT
+                                if (fillAvailableHeight) FrameLayout.LayoutParams.MATCH_PARENT else FrameLayout.LayoutParams.WRAP_CONTENT
                             )
                             setPadding(0, 0, 0, 0)
                             addView(FrameLayout(viewContext).apply {
@@ -139,9 +140,10 @@ fun ErainNativeAdHost(
                         )
                     }
                 },
-                modifier = modifier
-                    .fillMaxWidth()
-                    .height(height)
+                // Use the caller-supplied modifier directly — do NOT force .height(height) here
+                // because compact placements (home feed) pass wrapContentHeight so the ad card
+                // sizes itself naturally and no extra blank space appears below it.
+                modifier = if (fillAvailableHeight) modifier else modifier.fillMaxWidth()
             )
         }
     }

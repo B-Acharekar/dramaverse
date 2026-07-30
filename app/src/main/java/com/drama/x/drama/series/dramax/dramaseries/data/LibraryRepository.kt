@@ -61,7 +61,9 @@ class LibraryRepository(
         }
         // Local saves are merged into cached data so Library reflects new saves before backend refresh finishes.
         return feed.copy(
-            watchList = (localWatchListItems + feed.watchList).distinctFilms(),
+            watchList = (localWatchListItems + feed.watchList)
+                .filterNot { it.looksLikePlaceholder() }
+                .distinctFilms(),
             watchHistory = feed.watchHistory.mergeLocalWatchHistory(localWatchHistoryItems)
         )
     }
@@ -338,7 +340,11 @@ private fun DramaItem.looksLikePlaceholder(): Boolean {
         "historical drama",
         "drama",
         "romance",
-        "melodrama"
+        "melodrama",
+        "revenge storeis",
+        "revenge stories",
+        "the second chance",
+        "contract love"
     )
     return title.isBlank() ||
         normalizedTitle in blockedTitles ||
@@ -462,7 +468,7 @@ private fun JSONArray?.toDramaItems(): List<DramaItem> {
             val item = optJSONObject(index) ?: continue
             add(item.toCachedDramaItem())
         }
-    }
+    }.filterNot { it.looksLikePlaceholder() }
 }
 
 private fun JSONArray?.toContinueItems(): List<ContinueWatchingItem> {
