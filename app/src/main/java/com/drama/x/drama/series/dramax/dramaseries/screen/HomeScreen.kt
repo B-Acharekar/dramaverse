@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
@@ -304,7 +305,8 @@ private fun HomeContent(
     val rankingItems = feed.ranking.filter { it.title.isNotBlank() }.distinctBy { it.uniqueKey() }
     val categoryItems = feed.categories.filter { it.title.isNotBlank() }.distinctBy { it.uniqueKey() }
     val featuredItems = feed.featured.filter { it.title.isNotBlank() }.distinctBy { it.uniqueKey() }
-        .ifEmpty { popularItems }
+        .take(9)  // Limit featured to exactly 9 items
+        .ifEmpty { popularItems.take(9) }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -1873,8 +1875,7 @@ private fun HomeSmallNativeAd(
         state = state,
         modifier = modifier
             .fillMaxWidth()
-            .height(104.dp),
-        height = 104.dp
+            .wrapContentHeight()
     )
 }
 
