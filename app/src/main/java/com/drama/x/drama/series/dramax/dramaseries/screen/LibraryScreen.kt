@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -200,14 +201,15 @@ private fun LibraryContent(
         }
         when (mode) {
             MyListMode.Overview -> {
-                item {
-                    MyListSectionHeader(
-                        title = "History watching",
-                        action = "SEE ALL".takeIf { history.isNotEmpty() },
-                        onAction = { mode = MyListMode.History }
-                    )
-                }
-                if (!history.isEmpty()) {
+                // Only show History watching section if there are items
+                if (history.isNotEmpty()) {
+                    item {
+                        MyListSectionHeader(
+                            title = "History watching",
+                            action = "SEE ALL",
+                            onAction = { mode = MyListMode.History }
+                        )
+                    }
                     item {
                         LazyRow(
                             contentPadding = PaddingValues(horizontal = 18.dp),
@@ -217,12 +219,6 @@ private fun LibraryContent(
                                 MyListHistoryPreviewCard(item = item, onOpenShorts = onOpenShorts)
                             }
                         }
-                    }
-                    item {
-                        MyListNativeAd(
-                            state = nativeMyListAdState,
-                            modifier = Modifier.padding(horizontal = 18.dp)
-                        )
                     }
                 }
 
@@ -241,21 +237,28 @@ private fun LibraryContent(
                         )
                     }
                 } else {
-                    favorites.take(6).chunked(3).forEach { films ->
-                        items(films) { film ->
+                    // Show ads after every 3rd item, starting from position 1 (after first item)
+                    favorites.forEachIndexed { index, film ->
+                        item {
                             FavoriteListCard(film = film, onOpenShorts = onOpenShorts)
                         }
-                        item {
-                            MyListNativeAd(
-                                state = nativeMyListAdState,
-                                modifier = Modifier.padding(horizontal = 18.dp)
-                            )
+                        // Show ad after every 3rd item (positions 2, 5, 8, etc.)
+                        if ((index + 1) % 3 == 0) {
+                            item {
+                                MyListNativeAd(
+                                    state = nativeMyListAdState,
+                                    modifier = Modifier.padding(horizontal = 18.dp)
+                                )
+                            }
                         }
                     }
                 }
             }
 
             MyListMode.History -> {
+                item {
+                    Spacer(modifier = Modifier.statusBarsPadding())
+                }
                 item {
                     MyListAllHeader(
                         title = "History watching",
@@ -272,37 +275,33 @@ private fun LibraryContent(
                         )
                     }
                 } else {
-                    history.chunked(3).forEach { rowItems ->
+                    history.forEachIndexed { index, item ->
                         item {
-                            Row(
+                            MyListHistoryGridCard(
+                                item = item,
+                                onOpenShorts = onOpenShorts,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 18.dp),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                rowItems.forEach { item ->
-                                    MyListHistoryGridCard(
-                                        item = item,
-                                        onOpenShorts = onOpenShorts,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
-                                repeat(3 - rowItems.size) {
-                                    Spacer(modifier = Modifier.weight(1f))
-                                }
-                            }
-                        }
-                        item {
-                            MyListNativeAd(
-                                state = nativeMyListAdState,
-                                modifier = Modifier.padding(horizontal = 18.dp)
+                                    .padding(horizontal = 18.dp)
                             )
+                        }
+                        // Show ad after every 3rd item
+                        if ((index + 1) % 3 == 0) {
+                            item {
+                                MyListNativeAd(
+                                    state = nativeMyListAdState,
+                                    modifier = Modifier.padding(horizontal = 18.dp)
+                                )
+                            }
                         }
                     }
                 }
             }
 
             MyListMode.Favorites -> {
+                item {
+                    Spacer(modifier = Modifier.statusBarsPadding())
+                }
                 item {
                     MyListAllHeader(
                         title = "My Favorites",
@@ -319,15 +318,18 @@ private fun LibraryContent(
                         )
                     }
                 } else {
-                    favorites.chunked(3).forEach { films ->
-                        items(films) { film ->
+                    favorites.forEachIndexed { index, film ->
+                        item {
                             FavoriteListCard(film = film, onOpenShorts = onOpenShorts)
                         }
-                        item {
-                            MyListNativeAd(
-                                state = nativeMyListAdState,
-                                modifier = Modifier.padding(horizontal = 18.dp)
-                            )
+                        // Show ad after every 3rd item
+                        if ((index + 1) % 3 == 0) {
+                            item {
+                                MyListNativeAd(
+                                    state = nativeMyListAdState,
+                                    modifier = Modifier.padding(horizontal = 18.dp)
+                                )
+                            }
                         }
                     }
                 }
@@ -346,13 +348,13 @@ private fun MyListNativeAd(
         state = state,
         modifier = modifier
             .fillMaxWidth()
-            .height(104.dp),
+            .wrapContentHeight(),
         height = 104.dp
     )
 }
 
 @Composable
-private fun LibraryTopHeader( onSearchClick: (String) -> Unit = {},
+private fun LibraryTopHeader(onSearchClick: (String) -> Unit = {},
                               modifier: Modifier = Modifier) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     Row(
@@ -362,10 +364,17 @@ private fun LibraryTopHeader( onSearchClick: (String) -> Unit = {},
             .background(Color(0xFF0C0808))
             .padding(top = topInset)
             .border(width = 1.dp, color = Color(0x1AFFFFFF))
-            .padding(start = 36.dp, end = 12.dp),
+            .padding(start = 18.dp, end = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-
+        // Add "My List" title
+        Text(
+            "My List",
+            color = Color.White,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.ExtraBold,
+            letterSpacing = 0.sp
+        )
         Spacer(modifier = Modifier.weight(1f))
         AppHeaderIcon(Icons.Filled.Search, {onSearchClick("")}, Modifier.size(18.dp))
         Spacer(modifier = Modifier.width(16.dp))
@@ -476,32 +485,30 @@ private fun MyListHistoryGridCard(
     modifier: Modifier = Modifier
 ) {
     val film = item.film
-    Column(
-        modifier = modifier.clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
+    val context = LocalContext.current
+    val progressPercent = ((item.progressFraction * 100).toInt()).coerceIn(0, 100)
+    
+    Row(
+        modifier = modifier
+            .wrapContentHeight()
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFF1F1F1F))
+            .clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
+            .padding(10.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(0.70f)
-                .clip(RoundedCornerShape(7.dp))
-                .background(Panel)
-        ) {
-            NetworkDramaImage(film.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, film.title)
-            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xC909090B)))))
-            Box(
+        Box {
+            NetworkDramaImage(
+                imageUrl = film.imageUrl,
                 modifier = Modifier
-                    .padding(5.dp)
-                    .size(18.dp)
-                    .clip(RoundedCornerShape(3.dp))
-                    .background(Pink),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Filled.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(12.dp))
-            }
-            ProgressPill(
-                text = stringResource(R.string.episode_progress, item.episodeNumber, film.episodeTotal.coerceAtLeast(item.episodeNumber)),
-                modifier = Modifier.align(Alignment.BottomEnd).padding(5.dp)
+                    .width(70.dp)
+                    .height(92.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(Panel),
+                contentScale = ContentScale.Crop,
+                seed = film.title
             )
+            // Progress indicator at bottom
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -510,30 +517,65 @@ private fun MyListHistoryGridCard(
                     .background(Pink)
             )
         }
-        Spacer(modifier = Modifier.height(5.dp))
-        Text(film.title, color = Color.White, fontSize = 10.sp, lineHeight = 12.sp, fontWeight = FontWeight.ExtraBold, maxLines = 2, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
-        Text("Ep ${item.episodeNumber} of ${film.episodeTotal.coerceAtLeast(item.episodeNumber)}", color = Color(0xFFCDB5BC), fontSize = 8.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+        Spacer(modifier = Modifier.width(10.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(film.title, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, maxLines = 2, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(film.genre.ifBlank { "Drama" }, color = Color(0xFFCDB5BC), fontSize = 9.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
+            Text(
+                "Ep ${item.episodeNumber} of ${film.episodeTotal.coerceAtLeast(item.episodeNumber)} • $progressPercent%",
+                color = Color.White,
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.sp
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Pink)
+                    .clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
+                    .padding(horizontal = 14.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = Color.White, modifier = Modifier.size(12.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Continue", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+            }
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Icon(
+            Icons.Filled.Share,
+            contentDescription = "Share",
+            tint = Color(0xFFBCAFB4),
+            modifier = Modifier
+                .size(18.dp)
+                .clickable {
+                    shareFilm(context, film)
+                }
+        )
     }
 }
 
 @Composable
 private fun FavoriteListCard(film: DramaItem, onOpenShorts: (Int?) -> Unit) {
+    val context = LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 18.dp, vertical = 3.dp)
-            .height(92.dp)
+            .wrapContentHeight()
             .clip(RoundedCornerShape(8.dp))
             .background(Color(0xFF1F1F1F))
             .clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
-            .padding(8.dp),
+            .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         NetworkDramaImage(
             imageUrl = film.imageUrl,
             modifier = Modifier
-                .width(74.dp)
-                .height(76.dp)
+                .width(70.dp)
+                .height(92.dp)
                 .clip(RoundedCornerShape(6.dp))
                 .background(Panel),
             contentScale = ContentScale.Crop,
@@ -541,23 +583,35 @@ private fun FavoriteListCard(film: DramaItem, onOpenShorts: (Int?) -> Unit) {
         )
         Spacer(modifier = Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(film.title, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
+            Text(film.title, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, maxLines = 2, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
+            Spacer(modifier = Modifier.height(2.dp))
             Text(film.genre.ifBlank { "Drama" }, color = Color(0xFFCDB5BC), fontSize = 9.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
             Text("${film.episodeTotal.coerceAtLeast(1)} Episodes", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
-            Spacer(modifier = Modifier.height(5.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(20.dp))
                     .background(Pink)
-                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                    .clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
+                    .padding(horizontal = 14.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = Color.White, modifier = Modifier.size(11.dp))
-                Spacer(modifier = Modifier.width(3.dp))
-                Text("Play", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+                Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = Color.White, modifier = Modifier.size(12.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Play", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
             }
         }
-        Icon(Icons.Filled.Share, contentDescription = null, tint = Color(0xFFBCAFB4), modifier = Modifier.size(16.dp))
+        Spacer(modifier = Modifier.width(8.dp))
+        Icon(
+            Icons.Filled.Share,
+            contentDescription = "Share",
+            tint = Color(0xFFBCAFB4),
+            modifier = Modifier
+                .size(18.dp)
+                .clickable {
+                    shareFilm(context, film)
+                }
+        )
     }
 }
 
@@ -973,6 +1027,15 @@ private fun LibrarySkeleton() {
             Box(Modifier.fillMaxWidth().height(138.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFF151318)))
         }
     }
+}
+
+private fun shareFilm(context: Context, film: DramaItem) {
+    val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(android.content.Intent.EXTRA_SUBJECT, film.title)
+        putExtra(android.content.Intent.EXTRA_TEXT, "Check out ${film.title} on DramaVerse!")
+    }
+    context.startActivity(android.content.Intent.createChooser(intent, "Share via"))
 }
 
 private tailrec fun Context.findLibraryActivity(): Activity? = when (this) {
