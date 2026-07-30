@@ -3,6 +3,7 @@ package com.drama.x.drama.series.dramax.dramaseries
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.util.Log
+import com.ads.module.billing.AppPurchase
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdRemoteConfig
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdsInitializationState
 import com.drama.x.drama.series.dramax.dramaseries.ads.ResumeAdsEntryRule
@@ -47,6 +48,7 @@ class GlobalApp : AdsMultiDexApplication() {
         Log.d(TAG, "LOCAL_AD_CONFIG_READY")
 
         initAds()
+        initBilling()
         DramaXWidgetProvider.refresh(this)
 
         val lifecycleObserver = if (ResumeAdsEntryRule.shouldShowWelcomeOnResume()) {
@@ -72,8 +74,8 @@ class GlobalApp : AdsMultiDexApplication() {
             )
             facebookClientToken = getString(R.string.facebook_client_token)
             adjustTokenTiktok = getString(R.string.event_token)
-            intervalInterstitialAd = 15
-            idAdResume = ""
+            intervalInterstitialAd = 35
+            idAdResume = AdRemoteConfig.openResume.id.takeIf { AdRemoteConfig.openResume.isEnable }.orEmpty()
         }
 
         ERainAd.getInstance().init(this, erainAdConfig)
@@ -85,6 +87,15 @@ class GlobalApp : AdsMultiDexApplication() {
             "ERAIN_INIT_COMPLETED environment=$environment " +
                 "adjust=true facebook=true tiktok=true"
         )
+    }
+
+    private fun initBilling() {
+        AppPurchase.getInstance().initBilling(
+            this,
+            mutableListOf(),
+            mutableListOf()
+        )
+        Log.d(TAG, "BILLING_INIT_COMPLETED productCount=0 subscriptionCount=0")
     }
 
 }

@@ -12,7 +12,7 @@ data class SubtitleTrack(
 
 data class ShortsItem(
     val film: DramaItem,
-    val episodeNumber: Int = 12,
+    val episodeNumber: Int = 1,
     val playUrl: String = "",
     val subtitleUrl: String = "",
     val subtitleTracks: List<SubtitleTrack> = emptyList(),
@@ -26,6 +26,8 @@ data class EpisodeInfo(
     val isLocked: Boolean = false,
     val isWatched: Boolean = false
 )
+
+private const val FREE_SHORTS_PREVIEW_EPISODES = 3
 
 class ShortsRepository(
     private val authRepository: AuthRepository
@@ -48,7 +50,7 @@ class ShortsRepository(
     suspend fun loadPlayback(
         backendBaseUrl: String,
         filmId: Int,
-        episodeNumber: Int = 12,
+        episodeNumber: Int = 1,
         language: String = "en"
     ): Result<ShortsItem> = runCatching {
         val token = authRepository.authToken()
@@ -84,7 +86,8 @@ class ShortsRepository(
             playUrl = playback.optString("hls_url").ifBlank { playback.optString("backup_hls_url") },
             subtitleUrl = subtitleTracks.firstOrNull()?.url.orEmpty(),
             subtitleTracks = subtitleTracks,
-            isLocked = json.optBoolean("unlock_required", false),
+            isLocked = json.optBoolean("unlock_required", false) &&
+                episodeJson.optInt("episode", episodeNumber) > FREE_SHORTS_PREVIEW_EPISODES,
             likeCount = likeCount
         )
     }
@@ -114,8 +117,10 @@ class ShortsRepository(
                     EpisodeInfo(
                         episodeNumber = number,
                         title = episode.firstString("title", "name"),
-                        isLocked = episode.optBoolean("unlock_required", false) ||
-                            episode.firstInt("is_unlocked", "unlocked") == 0 && number > 1,
+                        isLocked = number > FREE_SHORTS_PREVIEW_EPISODES && (
+                            episode.optBoolean("unlock_required", false) ||
+                                episode.firstInt("is_unlocked", "unlocked") == 0
+                            ),
                         isWatched = episode.optBoolean("watched", false) ||
                             episode.optBoolean("is_watched", false) ||
                             episode.optBoolean("completed", false) ||

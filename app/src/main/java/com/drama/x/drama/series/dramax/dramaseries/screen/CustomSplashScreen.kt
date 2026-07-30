@@ -61,8 +61,11 @@ import com.drama.x.drama.series.dramax.dramaseries.ads.ADS_TAG
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdRemoteConfig
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdsInitializationState
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdsManager
+import com.drama.x.drama.series.dramax.dramaseries.ads.ConsentFlow
 import com.drama.x.drama.series.dramax.dramaseries.ads.RemoteConfigUtils
+import com.drama.x.drama.series.dramax.dramaseries.ads.ResumeAdsEntryRule
 import com.drama.x.drama.series.dramax.dramaseries.ads.isNetworkAvailable
+import com.ads.module.admob.AppOpenManager
 import com.ads.module.ads.ERainAd
 import com.ads.module.funtion.AdCallback
 import com.facebook.shimmer.ShimmerFrameLayout
@@ -141,6 +144,18 @@ fun CustomSplashScreen(
         waitUntilReadyOrTimedOut()
     }
 
+    fun configureOpenResume() {
+        val openResume = AdRemoteConfig.openResume
+        if (ResumeAdsEntryRule.shouldEnableOpenResume() && openResume.id.isNotBlank()) {
+            AppOpenManager.getInstance().setAppResumeAdId(openResume.id)
+            AppOpenManager.getInstance().enableAppResume()
+            Log.d(ADS_TAG, "OPEN_RESUME_ENABLED id=${openResume.id}")
+        } else {
+            AppOpenManager.getInstance().disableAppResume()
+            Log.d(ADS_TAG, "OPEN_RESUME_DISABLED")
+        }
+    }
+
 //    LaunchedEffect(activity) {
 //        logStage("SPLASH_FLOW_START")
 //        if (activity == null) {
@@ -209,6 +224,9 @@ fun CustomSplashScreen(
         bannerVisibleSinceMs.set(SystemClock.elapsedRealtime())
         splashAdsConfigReady = true
 
+        val consentResult = ConsentFlow.ensureConsent(activity)
+        Log.d(ADS_TAG, "SPLASH_CONSENT_RESULT canPersonalize=$consentResult elapsedMs=${SystemClock.elapsedRealtime() - startMs}")
+
         // Mobile Ads SDK init and Remote Config fetch no longer block the banner.
         // Run them in parallel instead of sequentially to shrink the interstitial
         // gate too.
@@ -231,6 +249,8 @@ fun CustomSplashScreen(
         // since those genuinely need the SDK initialized — but this now runs
         // concurrently with the remote config fetch instead of after it.
         mobileAdsReadyDeferred.await()
+        remoteConfigDeferred.await()
+        configureOpenResume()
 
         AdsManager.loadSplashInterstitial(
             activity = activity,
@@ -259,10 +279,6 @@ fun CustomSplashScreen(
         )
         AdsManager.loadNativeLanguage(activity, firstVisit = true)
         AdsManager.preloadOnboardingAds(activity, firstVisit = true)
-
-        // Let remote config finish in the background; don't block navigation on it,
-        // it will simply update AdRemoteConfig in place whenever it lands.
-        remoteConfigDeferred
 
         delay(30_000L)
         if (interstitialResolved.compareAndSet(false, true) && !hasNavigated.get()) {

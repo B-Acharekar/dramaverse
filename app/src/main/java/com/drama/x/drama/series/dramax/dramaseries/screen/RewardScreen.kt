@@ -93,6 +93,8 @@ fun RewardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showSpinDialog by remember { mutableStateOf(false) }
+    val bottomBannerVisible = shouldShowAppBottomBanner()
+    val bottomBannerPadding = if (bottomBannerVisible) AppBottomBannerHeight else 0.dp
 
     LaunchedEffect(backendBaseUrl) {
         viewModel.loadRewards(backendBaseUrl)
@@ -122,8 +124,13 @@ fun RewardScreen(
             onLibrary = onLibrary,
             onRewards = {},
             onProfile = onProfile,
-            modifier = Modifier.align(Alignment.BottomCenter)
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = bottomBannerPadding)
         )
+        if (bottomBannerVisible) {
+            AppBottomBanner(modifier = Modifier.align(Alignment.BottomCenter))
+        }
     }
 
     if (uiState.showRules) {

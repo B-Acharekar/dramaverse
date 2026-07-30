@@ -1,5 +1,8 @@
 package com.drama.x.drama.series.dramax.dramaseries.screen
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.annotation.DrawableRes
@@ -24,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -52,6 +56,7 @@ import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -78,10 +83,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Observer
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.drama.x.drama.series.dramax.dramaseries.ads.AdRemoteConfig
+import com.drama.x.drama.series.dramax.dramaseries.ads.AdsManager
+import com.drama.x.drama.series.dramax.dramaseries.ads.NativeAdState
 import com.drama.x.drama.series.dramax.dramaseries.data.ContinueWatchingItem
 import com.drama.x.drama.series.dramax.dramaseries.data.DramaItem
 import com.drama.x.drama.series.dramax.dramaseries.data.HomeFeed
+import com.drama.x.drama.series.dramax.dramaseries.data.allCatalogItems
 import com.drama.x.drama.series.dramax.dramaseries.model.HomeViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -143,14 +153,48 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val activity = remember(context) { context.findActivity() }
     var selectedTab by remember { mutableStateOf(HomeTab.Popular) }
     var activeCategorySheet by remember { mutableStateOf<CategorySheet?>(null) }
     var selectedAudienceFilter by remember { mutableStateOf(AudienceFilter.All) }
     var selectedCategoryFilter by remember { mutableStateOf(CategoryFilter.All) }
     var selectedCategorySort by remember { mutableStateOf(CategorySort.Newest) }
+    var nativeSearchAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
+    var nativeHomeAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
 
     LaunchedEffect(backendBaseUrl) {
         viewModel.loadHome(backendBaseUrl)
+    }
+
+    LaunchedEffect(activity) {
+        activity?.let { AdsManager.preloadHomeAds(it) }
+    }
+
+    DisposableEffect(Unit) {
+        val searchObserver = Observer<NativeAdState> { nativeSearchAdState = it }
+        val homeObserver = Observer<NativeAdState> { nativeHomeAdState = it }
+        AdsManager.nativeHomeSearchAdLive.observeForever(searchObserver)
+        AdsManager.nativeHomeAdLive.observeForever(homeObserver)
+        onDispose {
+            AdsManager.nativeHomeSearchAdLive.removeObserver(searchObserver)
+            AdsManager.nativeHomeAdLive.removeObserver(homeObserver)
+        }
+    }
+
+    fun openShortsWithHomeAd(filmId: Int?) {
+        val currentActivity = activity
+        if (currentActivity == null) {
+            onOpenShorts(filmId)
+            return
+        }
+        AdsManager.loadAndShowInterstitial(
+            activity = currentActivity,
+            placementName = "inter_home",
+            config = AdRemoteConfig.interHome,
+            timeoutMs = 6_000L,
+            onFinished = { onOpenShorts(filmId) }
+        )
     }
 
     Box(
@@ -159,6 +203,8 @@ fun HomeScreen(
             .background(HomeBackground)
     ) {
         val feed = uiState.feed
+        val bottomBannerVisible = shouldShowAppBottomBanner()
+        val bottomBannerPadding = if (bottomBannerVisible) AppBottomBannerHeight else 0.dp
         if (feed == null) {
             HomeSkeleton()
         } else {
@@ -169,13 +215,16 @@ fun HomeScreen(
                 savedFilms = uiState.savedFilms,
                 onSearchClick = { onSearch("hot") },
                 onNotifications = onNotifications,
-                onOpenShorts = onOpenShorts,
+                onOpenShorts = ::openShortsWithHomeAd,
                 onLibrary = onLibrary,
                 onTabSelected = { selectedTab = it },
                 audienceFilter = selectedAudienceFilter,
                 categoryFilter = selectedCategoryFilter,
                 categorySort = selectedCategorySort,
                 onOpenCategorySheet = { activeCategorySheet = it },
+                nativeSearchAdState = nativeSearchAdState,
+                nativeHomeAdState = nativeHomeAdState,
+                bottomBannerVisible = bottomBannerVisible,
                 onToggleWatchList = { film, enabled ->
                     viewModel.setReminder(backendBaseUrl, film, enabled)
                 }
@@ -184,12 +233,17 @@ fun HomeScreen(
         BottomNavigationBar(
             selected = "Home",
             onHome = {},
-            onShorts = { onOpenShorts(null) },
+            onShorts = { openShortsWithHomeAd(null) },
             onLibrary = onLibrary,
             onRewards = onRewards,
             onProfile = onProfile,
-            modifier = Modifier.align(Alignment.BottomCenter)
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = bottomBannerPadding)
         )
+        if (bottomBannerVisible) {
+            AppBottomBanner(modifier = Modifier.align(Alignment.BottomCenter))
+        }
         when (activeCategorySheet) {
             CategorySheet.Filters -> CategoryFilterSheet(
                 selectedAudience = selectedAudienceFilter,
@@ -231,53 +285,67 @@ private fun HomeContent(
     categoryFilter: CategoryFilter,
     categorySort: CategorySort,
     onOpenCategorySheet: (CategorySheet) -> Unit,
+    nativeSearchAdState: NativeAdState,
+    nativeHomeAdState: NativeAdState,
+    bottomBannerVisible: Boolean,
     onToggleWatchList: (DramaItem, Boolean) -> Unit
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val headerHeight = 104.dp + topInset
+    val bottomContentPadding =
+        96.dp + if (bottomBannerVisible) AppBottomBannerHeight else 0.dp
     val heroItems = feed.heroItems()
-    val heroKeys = heroItems.map { it.uniqueKey() }.toSet()
-    val popularItems = feed.trending
-        .filterNot { it.uniqueKey() in heroKeys }
-        .ifEmpty {
-            feed.moreLikeThis.filterNot { it.uniqueKey() in heroKeys }
-        }
-    val allItems = (heroItems + feed.trending + feed.moreLikeThis + listOf(feed.topRated))
+    val allCatalog = feed.allCatalogItems()
+    val popularItems = (feed.trending + feed.moreLikeThis + allCatalog)
+        .filter { it.title.isNotBlank() }
         .distinctBy { it.uniqueKey() }
+    // Each tab uses its own dedicated API data.
+    val newItems = feed.newReleases.filter { it.title.isNotBlank() }.distinctBy { it.uniqueKey() }
+    val rankingItems = feed.ranking.filter { it.title.isNotBlank() }.distinctBy { it.uniqueKey() }
+    val categoryItems = feed.categories.filter { it.title.isNotBlank() }.distinctBy { it.uniqueKey() }
+    val featuredItems = feed.featured.filter { it.title.isNotBlank() }.distinctBy { it.uniqueKey() }
+        .ifEmpty { popularItems }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(top = headerHeight, bottom = 96.dp)
+        contentPadding = PaddingValues(top = headerHeight, bottom = bottomContentPadding)
     ) {
         when (selectedTab) {
             HomeTab.Popular -> popularTab(
                 heroItems = heroItems,
                 popularItems = popularItems,
+                featuredItems = featuredItems,
                 feed = feed,
+                allCatalog = allCatalog,
                 savedFilmIds = savedFilmIds,
                 savedFilms = savedFilms,
                 onOpenShorts = onOpenShorts,
                 onLibrary = onLibrary,
+                nativeSearchAdState = nativeSearchAdState,
+                nativeHomeAdState = nativeHomeAdState,
                 onToggleWatchList = onToggleWatchList
             )
 
             HomeTab.New -> newTab(
-                items = allItems,
+                items = newItems,
+                nativeSearchAdState = nativeSearchAdState,
                 onOpenShorts = onOpenShorts
             )
 
             HomeTab.Ranking -> rankingTab(
-                items = allItems,
+                items = rankingItems,
+                nativeSearchAdState = nativeSearchAdState,
                 onOpenShorts = onOpenShorts
             )
 
             HomeTab.Categories -> categoriesTab(
-                items = allItems,
+                items = categoryItems,
                 hotTags = feed.hotTags,
                 audienceFilter = audienceFilter,
                 categoryFilter = categoryFilter,
                 categorySort = categorySort,
                 onOpenSheet = onOpenCategorySheet,
+                nativeSearchAdState = nativeSearchAdState,
                 onOpenShorts = onOpenShorts
             )
         }
@@ -295,11 +363,15 @@ private fun HomeContent(
 private fun LazyListScope.popularTab(
     heroItems: List<DramaItem>,
     popularItems: List<DramaItem>,
+    featuredItems: List<DramaItem>,
     feed: HomeFeed,
+    allCatalog: List<DramaItem>,
     savedFilmIds: Set<Int>,
     savedFilms: List<DramaItem>,
     onOpenShorts: (Int?) -> Unit,
     onLibrary: () -> Unit,
+    nativeSearchAdState: NativeAdState,
+    nativeHomeAdState: NativeAdState,
     onToggleWatchList: (DramaItem, Boolean) -> Unit
 ) {
     item {
@@ -311,10 +383,24 @@ private fun LazyListScope.popularTab(
         )
     }
     item {
-        SectionHeader(title = "Featured Highlights")
-        CompactPosterGrid(items = popularItems.take(9), columns = 3, onOpenShorts = onOpenShorts)
+        HomeSmallNativeAd(
+            placementName = "native_search",
+            state = nativeSearchAdState,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+        )
     }
-    item { ContinueWatching(feed.continueWatching, onOpenShorts) }
+    item {
+        SectionHeader(title = "Featured Highlights")
+        CompactPosterGrid(items = featuredItems, columns = 3, onOpenShorts = onOpenShorts)
+    }
+    item { ContinueWatching(feed.continueWatching, allCatalog, onOpenShorts) }
+    item {
+        HomeSmallNativeAd(
+            placementName = "native_home",
+            state = nativeHomeAdState,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+        )
+    }
     item {
         SectionHeader(title = "My Favorites", action = stringResource(R.string.see_all), onAction = onLibrary)
         FavoriteGrid(items = savedFilms.take(4), onOpenShorts = onOpenShorts)
@@ -322,19 +408,38 @@ private fun LazyListScope.popularTab(
     item { Spacer(modifier = Modifier.height(14.dp)) }
 }
 
+private val newTabBadgeCycle = listOf("HOT", "NEW", "TRENDING", "NEW", "HOT", "NEW", "TRENDING", "HOT")
+
+private fun badgesFor(count: Int): List<String> =
+    List(count) { i -> newTabBadgeCycle[i % newTabBadgeCycle.size] }
+
 private fun LazyListScope.newTab(
     items: List<DramaItem>,
+    nativeSearchAdState: NativeAdState,
     onOpenShorts: (Int?) -> Unit
 ) {
+    val firstChunk = items.take(4)
+    val restChunk = items.drop(4)
     item {
         AccentTitle("Fresh on DramaX")
-        TallPosterGrid(items = items, onOpenShorts = onOpenShorts, badges = listOf("HOT", "NEW", "NEW", "NEW", "TRENDING"))
+        TallPosterGrid(items = firstChunk, onOpenShorts = onOpenShorts, badges = badgesFor(firstChunk.size))
+        HomeSmallNativeAd(
+            placementName = "native_search",
+            state = nativeSearchAdState,
+            modifier = Modifier.padding(top = 14.dp)
+        )
+        TallPosterGrid(
+            items = restChunk,
+            onOpenShorts = onOpenShorts,
+            badges = badgesFor(restChunk.size)
+        )
         Spacer(Modifier.height(12.dp))
     }
 }
 
 private fun LazyListScope.rankingTab(
     items: List<DramaItem>,
+    nativeSearchAdState: NativeAdState,
     onOpenShorts: (Int?) -> Unit
 ) {
     item {
@@ -352,6 +457,13 @@ private fun LazyListScope.rankingTab(
     items(items.take(3).withIndex().toList()) { (index, item) ->
         RankingHeroRow(rank = index + 1, item = item, onOpenShorts = onOpenShorts)
     }
+    item {
+        HomeSmallNativeAd(
+            placementName = "native_search",
+            state = nativeSearchAdState,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+        )
+    }
     items(items.drop(3).take(17).withIndex().toList()) { (index, item) ->
         RankingListRow(rank = index + 4, item = item, onOpenShorts = onOpenShorts)
     }
@@ -365,6 +477,7 @@ private fun LazyListScope.categoriesTab(
     categoryFilter: CategoryFilter,
     categorySort: CategorySort,
     onOpenSheet: (CategorySheet) -> Unit,
+    nativeSearchAdState: NativeAdState,
     onOpenShorts: (Int?) -> Unit
 ) {
     item {
@@ -382,8 +495,13 @@ private fun LazyListScope.categoriesTab(
             .distinctBy { it.uniqueKey() }
             .filterByCategoryControls(audienceFilter, categoryFilter)
             .sortForCategory(categorySort)
-            .take(12)
-        CompactPosterGrid(items = categoryItems, columns = 3, onOpenShorts = onOpenShorts)
+        CompactPosterGrid(items = categoryItems.take(6), columns = 3, onOpenShorts = onOpenShorts)
+        HomeSmallNativeAd(
+            placementName = "native_search",
+            state = nativeSearchAdState,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)
+        )
+        CompactPosterGrid(items = categoryItems.drop(6), columns = 3, onOpenShorts = onOpenShorts)
     }
 }
 
@@ -411,7 +529,7 @@ private fun HeroCarousel(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(374.dp)
+            .height(300.dp)
     ) {
         HorizontalPager(
             state = pagerState,
@@ -442,7 +560,7 @@ private fun HeroSection(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(374.dp)
+            .height(300.dp)
             .clickable { onOpenShorts(filmId) }
     ) {
         NetworkDramaImage(item.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, item.title)
@@ -522,7 +640,7 @@ private fun HeroSection(
 @Composable
 private fun HeroIndicators(selectedIndex: Int, count: Int) {
     Row(horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
-        repeat(count.coerceAtMost(4)) { index ->
+        repeat(count.coerceAtMost(8)) { index ->
             Box(
                 Modifier
                     .width(if (selectedIndex == index) 36.dp else 5.dp)
@@ -971,7 +1089,10 @@ private fun TallPosterCard(
 }
 
 @Composable
-private fun FavoriteGrid(items: List<DramaItem>, onOpenShorts: (Int?) -> Unit) {
+private fun FavoriteGrid(
+    items: List<DramaItem>,
+    onOpenShorts: (Int?) -> Unit
+) {
     if (items.isEmpty()) {
         EmptyFavorites(onOpenShorts)
         return
@@ -1398,50 +1519,215 @@ private fun SortOptionRow(label: String, selected: Boolean, onClick: () -> Unit)
 }
 
 @Composable
-private fun ContinueWatching(items: List<ContinueWatchingItem>, onOpenShorts: (Int?) -> Unit) {
-    if(!items.isEmpty()){
-        SectionHeader(title = stringResource(R.string.continue_watching), action = stringResource(R.string.see_all))
+private fun ContinueWatching(
+    items: List<ContinueWatchingItem>,
+    allCatalog: List<DramaItem>,
+    onOpenShorts: (Int?) -> Unit
+) {
+    SectionHeader(title = stringResource(R.string.continue_watching), action = stringResource(R.string.see_all))
+    if (items.isEmpty() && allCatalog.isEmpty()) {
+        EmptyContinueWatching(onOpenShorts)
+        return
     }
-
-//    if (items.isEmpty()) {
-//        EmptyContinueWatching(onOpenShorts)
-//        return
-//    }
+    // Show real continue-watching items; pad with catalog items rendered as pseudo-continue cards
+    val realItems = items
+    val paddingItems = if (realItems.isEmpty()) allCatalog.take(6) else emptyList()
     LazyRow(
         contentPadding = PaddingValues(horizontal = 18.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        items(items) { item -> ContinueCard(item, onOpenShorts) }
+        items(realItems) { item -> ContinueCard(item, onOpenShorts) }
+        items(paddingItems) { drama ->
+            ContinueCardFromDrama(drama, onOpenShorts)
+        }
     }
 }
 
 @Composable
 private fun ContinueCard(item: ContinueWatchingItem, onOpenShorts: (Int?) -> Unit) {
     val film = item.film
+    val totalEp = film.episodeTotal.coerceAtLeast(item.episodeNumber)
+    val epsLeft = (totalEp - item.episodeNumber).coerceAtLeast(0)
+    val minutesLeft = (epsLeft * 22 + 12).coerceAtLeast(1)
+    val timeLabel = if (minutesLeft >= 60) "${minutesLeft / 60}h ${minutesLeft % 60}m left" else "${minutesLeft}m left"
+    val subtitleText = "Ep ${item.episodeNumber} of $totalEp \u2022 $timeLabel"
+
     Column(
         modifier = Modifier
-            .width(210.dp)
+            .width(167.dp)
             .clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
+    ) {
+        // ── Image card (250dp tall) ──────────────────────────────────────────
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(250.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color(0xFF2A2A2A))
+        ) {
+            // Poster
+            NetworkDramaImage(
+                film.imageUrl,
+                Modifier.fillMaxSize(),
+                ContentScale.Crop,
+                film.title
+            )
+            // Bottom gradient so the episode badge reads well
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp)
+                    .align(Alignment.BottomCenter)
+                    .background(
+                        Brush.verticalGradient(listOf(Color.Transparent, Color(0xCC000000)))
+                    )
+            )
+            // Episode duration badge — bottom-right, 8.55dp from bottom
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 9.dp, bottom = 16.dp)   // above the 4dp progress bar + ~4dp gap
+                    .background(Color(0x66000000), RoundedCornerShape(4.dp))
+                    .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(4.dp))
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    timeLabel,
+                    color = Color(0xFFE5E2E1),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.sp
+                )
+            }
+            // ── Progress bar — 4dp, pinned flush to the bottom edge ──────────
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .align(Alignment.BottomCenter)
+                    .background(Color(0x33FFFFFF))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(item.progressFraction.coerceIn(0.04f, 1f))
+                        .background(
+                            Color(0xFFE10111),
+                            // no clip needed — parent already clips via the column card shape
+                        )
+                )
+            }
+        }
+        // ── Text block — sits below the image, never overlaps it ────────────
+        Spacer(Modifier.height(8.dp))
+        Text(
+            film.title,
+            color = Color(0xFFE5E2E1),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            letterSpacing = 0.sp
+        )
+        Text(
+            subtitleText,
+            color = Color(0xFFD0C6AB),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            letterSpacing = 0.6.sp
+        )
+    }
+}
+
+@Composable
+private fun ContinueCardFromDrama(drama: DramaItem, onOpenShorts: (Int?) -> Unit) {
+    val totalEp = drama.episodeTotal.coerceAtLeast(1)
+    val fakeEp = (totalEp * 0.45f).toInt().coerceAtLeast(1)
+    val progress = fakeEp.toFloat() / totalEp
+    val minutesLeft = ((totalEp - fakeEp) * 22 + 12).coerceAtLeast(1)
+    val timeLabel = if (minutesLeft >= 60) "${minutesLeft / 60}h ${minutesLeft % 60}m left" else "${minutesLeft}m left"
+    val subtitleText = "Ep $fakeEp of $totalEp \u2022 $timeLabel"
+
+    Column(
+        modifier = Modifier
+            .width(167.dp)
+            .clickable { onOpenShorts(drama.id.takeIf { it != 0 }) }
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(112.dp)
-                .clip(RoundedCornerShape(7.dp))
-                .background(Panel)
+                .height(250.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color(0xFF2A2A2A))
         ) {
-            NetworkDramaImage(film.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, film.title)
+            NetworkDramaImage(
+                drama.imageUrl,
+                Modifier.fillMaxSize(),
+                ContentScale.Crop,
+                drama.title
+            )
             Box(
                 modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .fillMaxWidth(item.progressFraction.takeIf { it > 0f } ?: 0.04f)
-                    .height(4.dp)
-                    .background(Pink, RoundedCornerShape(4.dp))
+                    .fillMaxWidth()
+                    .height(80.dp)
+                    .align(Alignment.BottomCenter)
+                    .background(
+                        Brush.verticalGradient(listOf(Color.Transparent, Color(0xCC000000)))
+                    )
             )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 9.dp, bottom = 16.dp)
+                    .background(Color(0x66000000), RoundedCornerShape(4.dp))
+                    .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(4.dp))
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    timeLabel,
+                    color = Color(0xFFE5E2E1),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.sp
+                )
+            }
+            // Progress bar pinned to bottom edge of image
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .align(Alignment.BottomCenter)
+                    .background(Color(0x33FFFFFF))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(progress.coerceIn(0.04f, 1f))
+                        .background(Color(0xFFE10111))
+                )
+            }
         }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(film.title, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
-        Text(stringResource(R.string.episode_progress, item.episodeNumber, film.episodeTotal.coerceAtLeast(item.episodeNumber)), color = Color(0xFFC7B6BC), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, letterSpacing = 0.sp)
+        Spacer(Modifier.height(8.dp))
+        Text(
+            drama.title,
+            color = Color(0xFFE5E2E1),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            letterSpacing = 0.sp
+        )
+        Text(
+            subtitleText,
+            color = Color(0xFFD0C6AB),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            letterSpacing = 0.6.sp
+        )
     }
 }
 
@@ -1574,6 +1860,22 @@ private fun SmallActionCard(icon: String, title: String, body: String, modifier:
         Text(title, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
         Text(body, color = Color(0xFFCDB5BC), fontSize = 10.sp, lineHeight = 13.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
     }
+}
+
+@Composable
+private fun HomeSmallNativeAd(
+    placementName: String,
+    state: NativeAdState,
+    modifier: Modifier = Modifier
+) {
+    ErainNativeAdHost(
+        placementName = placementName,
+        state = state,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(104.dp),
+        height = 104.dp
+    )
 }
 
 @Composable
@@ -1893,12 +2195,18 @@ private fun posterColors(seed: String): List<Color> {
 }
 
 private fun HomeFeed.heroItems(): List<DramaItem> {
-    val merged = (listOf(hero) + trending + moreLikeThis)
+    val merged = (listOf(hero) + featured + trending + moreLikeThis)
         .distinctBy { it.uniqueKey() }
-    val padded = if (merged.size >= 4) merged else merged + List(4 - merged.size) { hero }
-    return padded.take(4)
+    val padded = if (merged.size >= 5) merged else merged + List(5 - merged.size) { hero }
+    return padded.take(8)
 }
 
 private fun DramaItem.uniqueKey(): Any = id.takeIf { it != 0 } ?: title
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
 
 private fun Int.floorMod(other: Int): Int = ((this % other) + other) % other

@@ -1,5 +1,8 @@
 package com.drama.x.drama.series.dramax.dramaseries.screen
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
@@ -48,6 +51,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -60,6 +64,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -70,8 +75,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Observer
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drama.x.drama.series.dramax.dramaseries.R
+import com.drama.x.drama.series.dramax.dramaseries.ads.AdsManager
+import com.drama.x.drama.series.dramax.dramaseries.ads.NativeAdState
 import com.drama.x.drama.series.dramax.dramaseries.data.ContinueWatchingItem
 import com.drama.x.drama.series.dramax.dramaseries.data.DramaItem
 import com.drama.x.drama.series.dramax.dramaseries.data.LibraryFeed
@@ -99,9 +107,26 @@ fun LibraryScreen(
     viewModel: LibraryViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val activity = remember(context) { context.findLibraryActivity() }
+    val bottomBannerVisible = shouldShowAppBottomBanner()
+    val bottomBannerPadding = if (bottomBannerVisible) AppBottomBannerHeight else 0.dp
+    var nativeMyListAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
 
     LaunchedEffect(backendBaseUrl) {
         viewModel.loadLibrary(backendBaseUrl)
+    }
+
+    LaunchedEffect(activity) {
+        activity?.let { AdsManager.loadNativeMyList(it) }
+    }
+
+    DisposableEffect(Unit) {
+        val observer = Observer<NativeAdState> { nativeMyListAdState = it }
+        AdsManager.nativeMyListAdLive.observeForever(observer)
+        onDispose {
+            AdsManager.nativeMyListAdLive.removeObserver(observer)
+        }
     }
 
     Box(
@@ -118,6 +143,8 @@ fun LibraryScreen(
                 errorMessage = uiState.errorMessage,
                 onSearch = onSearch,
                 onOpenShorts = onOpenShorts,
+                nativeMyListAdState = nativeMyListAdState,
+                bottomBannerVisible = bottomBannerVisible,
                 onPlanner = onPlanner
             )
         }
@@ -128,8 +155,13 @@ fun LibraryScreen(
             onLibrary = {},
             onRewards = onRewards,
             onProfile = onProfile,
-            modifier = Modifier.align(Alignment.BottomCenter)
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = bottomBannerPadding)
         )
+        if (bottomBannerVisible) {
+            AppBottomBanner(modifier = Modifier.align(Alignment.BottomCenter))
+        }
     }
 }
 
@@ -139,6 +171,8 @@ private fun LibraryContent(
     errorMessage: String?,
     onSearch: (String) -> Unit = {},
     onOpenShorts: (Int?) -> Unit,
+    nativeMyListAdState: NativeAdState,
+    bottomBannerVisible: Boolean,
     onPlanner: () -> Unit
 ) {
     var mode by remember { mutableStateOf(MyListMode.Overview) }
@@ -147,7 +181,7 @@ private fun LibraryContent(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 104.dp),
+        contentPadding = PaddingValues(bottom = 104.dp + if (bottomBannerVisible) AppBottomBannerHeight else 0.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         if (mode == MyListMode.Overview) {
@@ -184,6 +218,12 @@ private fun LibraryContent(
                             }
                         }
                     }
+                    item {
+                        MyListNativeAd(
+                            state = nativeMyListAdState,
+                            modifier = Modifier.padding(horizontal = 18.dp)
+                        )
+                    }
                 }
 
                 item {
@@ -201,8 +241,16 @@ private fun LibraryContent(
                         )
                     }
                 } else {
-                    items(favorites.take(6)) { film ->
-                        FavoriteListCard(film = film, onOpenShorts = onOpenShorts)
+                    favorites.take(6).chunked(3).forEach { films ->
+                        items(films) { film ->
+                            FavoriteListCard(film = film, onOpenShorts = onOpenShorts)
+                        }
+                        item {
+                            MyListNativeAd(
+                                state = nativeMyListAdState,
+                                modifier = Modifier.padding(horizontal = 18.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -224,23 +272,31 @@ private fun LibraryContent(
                         )
                     }
                 } else {
-                    items(history.chunked(3)) { rowItems ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 18.dp),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            rowItems.forEach { item ->
-                                MyListHistoryGridCard(
-                                    item = item,
-                                    onOpenShorts = onOpenShorts,
-                                    modifier = Modifier.weight(1f)
-                                )
+                    history.chunked(3).forEach { rowItems ->
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 18.dp),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                rowItems.forEach { item ->
+                                    MyListHistoryGridCard(
+                                        item = item,
+                                        onOpenShorts = onOpenShorts,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                repeat(3 - rowItems.size) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
                             }
-                            repeat(3 - rowItems.size) {
-                                Spacer(modifier = Modifier.weight(1f))
-                            }
+                        }
+                        item {
+                            MyListNativeAd(
+                                state = nativeMyListAdState,
+                                modifier = Modifier.padding(horizontal = 18.dp)
+                            )
                         }
                     }
                 }
@@ -263,13 +319,36 @@ private fun LibraryContent(
                         )
                     }
                 } else {
-                    items(favorites) { film ->
-                        FavoriteListCard(film = film, onOpenShorts = onOpenShorts)
+                    favorites.chunked(3).forEach { films ->
+                        items(films) { film ->
+                            FavoriteListCard(film = film, onOpenShorts = onOpenShorts)
+                        }
+                        item {
+                            MyListNativeAd(
+                                state = nativeMyListAdState,
+                                modifier = Modifier.padding(horizontal = 18.dp)
+                            )
+                        }
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun MyListNativeAd(
+    state: NativeAdState,
+    modifier: Modifier = Modifier
+) {
+    ErainNativeAdHost(
+        placementName = "native_my_list",
+        state = state,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(104.dp),
+        height = 104.dp
+    )
 }
 
 @Composable
@@ -894,4 +973,10 @@ private fun LibrarySkeleton() {
             Box(Modifier.fillMaxWidth().height(138.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFF151318)))
         }
     }
+}
+
+private tailrec fun Context.findLibraryActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findLibraryActivity()
+    else -> null
 }

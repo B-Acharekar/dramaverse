@@ -51,9 +51,13 @@ data class ContinueWatchingItem(
 data class HomeFeed(
     val hero: DramaItem,
     val continueWatching: List<ContinueWatchingItem>,
-    val trending: List<DramaItem>,
+    val trending: List<DramaItem>,       // Popular tab
     val topRated: DramaItem,
-    val moreLikeThis: List<DramaItem>,
+    val moreLikeThis: List<DramaItem>,   // Popular tab secondary
+    val newReleases: List<DramaItem>,    // New tab
+    val ranking: List<DramaItem>,        // Ranking tab (Weekly Top 20)
+    val categories: List<DramaItem>,     // Categories tab
+    val featured: List<DramaItem>,       // Featured Highlights section
     val hotTags: List<String> = emptyList()
 ) {
     companion object
@@ -194,14 +198,23 @@ class HomeRepository(
                 .distinctBy { it.stableKey() }
                 .filter { it.title.isNotBlank() }
             val current = _prefetchedFeed.value ?: cacheStore.readFeedForCurrentWindow()
-            val base = current ?: parseHomeFeed(null, emptyList(), listOf(searchJson))
+            // If no cached feed exists, build a minimal one from the search results.
+            val base = current ?: parseHomeFeed(
+                homeJson = searchJson,
+                filmJsons = listOf(searchJson),
+                forYouJsons = listOf(searchJson)
+            )
             if (moodItems.isEmpty()) {
                 base
             } else {
                 base.copy(
                     hero = moodItems.first(),
-                    trending = moodItems.drop(1).take(8).ifEmpty { moodItems.take(8) },
-                    moreLikeThis = moodItems.take(8)
+                    trending = moodItems.drop(1).ifEmpty { moodItems },
+                    moreLikeThis = moodItems,
+                    newReleases = moodItems,
+                    ranking = moodItems,
+                    categories = moodItems,
+                    featured = moodItems
                 )
             }.also { _prefetchedFeed.value = it }
         }
@@ -227,14 +240,22 @@ class HomeRepository(
                 .distinctBy { it.stableKey() }
                 .filter { it.title.isNotBlank() }
             val current = _prefetchedFeed.value ?: cacheStore.readFeedForCurrentWindow()
-            val base = current ?: parseHomeFeed(null, emptyList(), listOf(searchJson))
+            val base = current ?: parseHomeFeed(
+                homeJson = searchJson,
+                filmJsons = listOf(searchJson),
+                forYouJsons = listOf(searchJson)
+            )
             if (hotItems.isEmpty()) {
                 base
             } else {
                 base.copy(
                     hero = hotItems.first(),
-                    trending = hotItems.drop(1).take(10).ifEmpty { hotItems.take(10) },
-                    moreLikeThis = hotItems.take(12)
+                    trending = hotItems.drop(1).ifEmpty { hotItems },
+                    moreLikeThis = hotItems,
+                    newReleases = hotItems,
+                    ranking = hotItems,
+                    categories = hotItems,
+                    featured = hotItems
                 )
             }.also { _prefetchedFeed.value = it }
         }
@@ -248,7 +269,7 @@ class HomeRepository(
 }
 
 fun HomeFeed.allCatalogItems(): List<DramaItem> {
-    return (listOf(hero, topRated) + trending + moreLikeThis + continueWatching.map { it.film })
+    return (listOf(hero, topRated) + trending + moreLikeThis + newReleases + ranking + categories + featured + continueWatching.map { it.film })
         .filter { it.title.isNotBlank() }
         .distinctBy { it.stableKey() }
 }
@@ -259,19 +280,23 @@ private suspend fun fetchHomeFeed(
     token: String,
     timeoutMillis: Int
 ): HomeFeed = coroutineScope {
-    val home = async {
+    // Single home_feature call gives us hot/latest/trending/recommends all at once.
+    val homeFeature = async {
         runCatching {
             getClientJson(backendBaseUrl, "client/home", language, token, timeoutMillis, page = 1)
-        }
+        }.getOrNull()
     }
+    // Paginated catalog for categories (api/list_films?is_youmightlike=1)
     val filmPages = (1..3).map { page ->
         async {
             runCatching {
-                getClientJson(backendBaseUrl, "client/films", language, token, timeoutMillis, page = page)
+                getClientJson(backendBaseUrl, "client/films", language, token, timeoutMillis,
+                    page = page, extraQuery = "is_youmightlike=1")
             }.getOrNull()
         }
     }
-    val forYouPages = (1..3).map { page ->
+    // For-you feed for Popular tab
+    val forYouPages = (1..2).map { page ->
         async {
             runCatching {
                 getClientJson(backendBaseUrl, "client/for-you", language, token, timeoutMillis, page = page)
@@ -283,16 +308,16 @@ private suspend fun fetchHomeFeed(
             getClientJson(backendBaseUrl, "client/history/watch", language, token, timeoutMillis, page = 1)
         }.getOrNull()
     }
-
     val tags = async {
         runCatching {
             getClientJson(backendBaseUrl, "client/tags", language, token, timeoutMillis, page = 1)
         }.getOrNull()
     }
 
+    val homeJson = homeFeature.await()
     parseHomeFeed(
-        homeJson = home.await().getOrNull(),
-        filmsJsons = filmPages.mapNotNull { it.await() },
+        homeJson = homeJson,
+        filmJsons = filmPages.mapNotNull { it.await() },
         forYouJsons = forYouPages.mapNotNull { it.await() },
         watchHistoryJson = watchHistory.await(),
         tagsJson = tags.await()
@@ -359,58 +384,68 @@ private fun postClientAction(
 
 private fun parseHomeFeed(
     homeJson: JSONObject?,
-    filmsJsons: List<JSONObject>,
+    filmJsons: List<JSONObject>,
     forYouJsons: List<JSONObject>,
     watchHistoryJson: JSONObject? = null,
     tagsJson: JSONObject? = null
 ): HomeFeed {
-    val homeItems = collectDramaItems(homeJson)
+    // home_feature data object contains: hot, latest, trending, recommends, suggests
+    val homeData = homeJson?.optJSONObject("data")
+
+    fun extractList(key: String): List<DramaItem> =
+        collectDramaItems(homeData?.opt(key))
+            .distinctBy { it.id.takeIf { id -> id != 0 } ?: it.title }
+            .filter { it.title.isNotBlank() }
+
+    val hotItems      = extractList("hot")        // ranking / Weekly Top 20
+    val latestItems   = extractList("latest")     // new releases
+    val trendingItems = extractList("trending")   // featured highlights
+    val recommendItems = extractList("recommends") // popular / hero source
+
+    // categories / popular tab — from paginated list_films?is_youmightlike=1
+    val filmItems = filmJsons.flatMap { collectDramaItems(it) }
         .distinctBy { it.id.takeIf { id -> id != 0 } ?: it.title }
         .filter { it.title.isNotBlank() }
+
     val forYouItems = forYouJsons.flatMap { collectDramaItems(it) }
         .distinctBy { it.id.takeIf { id -> id != 0 } ?: it.title }
         .filter { it.title.isNotBlank() }
-    val filmItems = filmsJsons.flatMap { collectDramaItems(it) }
-        .distinctBy { it.id.takeIf { id -> id != 0 } ?: it.title }
-        .filter { it.title.isNotBlank() }
+
     val continueKeys = setOf(
-        "continue_watching",
-        "continueWatching",
-        "watching",
-        "history",
-        "history_watching",
-        "watch_history"
+        "continue_watching", "continueWatching", "watching",
+        "history", "history_watching", "watch_history"
     )
     val continueItems = parseContinueWatching(watchHistoryJson).ifEmpty {
-        (
-            collectDramaItemsFromKeys(homeJson, continueKeys) +
-                filmsJsons.flatMap { collectDramaItemsFromKeys(it, continueKeys) }
-            )
+        collectDramaItemsFromKeys(homeJson, continueKeys)
             .distinctBy { it.id.takeIf { id -> id != 0 } ?: it.title }
             .map { film ->
-                ContinueWatchingItem(
-                    film = film,
-                    episodeNumber = 1,
-                    progressSeconds = 0,
-                    durationSeconds = 0
-                )
+                ContinueWatchingItem(film = film, episodeNumber = 1,
+                    progressSeconds = 0, durationSeconds = 0)
             }
     }
 
-    val items = (homeItems + forYouItems + filmItems)
+    // Merge everything for allItems check and tag extraction
+    val allItems = (hotItems + latestItems + trendingItems + recommendItems + filmItems + forYouItems)
         .distinctBy { it.id.takeIf { id -> id != 0 } ?: it.title }
-    if (items.isEmpty()) {
+
+    if (allItems.isEmpty()) {
         throw IllegalStateException("Home endpoints returned no films.")
     }
-    val feedItems = if (items.size >= 5) items else fallbackItems()
+
+    // Popular tab: for-you first, fall back to recommends then hotItems
+    val popularItems = forYouItems.ifEmpty { recommendItems.ifEmpty { hotItems } }
+
     return HomeFeed(
-        hero = homeItems.firstOrNull() ?: feedItems[0],
+        hero        = trendingItems.firstOrNull() ?: hotItems.firstOrNull() ?: allItems.first(),
         continueWatching = continueItems,
-        trending = filmItems.take(12).ifEmpty { feedItems.drop(2).take(8).ifEmpty { feedItems.take(4) } },
-        topRated = homeItems.getOrNull(1) ?: feedItems.getOrElse(3) { feedItems.first() },
-        moreLikeThis = (forYouItems + filmItems).distinctBy { it.stableKey() }.take(12)
-            .ifEmpty { feedItems.drop(4).take(8).ifEmpty { feedItems.take(4) } },
-        hotTags = collectHotTags(tagsJson, items)
+        trending    = popularItems,
+        topRated    = hotItems.firstOrNull() ?: allItems.first(),
+        moreLikeThis = popularItems.drop(1),
+        newReleases = latestItems.ifEmpty { filmItems },
+        ranking     = hotItems.ifEmpty { allItems },
+        categories  = filmItems.ifEmpty { allItems },
+        featured    = trendingItems.ifEmpty { hotItems },
+        hotTags     = collectHotTags(tagsJson, allItems)
     )
 }
 
@@ -466,26 +501,15 @@ private class HomeCacheStore(context: Context) :
 
     fun displayFeedForToday(rawFeed: HomeFeed): HomeFeed {
         readDisplayFeed()?.let { return it }
-        val pool = (listOf(rawFeed.hero) + rawFeed.trending + rawFeed.moreLikeThis)
-            .distinctBy { it.stableKey() }
-        val daily = pool.stableRotated(dayKey())
-        val weekly = pool.stableRotated(weekKey())
-        val hero = daily.firstOrNull() ?: rawFeed.hero
-        val trending = rawFeed.trending
-            .filterNot { it.stableKey() == hero.stableKey() }
-            .stableRotated(dayKey())
-            .take(10)
-            .ifEmpty { daily.drop(1).take(10) }
-        val topRated = weekly.firstOrNull() ?: rawFeed.topRated
-        val moreLikeThis = pool.filterNot { it.stableKey() == hero.stableKey() }
-            .stableRotated("${dayKey()}-more")
-            .take(8)
-            .ifEmpty { rawFeed.moreLikeThis }
+        // Use a stable daily rotation on each section independently so each tab
+        // refreshes its order each day without losing any items.
         return rawFeed.copy(
-            hero = hero,
-            trending = trending,
-            topRated = topRated,
-            moreLikeThis = moreLikeThis,
+            trending = rawFeed.trending.stableRotated(dayKey()),
+            moreLikeThis = rawFeed.moreLikeThis.stableRotated("${dayKey()}-more"),
+            newReleases = rawFeed.newReleases.stableRotated("${dayKey()}-new"),
+            ranking = rawFeed.ranking,   // ranking order must not be shuffled — it is ranked
+            categories = rawFeed.categories.stableRotated("${dayKey()}-cat"),
+            featured = rawFeed.featured.stableRotated(weekKey()),  // weekly rotation for featured
             hotTags = rawFeed.hotTags
         )
     }
@@ -727,6 +751,10 @@ private fun HomeFeed.toJson(): JSONObject = JSONObject()
     .put("trending", trending.toJsonArray())
     .put("topRated", topRated.toJson())
     .put("moreLikeThis", moreLikeThis.toJsonArray())
+    .put("newReleases", newReleases.toJsonArray())
+    .put("ranking", ranking.toJsonArray())
+    .put("categories", categories.toJsonArray())
+    .put("featured", featured.toJsonArray())
     .put("hotTags", JSONArray().also { array -> hotTags.forEach(array::put) })
 
 private fun List<DramaItem>.toJsonArray(): JSONArray = JSONArray().also { array ->
@@ -744,6 +772,10 @@ private fun HomeFeed.Companion.fromJson(json: JSONObject): HomeFeed {
         trending = json.optJSONArray("trending").toDramaItems(),
         topRated = json.getJSONObject("topRated").toDramaItem(),
         moreLikeThis = json.optJSONArray("moreLikeThis").toDramaItems(),
+        newReleases = json.optJSONArray("newReleases").toDramaItems(),
+        ranking = json.optJSONArray("ranking").toDramaItems(),
+        categories = json.optJSONArray("categories").toDramaItems(),
+        featured = json.optJSONArray("featured").toDramaItems(),
         hotTags = json.optJSONArray("hotTags").toStringList()
     )
 }
@@ -874,17 +906,6 @@ private fun JSONObject.firstBoolean(vararg keys: String): Boolean {
     }
     return false
 }
-
-private fun fallbackItems(): List<DramaItem> = listOf(
-    DramaItem(1, "Empire of Deceit", "In the cutthroat world of global finance, one woman risks everything to expose the corruption that built an empire.", "", "4.8", 96, "Romance"),
-    DramaItem(2, "The Secret Vow", "A hidden promise changes two lives forever.", "", "4.7", 42, "Drama"),
-    DramaItem(3, "Midnight Pulse", "Neon streets, dangerous secrets, and a chase after midnight.", "", "4.6", 65, "Thriller"),
-    DramaItem(4, "CEO's Hidden Heir", "A powerful family secret returns to claim everything.", "", "4.9", 96, "Romance", true),
-    DramaItem(5, "Love in Autumn Rain", "A second chance arrives with the season's first storm.", "", "4.5", 48, "Romance"),
-    DramaItem(6, "The Billionaire's Secret Heir", "Power, revenge, and family collide in the city.", "", "4.8", 45, "Revenge"),
-    DramaItem(7, "The Glass Mansion", "Behind every perfect wall is a dangerous lie.", "", "4.9", 72, "Suspense", true),
-    DramaItem(8, "Vengeance Sweetness", "A masked betrayal becomes a dangerous romance.", "", "4.7", 58, "Thriller")
-)
 
 private fun String.trimEndSlash(): String = trim().trimEnd('/').ifBlank { "https://drama-verse-backend.vercel.app/" }
 

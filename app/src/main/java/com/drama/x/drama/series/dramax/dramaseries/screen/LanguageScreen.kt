@@ -89,7 +89,10 @@ fun LanguageScreen(
 
     LaunchedEffect(selectedOnce) {
         if (selectedOnce) {
-            kotlinx.coroutines.delay(3_000L)
+            showActionButton = false
+            if (delayDoneAfterSelection) {
+                kotlinx.coroutines.delay(1_500L)
+            }
             showActionButton = true
         }
     }
@@ -168,6 +171,7 @@ fun LanguageScreen(
                     onClick = {
                         viewModel.selectLanguage(language)
                         if (!selectedOnce) {
+                            showActionButton = false
                             selectedOnce = true
                             activity?.let { AdsManager.loadNativeLanguageClick(it, firstVisit) }
                         }

@@ -13,6 +13,7 @@ import kotlin.coroutines.resume
 
 private const val TAG = "DramaXAds"
 private const val RC_AD_REMOTE_CONFIG = "ad_remote_config"
+private const val RC_HEIGHT_BUTTON_CTA = "height_button_cta"
 
 object RemoteConfigUtils {
     @Volatile
@@ -56,4 +57,10 @@ object RemoteConfigUtils {
             AdRemoteConfig.applyRemoteJson(config.getString(RC_AD_REMOTE_CONFIG))
         }
     }
+
+    fun ctaHeightDp(context: Context): Int =
+        configure(context)
+            ?.getLong(RC_HEIGHT_BUTTON_CTA)
+            ?.toInt()
+            ?: NativeAdUiStandards.defaultCtaHeightDp()
 }

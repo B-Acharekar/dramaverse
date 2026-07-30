@@ -21,8 +21,7 @@ object AdRemoteConfig {
         "native_onboarding_1_4",
         "native_onboarding_2_4",
         "native_onboarding_fullscreen_1_2",
-        "native_onboarding_fullscreen_2_2",
-        "inter_onboarding"
+        "native_onboarding_fullscreen_2_2"
     )
 
     @Volatile
@@ -31,6 +30,7 @@ object AdRemoteConfig {
     val placementNames = listOf(
         "inter_splash",
         "banner_splash",
+        "open_resume",
         "native_language_1",
         "native_language_1_click",
         "native_language_2",
@@ -41,7 +41,6 @@ object AdRemoteConfig {
         "native_onboarding_2_4",
         "native_onboarding_fullscreen_1_2",
         "native_onboarding_fullscreen_2_2",
-        "inter_onboarding",
         "inter_welcome_back",
         "inter_splash_uninstall",
         "banner_splash_uninstall",
@@ -49,6 +48,9 @@ object AdRemoteConfig {
         "native_survey_uninstall",
         "inter_home",
         "native_home",
+        "native_my_list",
+        "native_search",
+        "native_shortvideo_fullscreen",
         "banner_collapsible_home",
         "inter_back",
         "native_all",
@@ -61,12 +63,20 @@ object AdRemoteConfig {
 
     val interSplash: AdUnitConfig get() = placement("inter_splash")
     val bannerSplash: AdUnitConfig get() = placement("banner_splash")
-    val interOnboarding: AdUnitConfig get() = placement("inter_onboarding")
+    val openResume: AdUnitConfig get() = placement("open_resume")
     val interWelcomeBack: AdUnitConfig get() = placement("inter_welcome_back")
     val interSplashUninstall: AdUnitConfig get() = placement("inter_splash_uninstall")
     val bannerSplashUninstall: AdUnitConfig get() = placement("banner_splash_uninstall")
     val nativeUninstall: AdUnitConfig get() = placement("native_uninstall")
     val nativeSurveyUninstall: AdUnitConfig get() = placement("native_survey_uninstall")
+    val interHome: AdUnitConfig get() = placement("inter_home")
+    val nativeHome: AdUnitConfig get() = placement("native_home")
+    val nativeMyList: AdUnitConfig get() = placement("native_my_list")
+    val nativeSearch: AdUnitConfig get() = placement("native_search")
+    val bannerCollapsibleHome: AdUnitConfig get() = placement("banner_collapsible_home")
+    val interBack: AdUnitConfig get() = placement("inter_back")
+    val rewardAll: AdUnitConfig get() = placement("reward_all")
+    val nativeShortVideoFullscreen: AdUnitConfig get() = placement("native_shortvideo_fullscreen")
     fun nativeLanguage(firstVisit: Boolean): AdUnitConfig =
         placement(if (firstVisit) "native_language_1" else "native_language_2")
     fun nativeLanguageClick(firstVisit: Boolean): AdUnitConfig =
@@ -162,8 +172,7 @@ object AdRemoteConfig {
 
     private fun defaultEnableUaCheck(name: String): Boolean = when (name) {
         "native_onboarding_fullscreen_1_2",
-        "native_onboarding_fullscreen_2_2",
-        "inter_onboarding" -> true
+        "native_onboarding_fullscreen_2_2" -> true
         else -> false
     }
 }

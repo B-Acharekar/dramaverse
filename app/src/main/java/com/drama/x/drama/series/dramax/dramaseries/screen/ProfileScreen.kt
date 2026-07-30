@@ -144,6 +144,7 @@ fun ProfileScreen(
         episodesWatched = profile?.episodesWatched ?: stats.episodesWatched
     )
     val dynamicAvatarUrl = avatarImageUrl ?: profile?.avatarUrl
+    val bottomBannerVisible = shouldShowAppBottomBanner()
 
     LaunchedEffect(backendBaseUrl) {
         viewModel.loadProfile(backendBaseUrl)
@@ -175,14 +176,19 @@ fun ProfileScreen(
     Scaffold(
         containerColor = BgColor,
         bottomBar = {
-            BottomNavigationBar(
-                selected = "Profile",
-                onHome = onHome,
-                onShorts = onShorts,
-                onLibrary = onLibrary,
-            onRewards = onRewards,
-            onProfile = {}
-            )
+            Column {
+                BottomNavigationBar(
+                    selected = "Profile",
+                    onHome = onHome,
+                    onShorts = onShorts,
+                    onLibrary = onLibrary,
+                    onRewards = onRewards,
+                    onProfile = {}
+                )
+                if (bottomBannerVisible) {
+                    AppBottomBanner()
+                }
+            }
         }
     ) { innerPadding ->
         LazyColumn(

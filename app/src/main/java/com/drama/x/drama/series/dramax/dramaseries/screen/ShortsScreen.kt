@@ -1,6 +1,8 @@
 package com.drama.x.drama.series.dramax.dramaseries.screen
 
+import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import android.net.Uri
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -22,6 +24,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -103,12 +106,15 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drama.x.drama.series.dramax.dramaseries.R
+import com.drama.x.drama.series.dramax.dramaseries.ads.AdsManager
+import com.drama.x.drama.series.dramax.dramaseries.ads.NativeAdState
 import com.drama.x.drama.series.dramax.dramaseries.data.ShortsItem
 import com.drama.x.drama.series.dramax.dramaseries.data.SubtitleTrack
 import com.drama.x.drama.series.dramax.dramaseries.model.ShortsViewModel
@@ -133,12 +139,18 @@ private val Gold = Color(0xFFF5C65B)
 private val Pink = Color(0xFFFF5168)
 
 private const val DAILY_UNLOCK_LIMIT = 7
+private const val FREE_SHORTS_PREVIEW_EPISODES = 3
 
 private data class SubtitleCue(
     val startMs: Long,
     val endMs: Long,
     val text: String
 )
+
+private sealed interface ShortsFeedPage {
+    data class Video(val item: ShortsItem, val itemIndex: Int) : ShortsFeedPage
+    data object NativeFullscreenAd : ShortsFeedPage
+}
 
 @Composable
 fun ShortsScreen(
@@ -155,7 +167,12 @@ fun ShortsScreen(
     BackHandler(onBack = onBack)
 
     val uiState by viewModel.uiState.collectAsState()
-    val pagerState = rememberPagerState { uiState.items.size.coerceAtLeast(1) }
+    val feedPages = remember(uiState.items) { uiState.items.withNativeAdPages() }
+    val pagerState = rememberPagerState { feedPages.size.coerceAtLeast(1) }
+    val currentFeedPage = feedPages.getOrNull(pagerState.currentPage)
+    val currentVideoPage = currentFeedPage as? ShortsFeedPage.Video
+    val context = LocalContext.current
+    val activity = remember(context) { context.findActivity() }
     var controlsVisible by remember { mutableStateOf(true) }
     var isPlaying by remember { mutableStateOf(true) }
     var showPlaybackOptions by remember { mutableStateOf(false) }
@@ -164,65 +181,51 @@ fun ShortsScreen(
     var autoUnlock by remember { mutableStateOf(false) }
     var ccEnabled by remember { mutableStateOf(true) }
     var playbackSpeed by remember { mutableStateOf(1f) }
+    val bottomBannerVisible = shouldShowAppBottomBanner()
+    val bottomBannerPadding = if (bottomBannerVisible) AppBottomBannerHeight else 0.dp
 
     var dailyUnlocksUsed by remember { mutableStateOf(0) }
     var unlockedEpisodeKeys by remember { mutableStateOf(setOf<String>()) }
+    var nativeShortVideoAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
 
-    LaunchedEffect(pagerState.currentPage, uiState.items.size) {
-        val currentItem = uiState.items.getOrNull(pagerState.currentPage)
-        val currentLocked = currentItem?.isPaywalled() == true
-        controlsVisible = true
-        isPlaying = !currentLocked
-        showPlaybackOptions = false
-        showFeedbackForm = false
-        ccEnabled = currentItem?.subtitleTracks?.isNotEmpty() != false
-        viewModel.ensurePlayback(pagerState.currentPage, backendBaseUrl)
-        viewModel.loadMoreIfNeeded(pagerState.currentPage, backendBaseUrl)
+    LaunchedEffect(activity, uiState.items.size) {
+        activity?.let { AdsManager.loadNativeShortVideoFullscreen(it) }
     }
 
-    LaunchedEffect(controlsVisible, isPlaying, showPlaybackOptions, showFeedbackForm, pagerState.currentPage, uiState.items.size) {
-        val currentLocked = uiState.items.getOrNull(pagerState.currentPage)?.isPaywalled() == true
-        if (controlsVisible && isPlaying && !showPlaybackOptions && !showFeedbackForm && !currentLocked) {
-            delay(8000)
-            controlsVisible = false
-            showPlaybackOptions = false
-            showFeedbackForm = false
+    DisposableEffect(Unit) {
+        val observer = androidx.lifecycle.Observer<NativeAdState> { nativeShortVideoAdState = it }
+        AdsManager.nativeShortVideoFullscreenAdLive.observeForever(observer)
+        onDispose {
+            AdsManager.nativeShortVideoFullscreenAdLive.removeObserver(observer)
         }
     }
 
+    LaunchedEffect(pagerState.currentPage, feedPages.size) {
+        val currentItem = currentVideoPage?.item
+        controlsVisible = true
+        isPlaying = currentItem != null
+        showPlaybackOptions = false
+        showFeedbackForm = false
+        ccEnabled = currentItem?.subtitleTracks?.isNotEmpty() == true
+        if (currentVideoPage != null) {
+            viewModel.ensurePlayback(currentVideoPage.itemIndex, backendBaseUrl)
+            viewModel.loadMoreIfNeeded(currentVideoPage.itemIndex, backendBaseUrl)
+        }
+    }
 
     LaunchedEffect(backendBaseUrl, initialFilmId) {
         viewModel.loadInitial(backendBaseUrl, initialFilmId)
     }
 
-    LaunchedEffect(initialFilmId, uiState.items.size) {
-        val isGenericFeed = initialFilmId == null || initialFilmId == 0
-        if (!isGenericFeed || uiState.items.size <= 1) return@LaunchedEffect
-        while (true) {
-            delay(10_000)
-            val nextPage = (pagerState.currentPage + 1).coerceAtMost(uiState.items.lastIndex)
-            if (nextPage != pagerState.currentPage) {
-                pagerState.animateScrollToPage(nextPage)
-            }
-        }
-    }
-
-    LaunchedEffect(pagerState.currentPage, uiState.items.size) {
+    LaunchedEffect(pagerState.currentPage, feedPages.size) {
         controlsVisible = true
-        isPlaying = true
+        isPlaying = currentVideoPage != null
         showPlaybackOptions = false
         showFeedbackForm = false
-        ccEnabled = uiState.items.getOrNull(pagerState.currentPage)?.subtitleTracks?.isNotEmpty() != false
-        viewModel.ensurePlayback(pagerState.currentPage, backendBaseUrl)
-        viewModel.loadMoreIfNeeded(pagerState.currentPage, backendBaseUrl)
-    }
-
-    LaunchedEffect(controlsVisible, isPlaying, showPlaybackOptions, showFeedbackForm, pagerState.currentPage) {
-        if (controlsVisible && isPlaying && !showPlaybackOptions && !showFeedbackForm) {
-            delay(8000)
-            controlsVisible = false
-            showPlaybackOptions = false
-            showFeedbackForm = false
+        ccEnabled = currentVideoPage?.item?.subtitleTracks?.isNotEmpty() == true
+        if (currentVideoPage != null) {
+            viewModel.ensurePlayback(currentVideoPage.itemIndex, backendBaseUrl)
+            viewModel.loadMoreIfNeeded(currentVideoPage.itemIndex, backendBaseUrl)
         }
     }
 
@@ -239,114 +242,143 @@ fun ShortsScreen(
                 modifier = Modifier.fillMaxSize(),
                 pageSpacing = 0.dp
             ) { page ->
-                ShortsPage(
-                    item = uiState.items[page],
-                    itemIndex = page,
-                    isActive = page == pagerState.currentPage,
-                    backendBaseUrl = backendBaseUrl,
-                    controlsVisible = controlsVisible,
-                    isPlaying = isPlaying,
-                    showPlaybackOptions = showPlaybackOptions,
-                    showFeedbackForm = showFeedbackForm,
-                    autoNext = autoNext,
-                    autoUnlock = autoUnlock,
-                    ccEnabled = ccEnabled,
-                    playbackSpeed = playbackSpeed,
-                    onBack = onBack,
-                    onTogglePlay = {
-                        controlsVisible = true
-                        isPlaying = !isPlaying
-                    },
-                    onFeedbackClick = {
-                        controlsVisible = true
-                        showFeedbackForm = !showFeedbackForm
-                        showPlaybackOptions = false
-                    },
-                    onOptionsClick = {
-                        controlsVisible = true
-                        showPlaybackOptions = !showPlaybackOptions
-                        showFeedbackForm = false
-                    },
-                    onClosePopups = {
-                        showPlaybackOptions = false
-                        showFeedbackForm = false
-                    },
-                    onAutoUnlockChange = { enabled ->
-                        autoUnlock = enabled
-                    },
-                    onAutoNextChange = { enabled ->
-                        autoNext = enabled
-                    },
-                    onSubmitFeedback = { item, message ->
-                        viewModel.sendFeedback(
-                            backendBaseUrl = backendBaseUrl,
-                            filmId = item.film.id,
-                            episodeNumber = item.episodeNumber,
-                            message = message
-                        )
-                    },
-                    onLikeClick = { item, liked ->
-                        viewModel.setEpisodeLike(
-                            backendBaseUrl = backendBaseUrl,
-                            filmId = item.film.id,
-                            episodeNumber = item.episodeNumber,
-                            liked = liked
-                        )
-                    },
-                    onReminderClick = { item, enabled ->
-                        viewModel.setReminder(
-                            backendBaseUrl = backendBaseUrl,
-                            film = item.film,
-                            enabled = enabled
-                        )
-                    },
-                    onEpisodeFinished = { index, item, position, duration ->
-                        viewModel.completeEpisodeAndMaybePlayNext(
-                            backendBaseUrl = backendBaseUrl,
-                            itemIndex = index,
-                            item = item,
-                            progressSeconds = (position / 1000).toInt(),
-                            durationSeconds = duration.takeIf { it > 0L }?.let { (it / 1000).toInt() },
-                            autoNext = autoNext,
-                            autoUnlock = autoUnlock
-                        )
-                    },
-                    onProgressCheckpoint = { item, position, duration ->
-                        viewModel.saveWatchProgress(
-                            backendBaseUrl = backendBaseUrl,
-                            item = item,
-                            progressSeconds = (position / 1000).toInt(),
-                            durationSeconds = duration.takeIf { it > 0L }?.let { (it / 1000).toInt() }
-                        )
-                    },
-                    onToggleCc = { ccEnabled = !ccEnabled },
-                    onCycleSpeed = {
-                        playbackSpeed = when (playbackSpeed) {
-                            1f -> 1.25f
-                            1.25f -> 1.5f
-                            1.5f -> 2f
-                            else -> 1f
+                when (val feedPage = feedPages[page]) {
+                    ShortsFeedPage.NativeFullscreenAd -> ShortVideoNativeFullscreenAd(
+                        state = nativeShortVideoAdState,
+                        isActive = page == pagerState.currentPage
+                    )
+
+                    is ShortsFeedPage.Video -> ShortsPage(
+                        item = feedPage.item,
+                        itemIndex = feedPage.itemIndex,
+                        isActive = page == pagerState.currentPage,
+                        backendBaseUrl = backendBaseUrl,
+                        controlsVisible = controlsVisible,
+                        isPlaying = isPlaying,
+                        showPlaybackOptions = showPlaybackOptions,
+                        showFeedbackForm = showFeedbackForm,
+                        autoNext = autoNext,
+                        autoUnlock = autoUnlock,
+                        ccEnabled = ccEnabled,
+                        playbackSpeed = playbackSpeed,
+                        bottomReservedPadding = 78.dp + bottomBannerPadding,
+                        onBack = onBack,
+                        onTogglePlay = {
+                            controlsVisible = true
+                            isPlaying = !isPlaying
+                        },
+                        onFeedbackClick = {
+                            controlsVisible = true
+                            showFeedbackForm = !showFeedbackForm
+                            showPlaybackOptions = false
+                        },
+                        onOptionsClick = {
+                            controlsVisible = true
+                            showPlaybackOptions = !showPlaybackOptions
+                            showFeedbackForm = false
+                        },
+                        onClosePopups = {
+                            showPlaybackOptions = false
+                            showFeedbackForm = false
+                        },
+                        onAutoUnlockChange = { enabled ->
+                            autoUnlock = enabled
+                        },
+                        onAutoNextChange = { enabled ->
+                            autoNext = enabled
+                        },
+                        onSubmitFeedback = { item, message ->
+                            viewModel.sendFeedback(
+                                backendBaseUrl = backendBaseUrl,
+                                filmId = item.film.id,
+                                episodeNumber = item.episodeNumber,
+                                message = message
+                            )
+                        },
+                        onLikeClick = { item, liked ->
+                            viewModel.setEpisodeLike(
+                                backendBaseUrl = backendBaseUrl,
+                                filmId = item.film.id,
+                                episodeNumber = item.episodeNumber,
+                                liked = liked
+                            )
+                        },
+                        onReminderClick = { item, enabled ->
+                            viewModel.setReminder(
+                                backendBaseUrl = backendBaseUrl,
+                                film = item.film,
+                                enabled = enabled
+                            )
+                        },
+                        onEpisodeFinished = { index, item, position, duration ->
+                            viewModel.completeEpisodeAndMaybePlayNext(
+                                backendBaseUrl = backendBaseUrl,
+                                itemIndex = index,
+                                item = item,
+                                progressSeconds = (position / 1000).toInt(),
+                                durationSeconds = duration.takeIf { it > 0L }?.let { (it / 1000).toInt() },
+                                autoNext = autoNext,
+                                autoUnlock = autoUnlock
+                            )
+                        },
+                        onProgressCheckpoint = { item, position, duration ->
+                            viewModel.saveWatchProgress(
+                                backendBaseUrl = backendBaseUrl,
+                                item = item,
+                                progressSeconds = (position / 1000).toInt(),
+                                durationSeconds = duration.takeIf { it > 0L }?.let { (it / 1000).toInt() }
+                            )
+                        },
+                        onToggleCc = { ccEnabled = !ccEnabled },
+                        onCycleSpeed = {
+                            playbackSpeed = when (playbackSpeed) {
+                                1f -> 1.25f
+                                1.25f -> 1.5f
+                                1.5f -> 2f
+                                else -> 1f
+                            }
+                        },
+                        dailyUnlocksUsed = dailyUnlocksUsed,
+                        dailyUnlockLimit = DAILY_UNLOCK_LIMIT,
+                        isEpisodeUnlockedLocally = { filmId, episodeNumber ->
+                            unlockedEpisodeKeys.contains("$filmId:$episodeNumber")
+                        },
+                        onUnlockedEpisodeReady = { targetItem ->
+                            viewModel.playEpisode(
+                                backendBaseUrl = backendBaseUrl,
+                                itemIndex = feedPage.itemIndex,
+                                currentItem = feedPage.item,
+                                episodeNumber = targetItem.episodeNumber
+                            )
+                        },
+                        onWatchAdToUnlock = { targetItem, onDone ->
+                            val currentActivity = activity
+                            if (currentActivity == null) {
+                                onDone(false)
+                            } else {
+                                AdsManager.loadAndShowRewardAll(
+                                    activity = currentActivity,
+                                    onRewardEarned = {
+                                        dailyUnlocksUsed++
+                                        unlockedEpisodeKeys = unlockedEpisodeKeys + "${targetItem.film.id}:${targetItem.episodeNumber}"
+                                        viewModel.unlockEpisode(
+                                            backendBaseUrl = backendBaseUrl,
+                                            filmId = targetItem.film.id,
+                                            episodeNumber = targetItem.episodeNumber
+                                        )
+                                        onDone(true)
+                                    },
+                                    onFinished = {
+                                        onDone(false)
+                                    }
+                                )
+                            }
                         }
-                    },
-                    dailyUnlocksUsed = dailyUnlocksUsed,
-                    dailyUnlockLimit = DAILY_UNLOCK_LIMIT,
-                    isEpisodeUnlockedLocally = { filmId, episodeNumber ->
-                        unlockedEpisodeKeys.contains("$filmId:$episodeNumber")
-                    },
-                    onWatchAdToUnlock = { targetItem, onDone ->
-                        dailyUnlocksUsed++
-                        unlockedEpisodeKeys = unlockedEpisodeKeys + "${targetItem.film.id}:${targetItem.episodeNumber}"
-                        viewModel.unlockEpisode(
-                            backendBaseUrl = backendBaseUrl,
-                            filmId = targetItem.film.id,
-                            episodeNumber = targetItem.episodeNumber
-                        )
-                        onDone()
-                    }
-                )
+                    )
+                }
             }
         }
-        if (controlsVisible) {
+        if (controlsVisible && currentFeedPage is ShortsFeedPage.Video) {
             BottomNavigationBar(
                 selected = "Shorts",
                 onHome = onHome,
@@ -354,7 +386,49 @@ fun ShortsScreen(
                 onLibrary = onLibrary,
                 onRewards = onRewards,
                 onProfile = onProfile,
-                modifier = Modifier.align(Alignment.BottomCenter)
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = bottomBannerPadding)
+            )
+        }
+        if (bottomBannerVisible && currentFeedPage is ShortsFeedPage.Video) {
+            AppBottomBanner(modifier = Modifier.align(Alignment.BottomCenter))
+        }
+    }
+}
+
+private fun List<ShortsItem>.withNativeAdPages(): List<ShortsFeedPage> =
+    buildList {
+        this@withNativeAdPages.forEachIndexed { index, item ->
+            add(ShortsFeedPage.Video(item, index))
+            if ((index + 1) % 3 == 0) {
+                add(ShortsFeedPage.NativeFullscreenAd)
+            }
+        }
+    }
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
+
+@Composable
+private fun ShortVideoNativeFullscreenAd(
+    state: NativeAdState,
+    isActive: Boolean
+) {
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(ShortsBackground)
+    ) {
+        if (isActive) {
+            ErainNativeAdHost(
+                placementName = "native_shortvideo_fullscreen",
+                state = state,
+                modifier = Modifier.fillMaxSize(),
+                height = maxHeight
             )
         }
     }
@@ -375,6 +449,7 @@ private fun ShortsPage(
     autoUnlock: Boolean,
     ccEnabled: Boolean,
     playbackSpeed: Float,
+    bottomReservedPadding: Dp,
     onBack: () -> Unit,
     onTogglePlay: () -> Unit,
     onFeedbackClick: () -> Unit,
@@ -392,7 +467,8 @@ private fun ShortsPage(
     dailyUnlocksUsed: Int,
     dailyUnlockLimit: Int,
     isEpisodeUnlockedLocally: (filmId: Int, episodeNumber: Int) -> Boolean,
-    onWatchAdToUnlock: (ShortsItem, onDone: () -> Unit) -> Unit,
+    onUnlockedEpisodeReady: (ShortsItem) -> Unit,
+    onWatchAdToUnlock: (ShortsItem, onDone: (Boolean) -> Unit) -> Unit,
 ) {
     var videoReady by remember(item.playUrl) { mutableStateOf(false) }
     var reminderOn by remember(item.film.id) { mutableStateOf(false) }
@@ -426,17 +502,23 @@ private fun ShortsPage(
     var selectedReportReason by remember(item.playUrl) { mutableStateOf("") }
     var showShareSheet by remember(item.film.id) { mutableStateOf(false) }
 
-    var showUnlockDialog by remember(item.film.id, item.episodeNumber) { mutableStateOf(false) }
+    var unlockTargetItem by remember(item.film.id, item.episodeNumber) { mutableStateOf<ShortsItem?>(null) }
     var showDailyLimitDialog by remember { mutableStateOf(false) }
     var isWatchingAd by remember(item.film.id, item.episodeNumber) { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
 
-    val isLocked = item.isLocked && !isEpisodeUnlockedLocally(item.film.id, item.episodeNumber)
+    val isLocked = item.isPaywalled() && !isEpisodeUnlockedLocally(item.film.id, item.episodeNumber)
+    val fullEpisodeTarget = remember(item, isLocked) {
+        if (!isLocked && item.episodeNumber == 1 && item.film.episodeTotal > 1) {
+            item.copy(episodeNumber = 2, isLocked = true)
+        } else {
+            item
+        }
+    }
     android.util.Log.d("ShortsLock", "ep=${item.episodeNumber} rawLocked=${item.isLocked} computed=$isLocked")
 
 
     Box(modifier = Modifier.fillMaxSize()) {
-        if (!isActive || item.playUrl.isBlank() || isLocked) {
+        if (!isActive || item.playUrl.isBlank()) {
             LoadingBackdrop(
                 item = item,
                 showLoader = isActive,
@@ -496,7 +578,7 @@ private fun ShortsPage(
                         if (dailyUnlocksUsed >= dailyUnlockLimit) {
                             showDailyLimitDialog = true
                         } else {
-                            showUnlockDialog = true
+                            unlockTargetItem = fullEpisodeTarget
                         }
                     } else {
                         onTogglePlay()
@@ -505,22 +587,7 @@ private fun ShortsPage(
         )
 
         if (controlsVisible) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(
-                                Color(0xD6000000),
-                                Color(0x24000000),
-                                Color.Transparent,
-                                Color(0x33000000),
-                                Color(0xE8050507)
-                            ),
-                            startY = 0f
-                        )
-                    )
-            )
+            ShortsOverlayGradient()
         }
 
         if (controlsVisible && !isPlaying && videoReady) {
@@ -548,9 +615,9 @@ private fun ShortsPage(
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = 14.dp, bottom = 88.dp),
+                    .padding(end = 12.dp, bottom = bottomReservedPadding + 102.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 SideAction(
                     if (liked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
@@ -579,35 +646,26 @@ private fun ShortsPage(
                     Color.White,
                     onClick = { showShareSheet = true }
                 )
-                if (!isLocked) {
-                    SideAction(
-                        Icons.Filled.VideoLibrary,
-                        R.string.episodes,
-                        Color.White,
-                        onClick = { showEpisodeOptions = true }
-                    )
-                    SideAction(
-                        Icons.Filled.ClosedCaption,
-                        R.string.cc,
-                        if (ccEnabled && item.subtitleUrl.isNotBlank()) Gold else Color.White,
-                        onClick = {
-                            if (item.subtitleTracks.size > 1) {
-                                if (!ccEnabled && selectedSubtitleUrl.isBlank()) {
-                                    selectedSubtitleUrl = item.subtitleTracks.firstOrNull()?.url.orEmpty()
-                                }
-                                if (!ccEnabled) onToggleCc()
-                                showSubtitleOptions = !showSubtitleOptions
-                            } else {
-                                if (!ccEnabled && selectedSubtitleUrl.isBlank()) {
-                                    selectedSubtitleUrl = item.subtitleTracks.firstOrNull()?.url.orEmpty()
-                                }
-                                onToggleCc()
-                                showSubtitleOptions = false
+                SideAction(
+                    Icons.Filled.ClosedCaption,
+                    R.string.cc,
+                    if (ccEnabled && selectedSubtitleUrl.isNotBlank()) Gold else Color.White,
+                    onClick = {
+                        if (item.subtitleTracks.size > 1) {
+                            if (!ccEnabled && selectedSubtitleUrl.isBlank()) {
+                                selectedSubtitleUrl = item.subtitleTracks.firstOrNull()?.url.orEmpty()
                             }
+                            if (!ccEnabled) onToggleCc()
+                            showSubtitleOptions = !showSubtitleOptions
+                        } else {
+                            if (!ccEnabled && selectedSubtitleUrl.isBlank()) {
+                                selectedSubtitleUrl = item.subtitleTracks.firstOrNull()?.url.orEmpty()
+                            }
+                            onToggleCc()
+                            showSubtitleOptions = false
                         }
-                    )
-                    SideTextAction(speedLabel(playbackSpeed), R.string.speed, onCycleSpeed)
-                }
+                    }
+                )
             }
 
             Box(modifier = Modifier.align(Alignment.BottomStart)) {
@@ -616,15 +674,20 @@ private fun ShortsPage(
                     positionMs = positionMs,
                     durationMs = durationMs,
                     isLocked = isLocked,
+                    bottomReservedPadding = bottomReservedPadding,
                     onSeekTo = { targetMs ->
                         positionMs = targetMs
                         pendingSeekMs = targetMs
                     },
                     onWatchNowClick = {
-                        if (dailyUnlocksUsed >= dailyUnlockLimit) {
-                            showDailyLimitDialog = true
+                        if (isLocked) {
+                            if (dailyUnlocksUsed >= dailyUnlockLimit) {
+                                showDailyLimitDialog = true
+                            } else {
+                                unlockTargetItem = fullEpisodeTarget
+                            }
                         } else {
-                            showUnlockDialog = true
+                            unlockTargetItem = fullEpisodeTarget
                         }
                     }
                 )
@@ -703,6 +766,7 @@ private fun ShortsPage(
             EpisodeOptionsSheet(
                 currentEpisode = item.episodeNumber,
                 totalEpisodes = item.film.episodeTotal,
+                unlockedThrough = maxOf(item.episodeNumber, FREE_SHORTS_PREVIEW_EPISODES),
                 modifier = Modifier.align(Alignment.Center),
                 onDismiss = { showEpisodeOptions = false }
             )
@@ -713,27 +777,26 @@ private fun ShortsPage(
                 onDismiss = { showShareSheet = false }
             )
         }
-        if (showUnlockDialog) {
+        val currentUnlockTarget = unlockTargetItem
+        if (currentUnlockTarget != null) {
             UnlockEpisodeDialog(
-                posterUrl = item.film.imageUrl,
-                episodeNumber = item.episodeNumber,
+                posterUrl = currentUnlockTarget.film.imageUrl,
+                episodeNumber = currentUnlockTarget.episodeNumber,
                 dailyUnlocksUsed = dailyUnlocksUsed,
                 dailyUnlockLimit = dailyUnlockLimit,
                 isLoading = isWatchingAd,
                 onWatchAd = {
                     isWatchingAd = true
-                    scope.launch {
-                        // TODO: replace this delay with the actual rewarded-ad flow.
-                        // Call onWatchAdToUnlock only once the ad SDK reports a completed view.
-                        delay(1500)
-                        onWatchAdToUnlock(item) {
-                            isWatchingAd = false
-                            showUnlockDialog = false
+                    onWatchAdToUnlock(currentUnlockTarget) { unlocked ->
+                        isWatchingAd = false
+                        if (unlocked) {
+                            unlockTargetItem = null
+                            onUnlockedEpisodeReady(currentUnlockTarget)
                         }
                     }
                 },
                 onDismiss = {
-                    if (!isWatchingAd) showUnlockDialog = false
+                    if (!isWatchingAd) unlockTargetItem = null
                 }
             )
         }
@@ -761,61 +824,37 @@ private fun ShortsTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(78.dp)
-            .padding(horizontal = 18.dp),
+            .height(64.dp)
+            .padding(start = 16.dp, end = 16.dp, top = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(42.dp)
-                .clip(CircleShape)
-                .background(Color(0x66111114))
-                .border(1.dp, Color(0x33FFFFFF), CircleShape)
+                .size(40.dp)
                 .clickable(onClick = onBack)
-                .padding(9.dp),
+                .padding(8.dp),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
-        }
-        Spacer(Modifier.width(12.dp))
-        Text(
-            text = stringResource(
-                R.string.episode_progress,
-                item.episodeNumber,
-                item.film.episodeTotal
-            ),
-            color = Color.White,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.ExtraBold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
-            letterSpacing = 0.sp
-        )
-        Box(
-            modifier = Modifier
-                .size(42.dp)
-                .clip(CircleShape)
-                .background(Color(0x66111114))
-                .border(1.dp, Color(0x33FFFFFF), CircleShape)
-                .clickable(onClick = onFeedbackClick),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(Icons.Filled.Feedback, contentDescription = null, tint = Color.White, modifier = Modifier.size(21.dp))
-        }
-        Spacer(Modifier.width(10.dp))
-        Box(
-            modifier = Modifier
-                .size(42.dp)
-                .clip(CircleShape)
-                .background(Color(0x66111114))
-                .border(1.dp, Color(0x33FFFFFF), CircleShape)
-                .clickable(onClick = onOptionsClick),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(Icons.Filled.MoreVert, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = Color(0xFFE5E1E4), modifier = Modifier.size(24.dp))
         }
     }
+}
+
+@Composable
+private fun ShortsOverlayGradient() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    0.0f to Color(0xE60B0B0D),
+                    0.18f to Color(0x660B0B0D),
+                    0.42f to Color.Transparent,
+                    0.66f to Color.Transparent,
+                    1.0f to Color(0xF20B0B0D)
+                )
+            )
+    )
 }
 
 @Composable
@@ -824,20 +863,17 @@ private fun ShortsCaption(
     positionMs: Long,
     durationMs: Long,
     isLocked: Boolean,
+    bottomReservedPadding: Dp,
     onSeekTo: (Long) -> Unit,
     onWatchNowClick: () -> Unit
 ) {
-    val safeDuration = durationMs.takeIf { it > 0L && it < Long.MAX_VALUE / 2 } ?: 0L
-    var descriptionExpanded by remember(item.film.id, item.episodeNumber) { mutableStateOf(false) }
     val description = item.film.description.ifBlank { stringResource(R.string.default_short_description) }
-    val showDescriptionToggle = description.length > 42
-    var sliderPosition by remember(positionMs, safeDuration) {
-        mutableStateOf(positionMs.coerceIn(0L, safeDuration).toFloat())
-    }
+    var descriptionExpanded by remember(item.film.id, item.episodeNumber) { mutableStateOf(false) }
+    val showDescriptionToggle = description.length > 70
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 18.dp, end = if (isLocked) 18.dp else 86.dp, bottom = 104.dp)
+            .padding(start = 16.dp, end = if (isLocked) 16.dp else 90.dp, bottom = bottomReservedPadding + 16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
@@ -847,85 +883,67 @@ private fun ShortsCaption(
                     item.film.episodeTotal
                 ),
                 color = Gold,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Black,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
                 letterSpacing = 0.sp,
                 modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(Color(0x5533230A))
-                    .border(1.dp, Color(0x88F5C65B), RoundedCornerShape(6.dp))
-                    .padding(horizontal = 9.dp, vertical = 5.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Color(0x33F5C65B))
+                    .border(1.dp, Color(0x4DF5C65B), RoundedCornerShape(4.dp))
+                    .padding(horizontal = 8.dp, vertical = 3.dp)
             )
-            Spacer(Modifier.width(10.dp))
-            Text(stringResource(R.string.trending_number), color = Color(0xFFFFC3CA), fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.trending_number), color = Color(0xFFE5BDBE), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
         }
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(4.dp))
         Text(
             item.film.title,
-            color = Color.White,
+            color = Color(0xFFE5E1E4),
             fontSize = 20.sp,
-            lineHeight = 23.sp,
+            lineHeight = 25.sp,
             fontWeight = FontWeight.ExtraBold,
-            maxLines = 2,
+            maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             letterSpacing = 0.sp
         )
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(4.dp))
         Text(
             description,
-            color = Color(0xFFE5D2D7),
+            color = Color(0xCCE5E1E4),
             fontSize = 14.sp,
-            lineHeight = 19.sp,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = if (descriptionExpanded) 8 else 2,
+            lineHeight = 20.sp,
+            fontWeight = FontWeight.Normal,
+            maxLines = if (descriptionExpanded) 4 else 2,
             overflow = TextOverflow.Ellipsis,
             letterSpacing = 0.sp
         )
         if (showDescriptionToggle) {
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(3.dp))
             Text(
-                if (descriptionExpanded) stringResource(R.string.view_less) else stringResource(R.string.view_more),
+                text = if (descriptionExpanded) stringResource(R.string.view_less) else "... ${stringResource(R.string.view_more)}",
                 color = Gold,
-                fontSize = 13.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.ExtraBold,
                 letterSpacing = 0.sp,
                 modifier = Modifier.clickable { descriptionExpanded = !descriptionExpanded }
             )
         }
-        Spacer(Modifier.height(12.dp))
-        if (isLocked) {
-            Box(
-                modifier = Modifier
-                    .width(140.dp)
-                    .height(48.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(Pink)
-                    .clickable(onClick = onWatchNowClick),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    stringResource(R.string.watch_now),
-                    color = Color.White,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.ExtraBold
-                )
-            }
-        } else {
-            ThinSeekBar(
-                progress = if (safeDuration > 0L) sliderPosition / safeDuration.toFloat() else 0f,
-                onSeekFraction = { fraction ->
-                    val targetMs = (safeDuration * fraction).toLong().coerceIn(0L, safeDuration)
-                    sliderPosition = targetMs.toFloat()
-                    onSeekTo(targetMs)
-                },
-                modifier = Modifier.fillMaxWidth()
+        Spacer(Modifier.height(10.dp))
+        Box(
+            modifier = Modifier
+                .width(170.dp)
+                .height(40.dp)
+                .clip(RoundedCornerShape(50))
+                .background(Pink)
+                .clickable(onClick = onWatchNowClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                stringResource(R.string.watch_now),
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold
             )
-            Spacer(Modifier.height(4.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(formatPlaybackTime(sliderPosition.toLong()), color = Color(0xFFE8D7DC), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
-                Spacer(Modifier.weight(1f))
-                Text(formatPlaybackTime(safeDuration), color = Color(0xFFE8D7DC), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
-            }
         }
     }
 }
@@ -1404,7 +1422,7 @@ private fun buildShareText(item: ShortsItem, context: android.content.Context): 
 }
 
 private fun ShortsItem.isPaywalled(): Boolean {
-    return isLocked
+    return isLocked && episodeNumber > FREE_SHORTS_PREVIEW_EPISODES
 }
 
 private fun subtitleMimeType(url: String): String {

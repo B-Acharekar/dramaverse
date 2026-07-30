@@ -70,6 +70,21 @@ fun DramaXApp(
         }
     }
 
+    fun openHomeWithBackAd() {
+        val activity = context.findActivity()
+        if (activity == null || currentStep == AppStep.Home) {
+            viewModel.openHome()
+            return
+        }
+        AdsManager.loadAndShowInterstitial(
+            activity = activity,
+            placementName = "inter_back",
+            config = AdRemoteConfig.interBack,
+            timeoutMs = 6_000L,
+            onFinished = viewModel::openHome
+        )
+    }
+
     when (currentStep) {
         AppStep.Splash -> CustomSplashScreen(
             onFinished = {
@@ -100,19 +115,7 @@ fun DramaXApp(
                     return@OnboardingScreen
                 }
                 onboardingFinishInProgress = true
-                val activity = context.findActivity()
-                if (activity == null) {
-                    viewModel.onOnboardingFinished()
-                } else {
-                    AdsManager.loadAndShowInterstitial(
-                        activity = activity,
-                        placementName = "inter_onboarding",
-                        config = AdRemoteConfig.interOnboarding,
-                        timeoutMs = 12_000L,
-                        bypassInterstitialInterval = true,
-                        onFinished = viewModel::onOnboardingFinished
-                    )
-                }
+                viewModel.onOnboardingFinished()
             }
         )
 
@@ -138,8 +141,8 @@ fun DramaXApp(
         AppStep.Shorts -> ShortsScreen(
             backendBaseUrl = uiState.backendBaseUrl,
             initialFilmId = uiState.selectedShortFilmId,
-            onBack = viewModel::openHome,
-            onHome = viewModel::openHome,
+            onBack = ::openHomeWithBackAd,
+            onHome = ::openHomeWithBackAd,
             onLibrary = viewModel::openLibrary,
             onRewards = viewModel::openRewards,
             onProfile = viewModel::openProfile
@@ -147,7 +150,7 @@ fun DramaXApp(
 
         AppStep.Library -> LibraryScreen(
             backendBaseUrl = uiState.backendBaseUrl,
-            onHome = viewModel::openHome,
+            onHome = ::openHomeWithBackAd,
             onShorts = { viewModel.openShorts(null) },
             onOpenShorts = viewModel::openShorts,
             onSearch = viewModel::openSearch,
@@ -159,8 +162,8 @@ fun DramaXApp(
         AppStep.Search -> SearchResultsScreen(
             backendBaseUrl = uiState.backendBaseUrl,
             query = uiState.searchQuery,
-            onBack = viewModel::openHome,
-            onHome = viewModel::openHome,
+            onBack = ::openHomeWithBackAd,
+            onHome = ::openHomeWithBackAd,
             onShorts = { viewModel.openShorts(null) },
             onLibrary = viewModel::openLibrary,
             onOpenShorts = viewModel::openShorts,
@@ -171,7 +174,7 @@ fun DramaXApp(
 
         AppStep.Rewards -> RewardScreen(
             backendBaseUrl = uiState.backendBaseUrl,
-            onHome = viewModel::openHome,
+            onHome = ::openHomeWithBackAd,
             onShorts = { viewModel.openShorts(null) },
             onLibrary = viewModel::openLibrary,
             onProfile = viewModel::openProfile
@@ -179,7 +182,7 @@ fun DramaXApp(
 
         AppStep.Profile -> ProfileScreen(
             backendBaseUrl = uiState.backendBaseUrl,
-            onHome = viewModel::openHome,
+            onHome = ::openHomeWithBackAd,
             onShorts = { viewModel.openShorts(null) },
             onLibrary = viewModel::openLibrary,
             onRewards = viewModel::openRewards,
@@ -188,7 +191,7 @@ fun DramaXApp(
         AppStep.Planner -> PlannerScreen(
             backendBaseUrl = uiState.backendBaseUrl,
             onBack = viewModel::openLibrary,
-            onHome = viewModel::openHome,
+            onHome = ::openHomeWithBackAd,
             onShorts = { viewModel.openShorts(null) },
             onLibrary = viewModel::openLibrary,
             onRewards = viewModel::openRewards,
@@ -197,8 +200,8 @@ fun DramaXApp(
 
         AppStep.Notifications -> NotificationScreen(
             backendBaseUrl = uiState.backendBaseUrl,
-            onBack = viewModel::openHome,
-            onHome = viewModel::openHome,
+            onBack = ::openHomeWithBackAd,
+            onHome = ::openHomeWithBackAd,
             onShorts = { viewModel.openShorts(null) },
             onLibrary = viewModel::openLibrary,
             onRewards = viewModel::openRewards,

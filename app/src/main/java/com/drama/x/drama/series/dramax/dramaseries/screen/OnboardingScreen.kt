@@ -65,6 +65,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drama.x.drama.series.dramax.dramaseries.R
 import com.drama.x.drama.series.dramax.dramaseries.ads.ADS_TAG
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdsManager
+import com.drama.x.drama.series.dramax.dramaseries.ads.NativeAdUiStandards
 import com.drama.x.drama.series.dramax.dramaseries.ads.NativeAdState
 import com.drama.x.drama.series.dramax.dramaseries.model.OnboardingPage
 import com.drama.x.drama.series.dramax.dramaseries.model.OnboardingViewModel
@@ -659,6 +660,7 @@ private fun NativeAdFullscreenView(
         update = { adView ->
             adView.forceLtrRecursively()
             bindNativeAd(adView, admobNativeAd)
+            NativeAdUiStandards.apply(adView, adView.context)
         }
     )
 }

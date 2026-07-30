@@ -12,9 +12,12 @@ import com.ads.module.ads.ERainAd
 import com.ads.module.ads.wrapper.ApInterstitialAd
 import com.ads.module.ads.wrapper.ApNativeAd
 import com.ads.module.funtion.AdCallback
+import com.ads.module.funtion.RewardCallback
 import com.drama.x.drama.series.dramax.dramaseries.devconfig.DevConfig
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.rewarded.RewardItem
+import com.google.android.gms.ads.rewarded.RewardedAd
 
 object AdsManager {
     private val _nativeLanguageAdLive = MutableLiveData<NativeAdState>(NativeAdState.Idle)
@@ -35,11 +38,24 @@ object AdsManager {
     private val _nativeOnboardingWelcomeAdLive = MutableLiveData<NativeAdState>(NativeAdState.Idle)
     val nativeOnboardingWelcomeAdLive: LiveData<NativeAdState> = _nativeOnboardingWelcomeAdLive
 
+    private val _nativeHomeAdLive = MutableLiveData<NativeAdState>(NativeAdState.Idle)
+    val nativeHomeAdLive: LiveData<NativeAdState> = _nativeHomeAdLive
+
+    private val _nativeHomeSearchAdLive = MutableLiveData<NativeAdState>(NativeAdState.Idle)
+    val nativeHomeSearchAdLive: LiveData<NativeAdState> = _nativeHomeSearchAdLive
+
+    private val _nativeMyListAdLive = MutableLiveData<NativeAdState>(NativeAdState.Idle)
+    val nativeMyListAdLive: LiveData<NativeAdState> = _nativeMyListAdLive
+
+    private val _nativeShortVideoFullscreenAdLive = MutableLiveData<NativeAdState>(NativeAdState.Idle)
+    val nativeShortVideoFullscreenAdLive: LiveData<NativeAdState> = _nativeShortVideoFullscreenAdLive
+
     private val _nativeUninstallAdLive = MutableLiveData<NativeAdState>(NativeAdState.Idle)
     val nativeUninstallAdLive: LiveData<NativeAdState> = _nativeUninstallAdLive
 
     private val _nativeSurveyUninstallAdLive = MutableLiveData<NativeAdState>(NativeAdState.Idle)
     val nativeSurveyUninstallAdLive: LiveData<NativeAdState> = _nativeSurveyUninstallAdLive
+
     private var splashInterstitial: ApInterstitialAd? = null
     private var interWelcome: ApInterstitialAd? = null
     private var lastWelcomeBackShowMs = 0L
@@ -112,9 +128,13 @@ object AdsManager {
     fun loadNativeOnboardingPageOne(activity: Activity, firstVisit: Boolean) {
         val rawConfig = AdRemoteConfig.nativeOnboardingFirstPage(firstVisit)
         val sdkShouldDisplay = if (firstVisit) {
-            sdkOrganicGate(activity, rawConfig) { ERainAd.getInstance().getShouldDisplayNativeOnboardingNormal1() }
+            sdkOrganicGate(activity, rawConfig) {
+                ERainAd.getInstance().getShouldDisplayNativeOnboardingNormal1(rawConfig.enableUaCheck)
+            }
         } else {
-            sdkOrganicGate(activity, rawConfig) { ERainAd.getInstance().getShouldDisplayNativeOnboardingNormal2() }
+            sdkOrganicGate(activity, rawConfig) {
+                ERainAd.getInstance().getShouldDisplayNativeOnboardingNormal2(rawConfig.enableUaCheck)
+            }
         }
         Log.d(
             ADS_TAG,
@@ -134,7 +154,7 @@ object AdsManager {
     fun loadNativeOnboardingPageThree(activity: Activity, firstVisit: Boolean) {
         val rawConfig = AdRemoteConfig.nativeOnboardingFourthPage(firstVisit)
         val sdkShouldDisplay = sdkOrganicGate(activity, rawConfig) {
-            ERainAd.getInstance().getShouldDisplayNativeOnboardingNormal2()
+            ERainAd.getInstance().getShouldDisplayNativeOnboardingNormal2(rawConfig.enableUaCheck)
         }
         Log.d(
             ADS_TAG,
@@ -154,9 +174,13 @@ object AdsManager {
     fun loadNativeOnboardingFullscreen(activity: Activity, firstVisit: Boolean) {
         val rawConfig = AdRemoteConfig.nativeOnboardingFull(firstVisit)
         val sdkShouldDisplay = if (firstVisit) {
-            sdkOrganicGate(activity, rawConfig) { ERainAd.getInstance().getShouldDisplayNativeOnboardingFull1() }
+            sdkOrganicGate(activity, rawConfig) {
+                ERainAd.getInstance().getShouldDisplayNativeOnboardingFull1(rawConfig.enableUaCheck)
+            }
         } else {
-            sdkOrganicGate(activity, rawConfig) { ERainAd.getInstance().getShouldDisplayNativeOnboardingFull2() }
+            sdkOrganicGate(activity, rawConfig) {
+                ERainAd.getInstance().getShouldDisplayNativeOnboardingFull2(rawConfig.enableUaCheck)
+            }
         }
         Log.d(
             ADS_TAG,
@@ -176,7 +200,7 @@ object AdsManager {
     fun loadNativeOnboardingWelcome(activity: Activity, firstVisit: Boolean) {
         val rawConfig = AdRemoteConfig.nativeOnboardingFourthPage(firstVisit)
         val sdkShouldDisplay = sdkOrganicGate(activity, rawConfig) {
-            ERainAd.getInstance().getShouldDisplayNativeOnboardingNormal2()
+            ERainAd.getInstance().getShouldDisplayNativeOnboardingNormal2(rawConfig.enableUaCheck)
         }
         Log.d(
             ADS_TAG,
@@ -193,10 +217,82 @@ object AdsManager {
         )
     }
 
+    fun preloadHomeAds(activity: Activity) {
+        loadNativeHome(activity)
+        loadNativeHomeSearch(activity)
+    }
+
+    fun loadNativeHome(activity: Activity) {
+        val rawConfig = AdRemoteConfig.nativeHome
+        val sdkShouldDisplay = sdkOrganicGate(activity, rawConfig) {
+            ERainAd.getInstance().getShouldDisplayNativeHome(rawConfig.enableUaCheck)
+        }
+        Log.d(
+            ADS_TAG,
+            "ERAIN_GATE native_home enableUaCheck=${rawConfig.enableUaCheck} sdkShouldDisplay=$sdkShouldDisplay"
+        )
+        loadNativePlacement(
+            activity = activity,
+            placementName = "native_home",
+            config = rawConfig.withSdkDisplayGate(sdkShouldDisplay),
+            layoutRes = R.layout.layout_native_home_small,
+            liveData = _nativeHomeAdLive
+        )
+    }
+
+    fun loadNativeHomeSearch(activity: Activity) {
+        val rawConfig = AdRemoteConfig.nativeSearch
+        val sdkShouldDisplay = sdkOrganicGate(activity, rawConfig) {
+            ERainAd.getInstance().getShouldDisplayNativeHome(rawConfig.enableUaCheck)
+        }
+        Log.d(
+            ADS_TAG,
+            "ERAIN_GATE native_search enableUaCheck=${rawConfig.enableUaCheck} sdkShouldDisplay=$sdkShouldDisplay"
+        )
+        loadNativePlacement(
+            activity = activity,
+            placementName = "native_search",
+            config = rawConfig.withSdkDisplayGate(sdkShouldDisplay),
+            layoutRes = R.layout.layout_native_home_small,
+            liveData = _nativeHomeSearchAdLive
+        )
+    }
+
+    fun loadNativeMyList(activity: Activity) {
+        val rawConfig = AdRemoteConfig.nativeMyList
+        val sdkShouldDisplay = sdkOrganicGate(activity, rawConfig) {
+            ERainAd.getInstance().getShouldDisplayNativeHome(rawConfig.enableUaCheck)
+        }
+        Log.d(
+            ADS_TAG,
+            "ERAIN_GATE native_my_list enableUaCheck=${rawConfig.enableUaCheck} sdkShouldDisplay=$sdkShouldDisplay"
+        )
+        loadNativePlacement(
+            activity = activity,
+            placementName = "native_my_list",
+            config = rawConfig.withSdkDisplayGate(sdkShouldDisplay),
+            layoutRes = R.layout.layout_native_home_small,
+            liveData = _nativeMyListAdLive
+        )
+    }
+
+    fun loadNativeShortVideoFullscreen(activity: Activity) {
+        val rawConfig = AdRemoteConfig.nativeShortVideoFullscreen
+        loadNativePlacement(
+            activity = activity,
+            placementName = "native_shortvideo_fullscreen",
+            config = rawConfig,
+            layoutRes = R.layout.layout_native_shortvideo_fullscreen,
+            liveData = _nativeShortVideoFullscreenAdLive
+        )
+    }
+
     fun loadNativeUninstall(activity: Activity) {
         val rawConfig = AdRemoteConfig.nativeUninstall
         val config = rawConfig.withSdkDisplayGate(
-            sdkOrganicGate(activity, rawConfig) { ERainAd.getInstance().getShouldDisplayWidgetUninstall() }
+            sdkOrganicGate(activity, rawConfig) {
+                ERainAd.getInstance().getShouldDisplayWidgetUninstall(rawConfig.enableUaCheck)
+            }
         )
         loadNativePlacement(
             activity = activity,
@@ -210,7 +306,9 @@ object AdsManager {
     fun loadNativeSurveyUninstall(activity: Activity) {
         val rawConfig = AdRemoteConfig.nativeSurveyUninstall
         val config = rawConfig.withSdkDisplayGate(
-            sdkOrganicGate(activity, rawConfig) { ERainAd.getInstance().getShouldDisplayWidgetUninstall() }
+            sdkOrganicGate(activity, rawConfig) {
+                ERainAd.getInstance().getShouldDisplayWidgetUninstall(rawConfig.enableUaCheck)
+            }
         )
         loadNativePlacement(
             activity = activity,
@@ -218,6 +316,75 @@ object AdsManager {
             config = config,
             layoutRes = R.layout.layout_native_language_large,
             liveData = _nativeSurveyUninstallAdLive
+        )
+    }
+
+    fun loadAndShowRewardAll(
+        activity: Activity,
+        timeoutMs: Long = 12_000L,
+        onRewardEarned: () -> Unit,
+        onFinished: () -> Unit
+    ) {
+        val config = AdRemoteConfig.rewardAll.withDevConfigUnlimitedAds(activity)
+        val placementName = "reward_all"
+        Log.d(ADS_TAG, "$placementName decision enabled=${config.isEnable} id=${config.id.maskAdUnit()}")
+        if (!config.canRequest || !isNetworkAvailable(activity) || activity.isFinishing || activity.isDestroyed) {
+            Log.d(ADS_TAG, "$placementName skipped canRequest=${config.canRequest} network=${isNetworkAvailable(activity)}")
+            onFinished()
+            return
+        }
+        var finished = false
+        var rewardEarned = false
+        fun finishOnce(reason: String) {
+            if (finished) return
+            finished = true
+            Log.d(ADS_TAG, "$placementName finished reason=$reason rewardEarned=$rewardEarned")
+            onFinished()
+        }
+        Handler(Looper.getMainLooper()).postDelayed({
+            finishOnce("timeout")
+        }, maxOf(timeoutMs, config.timeoutMs))
+        ERainAd.getInstance().initRewardAds(
+            activity,
+            config.id,
+            object : AdCallback() {
+                override fun onRewardAdLoaded(rewardedAd: RewardedAd) {
+                    if (finished || activity.isFinishing || activity.isDestroyed) return
+                    Log.d(ADS_TAG, "$placementName loaded via ERain")
+                    ERainAd.getInstance().showRewardAds(
+                        activity,
+                        rewardedAd,
+                        object : RewardCallback {
+                            override fun onUserEarnedReward(var1: RewardItem?) {
+                                if (!rewardEarned) {
+                                    rewardEarned = true
+                                    suppressImmediateResumeInterstitial("${placementName}_earned")
+                                    Log.d(ADS_TAG, "$placementName earned")
+                                    onRewardEarned()
+                                }
+                            }
+
+                            override fun onRewardedAdClosed() {
+                                finishOnce("closed")
+                            }
+
+                            override fun onRewardedAdFailedToShow(codeError: Int) {
+                                Log.e(ADS_TAG, "$placementName failed_to_show code=$codeError")
+                                finishOnce("show_failed")
+                            }
+
+                            override fun onAdClicked() {
+                                Log.d(ADS_TAG, "$placementName clicked")
+                            }
+                        }
+                    )
+                }
+
+                override fun onAdFailedToLoad(error: LoadAdError?) {
+                    error?.let { logAdFailure(placementName, it) }
+                    finishOnce("load_failed")
+                }
+            }
         )
     }
 
@@ -229,24 +396,22 @@ object AdsManager {
         bypassInterstitialInterval: Boolean = false,
         onFinished: () -> Unit
     ) {
-        val sdkShouldDisplayInterOnboarding = if (placementName == "inter_onboarding") {
-            sdkOrganicGate(activity, config) { ERainAd.getInstance().getShouldDisplayInterOnboarding() }
-        } else if (placementName == "inter_welcome_back") {
-            sdkOrganicGate(activity, config) { ERainAd.getInstance().getShouldDisplayInterWelcomeBack() }
+        val sdkShouldDisplayInterWelcomeBack = if (placementName == "inter_welcome_back") {
+            sdkOrganicGate(activity, config) {
+                ERainAd.getInstance().getShouldDisplayInterWelcomeBack(config.enableUaCheck)
+            }
         } else {
             true
         }
-        if (placementName == "inter_onboarding" || placementName == "inter_welcome_back") {
+        if (placementName == "inter_welcome_back") {
             Log.d(
                 ADS_TAG,
                 "ERAIN_GATE $placementName enableUaCheck=${config.enableUaCheck} " +
-                    "sdkShouldDisplay=$sdkShouldDisplayInterOnboarding"
+                    "sdkShouldDisplay=$sdkShouldDisplayInterWelcomeBack"
             )
         }
-        val gatedConfig = if (placementName == "inter_onboarding") {
-            config.withSdkDisplayGate(sdkShouldDisplayInterOnboarding)
-        } else if (placementName == "inter_welcome_back") {
-            config.withSdkDisplayGate(sdkShouldDisplayInterOnboarding)
+        val gatedConfig = if (placementName == "inter_welcome_back") {
+            config.withSdkDisplayGate(sdkShouldDisplayInterWelcomeBack)
         } else {
             config
         }
@@ -506,6 +671,10 @@ object AdsManager {
         _nativeOnboardingPageThreeAdLive.value?.destroyLoadedAdSafely()
         _nativeOnboardingFullscreenAdLive.value?.destroyLoadedAdSafely()
         _nativeOnboardingWelcomeAdLive.value?.destroyLoadedAdSafely()
+        _nativeHomeAdLive.value?.destroyLoadedAdSafely()
+        _nativeHomeSearchAdLive.value?.destroyLoadedAdSafely()
+        _nativeMyListAdLive.value?.destroyLoadedAdSafely()
+        _nativeShortVideoFullscreenAdLive.value?.destroyLoadedAdSafely()
         _nativeUninstallAdLive.value?.destroyLoadedAdSafely()
         _nativeSurveyUninstallAdLive.value?.destroyLoadedAdSafely()
         _nativeLanguageAdLive.value = NativeAdState.Idle
@@ -514,6 +683,10 @@ object AdsManager {
         _nativeOnboardingPageThreeAdLive.value = NativeAdState.Idle
         _nativeOnboardingFullscreenAdLive.value = NativeAdState.Idle
         _nativeOnboardingWelcomeAdLive.value = NativeAdState.Idle
+        _nativeHomeAdLive.value = NativeAdState.Idle
+        _nativeHomeSearchAdLive.value = NativeAdState.Idle
+        _nativeMyListAdLive.value = NativeAdState.Idle
+        _nativeShortVideoFullscreenAdLive.value = NativeAdState.Idle
         _nativeUninstallAdLive.value = NativeAdState.Idle
         _nativeSurveyUninstallAdLive.value = NativeAdState.Idle
     }

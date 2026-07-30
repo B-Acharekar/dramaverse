@@ -38,7 +38,7 @@ class AppLifecycleObserver {
             val config = AdRemoteConfig.interWelcomeBack
             val sdkAllowed = DevConfig.isUnlimitedAdsEnabled(activity) ||
                 !config.enableUaCheck ||
-                ERainAd.getInstance().getShouldDisplayInterWelcomeBack()
+                ERainAd.getInstance().getShouldDisplayInterWelcomeBack(config.enableUaCheck)
             Log.d(
                 "DramaXAds",
                 "ERAIN_GATE inter_welcome_back enableUaCheck=${config.enableUaCheck} sdkShouldDisplay=$sdkAllowed"

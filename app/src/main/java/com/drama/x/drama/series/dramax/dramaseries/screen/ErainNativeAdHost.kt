@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.drama.x.drama.series.dramax.dramaseries.ads.ADS_TAG
+import com.drama.x.drama.series.dramax.dramaseries.ads.NativeAdUiStandards
 import com.drama.x.drama.series.dramax.dramaseries.ads.NativeAdState
 import com.ads.module.ads.ERainAd
 import com.facebook.shimmer.ShimmerFrameLayout
@@ -159,8 +160,12 @@ private fun populateErainNative(
     }
     Log.d(ADS_TAG, "[$placementName] POPULATE via ERain")
     ERainAd.getInstance().populateNativeAdView(activity, state.nativeAd, adContainer, shimmer)
+    NativeAdUiStandards.apply(adContainer, activity)
     adContainer.forceLtrRecursively()
-    adContainer.post { adContainer.forceLtrRecursively() }
+    adContainer.post {
+        NativeAdUiStandards.apply(adContainer, activity)
+        adContainer.forceLtrRecursively()
+    }
 }
 
 private fun View.forceLtrRecursively() {

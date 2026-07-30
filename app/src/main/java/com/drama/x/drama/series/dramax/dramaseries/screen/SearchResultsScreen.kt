@@ -94,6 +94,8 @@ fun SearchResultsScreen(
     val focusManager = LocalFocusManager.current
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val headerHeight = 80.dp + topInset
+    val bottomBannerVisible = shouldShowAppBottomBanner()
+    val bottomBannerPadding = if (bottomBannerVisible) AppBottomBannerHeight else 0.dp
 
     LaunchedEffect(backendBaseUrl, query) {
         viewModel.search(backendBaseUrl, if (isDefaultSearch) "hot" else query)
@@ -114,7 +116,7 @@ fun SearchResultsScreen(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = headerHeight, bottom = 92.dp)
+            contentPadding = PaddingValues(top = headerHeight, bottom = 92.dp + bottomBannerPadding)
         ) {
             when {
                 uiState.isLoading -> item {
@@ -170,8 +172,13 @@ fun SearchResultsScreen(
             onLibrary = onLibrary,
             onRewards = onRewards,
             onProfile = onProfile,
-            modifier = Modifier.align(Alignment.BottomCenter)
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = bottomBannerPadding)
         )
+        if (bottomBannerVisible) {
+            AppBottomBanner(modifier = Modifier.align(Alignment.BottomCenter))
+        }
     }
 }
 
