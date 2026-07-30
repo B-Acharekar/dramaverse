@@ -228,6 +228,16 @@ fun ShortsScreen(
             viewModel.loadMoreIfNeeded(currentVideoPage.itemIndex, backendBaseUrl)
         }
     }
+    
+    // Track if any video is showing an ad to pause playback
+    var isAnyVideoShowingAd by remember { mutableStateOf(false) }
+    
+    // Pause video when ad is showing
+    LaunchedEffect(isAnyVideoShowingAd) {
+        if (isAnyVideoShowingAd) {
+            isPlaying = false
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -344,6 +354,8 @@ fun ShortsScreen(
                             unlockedEpisodeKeys.contains("$filmId:$episodeNumber")
                         },
                         onUnlockedEpisodeReady = { targetItem ->
+                            // Resume playback after unlock
+                            isPlaying = true
                             viewModel.playEpisode(
                                 backendBaseUrl = backendBaseUrl,
                                 itemIndex = feedPage.itemIndex,
@@ -352,8 +364,13 @@ fun ShortsScreen(
                             )
                         },
                         onWatchAdToUnlock = { targetItem, onDone ->
+                            // Pause video while showing ad
+                            isPlaying = false
+                            isAnyVideoShowingAd = true
+                            
                             val currentActivity = activity
                             if (currentActivity == null) {
+                                isAnyVideoShowingAd = false
                                 onDone(false)
                             } else {
                                 AdsManager.loadAndShowRewardAll(
@@ -366,9 +383,11 @@ fun ShortsScreen(
                                             filmId = targetItem.film.id,
                                             episodeNumber = targetItem.episodeNumber
                                         )
+                                        isAnyVideoShowingAd = false
                                         onDone(true)
                                     },
                                     onFinished = {
+                                        isAnyVideoShowingAd = false
                                         onDone(false)
                                     }
                                 )
