@@ -200,7 +200,6 @@ class HomeRepository(
             val current = _prefetchedFeed.value ?: cacheStore.readFeedForCurrentWindow()
             // If no cached feed exists, build a minimal one from the search results.
             val base = current ?: parseHomeFeed(
-                homeJson = searchJson,
                 filmJsons = listOf(searchJson),
                 forYouJsons = listOf(searchJson)
             )
@@ -241,7 +240,6 @@ class HomeRepository(
                 .filter { it.title.isNotBlank() }
             val current = _prefetchedFeed.value ?: cacheStore.readFeedForCurrentWindow()
             val base = current ?: parseHomeFeed(
-                homeJson = searchJson,
                 filmJsons = listOf(searchJson),
                 forYouJsons = listOf(searchJson)
             )
@@ -280,23 +278,16 @@ private suspend fun fetchHomeFeed(
     token: String,
     timeoutMillis: Int
 ): HomeFeed = coroutineScope {
-    // home_feature — single call, gives us ordering keys: hot/latest/trending/recommends
-    val homeFeature = async {
-        runCatching {
-            getClientJson(backendBaseUrl, "client/home", language, token, timeoutMillis, page = 1)
-        }.getOrNull()
-    }
-    // list_films?is_youmightlike=1 — all 6 pages in parallel (~72 films total)
-    val filmPages = (1..6).map { page ->
+    // list_films — 4 pages (pages 5+ are empty on upstream, so stop at 4)
+    val filmPages = (1..4).map { page ->
         async {
             runCatching {
-                getClientJson(backendBaseUrl, "client/films", language, token, timeoutMillis,
-                    page = page, extraQuery = "is_youmightlike=1")
+                getClientJson(backendBaseUrl, "client/films", language, token, timeoutMillis, page = page)
             }.getOrNull()
         }
     }
-    // for-you feed — 2 pages
-    val forYouPages = (1..2).map { page ->
+    // for-you — 3 pages (5 items each = 15 personalized films)
+    val forYouPages = (1..3).map { page ->
         async {
             runCatching {
                 getClientJson(backendBaseUrl, "client/for-you", language, token, timeoutMillis, page = page)
@@ -315,7 +306,6 @@ private suspend fun fetchHomeFeed(
     }
 
     parseHomeFeed(
-        homeJson = homeFeature.await(),
         filmJsons = filmPages.mapNotNull { it.await() },
         forYouJsons = forYouPages.mapNotNull { it.await() },
         watchHistoryJson = watchHistory.await(),
@@ -382,88 +372,62 @@ private fun postClientAction(
 }
 
 private fun parseHomeFeed(
-    homeJson: JSONObject?,
     filmJsons: List<JSONObject>,
     forYouJsons: List<JSONObject>,
     watchHistoryJson: JSONObject? = null,
     tagsJson: JSONObject? = null
 ): HomeFeed {
-    // ── Full catalog from list_films?is_youmightlike=1 (all 6 pages, ~72 films) ──
+    // Full catalog from list_films pages 1-4 (~44 unique films)
     val fullCatalog = filmJsons.flatMap { collectDramaItems(it) }
         .distinctBy { it.id.takeIf { id -> id != 0 } ?: it.title }
         .filter { it.title.isNotBlank() }
 
-    // ── home_feature ordering keys — used to reorder fullCatalog, not replace it ──
-    val homeData = homeJson?.optJSONObject("data")
-
-    // Extract IDs from a home_feature key in their priority order
-    fun priorityIds(key: String): List<Int> {
-        val arr = homeData?.optJSONArray(key) ?: return emptyList()
-        return (0 until arr.length()).mapNotNull { arr.optJSONObject(it)?.optInt("id")?.takeIf { id -> id != 0 } }
-    }
-
-    fun reorderByCatalog(priorityIds: List<Int>): List<DramaItem> {
-        if (priorityIds.isEmpty()) return fullCatalog
-        val catalogById = fullCatalog.associateBy { it.id }
-        // Priority items first (from fullCatalog so we have full data), then rest of catalog
-        val prioritized = priorityIds.mapNotNull { catalogById[it] }
-        val rest = fullCatalog.filter { it.id !in priorityIds.toSet() }
-        return prioritized + rest
-    }
-
-    val hotIds      = priorityIds("hot")       // ranking priority order
-    val latestIds   = priorityIds("latest")    // new releases priority order
-    val trendingIds = priorityIds("trending")  // featured priority order
-    val recommendIds = priorityIds("recommends") // popular priority order
-
-    // Reorder fullCatalog using home_feature priority — every section gets all films
-    val rankingOrdered  = reorderByCatalog(hotIds)
-    val newOrdered      = reorderByCatalog(latestIds)
-    val featuredOrdered = reorderByCatalog(trendingIds)
-
-    // for-you items from the personalized feed
+    // Personalized for-you items (15 total, 5 per page × 3 pages)
     val forYouItems = forYouJsons.flatMap { collectDramaItems(it) }
         .distinctBy { it.id.takeIf { id -> id != 0 } ?: it.title }
         .filter { it.title.isNotBlank() }
 
-    // Popular tab: for-you first, then recommend-ordered catalog
-    val popularOrdered = if (forYouItems.isNotEmpty()) {
-        val forYouIds = forYouItems.map { it.id }.toSet()
-        forYouItems + fullCatalog.filter { it.id !in forYouIds }
-    } else {
-        reorderByCatalog(recommendIds)
-    }
-
-    val continueKeys = setOf(
-        "continue_watching", "continueWatching", "watching",
-        "history", "history_watching", "watch_history"
-    )
-    val continueItems = parseContinueWatching(watchHistoryJson).ifEmpty {
-        collectDramaItemsFromKeys(homeJson, continueKeys)
-            .distinctBy { it.id.takeIf { id -> id != 0 } ?: it.title }
-            .map { film ->
-                ContinueWatchingItem(film = film, episodeNumber = 1,
-                    progressSeconds = 0, durationSeconds = 0)
-            }
-    }
-
-    val allItems = (rankingOrdered + newOrdered + popularOrdered)
+    val allItems = (fullCatalog + forYouItems)
         .distinctBy { it.id.takeIf { id -> id != 0 } ?: it.title }
 
     if (allItems.isEmpty()) {
         throw IllegalStateException("Home endpoints returned no films.")
     }
 
+    val continueKeys = setOf(
+        "continue_watching", "continueWatching", "watching",
+        "history", "history_watching", "watch_history"
+    )
+    val continueItems = parseContinueWatching(watchHistoryJson)
+
+    // Popular: for-you first, fill up with catalog
+    val forYouIds = forYouItems.map { it.id }.toSet()
+    val popularItems = forYouItems + fullCatalog.filter { it.id !in forYouIds }
+
+    // Each section gets the full catalog but with a different stable rotation
+    // so each tab feels distinct without needing separate API calls.
+    // Ranking: sort by likeCount desc (real signal from API)
+    val rankingItems = fullCatalog.sortedByDescending { it.likeCount }
+
+    // New: reverse order (last pages = older, first pages = newest on this API)
+    val newItems = fullCatalog  // already newest-first from list_films pagination
+
+    // Categories: full catalog unordered
+    val categoryItems = fullCatalog
+
+    // Featured: top-rated by rating field
+    val featuredItems = fullCatalog.sortedByDescending { it.rating.toFloatOrNull() ?: 0f }
+
     return HomeFeed(
-        hero             = featuredOrdered.firstOrNull() ?: allItems.first(),
+        hero             = featuredItems.firstOrNull() ?: allItems.first(),
         continueWatching = continueItems,
-        trending         = popularOrdered,          // Popular tab
-        topRated         = rankingOrdered.firstOrNull() ?: allItems.first(),
-        moreLikeThis     = popularOrdered.drop(1),
-        newReleases      = newOrdered,              // New tab — all ~72 films, latest first
-        ranking          = rankingOrdered,          // Ranking tab — all ~72 films, hot first
-        categories       = fullCatalog,             // Categories tab — full unordered catalog
-        featured         = featuredOrdered,         // Featured Highlights — trending first
+        trending         = popularItems,
+        topRated         = rankingItems.firstOrNull() ?: allItems.first(),
+        moreLikeThis     = popularItems.drop(1),
+        newReleases      = newItems,
+        ranking          = rankingItems,
+        categories       = categoryItems,
+        featured         = featuredItems,
         hotTags          = collectHotTags(tagsJson, allItems)
     )
 }
