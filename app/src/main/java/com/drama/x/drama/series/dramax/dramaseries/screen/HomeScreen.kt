@@ -1526,22 +1526,17 @@ private fun ContinueWatching(
     allCatalog: List<DramaItem>,
     onOpenShorts: (Int?) -> Unit
 ) {
-    SectionHeader(title = stringResource(R.string.continue_watching), action = stringResource(R.string.see_all))
-    if (items.isEmpty() && allCatalog.isEmpty()) {
-        EmptyContinueWatching(onOpenShorts)
-        return
+    // Only show Continue Watching if user has actually watched something
+    if (items.isEmpty()) {
+        return  // Don't show the section at all
     }
-    // Show real continue-watching items; pad with catalog items rendered as pseudo-continue cards
-    val realItems = items
-    val paddingItems = if (realItems.isEmpty()) allCatalog.take(6) else emptyList()
+    
+    SectionHeader(title = stringResource(R.string.continue_watching), action = stringResource(R.string.see_all))
     LazyRow(
         contentPadding = PaddingValues(horizontal = 18.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        items(realItems) { item -> ContinueCard(item, onOpenShorts) }
-        items(paddingItems) { drama ->
-            ContinueCardFromDrama(drama, onOpenShorts)
-        }
+        items(items) { item -> ContinueCard(item, onOpenShorts) }
     }
 }
 
