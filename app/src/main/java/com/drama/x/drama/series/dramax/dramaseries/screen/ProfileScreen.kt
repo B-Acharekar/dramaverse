@@ -198,17 +198,16 @@ fun ProfileScreen(
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
             item {
-                val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-                DramaXTopAppBar(topInset = topInset)
+                ProfileTopBar()
             }
             item { ProfileStatsPanel(stats = dynamicStats) }
 
             item { SectionLabel("ACCOUNT ACTIVITY") }
             item {
                 SettingsCard {
-                    SettingsRow(Icons.Outlined.History, R.string.watch_history, onClick = onWatchHistory)
+                    SettingsRow(Icons.Outlined.History, R.string.watch_history, onClick = onLibrary)
                     RowDivider()
-                    SettingsRow(Icons.Outlined.BookmarkBorder, R.string.my_watchlist, onClick = onMyWatchlist)
+                    SettingsRow(Icons.Outlined.BookmarkBorder, R.string.my_watchlist, onClick = onLibrary)
                 }
             }
 
@@ -1013,6 +1012,30 @@ private fun LanguagePickerSelectionRing(selected: Boolean) {
                     .background(Color.White, CircleShape)
             )
         }
+    }
+}
+
+@Composable
+private fun ProfileTopBar() {
+    val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp + topInset)
+            .background(Color(0xFF0C0808))
+            .padding(top = topInset)
+            .border(width = 1.dp, color = Color(0x1AFFFFFF))
+            .padding(horizontal = 18.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Profile",
+            color = Color.White,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.ExtraBold,
+            letterSpacing = 0.sp
+        )
+        Spacer(modifier = Modifier.weight(1f))
     }
 }
 
