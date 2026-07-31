@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -69,9 +70,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-
-
-
+import android.os.Build
+import androidx.annotation.RequiresApi
 
 
 private val BgColor = Color(0xFF131315)
@@ -236,11 +236,12 @@ fun ProfileScreen(
                     })
                     RowDivider()
                     SettingsRow(Icons.Outlined.AlternateEmail, R.string.privacy_policy, onClick = {
-                        showPrivacyDialog = true
+                        context.openPrivacyPolicy()
                         onPrivacyPolicy()
                     })
                 }
             }
+            item { AppVersionFooter(versionLabel = context.appVersionLabel()) }
         }
     }
 
@@ -447,7 +448,8 @@ private fun RateUsDialog(
                     .padding(horizontal = 40.dp)
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(18.dp))
-                    .background(Color.White)
+                    .background(Color(0xFF16121A))
+                    .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(26.dp))
                     .clickable(onClick = {})
                     .padding(horizontal = 24.dp, vertical = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -470,15 +472,15 @@ private fun RateUsDialog(
                     )
                 }
                 Text(
-                    text = "Enjoying Dramax?",
-                    color = Color.Black,
+                    text = "Enjoying DramaX?",
+                    color = Color.White,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.ExtraBold,
                     letterSpacing = 0.sp
                 )
                 Text(
                     text = "Your review will improve the\nquality of this application",
-                    color = Color(0xFF787174),
+                    color = Color.White,
                     fontSize = 14.sp,
                     lineHeight = 18.sp,
                     textAlign = TextAlign.Center,
@@ -1024,7 +1026,17 @@ private fun ProfileTopBar() {
     )
 }
 
-
+private fun Context.openPrivacyPolicy() {
+    val intent = Intent(
+        Intent.ACTION_VIEW,
+        android.net.Uri.parse("https://sites.google.com/view/dramaxshortdramaseries/home")
+    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    try {
+        startActivity(intent)
+    } catch (e: android.content.ActivityNotFoundException) {
+        // No browser/app available to handle the URL — nothing further to fall back to here.
+    }
+}
 
 private fun Context.shareApp() {
     val shareIntent = Intent(Intent.ACTION_SEND)
@@ -1043,6 +1055,23 @@ private fun Context.openPlayStoreRating() {
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     runCatching { startActivity(marketIntent) }
         .onFailure { runCatching { startActivity(webIntent) } }
+}
+
+@RequiresApi(Build.VERSION_CODES.P)
+private fun Context.appVersionLabel(): String {
+    return try {
+        val packageInfo = packageManager.getPackageInfo(packageName, 0)
+        val versionName = packageInfo.versionName ?: "—"
+        val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            packageInfo.longVersionCode
+        } else {
+            @Suppress("DEPRECATION")
+            packageInfo.versionCode.toLong()
+        }
+        "v$versionName ($versionCode)"
+    } catch (e: PackageManager.NameNotFoundException) {
+        "—"
+    }
 }
 
 private fun ProfileStats.watchTimeLabel(): String {
@@ -1117,3 +1146,20 @@ fun LanguageChangeDialog(
     }
 }
 
+@Composable
+private fun AppVersionFooter(versionLabel: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 28.dp, bottom = 12.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = versionLabel,
+            color = SectionLabelColor,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            letterSpacing = 0.sp
+        )
+    }
+}
