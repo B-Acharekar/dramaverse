@@ -82,6 +82,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -356,7 +357,8 @@ fun ShortsScreen(
                             playbackSpeed = when (playbackSpeed) {
                                 1f -> 1.25f
                                 1.25f -> 1.5f
-                                1.5f -> 2f
+                                1.5f -> 1.75f
+                                1.75f -> 2f
                                 else -> 1f
                             }
                         },
@@ -696,11 +698,16 @@ private fun ShortsPage(
                     if (ccEnabled && selectedSubtitleUrl.isNotBlank()) Gold else Color.White,
                     onClick = {
                         if (item.subtitleTracks.size > 1) {
-                            if (!ccEnabled && selectedSubtitleUrl.isBlank()) {
-                                selectedSubtitleUrl = item.subtitleTracks.firstOrNull()?.url.orEmpty()
+                            if (ccEnabled) {
+                                onToggleCc()
+                                showSubtitleOptions = false
+                            } else {
+                                if (selectedSubtitleUrl.isBlank()) {
+                                    selectedSubtitleUrl = item.subtitleTracks.firstOrNull()?.url.orEmpty()
+                                }
+                                onToggleCc()
+                                showSubtitleOptions = true
                             }
-                            if (!ccEnabled) onToggleCc()
-                            showSubtitleOptions = !showSubtitleOptions
                         } else {
                             if (!ccEnabled && selectedSubtitleUrl.isBlank()) {
                                 selectedSubtitleUrl = item.subtitleTracks.firstOrNull()?.url.orEmpty()
@@ -751,6 +758,7 @@ private fun ShortsPage(
             ComposeSubtitleOverlay(
                 text = visibleSubtitleText,
                 controlsVisible = controlsVisible,
+                fontSize = subtitleSize.toFontSizeSp(),
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
@@ -910,7 +918,7 @@ private fun ShortsTopBar(
         Spacer(Modifier.weight(1f))
         if (showActions) {
             HeaderCircleAction(
-                icon = Icons.Filled.ClosedCaption,
+                icon = Icons.Filled.Feedback,
                 onClick = onFeedbackClick
             )
             Spacer(Modifier.width(8.dp))
@@ -1082,13 +1090,14 @@ private fun ShortsCaption(
 private fun ComposeSubtitleOverlay(
     text: String,
     controlsVisible: Boolean,
+    fontSize: androidx.compose.ui.unit.TextUnit,
     modifier: Modifier
 ) {
     Text(
         text = text,
         color = Color.White,
-        fontSize = 16.sp,
-        lineHeight = 20.sp,
+        fontSize = fontSize,
+        lineHeight = fontSize.value.times(1.25f).sp,
         fontWeight = FontWeight.SemiBold,
         textAlign = TextAlign.Center,
         letterSpacing = 0.sp,
@@ -1099,6 +1108,12 @@ private fun ComposeSubtitleOverlay(
             .background(Color(0xB8000000))
             .padding(horizontal = 8.dp, vertical = 3.dp)
     )
+}
+
+private fun SubtitleSize.toFontSizeSp(): androidx.compose.ui.unit.TextUnit = when (this) {
+    SubtitleSize.SMALL -> 14.sp
+    SubtitleSize.MEDIUM -> 18.sp
+    SubtitleSize.LARGE -> 22.sp
 }
 
 @Composable
@@ -1496,6 +1511,7 @@ private fun speedLabel(speed: Float): String {
         1f -> "1x"
         1.25f -> "1.25x"
         1.5f -> "1.5x"
+        1.75f -> "1.75x"
         2f -> "2x"
         else -> "${speed}x"
     }
@@ -1903,15 +1919,34 @@ private fun SubtitleOptionsSheet(
                         .clip(RoundedCornerShape(2.dp))
                         .background(Color(0x33FFFFFF))
                 ) {
-                    val itemCount = tracks.size.coerceAtLeast(1)
-                    val visibleFraction = (5f / itemCount).coerceIn(0.15f, 1f)
-                    val firstVisible = listState.firstVisibleItemIndex
-                    val scrollFraction = if (itemCount <= 1) 0f else firstVisible / (itemCount - 1).toFloat()
+                    val scrollProgress by remember {
+                        derivedStateOf {
+                            val info = listState.layoutInfo
+                            val visibleItems = info.visibleItemsInfo
+                            val totalCount = info.totalItemsCount
+                            if (visibleItems.isEmpty() || totalCount == 0) {
+                                0f
+                            } else {
+                                val firstItem = visibleItems.first()
+                                val itemHeight = firstItem.size.takeIf { it > 0 }?.toFloat() ?: 1f
+                                val scrolledItemUnits = firstItem.index + (-firstItem.offset / itemHeight)
+                                val maxScrollableUnits = (totalCount - visibleItems.size).coerceAtLeast(1)
+                                (scrolledItemUnits / maxScrollableUnits).coerceIn(0f, 1f)
+                            }
+                        }
+                    }
+                    val visibleFraction by remember {
+                        derivedStateOf {
+                            val info = listState.layoutInfo
+                            val totalCount = info.totalItemsCount.coerceAtLeast(1)
+                            (info.visibleItemsInfo.size.toFloat() / totalCount).coerceIn(0.15f, 1f)
+                        }
+                    }
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height((300.dp.value * visibleFraction).dp)
-                            .padding(top = (300.dp.value * (1f - visibleFraction) * scrollFraction).dp)
+                            .padding(top = (300.dp.value * (1f - visibleFraction) * scrollProgress).dp)
                             .clip(RoundedCornerShape(2.dp))
                             .background(Gold)
                     )

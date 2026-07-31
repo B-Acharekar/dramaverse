@@ -74,6 +74,15 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.WifiOff
+import androidx.compose.material3.Icon
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 
 private const val MIN_SPLASH_BANNER_VISIBLE_MS = 2_200L
 private const val MAX_SPLASH_BANNER_WAIT_MS = 6_000L
@@ -92,6 +101,16 @@ fun CustomSplashScreen(
     val bannerVisibleSinceMs = remember { AtomicLong(0L) }
     val mainHandler = remember { Handler(Looper.getMainLooper()) }
     var splashAdsConfigReady by remember { mutableStateOf(false) }
+
+    // Poll connectivity so the blocking dialog appears/disappears live as the
+    // user toggles Wi-Fi/mobile data, without needing to relaunch the screen.
+    var isConnected by remember { mutableStateOf(isNetworkAvailable(context)) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            isConnected = isNetworkAvailable(context)
+            delay(1000L)
+        }
+    }
 
     DisposableEffect(activity) {
         if (activity == null) return@DisposableEffect onDispose {}
@@ -156,62 +175,8 @@ fun CustomSplashScreen(
         }
     }
 
-//    LaunchedEffect(activity) {
-//        logStage("SPLASH_FLOW_START")
-//        if (activity == null) {
-//            continueFromSplash("missing_activity")
-//            return@LaunchedEffect
-//        }
-//
-//        AdsInitializationState.awaitMobileAdsReady(timeoutMs = 4_000L).also { ready ->
-//            Log.d(ADS_TAG, "SPLASH_MOBILE_ADS_READY=$ready elapsedMs=${SystemClock.elapsedRealtime() - startMs}")
-//        }
-//
-//        logStage("SPLASH_REMOTE_CONFIG_START")
-//        val remoteResult = RemoteConfigUtils.fetchAndApply(
-//            RemoteConfigUtils.configure(context.applicationContext),
-//            timeoutMs = 3_000L
-//        )
-//        Log.d(ADS_TAG, "SPLASH_REMOTE_CONFIG_RESULT success=$remoteResult elapsedMs=${SystemClock.elapsedRealtime() - startMs}")
-//        bannerVisibleSinceMs.set(SystemClock.elapsedRealtime())
-//        splashAdsConfigReady = true
-//
-//        AdsManager.loadSplashInterstitial(
-//            activity = activity,
-//            uninstallFlow = uninstallFlow,
-//            onLoaded = {
-//                if (interstitialResolved.compareAndSet(false, true) && !hasNavigated.get()) {
-//                    Log.d(ADS_TAG, "SPLASH_INTER_READY waiting_for_erain_banner")
-//                    showInterstitialAfterBannerWindow(activity)
-//                } else {
-//                    Log.d(ADS_TAG, "SPLASH_NAVIGATION_SKIPPED_DUPLICATE reason=interstitial_loaded_after_resolution")
-//                }
-//            },
-//            onFailed = {
-//                if (interstitialResolved.compareAndSet(false, true)) {
-//                    val bannerElapsedMs = SystemClock.elapsedRealtime() - bannerVisibleSinceMs.get()
-//                    val continueDelayMs = (MIN_SPLASH_BANNER_VISIBLE_MS - bannerElapsedMs).coerceAtLeast(0L)
-//                    Log.d(
-//                        ADS_TAG,
-//                        "SPLASH_INTER_FAILED delayingNavigationForBannerMs=$continueDelayMs bannerElapsedMs=$bannerElapsedMs"
-//                    )
-//                    mainHandler.postDelayed({
-//                        continueFromSplash("interstitial_failed_or_ineligible")
-//                    }, continueDelayMs)
-//                }
-//            }
-//        )
-//        AdsManager.loadNativeLanguage(activity, firstVisit = true)
-//        AdsManager.preloadOnboardingAds(activity, firstVisit = true)
-//
-//        delay(30_000L)
-//        if (interstitialResolved.compareAndSet(false, true) && !hasNavigated.get()) {
-//            logStage("SPLASH_INTER_TIMEOUT")
-//            continueFromSplash("interstitial_timeout")
-//        }
-//    }
-
-    LaunchedEffect(activity) {
+    LaunchedEffect(activity,isConnected) {
+        if (!isConnected) return@LaunchedEffect
         logStage("SPLASH_FLOW_START")
         if (activity == null) {
             continueFromSplash("missing_activity")
@@ -372,7 +337,7 @@ fun CustomSplashScreen(
             Spacer(modifier = Modifier.weight(1.35f))
         }
 
-        if (splashAdsConfigReady) {
+        if (splashAdsConfigReady && isConnected) {
             SplashBanner(
                 uninstallFlow = uninstallFlow,
                 onBannerLoaded = {
@@ -384,6 +349,11 @@ fun CustomSplashScreen(
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .navigationBarsPadding()
+            )
+        }
+        if (!isConnected) {
+            NoInternetDialog(
+                onConnectClick = { context.openWifiSettings() }
             )
         }
     }
@@ -541,6 +511,97 @@ private fun LoadingDots() {
                         shape = CircleShape
                     )
             )
+        }
+    }
+}
+
+
+@Composable
+private fun NoInternetDialog(
+    onConnectClick: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = {}, // no-op: intentionally non-dismissible
+        properties = DialogProperties(
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(0.84f)
+                .clip(RoundedCornerShape(26.dp))
+                .background(Color(0xFF16121A))
+                .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(26.dp))
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                Icons.Filled.WifiOff,
+                contentDescription = null,
+                tint = Color(0xFFFF5168),
+                modifier = Modifier.size(52.dp)
+            )
+
+            Spacer(Modifier.height(18.dp))
+
+            Text(
+                stringResource(R.string.no_internet_title),
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            Text(
+                stringResource(R.string.no_internet_desc),
+                color = Color(0xFFCDB8BF),
+                fontSize = 13.sp,
+                lineHeight = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(Modifier.height(22.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(brush = Brush.linearGradient(listOf(Color(0xFFA40024),Color(0xFF000000))))
+                    .clickable(onClick = onConnectClick),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    stringResource(R.string.connect_internet),
+                    color = Color.White,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.ExtraBold
+                )
+            }
+        }
+    }
+}
+
+private fun Context.openWifiSettings() {
+    try {
+        startActivity(
+            android.content.Intent(android.provider.Settings.ACTION_WIFI_SETTINGS)
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    } catch (e: android.content.ActivityNotFoundException) {
+        // Fallback for OEMs/Android versions where the Wi-Fi settings screen
+        // isn't directly reachable — send them to general connectivity settings instead.
+        try {
+            startActivity(
+                android.content.Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS)
+                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+        } catch (e2: android.content.ActivityNotFoundException) {
+            // Nothing to fall back to further — device has no reachable settings screen.
         }
     }
 }
