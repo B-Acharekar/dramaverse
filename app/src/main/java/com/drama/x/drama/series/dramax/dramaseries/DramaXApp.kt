@@ -21,6 +21,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drama.x.drama.series.dramax.dramaseries.model.AppStep
 import com.drama.x.drama.series.dramax.dramaseries.model.AppViewModel
 import com.drama.x.drama.series.dramax.dramaseries.screen.CustomSplashScreen
+import com.drama.x.drama.series.dramax.dramaseries.screen.EpisodeScreen
 import com.drama.x.drama.series.dramax.dramaseries.screen.LanguageScreen
 import com.drama.x.drama.series.dramax.dramaseries.screen.OnboardingScreen
 import com.drama.x.drama.series.dramax.dramaseries.screen.ConfirmUninstallScreen
@@ -131,7 +132,14 @@ fun DramaXApp(
 
         AppStep.Home -> HomeScreen(
             backendBaseUrl = uiState.backendBaseUrl,
-            onOpenShorts = viewModel::openShorts,
+            onOpenEpisodes = { filmId ->
+                // Open Episodes screen when clicking a film
+                viewModel.openEpisodes(filmId)
+            },
+            onOpenShorts = {
+                // Open generic Shorts screen for casual browsing
+                viewModel.openShorts(null)
+            },
             onLibrary = viewModel::openLibrary,
             onSearch = viewModel::openSearch,
             onRewards = viewModel::openRewards,
@@ -142,6 +150,16 @@ fun DramaXApp(
         AppStep.Shorts -> ShortsScreen(
             backendBaseUrl = uiState.backendBaseUrl,
             initialFilmId = uiState.selectedShortFilmId,
+            onBack = ::openHomeWithBackAd,
+            onHome = ::openHomeWithBackAd,
+            onLibrary = viewModel::openLibrary,
+            onRewards = viewModel::openRewards,
+            onProfile = viewModel::openProfile
+        )
+
+        AppStep.Episodes -> EpisodeScreen(
+            backendBaseUrl = uiState.backendBaseUrl,
+            filmId = uiState.selectedEpisodeFilmId,
             onBack = ::openHomeWithBackAd,
             onHome = ::openHomeWithBackAd,
             onLibrary = viewModel::openLibrary,

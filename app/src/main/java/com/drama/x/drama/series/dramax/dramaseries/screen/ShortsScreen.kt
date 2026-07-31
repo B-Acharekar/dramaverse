@@ -215,22 +215,27 @@ fun ShortsScreen(
             viewModel.ensurePlayback(currentVideoPage.itemIndex, backendBaseUrl)
             viewModel.loadMoreIfNeeded(currentVideoPage.itemIndex, backendBaseUrl)
         }
+        
+        // Prefetch adjacent videos for smooth transitions
+        val nextPage = pagerState.currentPage + 1
+        if (nextPage < feedPages.size) {
+            val nextFeedPage = feedPages.getOrNull(nextPage)
+            if (nextFeedPage is ShortsFeedPage.Video) {
+                viewModel.ensurePlayback(nextFeedPage.itemIndex, backendBaseUrl)
+            }
+        }
+        
+        val prevPage = pagerState.currentPage - 1
+        if (prevPage >= 0) {
+            val prevFeedPage = feedPages.getOrNull(prevPage)
+            if (prevFeedPage is ShortsFeedPage.Video) {
+                viewModel.ensurePlayback(prevFeedPage.itemIndex, backendBaseUrl)
+            }
+        }
     }
 
     LaunchedEffect(backendBaseUrl, initialFilmId) {
         viewModel.loadInitial(backendBaseUrl, initialFilmId)
-    }
-
-    LaunchedEffect(pagerState.currentPage, feedPages.size) {
-        controlsVisible = true
-        isPlaying = currentVideoPage != null
-        showPlaybackOptions = false
-        showFeedbackForm = false
-        ccEnabled = currentVideoPage?.item?.subtitleTracks?.isNotEmpty() == true
-        if (currentVideoPage != null) {
-            viewModel.ensurePlayback(currentVideoPage.itemIndex, backendBaseUrl)
-            viewModel.loadMoreIfNeeded(currentVideoPage.itemIndex, backendBaseUrl)
-        }
     }
     
     // Track if any video is showing an ad to pause playback
@@ -1661,7 +1666,7 @@ private fun EpisodeOptionsSheet(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(episodes) { episode ->
+                items(episodes, key = { it }) { episode ->
                     EpisodeCell(
                         episode = episode,
                         isPlaying = episode == currentEpisode,
@@ -1865,7 +1870,7 @@ private fun SubtitleOptionsSheet(
                         .height(300.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    items(tracks) { track ->
+                    items(tracks, key = { it.url }) { track ->
                         val selected = track.url == pendingUrl
                         Row(
                             modifier = Modifier

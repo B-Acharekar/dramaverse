@@ -28,6 +28,7 @@ enum class AppStep {
     Language,
     Onboarding,
     Home,
+    Episodes,
     Shorts,
     Library,
     Search,
@@ -45,7 +46,10 @@ data class AppUiState(
     val delayDoneLanguage: Boolean = false,
     val backendBaseUrl: String = DEFAULT_BACKEND_URL,
     val selectedLanguage: String? = null,
+    val selectedEpisodeFilmId: Int? = null,
+    val selectedEpisodeNumber: Int? = null,
     val selectedShortFilmId: Int? = null,
+    val isEpisodeMode: Boolean = false,
     val searchQuery: String = "",
     val recreateRequested: Boolean = false,
     val isFirstLaunch: Boolean = true
@@ -178,6 +182,22 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 it.copy(
                     currentStep = AppStep.Shorts,
                     selectedShortFilmId = filmId
+                )
+            }
+        }
+    }
+    
+    fun openEpisodes(filmId: Int?, episodeNumber: Int? = null) {
+        // Open episodes screen for watching series
+        viewModelScope.launch {
+            val now = System.currentTimeMillis()
+            if (now - lastNavigationTimeMs < NAVIGATION_DEBOUNCE_MS) return@launch
+            lastNavigationTimeMs = now
+            _uiState.update {
+                it.copy(
+                    currentStep = AppStep.Episodes,
+                    selectedEpisodeFilmId = filmId,
+                    selectedEpisodeNumber = episodeNumber ?: 1
                 )
             }
         }

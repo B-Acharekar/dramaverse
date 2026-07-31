@@ -3,8 +3,6 @@ package com.drama.x.drama.series.dramax.dramaseries.screen
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -96,9 +94,8 @@ import com.drama.x.drama.series.dramax.dramaseries.data.allCatalogItems
 import com.drama.x.drama.series.dramax.dramaseries.model.HomeViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
-import java.net.URL
 import com.drama.x.drama.series.dramax.dramaseries.R
+import coil.compose.AsyncImage
 
 
 
@@ -145,7 +142,8 @@ private enum class CategorySort(val label: String) {
 @Composable
 fun HomeScreen(
     backendBaseUrl: String,
-    onOpenShorts: (Int?) -> Unit,
+    onOpenEpisodes: (Int?) -> Unit,
+    onOpenShorts: () -> Unit,
     onLibrary: () -> Unit,
     onSearch: (String) -> Unit,
     onRewards: () -> Unit,
@@ -185,20 +183,16 @@ fun HomeScreen(
         }
     }
 
-    fun openShortsWithHomeAd(filmId: Int?) {
-        val currentActivity = activity
-        if (currentActivity == null) {
-            onOpenShorts(filmId)
+    fun openEpisodesWithHomeAd(filmId: Int?) {
+        if (filmId == null || filmId == 0) {
+            // If no film ID, open generic shorts
+            onOpenShorts()
             return
         }
-        // Reduced timeout from 6s to 3.5s for faster navigation, with fallback
-        AdsManager.loadAndShowInterstitial(
-            activity = currentActivity,
-            placementName = "inter_home",
-            config = AdRemoteConfig.interHome,
-            timeoutMs = 3_500L,
-            onFinished = { onOpenShorts(filmId) }
-        )
+        // No interstitial on the way IN — navigate directly so the user
+        // reaches the episode screen instantly. The inter_back ad fires
+        // on the way out (handled in DramaXApp.openHomeWithBackAd).
+        onOpenEpisodes(filmId)
     }
 
     Box(
@@ -219,7 +213,8 @@ fun HomeScreen(
                 savedFilms = uiState.savedFilms,
                 onSearchClick = { onSearch("hot") },
                 onNotifications = onNotifications,
-                onOpenShorts = ::openShortsWithHomeAd,
+                onOpenEpisodes = ::openEpisodesWithHomeAd,
+                onOpenShorts = onOpenShorts,
                 onLibrary = onLibrary,
                 onTabSelected = { selectedTab = it },
                 audienceFilter = selectedAudienceFilter,
@@ -237,7 +232,7 @@ fun HomeScreen(
         BottomNavigationBar(
             selected = "Home",
             onHome = {},
-            onShorts = { openShortsWithHomeAd(null) },
+            onShorts = onOpenShorts,
             onLibrary = onLibrary,
             onRewards = onRewards,
             onProfile = onProfile,
@@ -282,7 +277,8 @@ private fun HomeContent(
     savedFilms: List<DramaItem>,
     onSearchClick: () -> Unit,
     onNotifications: () -> Unit,
-    onOpenShorts: (Int?) -> Unit,
+    onOpenEpisodes: (Int?) -> Unit,
+    onOpenShorts: () -> Unit,
     onLibrary: () -> Unit,
     onTabSelected: (HomeTab) -> Unit,
     audienceFilter: AudienceFilter,
@@ -299,25 +295,28 @@ private fun HomeContent(
     val bottomContentPadding =
         96.dp + if (bottomBannerVisible) AppBottomBannerHeight else 0.dp
 
-    // Memoize expensive computations to prevent freeze on every recomposition
     val heroItems = remember(feed) { feed.heroItems() }
     val allCatalog = remember(feed) { feed.allCatalogItems() }
     val popularItems = remember(feed.trending, feed.moreLikeThis, allCatalog) {
         (feed.trending + feed.moreLikeThis + allCatalog)
             .filter { it.title.isNotBlank() }
-            .distinctBy { it.uniqueKey() }
+            .associateBy { it.uniqueKey() }.values.toList()  // O(n) instead of O(n²) distinctBy
     }
     val newItems = remember(feed.newReleases) {
-        feed.newReleases.filter { it.title.isNotBlank() }.distinctBy { it.uniqueKey() }
+        feed.newReleases.filter { it.title.isNotBlank() }
+            .associateBy { it.uniqueKey() }.values.toList()
     }
     val rankingItems = remember(feed.ranking) {
-        feed.ranking.filter { it.title.isNotBlank() }.distinctBy { it.uniqueKey() }
+        feed.ranking.filter { it.title.isNotBlank() }
+            .associateBy { it.uniqueKey() }.values.toList()
     }
     val categoryItems = remember(feed.categories) {
-        feed.categories.filter { it.title.isNotBlank() }.distinctBy { it.uniqueKey() }
+        feed.categories.filter { it.title.isNotBlank() }
+            .associateBy { it.uniqueKey() }.values.toList()
     }
     val featuredItems = remember(feed.featured, popularItems) {
-        feed.featured.filter { it.title.isNotBlank() }.distinctBy { it.uniqueKey() }
+        feed.featured.filter { it.title.isNotBlank() }
+            .associateBy { it.uniqueKey() }.values.toList()
             .take(9)  // Limit featured to exactly 9 items
             .ifEmpty { popularItems.take(9) }
     }
@@ -335,7 +334,7 @@ private fun HomeContent(
                 allCatalog = allCatalog,
                 savedFilmIds = savedFilmIds,
                 savedFilms = savedFilms,
-                onOpenShorts = onOpenShorts,
+                onOpenEpisodes = onOpenEpisodes,
                 onLibrary = onLibrary,
                 nativeSearchAdState = nativeSearchAdState,
                 nativeHomeAdState = nativeHomeAdState,
@@ -345,13 +344,13 @@ private fun HomeContent(
             HomeTab.New -> newTab(
                 items = newItems,
                 nativeSearchAdState = nativeSearchAdState,
-                onOpenShorts = onOpenShorts
+                onOpenEpisodes = onOpenEpisodes
             )
 
             HomeTab.Ranking -> rankingTab(
                 items = rankingItems,
                 nativeSearchAdState = nativeSearchAdState,
-                onOpenShorts = onOpenShorts
+                onOpenEpisodes = onOpenEpisodes
             )
 
             HomeTab.Categories -> categoriesTab(
@@ -362,7 +361,7 @@ private fun HomeContent(
                 categorySort = categorySort,
                 onOpenSheet = onOpenCategorySheet,
                 nativeSearchAdState = nativeSearchAdState,
-                onOpenShorts = onOpenShorts
+                onOpenEpisodes = onOpenEpisodes
             )
         }
     }
@@ -384,7 +383,7 @@ private fun LazyListScope.popularTab(
     allCatalog: List<DramaItem>,
     savedFilmIds: Set<Int>,
     savedFilms: List<DramaItem>,
-    onOpenShorts: (Int?) -> Unit,
+    onOpenEpisodes: (Int?) -> Unit,
     onLibrary: () -> Unit,
     nativeSearchAdState: NativeAdState,
     nativeHomeAdState: NativeAdState,
@@ -394,7 +393,7 @@ private fun LazyListScope.popularTab(
         HeroCarousel(
             items = heroItems,
             savedFilmIds = savedFilmIds,
-            onOpenShorts = onOpenShorts,
+            onOpenEpisodes = onOpenEpisodes,
             onToggleWatchList = onToggleWatchList
         )
     }
@@ -407,9 +406,9 @@ private fun LazyListScope.popularTab(
     }
     item {
         SectionHeader(title = "Featured Highlights")
-        CompactPosterGrid(items = featuredItems, columns = 3, onOpenShorts = onOpenShorts)
+        CompactPosterGrid(items = featuredItems, columns = 3, onOpenEpisodes = onOpenEpisodes)
     }
-    item { ContinueWatching(feed.continueWatching, allCatalog, onOpenShorts) }
+    item { ContinueWatching(feed.continueWatching, allCatalog, onOpenEpisodes) }
     item {
         HomeSmallNativeAd(
             placementName = "native_home",
@@ -419,7 +418,7 @@ private fun LazyListScope.popularTab(
     }
     item {
         SectionHeader(title = "My Favorites", action = stringResource(R.string.see_all), onAction = onLibrary)
-        FavoriteGrid(items = savedFilms.take(4), onOpenShorts = onOpenShorts)
+        FavoriteGrid(items = savedFilms.take(4), onOpenEpisodes = onOpenEpisodes)
     }
     item { Spacer(modifier = Modifier.height(14.dp)) }
 }
@@ -432,13 +431,13 @@ private fun badgesFor(count: Int): List<String> =
 private fun LazyListScope.newTab(
     items: List<DramaItem>,
     nativeSearchAdState: NativeAdState,
-    onOpenShorts: (Int?) -> Unit
+    onOpenEpisodes: (Int?) -> Unit
 ) {
     val firstChunk = items.take(4)
     val restChunk = items.drop(4)
     item {
         AccentTitle("Fresh on DramaX")
-        TallPosterGrid(items = firstChunk, onOpenShorts = onOpenShorts, badges = badgesFor(firstChunk.size))
+        TallPosterGrid(items = firstChunk, onOpenEpisodes = onOpenEpisodes, badges = badgesFor(firstChunk.size))
         HomeSmallNativeAd(
             placementName = "native_search",
             state = nativeSearchAdState,
@@ -446,7 +445,7 @@ private fun LazyListScope.newTab(
         )
         TallPosterGrid(
             items = restChunk,
-            onOpenShorts = onOpenShorts,
+            onOpenEpisodes = onOpenEpisodes,
             badges = badgesFor(restChunk.size)
         )
         Spacer(Modifier.height(12.dp))
@@ -456,7 +455,7 @@ private fun LazyListScope.newTab(
 private fun LazyListScope.rankingTab(
     items: List<DramaItem>,
     nativeSearchAdState: NativeAdState,
-    onOpenShorts: (Int?) -> Unit
+    onOpenEpisodes: (Int?) -> Unit
 ) {
     item {
         Row(
@@ -470,8 +469,8 @@ private fun LazyListScope.rankingTab(
             Text("Updated 3h ago", color = Color(0xFF9CA3AF), fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
         }
     }
-    items(items.take(3).withIndex().toList()) { (index, item) ->
-        RankingHeroRow(rank = index + 1, item = item, onOpenShorts = onOpenShorts)
+    items(items.take(3).withIndex().toList(), key = { (_, item) -> item.uniqueKey() }) { (index, item) ->
+        RankingHeroRow(rank = index + 1, item = item, onOpenEpisodes = onOpenEpisodes)
     }
     item {
         HomeSmallNativeAd(
@@ -480,8 +479,8 @@ private fun LazyListScope.rankingTab(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
         )
     }
-    items(items.drop(3).take(17).withIndex().toList()) { (index, item) ->
-        RankingListRow(rank = index + 4, item = item, onOpenShorts = onOpenShorts)
+    items(items.drop(3).take(17).withIndex().toList(), key = { (_, item) -> item.uniqueKey() }) { (index, item) ->
+        RankingListRow(rank = index + 4, item = item, onOpenEpisodes = onOpenEpisodes)
     }
     item { Spacer(Modifier.height(12.dp)) }
 }
@@ -494,7 +493,7 @@ private fun LazyListScope.categoriesTab(
     categorySort: CategorySort,
     onOpenSheet: (CategorySheet) -> Unit,
     nativeSearchAdState: NativeAdState,
-    onOpenShorts: (Int?) -> Unit
+    onOpenEpisodes: (Int?) -> Unit
 ) {
     item {
         Row(
@@ -508,16 +507,16 @@ private fun LazyListScope.categoriesTab(
             ToolPill(Icons.AutoMirrored.Filled.Sort, "SORT BY", onClick = { onOpenSheet(CategorySheet.Sort) })
         }
         val categoryItems = items
-            .distinctBy { it.uniqueKey() }
+            .associateBy { it.uniqueKey() }.values.toList()  // O(n) instead of O(n²)
             .filterByCategoryControls(audienceFilter, categoryFilter)
             .sortForCategory(categorySort)
-        CompactPosterGrid(items = categoryItems.take(6), columns = 3, onOpenShorts = onOpenShorts)
+        CompactPosterGrid(items = categoryItems.take(6), columns = 3, onOpenEpisodes = onOpenEpisodes)
         HomeSmallNativeAd(
             placementName = "native_search",
             state = nativeSearchAdState,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)
         )
-        CompactPosterGrid(items = categoryItems.drop(6), columns = 3, onOpenShorts = onOpenShorts)
+        CompactPosterGrid(items = categoryItems.drop(6), columns = 3, onOpenEpisodes = onOpenEpisodes)
     }
 }
 
@@ -525,7 +524,7 @@ private fun LazyListScope.categoriesTab(
 private fun HeroCarousel(
     items: List<DramaItem>,
     savedFilmIds: Set<Int>,
-    onOpenShorts: (Int?) -> Unit,
+    onOpenEpisodes: (Int?) -> Unit,
     onToggleWatchList: (DramaItem, Boolean) -> Unit
 ) {
     val pageCount = 10_000
@@ -564,7 +563,7 @@ private fun HeroCarousel(
                 selectedIndex = pagerState.currentPage.floorMod(items.size),
                 itemCount = items.size,
                 saved = items[page.floorMod(items.size)].id in savedFilmIds,
-                onOpenShorts = onOpenShorts,
+                onOpenEpisodes = onOpenEpisodes,
                 onToggleWatchList = onToggleWatchList
             )
         }
@@ -577,7 +576,7 @@ private fun HeroSection(
     selectedIndex: Int,
     itemCount: Int,
     saved: Boolean,
-    onOpenShorts: (Int?) -> Unit,
+    onOpenEpisodes: (Int?) -> Unit,
     onToggleWatchList: (DramaItem, Boolean) -> Unit
 ) {
     val filmId = item.id.takeIf { it != 0 }
@@ -585,7 +584,7 @@ private fun HeroSection(
         modifier = Modifier
             .fillMaxWidth()
             .height(300.dp)
-            .clickable { onOpenShorts(filmId) }
+            .clickable { onOpenEpisodes(filmId) }
     ) {
         NetworkDramaImage(item.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, item.title)
         Box(
@@ -643,7 +642,7 @@ private fun HeroSection(
             )
             Spacer(modifier = Modifier.height(20.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                WatchButton(width = 135, height = 35, onClick = { onOpenShorts(filmId) })
+                WatchButton(width = 135, height = 35, onClick = { onOpenEpisodes(filmId) })
                 Spacer(modifier = Modifier.width(12.dp))
                 PlusButton(
                     saved = saved,
@@ -704,7 +703,7 @@ private fun HomeTopBar(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            items(HomeTab.values().toList()) { tab ->
+            items(HomeTab.values().toList(), key = { it.label }) { tab ->
                 HomeTabChip(
                     label = tab.label,
                     selected = selectedTab == tab,
@@ -858,29 +857,12 @@ fun DramaXTopAppBar(
 
 @Composable
 private fun HeaderAssetLogo() {
-    val context = LocalContext.current
-    val bitmap by produceState<Bitmap?>(initialValue = null) {
-        value = withContext(Dispatchers.IO) {
-            runCatching {
-                context.assets.open("header-icon.png").use(BitmapFactory::decodeStream)
-            }.getOrNull()
-        }
-    }
-    if (bitmap != null) {
-        Image(
-            bitmap = bitmap!!.asImageBitmap(),
-            contentDescription = null,
-            modifier = Modifier.size(35.dp),
-            contentScale = ContentScale.Fit
-        )
-    } else {
-        Image(
-            painter = painterResource(R.drawable.icon_2),
-            contentDescription = null,
-            modifier = Modifier.size(35.dp),
-            contentScale = ContentScale.Fit
-        )
-    }
+    Image(
+        painter = painterResource(R.drawable.icon_2),
+        contentDescription = null,
+        modifier = Modifier.size(35.dp),
+        contentScale = ContentScale.Fit
+    )
 }
 
 @Composable
@@ -918,7 +900,7 @@ private fun AccentTitle(title: String) {
 private fun CompactPosterGrid(
     items: List<DramaItem>,
     columns: Int,
-    onOpenShorts: (Int?) -> Unit
+    onOpenEpisodes: (Int?) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -931,7 +913,7 @@ private fun CompactPosterGrid(
                 rowItems.forEach { item ->
                     CompactPosterCard(
                         item = item,
-                        onOpenShorts = onOpenShorts,
+                        onOpenEpisodes = onOpenEpisodes,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -946,7 +928,7 @@ private fun CompactPosterGrid(
 @Composable
 private fun CompactPosterCard(
     item: DramaItem,
-    onOpenShorts: (Int?) -> Unit,
+    onOpenEpisodes: (Int?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -966,7 +948,7 @@ private fun CompactPosterCard(
                 ),
                 shape = RoundedCornerShape(8.dp)
             )
-            .clickable { onOpenShorts(item.id.takeIf { it != 0 }) }
+            .clickable { onOpenEpisodes(item.id.takeIf { it != 0 }) }
     ) {
         NetworkDramaImage(item.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, item.title)
         Box(
@@ -1007,7 +989,7 @@ private fun CompactPosterCard(
 @Composable
 private fun TallPosterGrid(
     items: List<DramaItem>,
-    onOpenShorts: (Int?) -> Unit,
+    onOpenEpisodes: (Int?) -> Unit,
     badges: List<String?>
 ) {
     Column(
@@ -1023,7 +1005,7 @@ private fun TallPosterGrid(
                     TallPosterCard(
                         item = item,
                         badge = badges.getOrNull(itemIndex),
-                        onOpenShorts = onOpenShorts,
+                        onOpenEpisodes = onOpenEpisodes,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -1037,7 +1019,7 @@ private fun TallPosterGrid(
 private fun TallPosterCard(
     item: DramaItem,
     badge: String?,
-    onOpenShorts: (Int?) -> Unit,
+    onOpenEpisodes: (Int?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -1057,7 +1039,7 @@ private fun TallPosterCard(
                 ),
                 shape = RoundedCornerShape(8.dp)
             )
-            .clickable { onOpenShorts(item.id.takeIf { it != 0 }) }
+            .clickable { onOpenEpisodes(item.id.takeIf { it != 0 }) }
     ) {
         NetworkDramaImage(item.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, item.title)
         Box(
@@ -1118,21 +1100,21 @@ private fun TallPosterCard(
 @Composable
 private fun FavoriteGrid(
     items: List<DramaItem>,
-    onOpenShorts: (Int?) -> Unit
+    onOpenEpisodes: (Int?) -> Unit
 ) {
     if (items.isEmpty()) {
-        EmptyFavorites(onOpenShorts)
+        EmptyFavorites(onOpenEpisodes)
         return
     }
     TallPosterGrid(
         items = items,
-        onOpenShorts = onOpenShorts,
+        onOpenEpisodes = onOpenEpisodes,
         badges = listOf("HOT", null, "NEW", "NEW")
     )
 }
 
 @Composable
-private fun EmptyFavorites(onOpenShorts: (Int?) -> Unit) {
+private fun EmptyFavorites(onOpenEpisodes: (Int?) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1141,7 +1123,7 @@ private fun EmptyFavorites(onOpenShorts: (Int?) -> Unit) {
             .clip(RoundedCornerShape(12.dp))
             .background(Color(0xFF151318))
             .border(1.dp, Color(0xFF2B252B), RoundedCornerShape(12.dp))
-            .clickable { onOpenShorts(null) }
+            .clickable { onOpenEpisodes(null) }
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -1155,13 +1137,13 @@ private fun EmptyFavorites(onOpenShorts: (Int?) -> Unit) {
 }
 
 @Composable
-private fun RankingHeroRow(rank: Int, item: DramaItem, onOpenShorts: (Int?) -> Unit) {
+private fun RankingHeroRow(rank: Int, item: DramaItem, onOpenEpisodes: (Int?) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
             .height(112.dp)
-            .clickable { onOpenShorts(item.id.takeIf { it != 0 }) },
+            .clickable { onOpenEpisodes(item.id.takeIf { it != 0 }) },
         verticalAlignment = Alignment.CenterVertically
     ) {
         val (textBrush, strokeColor) = when (rank) {
@@ -1252,7 +1234,7 @@ private fun RankingHeroRow(rank: Int, item: DramaItem, onOpenShorts: (Int?) -> U
 }
 
 @Composable
-private fun RankingListRow(rank: Int, item: DramaItem, onOpenShorts: (Int?) -> Unit) {
+private fun RankingListRow(rank: Int, item: DramaItem, onOpenEpisodes: (Int?) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1260,7 +1242,7 @@ private fun RankingListRow(rank: Int, item: DramaItem, onOpenShorts: (Int?) -> U
             .height(88.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(CardPanel)
-            .clickable { onOpenShorts(item.id.takeIf { it != 0 }) }
+            .clickable { onOpenEpisodes(item.id.takeIf { it != 0 }) }
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -1549,7 +1531,7 @@ private fun SortOptionRow(label: String, selected: Boolean, onClick: () -> Unit)
 private fun ContinueWatching(
     items: List<ContinueWatchingItem>,
     allCatalog: List<DramaItem>,
-    onOpenShorts: (Int?) -> Unit
+    onOpenEpisodes: (Int?) -> Unit
 ) {
     // Only show Continue Watching if user has actually watched something
     if (items.isEmpty()) {
@@ -1561,12 +1543,12 @@ private fun ContinueWatching(
         contentPadding = PaddingValues(horizontal = 18.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        items(items) { item -> ContinueCard(item, onOpenShorts) }
+        items(items, key = { item -> "${item.film.id}:${item.episodeNumber}" }) { item -> ContinueCard(item, onOpenEpisodes) }
     }
 }
 
 @Composable
-private fun ContinueCard(item: ContinueWatchingItem, onOpenShorts: (Int?) -> Unit) {
+private fun ContinueCard(item: ContinueWatchingItem, onOpenEpisodes: (Int?) -> Unit) {
     val film = item.film
     val totalEp = film.episodeTotal.coerceAtLeast(item.episodeNumber)
     val epsLeft = (totalEp - item.episodeNumber).coerceAtLeast(0)
@@ -1577,7 +1559,7 @@ private fun ContinueCard(item: ContinueWatchingItem, onOpenShorts: (Int?) -> Uni
     Column(
         modifier = Modifier
             .width(167.dp)
-            .clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
+            .clickable { onOpenEpisodes(film.id.takeIf { it != 0 }) }
     ) {
         // ── Image card (250dp tall) ──────────────────────────────────────────
         Box(
@@ -1664,7 +1646,7 @@ private fun ContinueCard(item: ContinueWatchingItem, onOpenShorts: (Int?) -> Uni
 }
 
 @Composable
-private fun ContinueCardFromDrama(drama: DramaItem, onOpenShorts: (Int?) -> Unit) {
+private fun ContinueCardFromDrama(drama: DramaItem, onOpenEpisodes: (Int?) -> Unit) {
     val totalEp = drama.episodeTotal.coerceAtLeast(1)
     val fakeEp = (totalEp * 0.45f).toInt().coerceAtLeast(1)
     val progress = fakeEp.toFloat() / totalEp
@@ -1675,7 +1657,7 @@ private fun ContinueCardFromDrama(drama: DramaItem, onOpenShorts: (Int?) -> Unit
     Column(
         modifier = Modifier
             .width(167.dp)
-            .clickable { onOpenShorts(drama.id.takeIf { it != 0 }) }
+            .clickable { onOpenEpisodes(drama.id.takeIf { it != 0 }) }
     ) {
         Box(
             modifier = Modifier
@@ -1758,23 +1740,23 @@ private fun PosterRail(
     title: String,
     items: List<DramaItem>,
     showTrend: Boolean,
-    onOpenShorts: (Int?) -> Unit
+    onOpenEpisodes: (Int?) -> Unit
 ) {
     SectionHeader(title = title, action = if (showTrend) stringResource(R.string.trending_tag) else null)
     LazyRow(
         contentPadding = PaddingValues(horizontal = 18.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(items) { item -> PosterCard(item, onOpenShorts) }
+        items(items, key = { it.uniqueKey() }) { item -> PosterCard(item, onOpenEpisodes) }
     }
 }
 
 @Composable
-private fun PosterCard(item: DramaItem, onOpenShorts: (Int?) -> Unit) {
+private fun PosterCard(item: DramaItem, onOpenEpisodes: (Int?) -> Unit) {
     Column(
         modifier = Modifier
             .width(150.dp)
-            .clickable { onOpenShorts(item.id.takeIf { it != 0 }) }
+            .clickable { onOpenEpisodes(item.id.takeIf { it != 0 }) }
     ) {
         Box(
             modifier = Modifier
@@ -1817,7 +1799,7 @@ private fun PosterCard(item: DramaItem, onOpenShorts: (Int?) -> Unit) {
 }
 
 @Composable
-private fun TopRatedCard(item: DramaItem, onOpenShorts: (Int?) -> Unit) {
+private fun TopRatedCard(item: DramaItem, onOpenEpisodes: (Int?) -> Unit) {
     SectionHeader(stringResource(R.string.top_rated_this_week))
     Box(
         modifier = Modifier
@@ -1827,7 +1809,7 @@ private fun TopRatedCard(item: DramaItem, onOpenShorts: (Int?) -> Unit) {
             .clip(RoundedCornerShape(16.dp))
             .background(Panel)
             .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(16.dp))
-            .clickable { onOpenShorts(item.id.takeIf { it != 0 }) }
+            .clickable { onOpenEpisodes(item.id.takeIf { it != 0 }) }
     ) {
         NetworkDramaImage(item.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, item.title)
         Box(
@@ -2028,7 +2010,7 @@ private fun PlusButton(saved: Boolean, size: Int = 50, onClick: () -> Unit) {
 }
 
 @Composable
-private fun EmptyContinueWatching(onOpenShorts: (Int?) -> Unit) {
+private fun EmptyContinueWatching(onOpenEpisodes: (Int?) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -2037,7 +2019,7 @@ private fun EmptyContinueWatching(onOpenShorts: (Int?) -> Unit) {
             .clip(RoundedCornerShape(12.dp))
             .background(Brush.horizontalGradient(listOf(Color(0xFF20161B), Color(0xFF131316))))
             .border(1.dp, Color(0xFF2B252B), RoundedCornerShape(12.dp))
-            .clickable { onOpenShorts(null) }
+            .clickable { onOpenEpisodes(null) }
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -2081,14 +2063,15 @@ fun NetworkDramaImage(
     contentScale: ContentScale,
     seed: String
 ) {
-    val bitmap by produceState<Bitmap?>(initialValue = null, imageUrl) {
-        value = if (imageUrl.isBlank()) null else loadBitmap(imageUrl)
-    }
-
-    if (bitmap != null) {
-        Image(bitmap = bitmap!!.asImageBitmap(), contentDescription = null, modifier = modifier, contentScale = contentScale)
-    } else {
+    if (imageUrl.isBlank()) {
         GeneratedPoster(seed = seed, modifier = modifier)
+    } else {
+        AsyncImage(
+            model = imageUrl,
+            contentDescription = null,
+            modifier = modifier,
+            contentScale = contentScale
+        )
     }
 }
 
@@ -2196,12 +2179,6 @@ private fun SkeletonBlock(width: Int, height: Int) {
             .clip(RoundedCornerShape(8.dp))
             .background(Color(0xFF242027))
     )
-}
-
-private suspend fun loadBitmap(imageUrl: String): Bitmap? = withContext(Dispatchers.IO) {
-    runCatching {
-        URL(imageUrl).openStream().use { BitmapFactory.decodeStream(it) }
-    }.getOrNull()
 }
 
 private fun posterColors(seed: String): List<Color> {

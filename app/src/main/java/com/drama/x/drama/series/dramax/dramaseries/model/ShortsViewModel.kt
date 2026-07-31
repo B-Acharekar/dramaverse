@@ -44,6 +44,8 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
 
     fun loadInitial(backendBaseUrl: String, initialFilmId: Int?) {
         val isGenericFeed = initialFilmId == null || initialFilmId == 0
+        
+        // Generic feed mode: existing behavior
         if (
             _uiState.value.items.isNotEmpty() &&
             currentBackendBaseUrl == backendBaseUrl &&
