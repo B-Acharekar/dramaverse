@@ -102,12 +102,20 @@ class HomeRepository(
                 ?: throw IllegalStateException("Device auth did not return a bearer token.")
 
             withTimeoutOrNull(2800) {
-                fetchHomeFeed(backendBaseUrl, language, token, timeoutMillis = 2200)
+                // Parse feed on background IO thread to keep UI responsive
+                withContext(Dispatchers.IO) {
+                    fetchHomeFeed(backendBaseUrl, language, token, timeoutMillis = 2200)
+                }
             }?.let { rawFeed ->
-                cacheStore.writeRawFeed(rawFeed)
+                // Cache writes are also on IO to avoid UI blocking
+                withContext(Dispatchers.IO) {
+                    cacheStore.writeRawFeed(rawFeed)
+                }
                 withLocalWatchState(cacheStore.displayFeedForToday(rawFeed)).also { displayFeed ->
                     _prefetchedFeed.value = displayFeed
-                    cacheStore.writeDisplayFeed(displayFeed)
+                    withContext(Dispatchers.IO) {
+                        cacheStore.writeDisplayFeed(displayFeed)
+                    }
                 }
             }
         }

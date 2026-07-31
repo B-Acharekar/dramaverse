@@ -78,21 +78,30 @@ class LibraryRepository(
                 ?: throw IllegalStateException("Device auth did not return a bearer token.")
 
             coroutineScope {
+                // Reduced timeout from 7s to 4s per call for faster feedback
+                // With circuit breaker: stop after 2 failures to prevent cascading delays
+                val timeoutMs = 4_000
+                var failedCallCount = 0
+                val maxFailures = 2
+                
                 val watchList = async {
+                    if (failedCallCount >= maxFailures) return@async null
                     runCatching {
-                        getClientJson(backendBaseUrl, "client/reminders", language, token, 7000)
-                    }.getOrNull()
+                        getClientJson(backendBaseUrl, "client/reminders", language, token, timeoutMs)
+                    }.onFailure { failedCallCount++ }.getOrNull()
                 }
                 val history = async {
+                    if (failedCallCount >= maxFailures) return@async null
                     runCatching {
-                        getClientJson(backendBaseUrl, "client/history/watch", language, token, 7000)
-                    }.getOrNull()
+                        getClientJson(backendBaseUrl, "client/history/watch", language, token, timeoutMs)
+                    }.onFailure { failedCallCount++ }.getOrNull()
                 }
                 val recommendedPages = (1..4).map { page ->
                     async {
+                        if (failedCallCount >= maxFailures) return@async null
                         runCatching {
-                            getClientJson(backendBaseUrl, "client/for-you", language, token, 7000, page = page)
-                        }.getOrNull()
+                            getClientJson(backendBaseUrl, "client/for-you", language, token, timeoutMs, page = page)
+                        }.onFailure { failedCallCount++ }.getOrNull()
                     }
                 }
 
@@ -113,11 +122,15 @@ class LibraryRepository(
                     ?: historyItems.firstOrNull()?.film?.genre?.takeIf { it.isUsefulSimilarQuery() }
                     ?: watchListItems.firstOrNull()?.title?.takeIf { it.isUsefulSimilarQuery() }
                     ?: watchListItems.firstOrNull()?.genre?.takeIf { it.isUsefulSimilarQuery() }
-                val similarJson = runCatching {
-                    val querySeed = similarQuery ?: return@runCatching null
-                    val query = URLEncoder.encode(querySeed, "UTF-8")
-                    getClientJson(backendBaseUrl, "client/search", language, token, 7000, "query=$query")
-                }.getOrNull()
+                val similarJson = if (failedCallCount < maxFailures) {
+                    runCatching {
+                        val querySeed = similarQuery ?: return@runCatching null
+                        val query = URLEncoder.encode(querySeed, "UTF-8")
+                        getClientJson(backendBaseUrl, "client/search", language, token, timeoutMs, "query=$query")
+                    }.onFailure { failedCallCount++ }.getOrNull()
+                } else {
+                    null
+                }
                 val watchedIds = historyItems.map { it.film.id }.toSet()
                 val watchListIds = watchListItems.map { it.id }.toSet()
                 val displayedRecommendedIds = displayedRecommendedItems.map { it.id }.toSet()

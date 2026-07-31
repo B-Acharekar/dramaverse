@@ -76,11 +76,12 @@ fun DramaXApp(
             viewModel.openHome()
             return
         }
+        // Reduced timeout from 6s to 3.5s for faster navigation, with fallback
         AdsManager.loadAndShowInterstitial(
             activity = activity,
             placementName = "inter_back",
             config = AdRemoteConfig.interBack,
-            timeoutMs = 6_000L,
+            timeoutMs = 3_500L,
             onFinished = viewModel::openHome
         )
     }

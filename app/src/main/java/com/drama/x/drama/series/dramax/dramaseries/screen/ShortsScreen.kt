@@ -190,7 +190,10 @@ fun ShortsScreen(
     var nativeShortVideoAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
 
     LaunchedEffect(activity, uiState.items.size) {
-        activity?.let { AdsManager.loadNativeShortVideoFullscreen(it) }
+        activity?.let { 
+            // Start preloading native ads immediately instead of waiting for items to load
+            AdsManager.loadNativeShortVideoFullscreen(it) 
+        }
     }
 
     DisposableEffect(Unit) {

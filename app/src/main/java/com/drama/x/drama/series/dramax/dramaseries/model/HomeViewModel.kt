@@ -8,6 +8,7 @@ import com.drama.x.drama.series.dramax.dramaseries.data.DramaItem
 import com.drama.x.drama.series.dramax.dramaseries.data.HomeFeed
 import com.drama.x.drama.series.dramax.dramaseries.data.HomeRepository
 import com.drama.x.drama.series.dramax.dramaseries.data.LocaleHelper
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,11 +36,14 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
-        _uiState.update {
-            it.copy(
-                savedFilmIds = repository.savedWatchListIds(),
-                savedFilms = repository.savedWatchListItems()
-            )
+        // Move database queries to IO thread to prevent UI blocking
+        viewModelScope.launch(Dispatchers.IO) {
+            _uiState.update {
+                it.copy(
+                    savedFilmIds = repository.savedWatchListIds(),
+                    savedFilms = repository.savedWatchListItems()
+                )
+            }
         }
         viewModelScope.launch {
             HomeRepository.prefetchedFeed.collectLatest { feed ->
@@ -52,11 +56,14 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     fun loadHome(backendBaseUrl: String) {
         val language = LocaleHelper.persistedLanguageCode(appContext)
-        _uiState.update {
-            it.copy(
-                savedFilmIds = repository.savedWatchListIds(),
-                savedFilms = repository.savedWatchListItems()
-            )
+        // Move database queries to IO thread
+        viewModelScope.launch(Dispatchers.IO) {
+            _uiState.update {
+                it.copy(
+                    savedFilmIds = repository.savedWatchListIds(),
+                    savedFilms = repository.savedWatchListItems()
+                )
+            }
         }
         val hasFeed = _uiState.value.feed != null
         if (!hasFeed) {

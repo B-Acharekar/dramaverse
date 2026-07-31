@@ -79,7 +79,8 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
     fun loadMoreIfNeeded(currentIndex: Int, backendBaseUrl: String) {
         val state = _uiState.value
         if (state.isLoadingMore || state.items.isEmpty()) return
-        if (currentIndex < state.items.lastIndex - 2) return
+        // Prefetch next page earlier (at 50% threshold instead of 75%) for smoother scrolling
+        if (currentIndex < state.items.lastIndex - 4) return
         viewModelScope.launch {
             _uiState.update { it.copy(isLoadingMore = true) }
             loadPage(backendBaseUrl, null, genericFeedOpenNonce)
@@ -102,6 +103,36 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                 state.copy(
                     items = state.items.mapIndexed { itemIndex, existing ->
                         if (itemIndex == index) playback.copy(film = playback.film.mergeFallback(existing.film)) else existing
+                    }
+                )
+            }
+        }
+        
+        // Preload next 2 videos to eliminate loading delays during scrolling
+        preloadVideoUrl(index + 1, backendBaseUrl)
+        preloadVideoUrl(index + 2, backendBaseUrl)
+    }
+
+    private fun preloadVideoUrl(index: Int, backendBaseUrl: String) {
+        val item = _uiState.value.items.getOrNull(index) ?: return
+        if (item.playUrl.isNotBlank() || item.film.id == 0) return
+        viewModelScope.launch {
+            val playback = withContext(Dispatchers.IO) {
+                repository.loadPlayback(
+                    backendBaseUrl = backendBaseUrl,
+                    filmId = item.film.id,
+                    language = selectedLanguageCode()
+                )
+            }.getOrNull() ?: return@launch
+            // Only update if the URL was empty (don't overwrite if already loaded)
+            _uiState.update { state ->
+                state.copy(
+                    items = state.items.mapIndexed { itemIndex, existing ->
+                        if (itemIndex == index && existing.playUrl.isBlank()) {
+                            playback.copy(film = playback.film.mergeFallback(existing.film))
+                        } else {
+                            existing
+                        }
                     }
                 )
             }

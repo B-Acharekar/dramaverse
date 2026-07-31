@@ -166,10 +166,12 @@ fun HomeScreen(
 
     LaunchedEffect(backendBaseUrl) {
         viewModel.loadHome(backendBaseUrl)
+        // Start ad preloading immediately during composition, not after first render
+        activity?.let { AdsManager.preloadHomeAds(it) }
     }
 
     LaunchedEffect(activity) {
-        activity?.let { AdsManager.preloadHomeAds(it) }
+        // Activity reference update - ads already preloading from first LaunchedEffect
     }
 
     DisposableEffect(Unit) {
@@ -189,11 +191,12 @@ fun HomeScreen(
             onOpenShorts(filmId)
             return
         }
+        // Reduced timeout from 6s to 3.5s for faster navigation, with fallback
         AdsManager.loadAndShowInterstitial(
             activity = currentActivity,
             placementName = "inter_home",
             config = AdRemoteConfig.interHome,
-            timeoutMs = 6_000L,
+            timeoutMs = 3_500L,
             onFinished = { onOpenShorts(filmId) }
         )
     }
@@ -295,18 +298,29 @@ private fun HomeContent(
     val headerHeight = 104.dp + topInset
     val bottomContentPadding =
         96.dp + if (bottomBannerVisible) AppBottomBannerHeight else 0.dp
-    val heroItems = feed.heroItems()
-    val allCatalog = feed.allCatalogItems()
-    val popularItems = (feed.trending + feed.moreLikeThis + allCatalog)
-        .filter { it.title.isNotBlank() }
-        .distinctBy { it.uniqueKey() }
-    // Each tab uses its own dedicated API data.
-    val newItems = feed.newReleases.filter { it.title.isNotBlank() }.distinctBy { it.uniqueKey() }
-    val rankingItems = feed.ranking.filter { it.title.isNotBlank() }.distinctBy { it.uniqueKey() }
-    val categoryItems = feed.categories.filter { it.title.isNotBlank() }.distinctBy { it.uniqueKey() }
-    val featuredItems = feed.featured.filter { it.title.isNotBlank() }.distinctBy { it.uniqueKey() }
-        .take(9)  // Limit featured to exactly 9 items
-        .ifEmpty { popularItems.take(9) }
+
+    // Memoize expensive computations to prevent freeze on every recomposition
+    val heroItems = remember(feed) { feed.heroItems() }
+    val allCatalog = remember(feed) { feed.allCatalogItems() }
+    val popularItems = remember(feed.trending, feed.moreLikeThis, allCatalog) {
+        (feed.trending + feed.moreLikeThis + allCatalog)
+            .filter { it.title.isNotBlank() }
+            .distinctBy { it.uniqueKey() }
+    }
+    val newItems = remember(feed.newReleases) {
+        feed.newReleases.filter { it.title.isNotBlank() }.distinctBy { it.uniqueKey() }
+    }
+    val rankingItems = remember(feed.ranking) {
+        feed.ranking.filter { it.title.isNotBlank() }.distinctBy { it.uniqueKey() }
+    }
+    val categoryItems = remember(feed.categories) {
+        feed.categories.filter { it.title.isNotBlank() }.distinctBy { it.uniqueKey() }
+    }
+    val featuredItems = remember(feed.featured, popularItems) {
+        feed.featured.filter { it.title.isNotBlank() }.distinctBy { it.uniqueKey() }
+            .take(9)  // Limit featured to exactly 9 items
+            .ifEmpty { popularItems.take(9) }
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -517,14 +531,22 @@ private fun HeroCarousel(
     val pageCount = 10_000
     val startPage = pageCount / 2
     val pagerState = rememberPagerState(initialPage = startPage) { pageCount }
+    var isCarouselVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(items) {
-        while (true) {
+        isCarouselVisible = true
+        while (isCarouselVisible) {
             delay(5200)
             pagerState.animateScrollToPage(
                 page = pagerState.currentPage + 1,
                 animationSpec = tween(durationMillis = 1150, easing = FastOutSlowInEasing)
             )
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            isCarouselVisible = false
         }
     }
 

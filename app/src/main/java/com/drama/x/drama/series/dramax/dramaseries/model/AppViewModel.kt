@@ -60,10 +60,15 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(AppUiState())
     val uiState: StateFlow<AppUiState> = _uiState.asStateFlow()
     private var oneSignalInitializedAppId: String? = null
+    
+    // Navigation debouncing to prevent multiple rapid transitions
+    private var lastNavigationTimeMs = 0L
 
     companion object {
         @Volatile
         private var pendingPostLanguageRecreate = false
+        
+        private const val NAVIGATION_DEBOUNCE_MS = 300L
     }
 
     init {
@@ -164,23 +169,45 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun openShorts(filmId: Int? = null) {
-        _uiState.update {
-            it.copy(
-                currentStep = AppStep.Shorts,
-                selectedShortFilmId = filmId
-            )
+        // Debounce rapid navigation to prevent multiple simultaneous transitions
+        viewModelScope.launch {
+            val now = System.currentTimeMillis()
+            if (now - lastNavigationTimeMs < NAVIGATION_DEBOUNCE_MS) return@launch
+            lastNavigationTimeMs = now
+            _uiState.update {
+                it.copy(
+                    currentStep = AppStep.Shorts,
+                    selectedShortFilmId = filmId
+                )
+            }
         }
     }
+    
     fun openProfile() {
-        _uiState.update { it.copy(currentStep = AppStep.Profile, selectedShortFilmId = null) }
+        viewModelScope.launch {
+            val now = System.currentTimeMillis()
+            if (now - lastNavigationTimeMs < NAVIGATION_DEBOUNCE_MS) return@launch
+            lastNavigationTimeMs = now
+            _uiState.update { it.copy(currentStep = AppStep.Profile, selectedShortFilmId = null) }
+        }
     }
 
     fun openLibrary() {
-        _uiState.update { it.copy(currentStep = AppStep.Library, selectedShortFilmId = null) }
+        viewModelScope.launch {
+            val now = System.currentTimeMillis()
+            if (now - lastNavigationTimeMs < NAVIGATION_DEBOUNCE_MS) return@launch
+            lastNavigationTimeMs = now
+            _uiState.update { it.copy(currentStep = AppStep.Library, selectedShortFilmId = null) }
+        }
     }
 
     fun openRewards() {
-        _uiState.update { it.copy(currentStep = AppStep.Rewards, selectedShortFilmId = null) }
+        viewModelScope.launch {
+            val now = System.currentTimeMillis()
+            if (now - lastNavigationTimeMs < NAVIGATION_DEBOUNCE_MS) return@launch
+            lastNavigationTimeMs = now
+            _uiState.update { it.copy(currentStep = AppStep.Rewards, selectedShortFilmId = null) }
+        }
     }
 
     fun openPlanner() {
