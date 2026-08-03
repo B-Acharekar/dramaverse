@@ -22,6 +22,7 @@ class GlobalApp : AdsMultiDexApplication() {
     companion object {
         @SuppressLint("StaticFieldLeak")
         var currentActivity: Activity? = null
+        var shouldShowWelcomeBackOnResume = false
     }
 
     override fun onCreate() {
@@ -56,7 +57,12 @@ class GlobalApp : AdsMultiDexApplication() {
         } else {
             null
         }
-        registerActivityLifecycleCallbacks(AppActivityLifecycleCallbacks(lifecycleObserver))
+        registerActivityLifecycleCallbacks(AppActivityLifecycleCallbacks(lifecycleObserver) { appResumed ->
+            // Mark that welcome back screen should be shown on next home navigation
+            if (appResumed) {
+                shouldShowWelcomeBackOnResume = true
+            }
+        })
     }
 
     private fun initAds() {

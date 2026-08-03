@@ -42,6 +42,7 @@ class DramaXWidgetProvider : AppWidgetProvider() {
             }
             val views = RemoteViews(context.packageName, layoutRes).apply {
                 setOnClickPendingIntent(R.id.widgetHome, pendingIntent(context, MainActivity.ACTION_WIDGET_HOME, 1))
+                setOnClickPendingIntent(R.id.widgetMyList, pendingIntent(context, MainActivity.ACTION_WIDGET_MY_LIST, 2))
                 if (showUninstall) {
                     setOnClickPendingIntent(R.id.widgetUninstall, pendingIntent(context, MainActivity.ACTION_WIDGET_UNINSTALL, 3))
                 }

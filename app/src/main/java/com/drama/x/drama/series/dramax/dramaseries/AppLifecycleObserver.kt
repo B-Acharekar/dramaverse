@@ -11,21 +11,41 @@ import com.drama.x.drama.series.dramax.dramaseries.devconfig.DevConfig
 class AppLifecycleObserver {
     private var hasStartedOnce = false
     private var stoppedAtMs = 0L
+    private var hasBeenBackgroundedBefore = false
+    /** Duration the app was in background on the last stop/start cycle. Set in onMoveToForeground before stoppedAtMs is cleared. */
+    private var lastStoppedElapsedMs = 0L
+
+    /**
+     * Returns true once if the app genuinely came back from background.
+     * "Genuine" means the app was backgrounded for at least [minElapsedMs] milliseconds.
+     * Brief system stops (permission dialogs, notifications) during fresh launch are < 3s and are excluded.
+     * Resets flag on return of true.
+     */
+    fun consumeHasBeenBackgrounded(minElapsedMs: Long = 700L): Boolean {
+        if (!hasBeenBackgroundedBefore) return false
+        if (lastStoppedElapsedMs < minElapsedMs) {
+            Log.d("DramaXAds", "consumeHasBeenBackgrounded skipped brief_background lastStoppedElapsedMs=$lastStoppedElapsedMs")
+            return false
+        }
+        hasBeenBackgroundedBefore = false
+        return true
+    }
 
     fun onMoveToForeground() {
         val activity = GlobalApp.currentActivity
-        val stoppedElapsedMs = if (stoppedAtMs > 0L) SystemClock.elapsedRealtime() - stoppedAtMs else 0L
+        // Capture elapsed BEFORE clearing stoppedAtMs so consumeHasBeenBackgrounded can use it
+        lastStoppedElapsedMs = if (stoppedAtMs > 0L) SystemClock.elapsedRealtime() - stoppedAtMs else 0L
         val suppressResumeAd = AdsManager.consumeSuppressNextResumeInterstitial()
         Log.d(
             "DramaXAds",
-            "APP_LIFECYCLE_ON_START hasStartedOnce=$hasStartedOnce stoppedElapsedMs=$stoppedElapsedMs " +
+            "APP_LIFECYCLE_ON_START hasStartedOnce=$hasStartedOnce stoppedElapsedMs=$lastStoppedElapsedMs " +
                 "suppressResumeAd=$suppressResumeAd"
         )
 
         if (
             hasStartedOnce &&
             activity != null &&
-            stoppedElapsedMs >= 700L &&
+            lastStoppedElapsedMs >= 700L &&
             !suppressResumeAd &&
             (
                 ResumeAdsEntryRule.shouldShowWelcomeOnResume() ||
@@ -59,6 +79,7 @@ class AppLifecycleObserver {
 
     fun onMoveToBackground() {
         stoppedAtMs = SystemClock.elapsedRealtime()
+        hasBeenBackgroundedBefore = true
         Log.d("DramaXAds", "APP_LIFECYCLE_ON_STOP stoppedAtMs=$stoppedAtMs")
     }
 }

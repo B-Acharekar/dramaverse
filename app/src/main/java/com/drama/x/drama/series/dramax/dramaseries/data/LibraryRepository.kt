@@ -68,6 +68,64 @@ class LibraryRepository(
         )
     }
 
+    suspend fun clearHistory(backendBaseUrl: String): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val token = authRepository.authToken()
+                ?: throw IllegalStateException("No auth token available")
+            
+            // Call backend endpoint to clear history
+            val url = URL("${backendBaseUrl.trimEndSlash()}/client/history/watch")
+            val connection = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "DELETE"
+                connectTimeout = 4_000
+                readTimeout = 4_000
+                setRequestProperty("Authorization", "Bearer $token")
+            }
+            
+            if (connection.responseCode !in 200..299) {
+                val error = connection.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
+                throw IllegalStateException("Failed to clear history: ${connection.responseCode} $error")
+            }
+            
+            // Also clear local cache
+            savedWatchHistoryStore.clearAll()
+        }
+    }
+
+    suspend fun toggleWatchList(
+        backendBaseUrl: String,
+        film: DramaItem,
+        enable: Boolean
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val token = authRepository.authToken()
+                ?: throw IllegalStateException("No auth token available")
+            
+            // Call backend endpoint to toggle watchlist
+            val method = if (enable) "POST" else "DELETE"
+            val url = URL("${backendBaseUrl.trimEndSlash()}/client/reminders/${film.id}")
+            val connection = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = method
+                connectTimeout = 4_000
+                readTimeout = 4_000
+                setRequestProperty("Authorization", "Bearer $token")
+                setRequestProperty("Content-Type", "application/json")
+            }
+            
+            if (connection.responseCode !in 200..299) {
+                val error = connection.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
+                throw IllegalStateException("Failed to toggle watchlist: ${connection.responseCode} $error")
+            }
+            
+            // Update local cache
+            if (enable) {
+                savedWatchListStore.save(film)
+            } else {
+                savedWatchListStore.remove(film.id)
+            }
+        }
+    }
+
     suspend fun loadLibrary(
         backendBaseUrl: String,
         language: String = "en"
@@ -78,11 +136,11 @@ class LibraryRepository(
                 ?: throw IllegalStateException("Device auth did not return a bearer token.")
 
             coroutineScope {
-                // Reduced timeout from 7s to 4s per call for faster feedback
-                // With circuit breaker: stop after 2 failures to prevent cascading delays
-                val timeoutMs = 4_000
+                // Reduced timeout from 7s to 2.5s per call for responsive navigation
+                // Circuit breaker: fail fast after 1 failure to prevent waiting for slow endpoints
+                val timeoutMs = 2_500
                 var failedCallCount = 0
-                val maxFailures = 2
+                val maxFailures = 1
                 
                 val watchList = async {
                     if (failedCallCount >= maxFailures) return@async null
@@ -96,7 +154,8 @@ class LibraryRepository(
                         getClientJson(backendBaseUrl, "client/history/watch", language, token, timeoutMs)
                     }.onFailure { failedCallCount++ }.getOrNull()
                 }
-                val recommendedPages = (1..4).map { page ->
+                // Only fetch first page of recommendations immediately, fetch remaining pages asynchronously
+                val recommendedPages = (1..2).map { page ->
                     async {
                         if (failedCallCount >= maxFailures) return@async null
                         runCatching {

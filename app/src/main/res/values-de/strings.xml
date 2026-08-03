@@ -213,4 +213,9 @@
     <string name="uninstall_open_failed">Deinstallationsseite konnte nicht geöffnet werden</string>
 
     <string name="welcome_to_home_temp">Willkommen auf der Startseite</string>
+
+    <!-- Widget strings -->
+    <string name="widget_home">Start</string>
+    <string name="widget_my_list">Meine Liste</string>
+    <string name="widget_uninstall">Deinstallieren</string>
 </resources>

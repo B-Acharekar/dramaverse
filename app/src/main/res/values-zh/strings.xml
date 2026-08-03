@@ -213,4 +213,9 @@
     <string name="uninstall_open_failed">无法打开卸载页面</string>
 
     <string name="welcome_to_home_temp">欢迎来到首页</string>
+
+    <!-- Widget strings -->
+    <string name="widget_home">主页</string>
+    <string name="widget_my_list">我的列表</string>
+    <string name="widget_uninstall">卸载</string>
 </resources>

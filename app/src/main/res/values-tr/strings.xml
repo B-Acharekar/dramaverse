@@ -213,4 +213,9 @@
     <string name="uninstall_open_failed">Kaldırma ekranı açılamadı</string>
 
     <string name="welcome_to_home_temp">Ana Sayfaya Hoş Geldiniz</string>
+
+    <!-- Widget strings -->
+    <string name="widget_home">Anasayfa</string>
+    <string name="widget_my_list">Listem</string>
+    <string name="widget_uninstall">Kaldır</string>
 </resources>

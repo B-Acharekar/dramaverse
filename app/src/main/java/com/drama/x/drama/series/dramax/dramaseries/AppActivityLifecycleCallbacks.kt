@@ -5,7 +5,8 @@ import android.app.Application
 import android.os.Bundle
 
 class AppActivityLifecycleCallbacks(
-    private val appLifecycleObserver: AppLifecycleObserver? = null
+    private val appLifecycleObserver: AppLifecycleObserver? = null,
+    private val onAppResumedFromBackground: ((Boolean) -> Unit)? = null
 ) : Application.ActivityLifecycleCallbacks {
     private var startedCount = 0
 
@@ -14,6 +15,9 @@ class AppActivityLifecycleCallbacks(
         startedCount++
         if (startedCount == 1) {
             appLifecycleObserver?.onMoveToForeground()
+            // Notify that app has resumed from background (if it was backgrounded before)
+            val hasBeenBackgroundedBefore = appLifecycleObserver?.consumeHasBeenBackgrounded() == true
+            onAppResumedFromBackground?.invoke(hasBeenBackgroundedBefore)
         }
     }
 

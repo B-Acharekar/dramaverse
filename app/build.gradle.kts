@@ -96,6 +96,7 @@ dependencies {
     implementation(libs.erain.studio)
     implementation(libs.firebase.analytics)
     implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation(libs.okhttp)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

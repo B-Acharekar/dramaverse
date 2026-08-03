@@ -43,7 +43,10 @@ class EpisodeViewModel(application: Application) : AndroidViewModel(application)
     private var currentBackendBaseUrl = ""
 
     fun loadEpisodes(backendBaseUrl: String, filmId: Int?) {
-        if (filmId == null || filmId == 0) return
+        if (filmId == null || filmId == 0) {
+            _uiState.update { it.copy(isLoading = false, errorMessage = "No film selected (filmId: $filmId)") }
+            return
+        }
         if (currentBackendBaseUrl == backendBaseUrl && _uiState.value.filmId == filmId && _uiState.value.episodes.isNotEmpty()) {
             return  // Already loaded
         }
@@ -53,17 +56,21 @@ class EpisodeViewModel(application: Application) : AndroidViewModel(application)
             _uiState.update { it.copy(isLoading = true) }
             
             // Load episode 1 first so the screen becomes interactive immediately (< 1s goal).
-            val firstEpisode = withContext(Dispatchers.IO) {
+            val result = withContext(Dispatchers.IO) {
                 repository.loadPlayback(
                     backendBaseUrl = backendBaseUrl,
                     filmId = filmId,
                     language = selectedLanguageCode(),
                     episodeNumber = 1
                 )
-            }.getOrNull()
+            }
+            
+            val firstEpisode = result.getOrNull()
             
             if (firstEpisode == null) {
-                _uiState.update { it.copy(isLoading = false, errorMessage = "Failed to load series") }
+                val errorMsg = result.exceptionOrNull()?.message ?: "Failed to load series"
+                android.util.Log.e("EpisodeViewModel", "Failed to load episode 1 for filmId=$filmId: $errorMsg")
+                _uiState.update { it.copy(isLoading = false, errorMessage = "Failed to load series: $errorMsg") }
                 return@launch
             }
             
@@ -207,4 +214,4 @@ class EpisodeViewModel(application: Application) : AndroidViewModel(application)
     }
 }
 
-private const val FREE_EPISODES = 3  // Episodes 1–3 are always free; 4+ require a daily ad unlock
+private const val FREE_EPISODES = 7  // Episodes 1–7 are always free; 8+ require a daily ad unlock

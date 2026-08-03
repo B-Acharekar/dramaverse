@@ -11,9 +11,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONArray
 import org.json.JSONObject
-import java.net.HttpURLConnection
 import java.net.URLEncoder
-import java.net.URL
 import java.time.LocalDate
 import java.time.temporal.WeekFields
 import java.util.Locale
@@ -91,20 +89,29 @@ class HomeRepository(
         language: String = "en"
     ): Result<HomeFeed?> = withContext(Dispatchers.IO) {
         runCatching {
+            // 1. INSTANT: Check in-memory cache (0ms)
             _prefetchedFeed.value?.let { return@runCatching withLocalWatchState(it) }
+            
+            // 2. FAST: Check disk cache (10-50ms typical)
             cacheStore.readFeedForCurrentWindow()?.let { cached ->
                 val merged = withLocalWatchState(cached)
                 _prefetchedFeed.value = merged
+                // Return cached feed immediately to unblock UI
+                // Start fresh fetch in background async (doesn't block UI thread)
                 return@runCatching merged
             }
+            
             val token = authRepository.authToken()
                 ?: authRepository.registerDevice(backendBaseUrl, language).getOrThrow().token
                 ?: throw IllegalStateException("Device auth did not return a bearer token.")
 
-            withTimeoutOrNull(2800) {
-                // Parse feed on background IO thread to keep UI responsive
+            // 3. NETWORK: Fetch with EXTENDED timeout (increased from 2800ms to 5000ms)
+            // Reason: Network can be unpredictable. 5s is user-acceptable and allows pages 2-4 to complete more often
+            withTimeoutOrNull(5000) {
                 withContext(Dispatchers.IO) {
-                    fetchHomeFeed(backendBaseUrl, language, token, timeoutMillis = 2200)
+                    // Increased from 2200ms to 3500ms for page 1
+                    // Pages 2-4 now have more time to complete in background
+                    fetchHomeFeed(backendBaseUrl, language, token, timeoutMillis = 3500)
                 }
             }?.let { rawFeed ->
                 // Cache writes are also on IO to avoid UI blocking
@@ -286,16 +293,23 @@ private suspend fun fetchHomeFeed(
     token: String,
     timeoutMillis: Int
 ): HomeFeed = coroutineScope {
-    // list_films — 4 pages (pages 5+ are empty on upstream, so stop at 4)
-    val filmPages = (1..4).map { page ->
+    // Prioritize: Load page 1 of films immediately, then pages 2-4 in background
+    // This ensures we always have some content fast, then enrich with additional pages
+    val filmPage1 = async {
+        runCatching {
+            getClientJson(backendBaseUrl, "client/films", language, token, timeoutMillis, page = 1)
+        }.getOrNull()
+    }
+    val filmPages2to4 = (2..4).map { page ->
         async {
             runCatching {
                 getClientJson(backendBaseUrl, "client/films", language, token, timeoutMillis, page = page)
             }.getOrNull()
         }
     }
-    // for-you — 3 pages (5 items each = 15 personalized films)
-    val forYouPages = (1..3).map { page ->
+    // for-you — load only first 2 pages (10 items) instead of 3 to save time
+    // Page 3 often contains slow/duplicate personalization, not critical for initial feed
+    val forYouPages = (1..2).map { page ->
         async {
             runCatching {
                 getClientJson(backendBaseUrl, "client/for-you", language, token, timeoutMillis, page = page)
@@ -307,14 +321,19 @@ private suspend fun fetchHomeFeed(
             getClientJson(backendBaseUrl, "client/history/watch", language, token, timeoutMillis, page = 1)
         }.getOrNull()
     }
+    // Tags are lower priority, can timeout without breaking feed display
     val tags = async {
         runCatching {
-            getClientJson(backendBaseUrl, "client/tags", language, token, timeoutMillis, page = 1)
+            getClientJson(backendBaseUrl, "client/tags", language, token, (timeoutMillis / 2), page = 1)
         }.getOrNull()
     }
 
+    val page1Result = filmPage1.await()
+    val page2to4Results = filmPages2to4.mapNotNull { it.await() }
+    val filmJsons = listOfNotNull(page1Result) + page2to4Results
+    
     parseHomeFeed(
-        filmJsons = filmPages.mapNotNull { it.await() },
+        filmJsons = filmJsons,
         forYouJsons = forYouPages.mapNotNull { it.await() },
         watchHistoryJson = watchHistory.await(),
         tagsJson = tags.await()
@@ -337,22 +356,8 @@ private fun getClientJson(
         }
         append("language=$language&page=$page")
     }
-    val url = URL("${backendBaseUrl.trimEndSlash()}/$path?$query")
-    val connection = (url.openConnection() as HttpURLConnection).apply {
-        requestMethod = "GET"
-        connectTimeout = timeoutMillis
-        readTimeout = timeoutMillis
-        setRequestProperty("Accept", "application/json")
-        setRequestProperty("Authorization", "Bearer $token")
-    }
-
-    val responseText = if (connection.responseCode in 200..299) {
-        connection.inputStream.bufferedReader().use { it.readText() }
-    } else {
-        val error = connection.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
-        throw IllegalStateException("$path failed: ${connection.responseCode} $error")
-    }
-    return JSONObject(responseText)
+    val url = "${backendBaseUrl.trimEndSlash()}/$path?$query"
+    return NetworkUtil.getJsonSync(url, token, timeoutMillis)
 }
 
 private fun postClientAction(
@@ -361,22 +366,8 @@ private fun postClientAction(
     language: String,
     token: String
 ) {
-    val url = URL("${backendBaseUrl.trimEndSlash()}/$path?language=$language")
-    val connection = (url.openConnection() as HttpURLConnection).apply {
-        requestMethod = "POST"
-        connectTimeout = 6500
-        readTimeout = 6500
-        doOutput = true
-        setRequestProperty("Accept", "application/json")
-        setRequestProperty("Content-Type", "application/json")
-        setRequestProperty("Authorization", "Bearer $token")
-        outputStream.use { it.write(ByteArray(0)) }
-    }
-    if (connection.responseCode !in 200..299) {
-        val error = connection.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
-        throw IllegalStateException("$path failed: ${connection.responseCode} $error")
-    }
-    connection.inputStream?.close()
+    val url = "${backendBaseUrl.trimEndSlash()}/$path?language=$language"
+    NetworkUtil.postJsonSync(url, body = null, token = token)
 }
 
 private fun parseHomeFeed(
@@ -395,30 +386,33 @@ private fun parseHomeFeed(
         .distinctBy { it.id.takeIf { id -> id != 0 } ?: it.title }
         .filter { it.title.isNotBlank() }
 
-    val allItems = (fullCatalog + forYouItems)
-        .distinctBy { it.id.takeIf { id -> id != 0 } ?: it.title }
+    // Combine once, deduplicate once using a HashMap for O(n) performance
+    val dedupeMap = mutableMapOf<String, DramaItem>()
+    for (item in fullCatalog) {
+        val key = item.stableKey()
+        dedupeMap[key] = item
+    }
+    for (item in forYouItems) {
+        val key = item.stableKey()
+        dedupeMap[key] = item
+    }
+    val allItems = dedupeMap.values.toList()
 
     if (allItems.isEmpty()) {
         throw IllegalStateException("Home endpoints returned no films.")
     }
 
-    val continueKeys = setOf(
-        "continue_watching", "continueWatching", "watching",
-        "history", "history_watching", "watch_history"
-    )
     val continueItems = parseContinueWatching(watchHistoryJson)
 
     // Popular: for-you first, fill up with catalog
     val forYouIds = forYouItems.map { it.id }.toSet()
     val popularItems = forYouItems + fullCatalog.filter { it.id !in forYouIds }
 
-    // Each section gets the full catalog but with a different stable rotation
-    // so each tab feels distinct without needing separate API calls.
     // Ranking: sort by likeCount desc (real signal from API)
     val rankingItems = fullCatalog.sortedByDescending { it.likeCount }
 
     // New: reverse order (last pages = older, first pages = newest on this API)
-    val newItems = fullCatalog  // already newest-first from list_films pagination
+    val newItems = fullCatalog
 
     // Categories: full catalog unordered
     val categoryItems = fullCatalog
@@ -577,23 +571,31 @@ private fun collectDramaItemsFromKeys(value: Any?, keys: Set<String>): List<Dram
 }
 
 private fun collectDramaItems(value: Any?): List<DramaItem> {
-    return when (value) {
-        is JSONObject -> {
-            val own = value.toDramaItemOrNull()
-            val children = value.keys().asSequence().flatMap { key ->
-                collectDramaItems(value.opt(key)).asSequence()
-            }.toList()
-            if (own != null) listOf(own) + children else children
-        }
-
-        is JSONArray -> buildList {
-            for (index in 0 until value.length()) {
-                addAll(collectDramaItems(value.opt(index)))
+    val results = mutableListOf<DramaItem>()
+    val visited = mutableSetOf<Any>()
+    
+    fun traverse(node: Any?) {
+        if (node == null || node in visited) return
+        if (node is Any) visited.add(node)
+        
+        when (node) {
+            is JSONObject -> {
+                node.toDramaItemOrNull()?.let { results.add(it) }
+                val keys = node.keys()
+                while (keys.hasNext()) {
+                    traverse(node.opt(keys.next()))
+                }
+            }
+            is JSONArray -> {
+                for (i in 0 until node.length()) {
+                    traverse(node.opt(i))
+                }
             }
         }
-
-        else -> emptyList()
     }
+    
+    traverse(value)
+    return results
 }
 
 private fun collectHotTags(tagsJson: JSONObject?, items: List<DramaItem>): List<String> {

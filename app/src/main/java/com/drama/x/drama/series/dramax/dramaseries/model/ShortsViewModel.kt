@@ -44,7 +44,7 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
 
     fun loadInitial(backendBaseUrl: String, initialFilmId: Int?) {
         val isGenericFeed = initialFilmId == null || initialFilmId == 0
-        
+
         // Generic feed mode: existing behavior
         if (
             _uiState.value.items.isNotEmpty() &&
@@ -60,27 +60,79 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             _uiState.update { ShortsUiState(isLoading = true) }
             if (initialFilmId != null && initialFilmId != 0) {
+                // Episode mode: load ep 1 immediately, then build full sequential episode list
                 withContext(Dispatchers.IO) {
                     repository.loadPlayback(
                         backendBaseUrl = backendBaseUrl,
                         filmId = initialFilmId,
                         language = selectedLanguageCode()
                     )
-                }.onSuccess { selectedItem ->
-                    if (selectedItem.playUrl.isBlank()) return@onSuccess
+                }.onSuccess { firstItem ->
+                    if (firstItem.playUrl.isBlank()) return@onSuccess
                     _uiState.update {
-                        it.copy(isLoading = false, items = listOf(selectedItem), errorMessage = null)
+                        it.copy(isLoading = false, items = listOf(firstItem), errorMessage = null)
                     }
+                    // Now load ALL episodes of this drama to fill the feed sequentially
+                    loadEpisodeFeed(backendBaseUrl, initialFilmId, firstItem)
                 }
+                ensurePlayback(0, backendBaseUrl)
+                return@launch  // Skip generic loadPage entirely in episode mode
             }
             loadPage(backendBaseUrl, initialFilmId, genericFeedOpenNonce)
             ensurePlayback(0, backendBaseUrl)
         }
     }
 
+    /**
+     * Loads all episodes of a drama and populates the feed sequentially:
+     * ep1, ep2, ... epN (first FREE_SHORTS_PREVIEW_EPISODES free, rest locked).
+     * Called only in episode mode (initialFilmId != null).
+     */
+    private suspend fun loadEpisodeFeed(
+        backendBaseUrl: String,
+        filmId: Int,
+        firstItem: ShortsItem
+    ) {
+        val totalEpisodes = firstItem.film.episodeTotal.coerceAtLeast(1)
+        if (totalEpisodes <= 1) return  // Only one episode, nothing to expand
+
+        // Load remaining episodes (2..totalEpisodes) in parallel batches of 3
+        val episodeNumbers = (2..totalEpisodes).toList()
+        val episodeItems = mutableListOf<ShortsItem>()
+
+        episodeNumbers.chunked(3).forEach { batch ->
+            val batchResults = batch.map { epNum ->
+                withContext(Dispatchers.IO) {
+                    repository.loadPlayback(
+                        backendBaseUrl = backendBaseUrl,
+                        filmId = filmId,
+                        episodeNumber = epNum,
+                        language = selectedLanguageCode()
+                    ).getOrNull()
+                }
+            }
+            batchResults.filterNotNull().forEach { item ->
+                episodeItems.add(item)
+            }
+            // Update UI incrementally after each batch so user sees episodes appear
+            if (episodeItems.isNotEmpty()) {
+                _uiState.update { state ->
+                    // Keep ep1 at top, then add newly loaded episodes in order
+                    val allItems = (listOf(firstItem) + episodeItems)
+                        .sortedBy { it.episodeNumber }
+                    state.copy(isLoading = false, items = allItems, errorMessage = null)
+                }
+            }
+        }
+    }
+
+
+
     fun loadMoreIfNeeded(currentIndex: Int, backendBaseUrl: String) {
         val state = _uiState.value
         if (state.isLoadingMore || state.items.isEmpty()) return
+        // In episode mode we never load more generic content — the episode list is finite
+        if (currentInitialFilmId != null && currentInitialFilmId != 0) return
         // Prefetch next page earlier (at 50% threshold instead of 75%) for smoother scrolling
         if (currentIndex < state.items.lastIndex - 4) return
         viewModelScope.launch {

@@ -54,17 +54,6 @@
         <receiver
             android:name=".data.DramaReminderReceiver"
             android:exported="false" />
-        <receiver
-            android:name=".DramaXWidgetProvider"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/dramaverse_widget_info" />
-        </receiver>
     </application>
 
 </manifest>

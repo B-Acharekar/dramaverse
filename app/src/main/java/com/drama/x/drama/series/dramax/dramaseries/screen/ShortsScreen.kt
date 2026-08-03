@@ -134,13 +134,16 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.URL
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 private val ShortsBackground = Color(0xFF050507)
 private val Gold = Color(0xFFF5C65B)
 private val Pink = Color(0xFFFF5168)
 
 private const val DAILY_UNLOCK_LIMIT = 7
-private const val FREE_SHORTS_PREVIEW_EPISODES = 3
+private const val FREE_SHORTS_PREVIEW_EPISODES = 7
 
 private data class SubtitleCue(
     val startMs: Long,
@@ -249,6 +252,22 @@ fun ShortsScreen(
         }
     }
 
+    // --- Immersive mode: hide system bars in episode mode ---
+    val isEpisodeEntry = initialFilmId != null
+    DisposableEffect(isEpisodeEntry) {
+        val window = activity?.window
+        val insetsController = window?.let { WindowInsetsControllerCompat(it, it.decorView) }
+        if (isEpisodeEntry && insetsController != null) {
+            insetsController.hide(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars())
+            insetsController.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
+        onDispose {
+            // Restore system bars when leaving ShortsScreen
+            insetsController?.show(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars())
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -269,7 +288,7 @@ fun ShortsScreen(
                     )
 
                     is ShortsFeedPage.Video -> {
-                        val isEpisodeModeForItem = episodeModeKeys.contains(feedPage.item.episodeKey())
+                        val isEpisodeModeForItem = initialFilmId != null || episodeModeKeys.contains(feedPage.item.episodeKey())
                         ShortsPage(
                         item = feedPage.item,
                         itemIndex = feedPage.itemIndex,
@@ -355,11 +374,12 @@ fun ShortsScreen(
                         onToggleCc = { ccEnabled = !ccEnabled },
                         onCycleSpeed = {
                             playbackSpeed = when (playbackSpeed) {
+                                0.75f -> 1f
                                 1f -> 1.25f
                                 1.25f -> 1.5f
                                 1.5f -> 1.75f
                                 1.75f -> 2f
-                                else -> 1f
+                                else -> 0.75f
                             }
                         },
                         dailyUnlocksUsed = dailyUnlocksUsed,
@@ -378,34 +398,14 @@ fun ShortsScreen(
                             )
                         },
                         onWatchAdToUnlock = { targetItem, onDone ->
-                            // Pause video while showing ad
-                            isPlaying = false
-                            isAnyVideoShowingAd = true
-                            
-                            val currentActivity = activity
-                            if (currentActivity == null) {
-                                isAnyVideoShowingAd = false
-                                onDone(false)
-                            } else {
-                                AdsManager.loadAndShowRewardAll(
-                                    activity = currentActivity,
-                                    onRewardEarned = {
-                                        dailyUnlocksUsed++
-                                        unlockedEpisodeKeys = unlockedEpisodeKeys + "${targetItem.film.id}:${targetItem.episodeNumber}"
-                                        viewModel.unlockEpisode(
-                                            backendBaseUrl = backendBaseUrl,
-                                            filmId = targetItem.film.id,
-                                            episodeNumber = targetItem.episodeNumber
-                                        )
-                                        isAnyVideoShowingAd = false
-                                        onDone(true)
-                                    },
-                                    onFinished = {
-                                        isAnyVideoShowingAd = false
-                                        onDone(false)
-                                    }
-                                )
-                            }
+                            dailyUnlocksUsed++
+                            unlockedEpisodeKeys = unlockedEpisodeKeys + "${targetItem.film.id}:${targetItem.episodeNumber}"
+                            viewModel.unlockEpisode(
+                                backendBaseUrl = backendBaseUrl,
+                                filmId = targetItem.film.id,
+                                episodeNumber = targetItem.episodeNumber
+                            )
+                            onDone(true)
                         }
                     )
                     }
@@ -413,7 +413,7 @@ fun ShortsScreen(
             }
         }
         val currentVideoItem = currentVideoPage?.item
-        val isCurrentEpisodeMode = currentVideoItem?.let { episodeModeKeys.contains(it.episodeKey()) } == true
+        val isCurrentEpisodeMode = isEpisodeEntry || currentVideoItem?.let { episodeModeKeys.contains(it.episodeKey()) } == true
         if (controlsVisible && currentFeedPage is ShortsFeedPage.Video && !isCurrentEpisodeMode) {
             BottomNavigationBar(
                 selected = "Shorts",
@@ -554,11 +554,22 @@ private fun ShortsPage(
             item
         }
     }
+
+    LaunchedEffect(isActive, isLocked) {
+        if (isActive && isLocked) {
+            if (dailyUnlocksUsed >= dailyUnlockLimit) {
+                showDailyLimitDialog = true
+            } else {
+                unlockTargetItem = item
+            }
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
-        if (!isActive || item.playUrl.isBlank()) {
+        if (!isActive || item.playUrl.isBlank() || isLocked) {
             LoadingBackdrop(
                 item = item,
-                showLoader = isActive,
+                showLoader = isActive && !isLocked,
                 modifier = Modifier
                     .fillMaxSize()
             )
@@ -642,7 +653,7 @@ private fun ShortsPage(
         }
 
         if (controlsVisible) {
-            ShortsTopBar(
+            SharedVideoTopBar(
                 item = item,
                 showActions = isEpisodeMode,
                 onBack = onBack,
@@ -650,84 +661,54 @@ private fun ShortsPage(
                 onOptionsClick = onOptionsClick
             )
 
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 12.dp, bottom = bottomReservedPadding + 102.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                SideAction(
-                    if (liked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                    formatCount(displayLikeCount(item) + if (liked) 1 else 0),
-                    if (liked) Pink else Color(0xFFFFAAB6),
-                    onClick = {
-                        liked = !liked
-                        onLikeClick(item, liked)
-                    }
-                )
-                SideAction(
-                    icon = if (reminderOn) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
-                    label = formatCount(displaySaveCount(item) + if (reminderOn) 1 else 0),
-                    tint = if (reminderOn) Gold else Color.White,
-                    onClick = {
-                        reminderOn = !reminderOn
-                        onReminderClick(item, reminderOn)
-                        Toast
-                            .makeText(context, if (reminderOn) savedToListText else removedFromListText, Toast.LENGTH_SHORT)
-                            .show()
-                    }
-                )
-                SideAction(
-                    Icons.Filled.Share,
-                    R.string.share,
-                    Color.White,
-                    onClick = { showShareSheet = true }
-                )
-                if (isEpisodeMode) {
-                    SideAction(
-                        Icons.Filled.VideoLibrary,
-                        R.string.episodes,
-                        Color.White,
-                        onClick = { showEpisodeOptions = true }
-                    )
-                }
-                SideAction(
-                    Icons.Filled.ClosedCaption,
-                    R.string.cc,
-                    if (ccEnabled && selectedSubtitleUrl.isNotBlank()) Gold else Color.White,
-                    onClick = {
-                        if (item.subtitleTracks.size > 1) {
-                            if (ccEnabled) {
-                                onToggleCc()
-                                showSubtitleOptions = false
-                            } else {
-                                if (selectedSubtitleUrl.isBlank()) {
-                                    selectedSubtitleUrl = item.subtitleTracks.firstOrNull()?.url.orEmpty()
-                                }
-                                onToggleCc()
-                                showSubtitleOptions = true
-                            }
+            SharedVideoSidebar(
+                liked = liked,
+                likeCount = displayLikeCount(item),
+                bookmarked = reminderOn,
+                saveCount = displaySaveCount(item),
+                ccEnabled = ccEnabled,
+                playbackSpeed = playbackSpeed,
+                isEpisodeMode = isEpisodeMode,
+                modifier = Modifier.align(Alignment.BottomEnd),
+                onLikeClick = { newLiked ->
+                    liked = newLiked
+                    onLikeClick(item, newLiked)
+                },
+                onBookmarkClick = { newBookmarked ->
+                    reminderOn = newBookmarked
+                    onReminderClick(item, newBookmarked)
+                    Toast
+                        .makeText(context, if (newBookmarked) savedToListText else removedFromListText, Toast.LENGTH_SHORT)
+                        .show()
+                },
+                onShareClick = { showShareSheet = true },
+                onEpisodesClick = { showEpisodeOptions = true },
+                onCcClick = {
+                    if (item.subtitleTracks.size > 1) {
+                        if (ccEnabled) {
+                            onToggleCc()
+                            showSubtitleOptions = false
                         } else {
-                            if (!ccEnabled && selectedSubtitleUrl.isBlank()) {
+                            if (selectedSubtitleUrl.isBlank()) {
                                 selectedSubtitleUrl = item.subtitleTracks.firstOrNull()?.url.orEmpty()
                             }
                             onToggleCc()
-                            showSubtitleOptions = false
+                            showSubtitleOptions = true
                         }
+                    } else {
+                        if (!ccEnabled && selectedSubtitleUrl.isBlank()) {
+                            selectedSubtitleUrl = item.subtitleTracks.firstOrNull()?.url.orEmpty()
+                        }
+                        onToggleCc()
+                        showSubtitleOptions = false
                     }
-                )
-                if (isEpisodeMode) {
-                    SideTextAction(
-                        value = speedLabel(playbackSpeed),
-                        label = "Speed",
-                        onClick = onCycleSpeed
-                    )
-                }
-            }
+                },
+                onSpeedClick = onCycleSpeed,
+                bottomReservedPadding = bottomReservedPadding
+            )
 
             Box(modifier = Modifier.align(Alignment.BottomStart)) {
-                ShortsCaption(
+                SharedVideoCaption(
                     item = item,
                     positionMs = positionMs,
                     durationMs = durationMs,
@@ -888,63 +869,6 @@ private fun ShortsPage(
                 onDismiss = { showDailyLimitDialog = false }
             )
         }
-    }
-}
-
-@Composable
-private fun ShortsTopBar(
-    item: ShortsItem,
-    showActions: Boolean,
-    onBack: () -> Unit,
-    onFeedbackClick: () -> Unit,
-    onOptionsClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(64.dp)
-            .padding(start = 16.dp, end = 16.dp, top = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clickable(onClick = onBack)
-                .padding(8.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = Color(0xFFE5E1E4), modifier = Modifier.size(24.dp))
-        }
-        Spacer(Modifier.weight(1f))
-        if (showActions) {
-            HeaderCircleAction(
-                icon = Icons.Filled.Feedback,
-                onClick = onFeedbackClick
-            )
-            Spacer(Modifier.width(8.dp))
-            HeaderCircleAction(
-                icon = Icons.Filled.MoreVert,
-                onClick = onOptionsClick
-            )
-        }
-    }
-}
-
-@Composable
-private fun HeaderCircleAction(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .background(Color(0x66131315))
-            .border(1.dp, Color(0x14FFFFFF), CircleShape)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(icon, contentDescription = null, tint = Color(0xFFE5E1E4), modifier = Modifier.size(20.dp))
     }
 }
 
@@ -1367,40 +1291,6 @@ private fun HlsVideoPlayer(
 }
 
 @Composable
-private fun SideAction(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: Int,
-    tint: Color,
-    onClick: () -> Unit = {}
-) {
-    SideAction(icon = icon, label = stringResource(label), tint = tint, onClick = onClick)
-}
-
-@Composable
-private fun SideAction(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    tint: Color,
-    onClick: () -> Unit = {}
-) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(
-            modifier = Modifier
-                .size(46.dp)
-                .clip(CircleShape)
-                .background(Color(0x8A111114))
-                .border(1.dp, Color(0x26FFFFFF), CircleShape)
-                .clickable(onClick = onClick),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(22.dp))
-        }
-        Spacer(Modifier.height(4.dp))
-        Text(label, color = Color(0xFFF2D7DD), fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
-    }
-}
-
-@Composable
 private fun ShortsThumbnail(
     imageUrl: String,
     modifier: Modifier
@@ -1508,6 +1398,7 @@ private fun SideTextAction(
 
 private fun speedLabel(speed: Float): String {
     return when (speed) {
+        0.75f -> "0.75x"
         1f -> "1x"
         1.25f -> "1.25x"
         1.5f -> "1.5x"
@@ -1577,7 +1468,7 @@ private fun buildShareText(item: ShortsItem, context: android.content.Context): 
 }
 
 private fun ShortsItem.isPaywalled(): Boolean {
-    return isLocked && episodeNumber > FREE_SHORTS_PREVIEW_EPISODES
+    return isLocked || episodeNumber > FREE_SHORTS_PREVIEW_EPISODES
 }
 
 private fun subtitleMimeType(url: String): String {

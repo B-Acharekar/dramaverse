@@ -20,6 +20,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drama.x.drama.series.dramax.dramaseries.model.AppStep
 import com.drama.x.drama.series.dramax.dramaseries.model.AppViewModel
+import kotlinx.coroutines.delay
 import com.drama.x.drama.series.dramax.dramaseries.screen.CustomSplashScreen
 import com.drama.x.drama.series.dramax.dramaseries.screen.EpisodeScreen
 import com.drama.x.drama.series.dramax.dramaseries.screen.LanguageScreen
@@ -34,6 +35,7 @@ import com.drama.x.drama.series.dramax.dramaseries.screen.RewardScreen
 import com.drama.x.drama.series.dramax.dramaseries.screen.SearchResultsScreen
 import com.drama.x.drama.series.dramax.dramaseries.screen.ShortsScreen
 import com.drama.x.drama.series.dramax.dramaseries.screen.SurveyUninstallScreen
+import com.drama.x.drama.series.dramax.dramaseries.screen.WelcomeBackScreen
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdRemoteConfig
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdsManager
 
@@ -50,7 +52,26 @@ fun DramaXApp(
             AppStep.SplashUninstall
         initialAction == MainActivity.ACTION_WIDGET_HOME && uiState.currentStep == AppStep.Splash ->
             AppStep.Home
+        initialAction == MainActivity.ACTION_WIDGET_MY_LIST && uiState.currentStep == AppStep.Splash ->
+            AppStep.Library
         else -> uiState.currentStep
+    }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            if (com.drama.x.drama.series.dramax.dramaseries.GlobalApp.shouldShowWelcomeBackOnResume) {
+                val step = uiState.currentStep
+                if (step != AppStep.Splash &&
+                    step != AppStep.SplashUninstall &&
+                    step != AppStep.Language &&
+                    step != AppStep.Onboarding &&
+                    step != AppStep.WelcomeBack) {
+                    com.drama.x.drama.series.dramax.dramaseries.GlobalApp.shouldShowWelcomeBackOnResume = false
+                    viewModel.openWelcomeBack()
+                }
+            }
+            kotlinx.coroutines.delay(250)
+        }
     }
 
     LaunchedEffect(uiState.recreateRequested) {
@@ -67,6 +88,7 @@ fun DramaXApp(
     LaunchedEffect(initialAction) {
         when (initialAction) {
             MainActivity.ACTION_WIDGET_HOME -> viewModel.startWidgetHome()
+            MainActivity.ACTION_WIDGET_MY_LIST -> viewModel.startWidgetMyList()
             MainActivity.ACTION_WIDGET_UNINSTALL -> viewModel.startWidgetUninstallFlow()
         }
     }
@@ -77,12 +99,11 @@ fun DramaXApp(
             viewModel.openHome()
             return
         }
-        // Reduced timeout from 6s to 3.5s for faster navigation, with fallback
         AdsManager.loadAndShowInterstitial(
             activity = activity,
             placementName = "inter_back",
             config = AdRemoteConfig.interBack,
-            timeoutMs = 3_500L,
+            timeoutMs = 2_500L,
             onFinished = viewModel::openHome
         )
     }
@@ -121,6 +142,10 @@ fun DramaXApp(
             }
         )
 
+        AppStep.WelcomeBack -> WelcomeBackScreen(
+            onFinished = viewModel::onWelcomeBackFinished
+        )
+
         AppStep.ConfirmUninstall -> ConfirmUninstallScreen(
             onBackHome = viewModel::returnFromUninstallPrompt,
             onStillUninstall = viewModel::openSurveyUninstall
@@ -157,9 +182,9 @@ fun DramaXApp(
             onProfile = viewModel::openProfile
         )
 
-        AppStep.Episodes -> EpisodeScreen(
+        AppStep.Episodes -> ShortsScreen(
             backendBaseUrl = uiState.backendBaseUrl,
-            filmId = uiState.selectedEpisodeFilmId,
+            initialFilmId = uiState.selectedEpisodeFilmId ?: uiState.selectedShortFilmId,
             onBack = ::openHomeWithBackAd,
             onHome = ::openHomeWithBackAd,
             onLibrary = viewModel::openLibrary,

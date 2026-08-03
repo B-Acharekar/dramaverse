@@ -60,6 +60,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -138,7 +139,12 @@ fun EpisodeScreen(
     val pagerState = rememberPagerState { uiState.episodes.size.coerceAtLeast(1) }
 
     LaunchedEffect(filmId, backendBaseUrl) {
-        if (filmId != null) viewModel.loadEpisodes(backendBaseUrl, filmId)
+        android.util.Log.d("EpisodeScreen", "LaunchedEffect: filmId=$filmId, backendBaseUrl=$backendBaseUrl")
+        if (filmId != null) {
+            viewModel.loadEpisodes(backendBaseUrl, filmId)
+        } else {
+            android.util.Log.w("EpisodeScreen", "filmId is null!")
+        }
     }
 
     LaunchedEffect(pagerState.currentPage, uiState.episodes.size) {
@@ -155,10 +161,23 @@ fun EpisodeScreen(
             uiState.isLoading -> Box(Modifier.fillMaxSize(), Alignment.Center) {
                 CircularProgressIndicator(color = EpPink)
             }
-            uiState.episodes.isEmpty() -> Text(
-                "No episodes found", color = EpTextPrimary,
-                modifier = Modifier.align(Alignment.Center)
-            )
+            uiState.errorMessage != null -> Box(Modifier.fillMaxSize(), Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(32.dp)) {
+                    Text(
+                        "Error: ${uiState.errorMessage}",
+                        color = Color(0xFFFF6B6B),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+            uiState.episodes.isEmpty() -> Box(Modifier.fillMaxSize(), Alignment.Center) {
+                Text(
+                    "No episodes found", color = EpTextPrimary,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
             else -> {
                 // ── Vertical pager ────────────────────────────────────
                 VerticalPager(state = pagerState, modifier = Modifier.fillMaxSize(), pageSpacing = 0.dp) { page ->
@@ -193,10 +212,12 @@ fun EpisodeScreen(
                 }
 
                 // ── Top bar ───────────────────────────────────────────
-                EpisodeTopBar(
+                SharedVideoTopBar(
+                    item = currentItem ?: return@Box,
+                    showActions = true,
                     onBack      = onBack,
-                    onEpisodes  = { showEpisodeList = !showEpisodeList },
-                    onMoreOpts  = { showPlaybackOpts = true }
+                    onFeedbackClick = { showFeedback = true },
+                    onOptionsClick  = { showPlaybackOpts = true }
                 )
 
                 // ── Episode list drawer ───────────────────────────────
@@ -342,6 +363,7 @@ private fun EpisodePage(
     var position by remember { mutableLongStateOf(0L) }
     var duration by remember { mutableLongStateOf(0L) }
     var speed    by remember { mutableStateOf(1f) }
+    var ccEnabled by remember { mutableStateOf(true) }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
 
@@ -380,22 +402,25 @@ private fun EpisodePage(
         }
 
         // Right action bar
-        Column(
-            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 8.dp, bottom = 200.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            EpSideAction(if (liked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                "24.5k", if (liked) EpPink else EpTextMuted, onLike)
-            EpSideAction(if (bookmarked) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
-                "1.2k", if (bookmarked) EpGold else EpTextPrimary, onBookmark)
-            EpSideAction(Icons.Filled.Share, "Share", EpTextPrimary, onShare)
-            EpSideAction(Icons.Filled.VideoLibrary, "Episodes", EpTextPrimary, onEpisodes)
-            EpSideAction(Icons.Filled.ClosedCaption, "Subtitle", EpTextPrimary, onSubtitle)
-            EpSpeedSideAction(speed = speed, onClick = {
-                speed = when (speed) { 1f -> 1.25f; 1.25f -> 1.5f; 1.5f -> 2f; else -> 1f }
-            })
-        }
+        SharedVideoSidebar(
+            liked = liked,
+            likeCount = 24500,
+            bookmarked = bookmarked,
+            saveCount = 1200,
+            ccEnabled = ccEnabled,
+            playbackSpeed = speed,
+            isEpisodeMode = true,
+            modifier = Modifier.align(Alignment.BottomEnd),
+            onLikeClick = { onLike() },
+            onBookmarkClick = { onBookmark() },
+            onShareClick = onShare,
+            onEpisodesClick = onEpisodes,
+            onCcClick = onSubtitle,
+            onSpeedClick = {
+                speed = when (speed) { 0.75f -> 1f; 1f -> 1.25f; 1.25f -> 1.5f; 1.5f -> 2f; else -> 0.75f }
+            },
+            bottomReservedPadding = 32.dp
+        )
 
         // Bottom info
         EpisodeBottomInfo(
@@ -509,7 +534,7 @@ private fun EpSideAction(icon: ImageVector, label: String, tint: Color, onClick:
 
 @Composable
 private fun EpSpeedSideAction(speed: Float, onClick: () -> Unit) {
-    val label = when (speed) { 1f -> "1x"; 1.25f -> "1.25x"; 1.5f -> "1.5x"; else -> "2x" }
+    val label = when (speed) { 0.75f -> "0.75x"; 1f -> "1x"; 1.25f -> "1.25x"; 1.5f -> "1.5x"; else -> "2x" }
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Box(modifier = Modifier.size(48.dp).clip(CircleShape).background(EpBtnBg)
             .border(1.dp, EpBtnBorder, CircleShape).clickable(onClick = onClick),

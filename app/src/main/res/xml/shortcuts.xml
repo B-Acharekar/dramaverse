@@ -12,5 +12,16 @@
             android:targetClass="com.drama.x.drama.series.dramax.dramaseries.MainActivity"
             android:targetPackage="com.drama.x.drama.series.dramax.dramaseries" />
     </shortcut>
-
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/shortcut_bookmark"
+        android:shortcutDisabledMessage="@string/widget_my_list"
+        android:shortcutId="shortcut_my_list"
+        android:shortcutLongLabel="@string/widget_my_list"
+        android:shortcutShortLabel="@string/widget_my_list">
+        <intent
+            android:action="com.drama.x.drama.series.dramax.dramaseries.action.WIDGET_MY_LIST"
+            android:targetClass="com.drama.x.drama.series.dramax.dramaseries.MainActivity"
+            android:targetPackage="com.drama.x.drama.series.dramax.dramaseries" />
+    </shortcut>
 </shortcuts>

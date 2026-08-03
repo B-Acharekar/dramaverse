@@ -185,14 +185,10 @@ fun HomeScreen(
 
     fun openEpisodesWithHomeAd(filmId: Int?) {
         if (filmId == null || filmId == 0) {
-            // If no film ID, open generic shorts
             onOpenShorts()
-            return
+        } else {
+            onOpenEpisodes(filmId)
         }
-        // No interstitial on the way IN — navigate directly so the user
-        // reaches the episode screen instantly. The inter_back ad fires
-        // on the way out (handled in DramaXApp.openHomeWithBackAd).
-        onOpenEpisodes(filmId)
     }
 
     Box(
@@ -1903,7 +1899,7 @@ fun BottomNavigationBar(
     ) {
         NavItem(Icons.Filled.Home, stringResource(R.string.nav_home), selected == "Home", onHome)
         NavItem(Icons.Filled.Explore, stringResource(R.string.nav_shorts), selected == "Shorts", onShorts)
-        NavItem(Icons.Filled.VideoLibrary, stringResource(R.string.nav_library), selected == "Library", onLibrary)
+        NavItem(Icons.Filled.Bookmark, stringResource(R.string.nav_library), selected == "Library", onLibrary)
         NavItem(Icons.Filled.Person, stringResource(R.string.nav_profile), selected == "Profile", onProfile)
     }
 }

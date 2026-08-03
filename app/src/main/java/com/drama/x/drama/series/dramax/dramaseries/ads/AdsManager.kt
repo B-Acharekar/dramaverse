@@ -544,6 +544,7 @@ object AdsManager {
         )
     }
 
+
     fun showInterWelcome(activity: Activity, onClosed: () -> Unit = {}) {
         val now = android.os.SystemClock.elapsedRealtime()
         if (now - lastWelcomeBackShowMs < 15_000L) {
@@ -582,6 +583,18 @@ object AdsManager {
                 }
             },
             true
+        )
+    }
+
+    fun loadAndShowInterHome(
+        activity: Activity,
+        onFinished: () -> Unit
+    ) {
+        loadAndShowInterstitial(
+            activity = activity,
+            placementName = "inter_home",
+            config = AdRemoteConfig.interHome,
+            onFinished = onFinished
         )
     }
 

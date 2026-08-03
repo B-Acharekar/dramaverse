@@ -213,4 +213,9 @@
     <string name="uninstall_open_failed">제거 화면을 열 수 없습니다</string>
 
     <string name="welcome_to_home_temp">홈에 오신 것을 환영합니다</string>
+
+    <!-- Widget strings -->
+    <string name="widget_home">홈</string>
+    <string name="widget_my_list">내 목록</string>
+    <string name="widget_uninstall">제거</string>
 </resources>

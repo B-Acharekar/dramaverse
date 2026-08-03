@@ -6,6 +6,7 @@ package com.drama.x.drama.series.dramax.dramaseries.screen
  * screens can reference them without duplication.
  */
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -15,17 +16,23 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -36,15 +43,25 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ClosedCaption
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
@@ -62,12 +79,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -601,4 +621,392 @@ internal fun buildSharedShareText(item: ShortsItem, context: Context): String = 
     append("Watch "); append(item.film.title.ifBlank { "this DramaX short" })
     append(" Episode "); append(item.episodeNumber); append(" on DramaX.\n\n")
     append("Get the app: https://play.google.com/store/apps/details?id="); append(context.packageName)
+}
+
+// ── Shared Video Top Bar (used by both ShortsScreen and EpisodeScreen) ──────
+@Composable
+internal fun SharedVideoTopBar(
+    item: ShortsItem,
+    showActions: Boolean,
+    onBack: () -> Unit,
+    onFeedbackClick: () -> Unit,
+    onOptionsClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp)
+            .padding(start = 16.dp, end = 16.dp, top = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clickable(onClick = onBack)
+                .padding(8.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = Color(0xFFE5E1E4), modifier = Modifier.size(24.dp))
+        }
+        Spacer(Modifier.weight(1f))
+        if (showActions) {
+            SharedHeaderCircleAction(
+                icon = Icons.Filled.Feedback,
+                onClick = onFeedbackClick
+            )
+            Spacer(Modifier.width(8.dp))
+            SharedHeaderCircleAction(
+                icon = Icons.Filled.MoreVert,
+                onClick = onOptionsClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun SharedHeaderCircleAction(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .background(Color(0x66131315))
+            .border(1.dp, Color(0x14FFFFFF), CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(icon, contentDescription = null, tint = Color(0xFFE5E1E4), modifier = Modifier.size(20.dp))
+    }
+}
+
+// ── Shared Video Caption/Info Section (bottom info with seekbar for episodes) ──
+@Composable
+internal fun SharedVideoCaption(
+    item: ShortsItem,
+    positionMs: Long,
+    durationMs: Long,
+    isLocked: Boolean,
+    isEpisodeMode: Boolean,
+    bottomReservedPadding: Dp,
+    onSeekTo: (Long) -> Unit,
+    onWatchNowClick: () -> Unit
+) {
+    val description = item.film.description.ifBlank { "Watch this great content" }
+    var descriptionExpanded by remember(item.film.id, item.episodeNumber) { mutableStateOf(false) }
+    val showDescriptionToggle = description.length > 70
+    
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = if (isLocked) 16.dp else 90.dp, bottom = bottomReservedPadding + 16.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "Episode ${item.episodeNumber} / ${item.film.episodeTotal}",
+                color = SharedGold,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.sp,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Color(0x33F5C65B))
+                    .border(1.dp, Color(0x4DF5C65B), RoundedCornerShape(4.dp))
+                    .padding(horizontal = 8.dp, vertical = 3.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text("Trending", color = Color(0xFFE5BDBE), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(
+            item.film.title,
+            color = Color(0xFFE5E1E4),
+            fontSize = 20.sp,
+            lineHeight = 25.sp,
+            fontWeight = FontWeight.ExtraBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            letterSpacing = 0.sp
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            description,
+            color = Color(0xCCE5E1E4),
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+            fontWeight = FontWeight.Normal,
+            maxLines = if (descriptionExpanded) 4 else 2,
+            overflow = TextOverflow.Ellipsis,
+            letterSpacing = 0.sp
+        )
+        if (showDescriptionToggle) {
+            Spacer(Modifier.height(3.dp))
+            Text(
+                text = if (descriptionExpanded) "View less" else "... View more",
+                color = SharedGold,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 0.sp,
+                modifier = Modifier.clickable { descriptionExpanded = !descriptionExpanded }
+            )
+        }
+        Spacer(Modifier.height(10.dp))
+        if (isEpisodeMode) {
+            SharedThinSeekBar(
+                progress = if (durationMs > 0L) positionMs.toFloat() / durationMs.toFloat() else 0f,
+                onSeekFraction = { fraction ->
+                    if (durationMs > 0L) onSeekTo((durationMs * fraction).toLong())
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    formatSharedPlaybackTime(positionMs),
+                    color = Color(0x99E5BDBE),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.sp
+                )
+                Text(
+                    formatSharedPlaybackTime(durationMs),
+                    color = Color(0x99E5BDBE),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.sp
+                )
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .width(170.dp)
+                    .height(40.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(SharedPink)
+                    .clickable(onClick = onWatchNowClick),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "Watch Now",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SharedThinSeekBar(
+    progress: Float,
+    onSeekFraction: (Float) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var widthPx by remember { mutableStateOf(1) }
+    Box(
+        modifier = modifier
+            .height(24.dp)
+            .onSizeChanged { widthPx = it.width.coerceAtLeast(1) }
+            .pointerInput(widthPx) {
+                detectTapGestures { offset ->
+                    onSeekFraction((offset.x / widthPx).coerceIn(0f, 1f))
+                }
+            }
+            .pointerInput(widthPx) {
+                detectDragGestures { change, _ ->
+                    onSeekFraction((change.position.x / widthPx).coerceIn(0f, 1f))
+                    change.consume()
+                }
+            },
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(3.dp)
+                .clip(RoundedCornerShape(3.dp))
+                .background(Color(0x66FFFFFF))
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(progress)
+                .height(3.dp)
+                .clip(RoundedCornerShape(3.dp))
+                .background(SharedPink)
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(progress)
+                .wrapContentWidth(Alignment.End)
+                .offset(x = (-6).dp)
+                .size(12.dp)
+                .clip(CircleShape)
+                .background(SharedPink)
+        )
+    }
+}
+
+private fun formatSharedPlaybackTime(ms: Long): String {
+    val totalSeconds = (ms / 1000L).toInt()
+    val hours = totalSeconds / 3600
+    val minutes = (totalSeconds % 3600) / 60
+    val seconds = totalSeconds % 60
+    return if (hours > 0) String.format("%d:%02d:%02d", hours, minutes, seconds) else String.format("%d:%02d", minutes, seconds)
+}
+
+// ── Shared imports needed ───────────────────────────────────────────────────
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is android.content.ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
+
+// ── Shared Video Sidebar Actions (used by both ShortsScreen and EpisodeScreen) ──
+@Composable
+internal fun SharedVideoSidebar(
+    liked: Boolean,
+    likeCount: Int,
+    bookmarked: Boolean,
+    saveCount: Int,
+    ccEnabled: Boolean,
+    playbackSpeed: Float,
+    isEpisodeMode: Boolean,
+    modifier: Modifier = Modifier,
+    onLikeClick: (Boolean) -> Unit,
+    onBookmarkClick: (Boolean) -> Unit,
+    onShareClick: () -> Unit,
+    onEpisodesClick: () -> Unit,
+    onCcClick: () -> Unit,
+    onSpeedClick: () -> Unit,
+    bottomReservedPadding: Dp = 0.dp
+) {
+    Column(
+        modifier = modifier
+            .padding(end = 12.dp, bottom = bottomReservedPadding + 102.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        // Like Button
+        SharedSideAction(
+            icon = if (liked) Icons.Filled.FavoriteBorder else Icons.Filled.FavoriteBorder,
+            label = formatSharedCount(likeCount + if (liked) 1 else 0),
+            tint = if (liked) SharedPink else Color(0xFFFFAAB6),
+            onClick = { onLikeClick(!liked) }
+        )
+
+        // Bookmark Button
+        SharedSideAction(
+            icon = if (bookmarked) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
+            label = formatSharedCount(saveCount + if (bookmarked) 1 else 0),
+            tint = if (bookmarked) SharedGold else Color.White,
+            onClick = { onBookmarkClick(!bookmarked) }
+        )
+
+        // Share Button
+        SharedSideAction(
+            icon = Icons.Filled.Share,
+            label = "Share",
+            tint = Color.White,
+            onClick = onShareClick
+        )
+
+        // Episodes Button (only in episode mode)
+        if (isEpisodeMode) {
+            SharedSideAction(
+                icon = Icons.Filled.VideoLibrary,
+                label = "Episodes",
+                tint = Color.White,
+                onClick = onEpisodesClick
+            )
+        }
+
+        // Subtitles Button
+        SharedSideAction(
+            icon = Icons.Filled.ClosedCaption,
+            label = "CC",
+            tint = if (ccEnabled) SharedGold else Color.White,
+            onClick = onCcClick
+        )
+
+        // Speed Button (only in episode mode)
+        if (isEpisodeMode) {
+            SharedSideTextAction(
+                value = formatSharedSpeed(playbackSpeed),
+                label = "Speed",
+                onClick = onSpeedClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun SharedSideAction(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    tint: Color,
+    onClick: () -> Unit = {}
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier.clickable(onClick = onClick)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(Color(0xFF1A1A1E))
+                .border(1.dp, Color(0xFF3A3640), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(20.dp))
+        }
+        Text(label, color = Color(0xFFB7A8B3), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@Composable
+private fun SharedSideTextAction(
+    value: String,
+    label: String,
+    onClick: () -> Unit = {}
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier.clickable(onClick = onClick)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(Color(0xFF1A1A1E))
+                .border(1.dp, Color(0xFF3A3640), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(value, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Black)
+        }
+        Text(label, color = Color(0xFFB7A8B3), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+// ── Helper functions for sidebar ────────────────────────────────────────────
+private fun formatSharedCount(count: Int): String = when {
+    count >= 1_000_000 -> String.format("%.1fM", count / 1_000_000f)
+    count >= 1_000 -> String.format("%.1fk", count / 1_000f)
+    else -> count.toString()
+}
+
+private fun formatSharedSpeed(speed: Float): String = when (speed) {
+    0.75f -> "0.75x"
+    1f -> "1x"
+    1.25f -> "1.25x"
+    1.5f -> "1.5x"
+    1.75f -> "1.75x"
+    2f -> "2x"
+    else -> "${speed}x"
 }

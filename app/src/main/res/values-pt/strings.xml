@@ -213,4 +213,9 @@
     <string name="uninstall_open_failed">Não foi possível abrir a tela de desinstalação</string>
 
     <string name="welcome_to_home_temp">Bem-vindo à Página Inicial</string>
+
+    <!-- Widget strings -->
+    <string name="widget_home">Início</string>
+    <string name="widget_my_list">Minha Lista</string>
+    <string name="widget_uninstall">Desinstalar</string>
 </resources>

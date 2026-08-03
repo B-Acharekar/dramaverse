@@ -213,4 +213,9 @@
     <string name="uninstall_open_failed">अनइंस्टॉल स्क्रीन नहीं खुल सकी</string>
 
     <string name="welcome_to_home_temp">होम में आपका स्वागत है</string>
+
+    <!-- Widget strings -->
+    <string name="widget_home">होम</string>
+    <string name="widget_my_list">मेरी सूची</string>
+    <string name="widget_uninstall">अनइंस्टॉल करें</string>
 </resources>

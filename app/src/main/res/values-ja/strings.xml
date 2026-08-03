@@ -212,4 +212,9 @@
     <string name="uninstall_action">アンインストール</string>
     <string name="uninstall_open_failed">アンインストール画面を開けませんでした</string>
     <string name="welcome_to_home_temp">ホームへようこそ</string>
+
+    <!-- Widget strings -->
+    <string name="widget_home">ホーム</string>
+    <string name="widget_my_list">マイリスト</string>
+    <string name="widget_uninstall">アンインストール</string>
 </resources>

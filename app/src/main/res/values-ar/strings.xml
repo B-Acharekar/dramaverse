@@ -212,4 +212,9 @@
     <string name="uninstall_open_failed">تعذر فتح شاشة إلغاء التثبيت</string>
 
     <string name="welcome_to_home_temp">مرحبًا بك في الصفحة الرئيسية</string>
+
+    <!-- Widget strings -->
+    <string name="widget_home">الرئيسية</string>
+    <string name="widget_my_list">قائمتي</string>
+    <string name="widget_uninstall">إلغاء التثبيت</string>
 </resources>

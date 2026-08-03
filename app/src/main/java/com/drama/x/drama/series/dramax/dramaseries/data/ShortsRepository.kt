@@ -1,8 +1,6 @@
 package com.drama.x.drama.series.dramax.dramaseries.data
 
 import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
 
 data class SubtitleTrack(
     val label: String,
@@ -27,7 +25,7 @@ data class EpisodeInfo(
     val isWatched: Boolean = false
 )
 
-private const val FREE_SHORTS_PREVIEW_EPISODES = 3
+private const val FREE_SHORTS_PREVIEW_EPISODES = 7
 
 class ShortsRepository(
     private val authRepository: AuthRepository
@@ -41,8 +39,16 @@ class ShortsRepository(
             ?: authRepository.registerDevice(backendBaseUrl, language).getOrThrow().token
             ?: throw IllegalStateException("Device auth did not return a bearer token.")
         val json = getJson(backendBaseUrl, "client/films", language, token, page)
-        collectShortDramaItems(json)
-            .distinctBy { it.id.takeIf { id -> id != 0 } ?: it.title }
+        val items = collectShortDramaItems(json)
+        
+        // Deduplicate once using HashMap for O(n) performance
+        val dedupeMap = mutableMapOf<String, DramaItem>()
+        for (item in items) {
+            val key = item.id.takeIf { it != 0 }?.toString() ?: item.title
+            dedupeMap[key] = item
+        }
+        
+        dedupeMap.values
             .filter { it.title.isNotBlank() }
             .map { ShortsItem(film = it) }
     }
@@ -86,8 +92,7 @@ class ShortsRepository(
             playUrl = playback.optString("hls_url").ifBlank { playback.optString("backup_hls_url") },
             subtitleUrl = subtitleTracks.firstOrNull()?.url.orEmpty(),
             subtitleTracks = subtitleTracks,
-            isLocked = json.optBoolean("unlock_required", false) &&
-                episodeJson.optInt("episode", episodeNumber) > FREE_SHORTS_PREVIEW_EPISODES,
+            isLocked = episodeJson.optInt("episode", episodeNumber) > FREE_SHORTS_PREVIEW_EPISODES,
             likeCount = likeCount
         )
     }
@@ -117,10 +122,7 @@ class ShortsRepository(
                     EpisodeInfo(
                         episodeNumber = number,
                         title = episode.firstString("title", "name"),
-                        isLocked = number > FREE_SHORTS_PREVIEW_EPISODES && (
-                            episode.optBoolean("unlock_required", false) ||
-                                episode.firstInt("is_unlocked", "unlocked") == 0
-                            ),
+                        isLocked = number > FREE_SHORTS_PREVIEW_EPISODES,
                         isWatched = episode.optBoolean("watched", false) ||
                             episode.optBoolean("is_watched", false) ||
                             episode.optBoolean("completed", false) ||
@@ -234,24 +236,8 @@ private fun postJson(
     token: String,
     body: JSONObject? = null
 ): JSONObject {
-    val url = URL("${backendBaseUrl.trimEndSlash()}/$path?language=$language")
-    val connection = (url.openConnection() as HttpURLConnection).apply {
-        requestMethod = "POST"
-        connectTimeout = 6500
-        readTimeout = 6500
-        doOutput = true
-        setRequestProperty("Accept", "application/json")
-        setRequestProperty("Content-Type", "application/json")
-        setRequestProperty("Authorization", "Bearer $token")
-        outputStream.use { it.write(body?.toString()?.toByteArray() ?: ByteArray(0)) }
-    }
-    val responseText = if (connection.responseCode in 200..299) {
-        connection.inputStream.bufferedReader().use { it.readText() }
-    } else {
-        val error = connection.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
-        throw IllegalStateException("$path failed: ${connection.responseCode} $error")
-    }
-    return JSONObject(responseText)
+    val url = "${backendBaseUrl.trimEndSlash()}/$path?language=$language"
+    return NetworkUtil.postJsonSync(url, body?.toString(), token)
 }
 
 private fun getJson(
@@ -265,39 +251,36 @@ private fun getJson(
         append("language=$language")
         if (page != null) append("&page=$page")
     }
-    val url = URL("${backendBaseUrl.trimEndSlash()}/$path?$query")
-    val connection = (url.openConnection() as HttpURLConnection).apply {
-        requestMethod = "GET"
-        connectTimeout = 6500
-        readTimeout = 6500
-        setRequestProperty("Accept", "application/json")
-        setRequestProperty("Authorization", "Bearer $token")
-    }
-    val responseText = if (connection.responseCode in 200..299) {
-        connection.inputStream.bufferedReader().use { it.readText() }
-    } else {
-        val error = connection.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
-        throw IllegalStateException("$path failed: ${connection.responseCode} $error")
-    }
-    return JSONObject(responseText)
+    val url = "${backendBaseUrl.trimEndSlash()}/$path?$query"
+    return NetworkUtil.getJsonSync(url, token)
 }
 
 private fun collectShortDramaItems(value: Any?): List<DramaItem> {
-    return when (value) {
-        is JSONObject -> {
-            val own = value.toShortDramaItemOrNull()
-            val children = value.keys().asSequence().flatMap { key ->
-                collectShortDramaItems(value.opt(key)).asSequence()
-            }.toList()
-            if (own != null) listOf(own) + children else children
+    val results = mutableListOf<DramaItem>()
+    val visited = mutableSetOf<Any>()
+    
+    fun traverse(node: Any?) {
+        if (node == null || node in visited) return
+        if (node is Any) visited.add(node)
+        
+        when (node) {
+            is JSONObject -> {
+                node.toShortDramaItemOrNull()?.let { results.add(it) }
+                val keys = node.keys()
+                while (keys.hasNext()) {
+                    traverse(node.opt(keys.next()))
+                }
+            }
+            is org.json.JSONArray -> {
+                for (i in 0 until node.length()) {
+                    traverse(node.opt(i))
+                }
+            }
         }
-
-        is org.json.JSONArray -> buildList {
-            for (index in 0 until value.length()) addAll(collectShortDramaItems(value.opt(index)))
-        }
-
-        else -> emptyList()
     }
+    
+    traverse(value)
+    return results
 }
 
 private fun JSONObject.toShortDramaItemOrNull(): DramaItem? {

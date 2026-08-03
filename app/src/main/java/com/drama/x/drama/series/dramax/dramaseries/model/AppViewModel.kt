@@ -27,6 +27,7 @@ enum class AppStep {
     Splash,
     Language,
     Onboarding,
+    WelcomeBack,
     Home,
     Episodes,
     Shorts,
@@ -67,16 +68,23 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     
     // Navigation debouncing to prevent multiple rapid transitions
     private var lastNavigationTimeMs = 0L
+    var lastHomeExitTimeMs = 0L  // Track when user navigates away from Home
+        private set
 
     companion object {
         @Volatile
         private var pendingPostLanguageRecreate = false
         
-        private const val NAVIGATION_DEBOUNCE_MS = 300L
+        // Reduced from 300ms to 100ms for snappier navigation response
+        private const val NAVIGATION_DEBOUNCE_MS = 100L
     }
 
     init {
         applyRemoteValues(remoteConfig)
+    }
+
+    fun onWelcomeBackFinished() {
+        _uiState.update { it.copy(currentStep = AppStep.Home) }
     }
 
     fun onSplashFinished() {
@@ -134,6 +142,15 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun startWidgetMyList() {
+        _uiState.update {
+            it.copy(
+                currentStep = AppStep.Library,
+                selectedShortFilmId = null
+            )
+        }
+    }
+
     fun startWidgetUninstallFlow() {
         pendingPostLanguageRecreate = false
         AdsManager.clearUninstallAds()
@@ -178,6 +195,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             val now = System.currentTimeMillis()
             if (now - lastNavigationTimeMs < NAVIGATION_DEBOUNCE_MS) return@launch
             lastNavigationTimeMs = now
+            lastHomeExitTimeMs = now
             _uiState.update {
                 it.copy(
                     currentStep = AppStep.Shorts,
@@ -188,16 +206,16 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
     
     fun openEpisodes(filmId: Int?, episodeNumber: Int? = null) {
-        // Open episodes screen for watching series
+        // Open Shorts screen in episode mode for watching series
         viewModelScope.launch {
             val now = System.currentTimeMillis()
             if (now - lastNavigationTimeMs < NAVIGATION_DEBOUNCE_MS) return@launch
             lastNavigationTimeMs = now
+            lastHomeExitTimeMs = now
             _uiState.update {
                 it.copy(
-                    currentStep = AppStep.Episodes,
-                    selectedEpisodeFilmId = filmId,
-                    selectedEpisodeNumber = episodeNumber ?: 1
+                    currentStep = AppStep.Shorts,
+                    selectedShortFilmId = filmId
                 )
             }
         }
@@ -208,6 +226,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             val now = System.currentTimeMillis()
             if (now - lastNavigationTimeMs < NAVIGATION_DEBOUNCE_MS) return@launch
             lastNavigationTimeMs = now
+            lastHomeExitTimeMs = now
             _uiState.update { it.copy(currentStep = AppStep.Profile, selectedShortFilmId = null) }
         }
     }
@@ -217,6 +236,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             val now = System.currentTimeMillis()
             if (now - lastNavigationTimeMs < NAVIGATION_DEBOUNCE_MS) return@launch
             lastNavigationTimeMs = now
+            lastHomeExitTimeMs = now
             _uiState.update { it.copy(currentStep = AppStep.Library, selectedShortFilmId = null) }
         }
     }
@@ -226,6 +246,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             val now = System.currentTimeMillis()
             if (now - lastNavigationTimeMs < NAVIGATION_DEBOUNCE_MS) return@launch
             lastNavigationTimeMs = now
+            lastHomeExitTimeMs = now
             _uiState.update { it.copy(currentStep = AppStep.Rewards, selectedShortFilmId = null) }
         }
     }
@@ -248,6 +269,10 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 searchQuery = trimmed
             )
         }
+    }
+
+    fun openWelcomeBack() {
+        _uiState.update { it.copy(currentStep = AppStep.WelcomeBack) }
     }
 
     private fun applyRemoteValues(config: FirebaseRemoteConfig?) {

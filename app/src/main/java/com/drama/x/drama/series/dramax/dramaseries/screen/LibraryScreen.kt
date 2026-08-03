@@ -10,6 +10,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -142,6 +144,8 @@ fun LibraryScreen(
             LibraryContent(
                 feed = feed ?: LibraryFeed(emptyList(), emptyList(), emptyList(), emptyList(), emptyList()),
                 errorMessage = uiState.errorMessage,
+                backendBaseUrl = backendBaseUrl,
+                viewModel = viewModel,
                 onSearch = onSearch,
                 onOpenShorts = onOpenShorts,
                 nativeMyListAdState = nativeMyListAdState,
@@ -170,6 +174,8 @@ fun LibraryScreen(
 private fun LibraryContent(
     feed: LibraryFeed,
     errorMessage: String?,
+    backendBaseUrl: String,
+    viewModel: LibraryViewModel,
     onSearch: (String) -> Unit = {},
     onOpenShorts: (Int?) -> Unit,
     nativeMyListAdState: NativeAdState,
@@ -179,6 +185,19 @@ private fun LibraryContent(
     var mode by remember { mutableStateOf(MyListMode.Overview) }
     val history = feed.watchHistory
     val favorites = feed.watchList
+    // Checkbox selection state for History and Favorites modes
+    var selectedHistoryIds by remember { mutableStateOf(emptySet<Int>()) }
+    var selectedFavoriteIds by remember { mutableStateOf(emptySet<Int>()) }
+    // Long-press to enter selection mode
+    var isHistorySelectionMode by remember { mutableStateOf(false) }
+    var isFavoritesSelectionMode by remember { mutableStateOf(false) }
+    // Reset selection and mode whenever screen mode changes
+    androidx.compose.runtime.LaunchedEffect(mode) {
+        selectedHistoryIds = emptySet()
+        selectedFavoriteIds = emptySet()
+        isHistorySelectionMode = false
+        isFavoritesSelectionMode = false
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -237,19 +256,17 @@ private fun LibraryContent(
                         )
                     }
                 } else {
-                    // Show ads after every 3rd item, starting from position 1 (after first item)
                     favorites.forEachIndexed { index, film ->
-                        item {
-                            FavoriteListCard(film = film, onOpenShorts = onOpenShorts)
-                        }
-                        // Show ad after every 3rd item (positions 2, 5, 8, etc.)
-                        if ((index + 1) % 3 == 0) {
+                        if (index % 3 == 0) {
                             item {
                                 MyListNativeAd(
                                     state = nativeMyListAdState,
                                     modifier = Modifier.padding(horizontal = 18.dp)
                                 )
                             }
+                        }
+                        item {
+                            FavoriteListCard(film = film, onOpenShorts = onOpenShorts)
                         }
                     }
                 }
@@ -260,11 +277,25 @@ private fun LibraryContent(
                     Spacer(modifier = Modifier.statusBarsPadding())
                 }
                 item {
-                    MyListAllHeader(
+                    val allSelected = history.isNotEmpty() && selectedHistoryIds.containsAll(history.map { it.film.id }.toSet())
+                    HistoryAllHeader(
                         title = "History watching",
                         meta = "${history.size} ITEMS WATCHED",
-                        action = "Select All",
-                        onBack = { mode = MyListMode.Overview }
+                        allSelected = allSelected,
+                        selectionMode = isHistorySelectionMode,
+                        onBack = { mode = MyListMode.Overview },
+                        onSelectAll = {
+                            isHistorySelectionMode = true
+                            selectedHistoryIds = if (allSelected) emptySet()
+                            else history.map { it.film.id }.toSet()
+                        },
+                        onDelete = {
+                            if (selectedHistoryIds.isNotEmpty()) {
+                                viewModel.removeHistoryItems(backendBaseUrl, selectedHistoryIds)
+                                selectedHistoryIds = emptySet()
+                                isHistorySelectionMode = false
+                            }
+                        }
                     )
                 }
                 if (history.isEmpty()) {
@@ -275,23 +306,50 @@ private fun LibraryContent(
                         )
                     }
                 } else {
-                    history.forEachIndexed { index, item ->
-                        item {
-                            MyListHistoryGridCard(
-                                item = item,
-                                onOpenShorts = onOpenShorts,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 18.dp)
-                            )
-                        }
-                        // Show ad after every 3rd item
-                        if ((index + 1) % 3 == 0) {
+                    // Build rows of 3 items, inserting native ad every 3 rows (every 9 items)
+                    val chunked = history.chunked(3)
+                    chunked.forEachIndexed { rowIndex, rowItems ->
+                        // Native ad every 3 rows (before row 0, 3, 6, ...)
+                        if (rowIndex % 3 == 0) {
                             item {
                                 MyListNativeAd(
                                     state = nativeMyListAdState,
-                                    modifier = Modifier.padding(horizontal = 18.dp)
+                                    modifier = Modifier.padding(horizontal = 16.dp)
                                 )
+                            }
+                        }
+                        item(key = "hist_row_$rowIndex") {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                rowItems.forEach { histItem ->
+                                    val filmId = histItem.film.id
+                                    val isChecked = filmId in selectedHistoryIds
+                                    HistoryGridCard(
+                                        item = histItem,
+                                        isChecked = isChecked,
+                                        selectionMode = isHistorySelectionMode,
+                                        onLongPress = {
+                                            isHistorySelectionMode = true
+                                            selectedHistoryIds = selectedHistoryIds + filmId
+                                        },
+                                        onToggleCheck = {
+                                            selectedHistoryIds = if (isChecked)
+                                                selectedHistoryIds - filmId
+                                            else
+                                                selectedHistoryIds + filmId
+                                        },
+                                        onOpen = { if (!isHistorySelectionMode) onOpenShorts(filmId.takeIf { it != 0 }) },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                // Fill empty slots in last row
+                                repeat(3 - rowItems.size) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
                             }
                         }
                     }
@@ -303,11 +361,25 @@ private fun LibraryContent(
                     Spacer(modifier = Modifier.statusBarsPadding())
                 }
                 item {
-                    MyListAllHeader(
+                    val allSelected = favorites.isNotEmpty() && selectedFavoriteIds.containsAll(favorites.map { it.id }.toSet())
+                    HistoryAllHeader(
                         title = "My Favorites",
                         meta = "${favorites.size} ITEMS",
-                        action = null,
-                        onBack = { mode = MyListMode.Overview }
+                        allSelected = allSelected,
+                        selectionMode = isFavoritesSelectionMode,
+                        onBack = { mode = MyListMode.Overview },
+                        onSelectAll = {
+                            isFavoritesSelectionMode = true
+                            selectedFavoriteIds = if (allSelected) emptySet()
+                            else favorites.map { it.id }.toSet()
+                        },
+                        onDelete = {
+                            if (selectedFavoriteIds.isNotEmpty()) {
+                                viewModel.removeFavoriteItems(backendBaseUrl, selectedFavoriteIds)
+                                selectedFavoriteIds = emptySet()
+                                isFavoritesSelectionMode = false
+                            }
+                        }
                     )
                 }
                 if (favorites.isEmpty()) {
@@ -319,17 +391,32 @@ private fun LibraryContent(
                     }
                 } else {
                     favorites.forEachIndexed { index, film ->
-                        item {
-                            FavoriteListCard(film = film, onOpenShorts = onOpenShorts)
-                        }
-                        // Show ad after every 3rd item
-                        if ((index + 1) % 3 == 0) {
+                        if (index % 3 == 0) {
                             item {
                                 MyListNativeAd(
                                     state = nativeMyListAdState,
                                     modifier = Modifier.padding(horizontal = 18.dp)
                                 )
                             }
+                        }
+                        item(key = "fav_${film.id}") {
+                            val isChecked = film.id in selectedFavoriteIds
+                            FavoriteListCard(
+                                film = film,
+                                onOpenShorts = { if (!isFavoritesSelectionMode) onOpenShorts(it) },
+                                isChecked = isChecked,
+                                selectionMode = isFavoritesSelectionMode,
+                                onLongPress = {
+                                    isFavoritesSelectionMode = true
+                                    selectedFavoriteIds = selectedFavoriteIds + film.id
+                                },
+                                onToggleCheck = {
+                                    selectedFavoriteIds = if (isChecked)
+                                        selectedFavoriteIds - film.id
+                                    else
+                                        selectedFavoriteIds + film.id
+                                }
+                            )
                         }
                     }
                 }
@@ -392,7 +479,8 @@ private fun MyListAllHeader(
     title: String,
     meta: String,
     action: String?,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onDelete: (() -> Unit)? = null
 ) {
     Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -413,7 +501,23 @@ private fun MyListAllHeader(
                 letterSpacing = 0.sp,
                 modifier = Modifier.weight(1f)
             )
-            Icon(Icons.Filled.DeleteOutline, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+            if (onDelete != null) {
+                Icon(
+                    Icons.Filled.DeleteOutline,
+                    contentDescription = "Delete all",
+                    tint = Color.White,
+                    modifier = Modifier
+                        .size(18.dp)
+                        .clickable(onClick = onDelete)
+                )
+            } else {
+                Icon(
+                    Icons.Filled.DeleteOutline,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
         }
         Spacer(modifier = Modifier.height(10.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -423,6 +527,240 @@ private fun MyListAllHeader(
                 Text(action, color = Gold, fontSize = 9.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
             }
         }
+    }
+}
+
+@Composable
+private fun HistoryAllHeader(
+    title: String,
+    meta: String,
+    allSelected: Boolean,
+    selectionMode: Boolean = false,
+    onBack: () -> Unit,
+    onSelectAll: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = Color.White,
+                modifier = Modifier
+                    .size(20.dp)
+                    .clickable(onClick = onBack)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(
+                title,
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.sp,
+                modifier = Modifier.weight(1f)
+            )
+            if (selectionMode) {
+                Icon(
+                    Icons.Filled.DeleteOutline,
+                    contentDescription = "Delete selected",
+                    tint = Color.White,
+                    modifier = Modifier
+                        .size(18.dp)
+                        .clickable(onClick = onDelete)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(meta, color = Color(0xFFCDB5BC), fontSize = 9.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+            Spacer(modifier = Modifier.weight(1f))
+            if (selectionMode) {
+                Text(
+                    text = if (allSelected) "Deselect All" else "Select All",
+                    color = Gold,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 0.sp,
+                    modifier = Modifier.clickable(onClick = onSelectAll)
+                )
+            } else {
+                Text(
+                    text = "Long-press to select",
+                    color = Color(0xFF6B6B6F),
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 0.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistoryGridCard(
+    item: ContinueWatchingItem,
+    isChecked: Boolean,
+    selectionMode: Boolean = false,
+    onLongPress: () -> Unit = {},
+    onToggleCheck: () -> Unit,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val film = item.film
+    Column(
+        modifier = modifier
+            .pointerInput(selectionMode) {
+                detectTapGestures(
+                    onLongPress = { onLongPress() },
+                    onTap = { onOpen() }
+                )
+            }
+    ) {
+        // Poster box with checkbox overlay
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(0.667f)  // ~2:3 portrait ratio
+                .clip(RoundedCornerShape(8.dp))
+                .background(Panel)
+        ) {
+            NetworkDramaImage(film.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, film.title)
+            // Dark overlay
+            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xC009090B)))))
+            // Episode progress pill (bottom-right)
+            ProgressPill(
+                text = stringResource(R.string.episode_progress, item.episodeNumber, film.episodeTotal.coerceAtLeast(item.episodeNumber)),
+                modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp)
+            )
+            // Progress bar (bottom)
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth(item.progressFraction.takeIf { it > 0f } ?: 0.04f)
+                    .height(3.dp)
+                    .background(Pink)
+            )
+            // Checkbox tap zone - only shown in selection mode
+            if (selectionMode) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .size(32.dp)
+                        .clickable(onClick = onToggleCheck),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(if (isChecked) Pink else Color(0x44FFFFFF))
+                            .border(1.dp, if (isChecked) Pink else Color(0x66FFFFFF), RoundedCornerShape(4.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isChecked) {
+                            Icon(
+                                Icons.Filled.Check,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(12.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(5.dp))
+        Text(
+            film.title,
+            color = Color.White,
+            fontSize = 11.sp,
+            lineHeight = 13.sp,
+            fontWeight = FontWeight.ExtraBold,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            letterSpacing = 0.sp
+        )
+        Text(
+            "Ep ${item.episodeNumber} of ${film.episodeTotal.coerceAtLeast(item.episodeNumber)}",
+            color = Color(0xFFCDB5BC),
+            fontSize = 9.sp,
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = 0.sp
+        )
+    }
+}
+
+@Composable
+private fun FavoriteGridCard(
+    film: DramaItem,
+    isChecked: Boolean,
+    onToggleCheck: () -> Unit,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.clickable(onClick = onOpen)
+    ) {
+        // Poster box with checkbox overlay
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(0.667f)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Panel)
+        ) {
+            NetworkDramaImage(film.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, film.title)
+            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xC009090B)))))
+            // Episode count pill (bottom-right)
+            ProgressPill(
+                text = "${film.episodeTotal.coerceAtLeast(1)} Eps",
+                modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp)
+            )
+            // Checkbox tap zone (top-left)
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .size(32.dp)
+                    .clickable(onClick = onToggleCheck),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(if (isChecked) Pink else Color(0x44FFFFFF))
+                        .border(1.dp, if (isChecked) Pink else Color(0x66FFFFFF), RoundedCornerShape(4.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isChecked) {
+                        Icon(
+                            Icons.Filled.Check,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(5.dp))
+        Text(
+            film.title,
+            color = Color.White,
+            fontSize = 11.sp,
+            lineHeight = 13.sp,
+            fontWeight = FontWeight.ExtraBold,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            letterSpacing = 0.sp
+        )
+        Text(
+            "${film.episodeTotal.coerceAtLeast(1)} Episodes",
+            color = Color(0xFFCDB5BC),
+            fontSize = 9.sp,
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = 0.sp
+        )
     }
 }
 
@@ -541,7 +879,14 @@ private fun MyListHistoryGridCard(
 }
 
 @Composable
-private fun FavoriteListCard(film: DramaItem, onOpenShorts: (Int?) -> Unit) {
+private fun FavoriteListCard(
+    film: DramaItem,
+    onOpenShorts: (Int?) -> Unit,
+    isChecked: Boolean = false,
+    selectionMode: Boolean = false,
+    onLongPress: (() -> Unit)? = null,
+    onToggleCheck: (() -> Unit)? = null
+) {
     val context = LocalContext.current
     Row(
         modifier = Modifier
@@ -550,20 +895,62 @@ private fun FavoriteListCard(film: DramaItem, onOpenShorts: (Int?) -> Unit) {
             .wrapContentHeight()
             .clip(RoundedCornerShape(8.dp))
             .background(Color(0xFF1F1F1F))
-            .clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
+            .then(
+                if (onLongPress != null) {
+                    Modifier.pointerInput(selectionMode) {
+                        detectTapGestures(
+                            onLongPress = { onLongPress() },
+                            onTap = { onOpenShorts(film.id.takeIf { it != 0 }) }
+                        )
+                    }
+                } else {
+                    Modifier.clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
+                }
+            )
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        NetworkDramaImage(
-            imageUrl = film.imageUrl,
+        Box(
             modifier = Modifier
                 .width(70.dp)
                 .height(92.dp)
                 .clip(RoundedCornerShape(6.dp))
-                .background(Panel),
-            contentScale = ContentScale.Crop,
-            seed = film.title
-        )
+                .background(Panel)
+        ) {
+            NetworkDramaImage(
+                imageUrl = film.imageUrl,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                seed = film.title
+            )
+            if (selectionMode && onToggleCheck != null) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .size(28.dp)
+                        .clickable(onClick = onToggleCheck),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(18.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(if (isChecked) Pink else Color(0x66000000))
+                            .border(1.dp, if (isChecked) Pink else Color(0x66FFFFFF), RoundedCornerShape(4.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isChecked) {
+                            Icon(
+                                Icons.Filled.Check,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(12.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
         Spacer(modifier = Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(film.title, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, maxLines = 2, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)

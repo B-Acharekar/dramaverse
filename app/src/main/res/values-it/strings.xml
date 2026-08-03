@@ -214,4 +214,9 @@
     <string name="uninstall_action">Disinstalla</string>
     <string name="uninstall_open_failed">Impossibile aprire la schermata di disinstallazione</string>
     <string name="welcome_to_home_temp">Benvenuto nella Home</string>
+
+    <!-- Widget strings -->
+    <string name="widget_home">Home</string>
+    <string name="widget_my_list">La mia Lista</string>
+    <string name="widget_uninstall">Disinstalla</string>
 </resources>

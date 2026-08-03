@@ -59,6 +59,10 @@ class SavedWatchHistoryStore(context: Context) {
         writeItems((listOf(item) + readItems()).distinctBy { it.film.stableHistoryKey() })
     }
 
+    fun clearAll() {
+        writeItems(emptyList())
+    }
+
     private fun writeItems(items: List<ContinueWatchingItem>) {
         val array = JSONArray()
         items.take(MAX_ITEMS).forEach { item ->
