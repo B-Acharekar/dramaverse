@@ -756,14 +756,25 @@ private fun ShortsPage(
                         pendingSeekMs = targetMs
                     },
                     onWatchNowClick = {
-                        if (isLocked) {
-                            if (dailyUnlocksUsed >= dailyUnlockLimit) {
-                                showDailyLimitDialog = true
+                        // When clicking "Watch Now" from Shorts view, open the full episode list in Episode mode
+                        // This should navigate to Episode mode, not show an unlock dialog
+                        if (isEpisodeMode) {
+                            // Already in episode mode, just navigate to next episode normally
+                            if (isLocked) {
+                                if (dailyUnlocksUsed >= dailyUnlockLimit) {
+                                    showDailyLimitDialog = true
+                                } else {
+                                    unlockTargetItem = fullEpisodeTarget
+                                }
                             } else {
-                                unlockTargetItem = fullEpisodeTarget
+                                // Current episode not locked, play the full episode version
+                                onUnlockedEpisodeReady(item)
                             }
                         } else {
-                            unlockTargetItem = fullEpisodeTarget
+                            // Not in episode mode - "Watch Now" should open Episode mode starting from Episode 1
+                            // The item should be Episode 1 (or current episode)
+                            val episodeToPlay = item.copy(episodeNumber = 1, isLocked = 1 > FREE_SHORTS_PREVIEW_EPISODES)
+                            onUnlockedEpisodeReady(episodeToPlay)
                         }
                     }
                 )
