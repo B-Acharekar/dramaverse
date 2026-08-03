@@ -549,11 +549,13 @@ object AdsManager {
         val now = android.os.SystemClock.elapsedRealtime()
         if (now - lastWelcomeBackShowMs < 15_000L) {
             Log.d(ADS_TAG, "inter_welcome_back skipped cooldown elapsedMs=${now - lastWelcomeBackShowMs}")
+            onClosed()
             return
         }
         val ad = interWelcome
         if (ad == null) {
             Log.d(ADS_TAG, "inter_welcome_back skipped no_loaded_ad")
+            onClosed()
             return
         }
         interWelcome = null

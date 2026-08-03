@@ -143,7 +143,16 @@ fun DramaXApp(
         )
 
         AppStep.WelcomeBack -> WelcomeBackScreen(
-            onFinished = viewModel::onWelcomeBackFinished
+            onFinished = {
+                val activity = context.findActivity()
+                if (activity != null) {
+                    AdsManager.showInterWelcome(activity) {
+                        viewModel.onWelcomeBackFinished()
+                    }
+                } else {
+                    viewModel.onWelcomeBackFinished()
+                }
+            }
         )
 
         AppStep.ConfirmUninstall -> ConfirmUninstallScreen(
@@ -157,9 +166,9 @@ fun DramaXApp(
 
         AppStep.Home -> HomeScreen(
             backendBaseUrl = uiState.backendBaseUrl,
-            onOpenEpisodes = { filmId ->
+            onOpenEpisodes = { filmId, episodeNumber ->
                 // Open Episodes screen when clicking a film
-                viewModel.openEpisodes(filmId)
+                viewModel.openEpisodes(filmId, episodeNumber)
             },
             onOpenShorts = {
                 // Open generic Shorts screen for casual browsing
@@ -175,6 +184,7 @@ fun DramaXApp(
         AppStep.Shorts -> ShortsScreen(
             backendBaseUrl = uiState.backendBaseUrl,
             initialFilmId = uiState.selectedShortFilmId,
+            initialEpisodeNumber = uiState.selectedEpisodeNumber,
             onBack = ::openHomeWithBackAd,
             onHome = ::openHomeWithBackAd,
             onLibrary = viewModel::openLibrary,
@@ -185,6 +195,7 @@ fun DramaXApp(
         AppStep.Episodes -> ShortsScreen(
             backendBaseUrl = uiState.backendBaseUrl,
             initialFilmId = uiState.selectedEpisodeFilmId ?: uiState.selectedShortFilmId,
+            initialEpisodeNumber = uiState.selectedEpisodeNumber,
             onBack = ::openHomeWithBackAd,
             onHome = ::openHomeWithBackAd,
             onLibrary = viewModel::openLibrary,

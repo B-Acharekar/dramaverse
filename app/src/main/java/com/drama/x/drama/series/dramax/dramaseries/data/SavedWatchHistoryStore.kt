@@ -59,6 +59,11 @@ class SavedWatchHistoryStore(context: Context) {
         writeItems((listOf(item) + readItems()).distinctBy { it.film.stableHistoryKey() })
     }
 
+    fun getLastWatchedEpisode(filmId: Int): Int? {
+        if (filmId == 0) return null
+        return readItems().firstOrNull { it.film.id == filmId }?.episodeNumber
+    }
+
     fun clearAll() {
         writeItems(emptyList())
     }

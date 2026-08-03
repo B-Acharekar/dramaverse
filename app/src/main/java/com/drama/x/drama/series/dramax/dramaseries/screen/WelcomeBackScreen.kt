@@ -41,12 +41,6 @@ private val SoftPink = Color(0xFFFFC0C9)
 fun WelcomeBackScreen(onFinished: () -> Unit) {
     var showContent by remember { mutableStateOf(false) }
 
-    // Auto-advance after 3 seconds
-    LaunchedEffect(Unit) {
-        delay(3000)
-        onFinished()
-    }
-
     // Trigger content animation on first composition
     LaunchedEffect(Unit) {
         delay(100)
@@ -121,7 +115,7 @@ fun WelcomeBackScreen(onFinished: () -> Unit) {
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    // Tap to continue button
+                    // Tap to start button
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -136,7 +130,7 @@ fun WelcomeBackScreen(onFinished: () -> Unit) {
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Continue",
+                            text = "Start",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Black,
                             color = Color.White,
@@ -147,10 +141,10 @@ fun WelcomeBackScreen(onFinished: () -> Unit) {
             }
         }
 
-        // Skip indicator at bottom
+        // Instruction at bottom
         if (showContent) {
             Text(
-                text = "Auto-advancing in 3 seconds...",
+                text = "Tap Start to continue.",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF6B6B6F),

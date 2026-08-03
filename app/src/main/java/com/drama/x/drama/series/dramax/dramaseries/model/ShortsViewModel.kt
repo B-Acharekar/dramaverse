@@ -42,7 +42,7 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
     private var currentInitialFilmId: Int? = null
     private var genericFeedOpenNonce = 0
 
-    fun loadInitial(backendBaseUrl: String, initialFilmId: Int?) {
+    fun loadInitial(backendBaseUrl: String, initialFilmId: Int?, initialEpisodeNumber: Int? = null) {
         val isGenericFeed = initialFilmId == null || initialFilmId == 0
 
         // Generic feed mode: existing behavior
@@ -60,22 +60,38 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             _uiState.update { ShortsUiState(isLoading = true) }
             if (initialFilmId != null && initialFilmId != 0) {
-                // Episode mode: load ep 1 immediately, then build full sequential episode list
+                // Episode mode: if a specific episode number is requested, load it; otherwise resume from watch history
+                val episodeToLoad = initialEpisodeNumber?.coerceAtLeast(1)
+                    ?: savedWatchHistoryStore.getLastWatchedEpisode(initialFilmId)
+                    ?: 1
                 withContext(Dispatchers.IO) {
                     repository.loadPlayback(
                         backendBaseUrl = backendBaseUrl,
                         filmId = initialFilmId,
+                        episodeNumber = episodeToLoad,
                         language = selectedLanguageCode()
                     )
                 }.onSuccess { firstItem ->
                     if (firstItem.playUrl.isBlank()) return@onSuccess
+                    val totalEpisodes = firstItem.film.episodeTotal.coerceAtLeast(1)
+                    val initialItems = (1..totalEpisodes).map { epNum ->
+                        if (epNum == episodeToLoad) {
+                            firstItem
+                        } else {
+                            firstItem.copy(
+                                episodeNumber = epNum,
+                                playUrl = "",
+                                isLocked = epNum > 7
+                            )
+                        }
+                    }
                     _uiState.update {
-                        it.copy(isLoading = false, items = listOf(firstItem), errorMessage = null)
+                        it.copy(isLoading = false, items = initialItems, errorMessage = null)
                     }
                     // Now load ALL episodes of this drama to fill the feed sequentially
-                    loadEpisodeFeed(backendBaseUrl, initialFilmId, firstItem)
+                    loadEpisodeFeed(backendBaseUrl, initialFilmId, firstItem, episodeToLoad)
                 }
-                ensurePlayback(0, backendBaseUrl)
+                ensurePlayback(episodeToLoad - 1, backendBaseUrl)
                 return@launch  // Skip generic loadPage entirely in episode mode
             }
             loadPage(backendBaseUrl, initialFilmId, genericFeedOpenNonce)
@@ -91,13 +107,14 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
     private suspend fun loadEpisodeFeed(
         backendBaseUrl: String,
         filmId: Int,
-        firstItem: ShortsItem
+        firstItem: ShortsItem,
+        startingEpisodeNumber: Int = 1
     ) {
         val totalEpisodes = firstItem.film.episodeTotal.coerceAtLeast(1)
         if (totalEpisodes <= 1) return  // Only one episode, nothing to expand
 
-        // Load remaining episodes (2..totalEpisodes) in parallel batches of 3
-        val episodeNumbers = (2..totalEpisodes).toList()
+        // Load remaining episodes (excluding the starting episode) in parallel batches of 3
+        val episodeNumbers = (1..totalEpisodes).filterNot { it == startingEpisodeNumber }
         val episodeItems = mutableListOf<ShortsItem>()
 
         episodeNumbers.chunked(3).forEach { batch ->
@@ -114,13 +131,13 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
             batchResults.filterNotNull().forEach { item ->
                 episodeItems.add(item)
             }
-            // Update UI incrementally after each batch so user sees episodes appear
+            // Update UI incrementally after each batch so user sees episodes appear without re-ordering
             if (episodeItems.isNotEmpty()) {
                 _uiState.update { state ->
-                    // Keep ep1 at top, then add newly loaded episodes in order
-                    val allItems = (listOf(firstItem) + episodeItems)
-                        .sortedBy { it.episodeNumber }
-                    state.copy(isLoading = false, items = allItems, errorMessage = null)
+                    val updatedItems = state.items.map { existing ->
+                        episodeItems.firstOrNull { it.episodeNumber == existing.episodeNumber } ?: existing
+                    }
+                    state.copy(isLoading = false, items = updatedItems, errorMessage = null)
                 }
             }
         }
@@ -150,6 +167,7 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                 repository.loadPlayback(
                     backendBaseUrl = backendBaseUrl,
                     filmId = item.film.id,
+                    episodeNumber = item.episodeNumber,
                     language = selectedLanguageCode()
                 )
             }.getOrNull() ?: return@launch
@@ -175,6 +193,7 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                 repository.loadPlayback(
                     backendBaseUrl = backendBaseUrl,
                     filmId = item.film.id,
+                    episodeNumber = item.episodeNumber,
                     language = selectedLanguageCode()
                 )
             }.getOrNull() ?: return@launch
@@ -191,6 +210,11 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                 )
             }
         }
+    }
+
+    fun getLastWatchedEpisode(filmId: Int?): Int? {
+        if (filmId == null || filmId == 0) return null
+        return savedWatchHistoryStore.getLastWatchedEpisode(filmId)
     }
 
     fun loadEpisodeList(backendBaseUrl: String, filmId: Int) {

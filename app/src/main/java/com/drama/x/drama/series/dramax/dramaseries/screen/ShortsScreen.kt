@@ -160,6 +160,7 @@ private sealed interface ShortsFeedPage {
 fun ShortsScreen(
     backendBaseUrl: String,
     initialFilmId: Int?,
+    initialEpisodeNumber: Int? = null,
     onBack: () -> Unit,
     onHome: () -> Unit,
     onLibrary: () -> Unit,
@@ -238,8 +239,24 @@ fun ShortsScreen(
         }
     }
 
-    LaunchedEffect(backendBaseUrl, initialFilmId) {
-        viewModel.loadInitial(backendBaseUrl, initialFilmId)
+    LaunchedEffect(backendBaseUrl, initialFilmId, initialEpisodeNumber) {
+        viewModel.loadInitial(backendBaseUrl, initialFilmId, initialEpisodeNumber)
+    }
+
+    var initialPageScrolled by remember(initialFilmId, initialEpisodeNumber) { mutableStateOf(false) }
+    LaunchedEffect(uiState.items, initialFilmId, initialEpisodeNumber) {
+        if (!initialPageScrolled && initialFilmId != null && uiState.items.isNotEmpty()) {
+            val targetEp = initialEpisodeNumber
+                ?: viewModel.getLastWatchedEpisode(initialFilmId)
+                ?: 1
+            val pageIndex = feedPages.indexOfFirst { page ->
+                page is ShortsFeedPage.Video && page.item.episodeNumber == targetEp
+            }
+            if (pageIndex > 0 && pageIndex < feedPages.size) {
+                pagerState.scrollToPage(pageIndex)
+            }
+            initialPageScrolled = true
+        }
     }
     
     // Track if any video is showing an ad to pause playback
@@ -578,16 +595,6 @@ private fun ShortsPage(
             item.copy(episodeNumber = 2, isLocked = true)
         } else {
             item
-        }
-    }
-
-    LaunchedEffect(isActive, isLocked) {
-        if (isActive && isLocked) {
-            if (dailyUnlocksUsed >= dailyUnlockLimit) {
-                showDailyLimitDialog = true
-            } else {
-                unlockTargetItem = item
-            }
         }
     }
 

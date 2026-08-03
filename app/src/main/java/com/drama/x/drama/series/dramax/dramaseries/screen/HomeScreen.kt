@@ -142,7 +142,7 @@ private enum class CategorySort(val label: String) {
 @Composable
 fun HomeScreen(
     backendBaseUrl: String,
-    onOpenEpisodes: (Int?) -> Unit,
+    onOpenEpisodes: (Int?, Int?) -> Unit,
     onOpenShorts: () -> Unit,
     onLibrary: () -> Unit,
     onSearch: (String) -> Unit,
@@ -183,11 +183,11 @@ fun HomeScreen(
         }
     }
 
-    fun openEpisodesWithHomeAd(filmId: Int?) {
+    fun openEpisodesWithHomeAd(filmId: Int?, episodeNumber: Int? = null) {
         if (filmId == null || filmId == 0) {
             onOpenShorts()
         } else {
-            onOpenEpisodes(filmId)
+            onOpenEpisodes(filmId, episodeNumber)
         }
     }
 
@@ -273,7 +273,7 @@ private fun HomeContent(
     savedFilms: List<DramaItem>,
     onSearchClick: () -> Unit,
     onNotifications: () -> Unit,
-    onOpenEpisodes: (Int?) -> Unit,
+    onOpenEpisodes: (Int?, Int?) -> Unit,
     onOpenShorts: () -> Unit,
     onLibrary: () -> Unit,
     onTabSelected: (HomeTab) -> Unit,
@@ -379,7 +379,7 @@ private fun LazyListScope.popularTab(
     allCatalog: List<DramaItem>,
     savedFilmIds: Set<Int>,
     savedFilms: List<DramaItem>,
-    onOpenEpisodes: (Int?) -> Unit,
+    onOpenEpisodes: (Int?, Int?) -> Unit,
     onLibrary: () -> Unit,
     nativeSearchAdState: NativeAdState,
     nativeHomeAdState: NativeAdState,
@@ -389,7 +389,7 @@ private fun LazyListScope.popularTab(
         HeroCarousel(
             items = heroItems,
             savedFilmIds = savedFilmIds,
-            onOpenEpisodes = onOpenEpisodes,
+            onOpenEpisodes = { filmId -> onOpenEpisodes(filmId, null) },
             onToggleWatchList = onToggleWatchList
         )
     }
@@ -402,7 +402,7 @@ private fun LazyListScope.popularTab(
     }
     item {
         SectionHeader(title = "Featured Highlights")
-        CompactPosterGrid(items = featuredItems, columns = 3, onOpenEpisodes = onOpenEpisodes)
+        CompactPosterGrid(items = featuredItems, columns = 3, onOpenEpisodes = { filmId -> onOpenEpisodes(filmId, null) })
     }
     item { ContinueWatching(feed.continueWatching, allCatalog, onOpenEpisodes) }
     item {
@@ -414,7 +414,7 @@ private fun LazyListScope.popularTab(
     }
     item {
         SectionHeader(title = "My Favorites", action = stringResource(R.string.see_all), onAction = onLibrary)
-        FavoriteGrid(items = savedFilms.take(4), onOpenEpisodes = onOpenEpisodes)
+        FavoriteGrid(items = savedFilms.take(4), onOpenEpisodes = { filmId -> onOpenEpisodes(filmId, null) })
     }
     item { Spacer(modifier = Modifier.height(14.dp)) }
 }
@@ -427,13 +427,13 @@ private fun badgesFor(count: Int): List<String> =
 private fun LazyListScope.newTab(
     items: List<DramaItem>,
     nativeSearchAdState: NativeAdState,
-    onOpenEpisodes: (Int?) -> Unit
+    onOpenEpisodes: (Int?, Int?) -> Unit
 ) {
     val firstChunk = items.take(4)
     val restChunk = items.drop(4)
     item {
         AccentTitle("Fresh on DramaX")
-        TallPosterGrid(items = firstChunk, onOpenEpisodes = onOpenEpisodes, badges = badgesFor(firstChunk.size))
+        TallPosterGrid(items = firstChunk, onOpenEpisodes = { filmId -> onOpenEpisodes(filmId, null) }, badges = badgesFor(firstChunk.size))
         HomeSmallNativeAd(
             placementName = "native_search",
             state = nativeSearchAdState,
@@ -441,7 +441,7 @@ private fun LazyListScope.newTab(
         )
         TallPosterGrid(
             items = restChunk,
-            onOpenEpisodes = onOpenEpisodes,
+            onOpenEpisodes = { filmId -> onOpenEpisodes(filmId, null) },
             badges = badgesFor(restChunk.size)
         )
         Spacer(Modifier.height(12.dp))
@@ -451,7 +451,7 @@ private fun LazyListScope.newTab(
 private fun LazyListScope.rankingTab(
     items: List<DramaItem>,
     nativeSearchAdState: NativeAdState,
-    onOpenEpisodes: (Int?) -> Unit
+    onOpenEpisodes: (Int?, Int?) -> Unit
 ) {
     item {
         Row(
@@ -466,7 +466,7 @@ private fun LazyListScope.rankingTab(
         }
     }
     items(items.take(3).withIndex().toList(), key = { (_, item) -> item.uniqueKey() }) { (index, item) ->
-        RankingHeroRow(rank = index + 1, item = item, onOpenEpisodes = onOpenEpisodes)
+        RankingHeroRow(rank = index + 1, item = item, onOpenEpisodes = { filmId -> onOpenEpisodes(filmId, null) })
     }
     item {
         HomeSmallNativeAd(
@@ -476,7 +476,7 @@ private fun LazyListScope.rankingTab(
         )
     }
     items(items.drop(3).take(17).withIndex().toList(), key = { (_, item) -> item.uniqueKey() }) { (index, item) ->
-        RankingListRow(rank = index + 4, item = item, onOpenEpisodes = onOpenEpisodes)
+        RankingListRow(rank = index + 4, item = item, onOpenEpisodes = { filmId -> onOpenEpisodes(filmId, null) })
     }
     item { Spacer(Modifier.height(12.dp)) }
 }
@@ -489,7 +489,7 @@ private fun LazyListScope.categoriesTab(
     categorySort: CategorySort,
     onOpenSheet: (CategorySheet) -> Unit,
     nativeSearchAdState: NativeAdState,
-    onOpenEpisodes: (Int?) -> Unit
+    onOpenEpisodes: (Int?, Int?) -> Unit
 ) {
     item {
         Row(
@@ -506,13 +506,13 @@ private fun LazyListScope.categoriesTab(
             .associateBy { it.uniqueKey() }.values.toList()  // O(n) instead of O(n²)
             .filterByCategoryControls(audienceFilter, categoryFilter)
             .sortForCategory(categorySort)
-        CompactPosterGrid(items = categoryItems.take(6), columns = 3, onOpenEpisodes = onOpenEpisodes)
+        CompactPosterGrid(items = categoryItems.take(6), columns = 3, onOpenEpisodes = { filmId -> onOpenEpisodes(filmId, null) })
         HomeSmallNativeAd(
             placementName = "native_search",
             state = nativeSearchAdState,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)
         )
-        CompactPosterGrid(items = categoryItems.drop(6), columns = 3, onOpenEpisodes = onOpenEpisodes)
+        CompactPosterGrid(items = categoryItems.drop(6), columns = 3, onOpenEpisodes = { filmId -> onOpenEpisodes(filmId, null) })
     }
 }
 
@@ -1527,7 +1527,7 @@ private fun SortOptionRow(label: String, selected: Boolean, onClick: () -> Unit)
 private fun ContinueWatching(
     items: List<ContinueWatchingItem>,
     allCatalog: List<DramaItem>,
-    onOpenEpisodes: (Int?) -> Unit
+    onOpenEpisodes: (Int?, Int?) -> Unit
 ) {
     // Only show Continue Watching if user has actually watched something
     if (items.isEmpty()) {
@@ -1544,7 +1544,7 @@ private fun ContinueWatching(
 }
 
 @Composable
-private fun ContinueCard(item: ContinueWatchingItem, onOpenEpisodes: (Int?) -> Unit) {
+private fun ContinueCard(item: ContinueWatchingItem, onOpenEpisodes: (Int?, Int?) -> Unit) {
     val film = item.film
     val totalEp = film.episodeTotal.coerceAtLeast(item.episodeNumber)
     val epsLeft = (totalEp - item.episodeNumber).coerceAtLeast(0)
@@ -1555,7 +1555,7 @@ private fun ContinueCard(item: ContinueWatchingItem, onOpenEpisodes: (Int?) -> U
     Column(
         modifier = Modifier
             .width(167.dp)
-            .clickable { onOpenEpisodes(film.id.takeIf { it != 0 }) }
+            .clickable { onOpenEpisodes(film.id.takeIf { it != 0 }, item.episodeNumber) }
     ) {
         // ── Image card (250dp tall) ──────────────────────────────────────────
         Box(
