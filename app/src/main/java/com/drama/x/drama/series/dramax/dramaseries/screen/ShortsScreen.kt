@@ -387,6 +387,7 @@ fun ShortsScreen(
                         isEpisodeUnlockedLocally = { filmId, episodeNumber ->
                             unlockedEpisodeKeys.contains("$filmId:$episodeNumber")
                         },
+                        unlockedEpisodeKeys = unlockedEpisodeKeys,
                         onUnlockedEpisodeReady = { targetItem ->
                             episodeModeKeys = episodeModeKeys + targetItem.episodeKey()
                             isPlaying = true
@@ -398,14 +399,37 @@ fun ShortsScreen(
                             )
                         },
                         onWatchAdToUnlock = { targetItem, onDone ->
-                            dailyUnlocksUsed++
-                            unlockedEpisodeKeys = unlockedEpisodeKeys + "${targetItem.film.id}:${targetItem.episodeNumber}"
-                            viewModel.unlockEpisode(
-                                backendBaseUrl = backendBaseUrl,
-                                filmId = targetItem.film.id,
-                                episodeNumber = targetItem.episodeNumber
-                            )
-                            onDone(true)
+                            activity?.let { act ->
+                                AdsManager.loadAndShowRewardAll(
+                                    activity = act,
+                                    onRewardEarned = {
+                                        dailyUnlocksUsed++
+                                        unlockedEpisodeKeys = unlockedEpisodeKeys + "${targetItem.film.id}:${targetItem.episodeNumber}"
+                                        viewModel.unlockEpisode(
+                                            backendBaseUrl = backendBaseUrl,
+                                            filmId = targetItem.film.id,
+                                            episodeNumber = targetItem.episodeNumber
+                                        )
+                                        onDone(true)
+                                    },
+                                    onFinished = {
+                                        // Ad display attempt completed
+                                    }
+                                )
+                            } ?: run {
+                                // No activity available, skip ad and unlock directly (fallback)
+                                dailyUnlocksUsed++
+                                unlockedEpisodeKeys = unlockedEpisodeKeys + "${targetItem.film.id}:${targetItem.episodeNumber}"
+                                viewModel.unlockEpisode(
+                                    backendBaseUrl = backendBaseUrl,
+                                    filmId = targetItem.film.id,
+                                    episodeNumber = targetItem.episodeNumber
+                                )
+                                onDone(true)
+                            }
+                        },
+                        onHideControls = {
+                            controlsVisible = false
                         }
                     )
                     }
@@ -507,8 +531,10 @@ private fun ShortsPage(
     dailyUnlocksUsed: Int,
     dailyUnlockLimit: Int,
     isEpisodeUnlockedLocally: (filmId: Int, episodeNumber: Int) -> Boolean,
+    unlockedEpisodeKeys: Set<String>,
     onUnlockedEpisodeReady: (ShortsItem) -> Unit,
     onWatchAdToUnlock: (ShortsItem, onDone: (Boolean) -> Unit) -> Unit,
+    onHideControls: () -> Unit = {},
 ) {
     var videoReady by remember(item.playUrl) { mutableStateOf(false) }
     var reminderOn by remember(item.film.id) { mutableStateOf(false) }
@@ -561,6 +587,16 @@ private fun ShortsPage(
                 showDailyLimitDialog = true
             } else {
                 unlockTargetItem = item
+            }
+        }
+    }
+
+    // Auto-hide overlay after 5 seconds of playback in Episode mode
+    LaunchedEffect(isEpisodeMode, isPlaying, isActive, controlsVisible) {
+        if (isEpisodeMode && isPlaying && isActive && controlsVisible) {
+            delay(5000L)
+            if (isActive && controlsVisible) { // Double-check still active and controls visible
+                onHideControls()
             }
         }
     }
@@ -804,10 +840,25 @@ private fun ShortsPage(
         }
 
         if (showEpisodeOptions && controlsVisible) {
+            // Calculate the highest consecutively unlocked episode
+            val maxUnlockedConsecutive = run {
+                var maxUnlocked = FREE_SHORTS_PREVIEW_EPISODES
+                for (ep in (FREE_SHORTS_PREVIEW_EPISODES + 1)..item.film.episodeTotal) {
+                    if (isEpisodeUnlockedLocally(item.film.id, ep)) {
+                        maxUnlocked = ep
+                    } else {
+                        break
+                    }
+                }
+                maxUnlocked
+            }
+            
+            val mustUnlockFirstMessage = stringResource(R.string.must_unlock_episode_first, maxUnlockedConsecutive + 1)
+            
             EpisodeOptionsSheet(
                 currentEpisode = item.episodeNumber,
                 totalEpisodes = item.film.episodeTotal,
-                unlockedThrough = maxOf(item.episodeNumber, FREE_SHORTS_PREVIEW_EPISODES),
+                unlockedThrough = maxUnlockedConsecutive,
                 onEpisodeSelected = { episode ->
                     val targetItem = item.copy(
                         episodeNumber = episode,
@@ -816,7 +867,11 @@ private fun ShortsPage(
                     if (episode > FREE_SHORTS_PREVIEW_EPISODES &&
                         !isEpisodeUnlockedLocally(item.film.id, episode)
                     ) {
-                        if (dailyUnlocksUsed >= dailyUnlockLimit) {
+                        // Check if trying to unlock a non-consecutive episode
+                        if (episode > maxUnlockedConsecutive + 1) {
+                            // User is trying to skip locked episodes
+                            Toast.makeText(context, mustUnlockFirstMessage, Toast.LENGTH_LONG).show()
+                        } else if (dailyUnlocksUsed >= dailyUnlockLimit) {
                             showDailyLimitDialog = true
                         } else {
                             unlockTargetItem = targetItem

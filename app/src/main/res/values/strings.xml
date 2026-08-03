@@ -250,4 +250,6 @@
     <string name="no_internet_desc">No internet connection. Please connect to the internet to use the app.</string>
     <string name="connect_internet">Connect Internet</string>
 
+    <string name="must_unlock_episode_first">You must unlock episode %1$d first.</string>
+
 </resources>
