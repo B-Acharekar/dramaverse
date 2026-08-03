@@ -114,6 +114,7 @@ private val presetAvatars = listOf(
     PresetAvatar(R.drawable.avatar_6, Color(0xFFE0745C))
 )
 
+@RequiresApi(Build.VERSION_CODES.P)
 @Composable
 fun ProfileScreen(
     backendBaseUrl: String,
@@ -202,7 +203,7 @@ fun ProfileScreen(
             }
             item { ProfileStatsPanel(stats = dynamicStats) }
 
-            item { SectionLabel("ACCOUNT ACTIVITY") }
+            item { SectionLabel(stringResource(R.string.account_activity)) }
             item {
                 SettingsCard {
                     SettingsRow(Icons.Outlined.History, R.string.watch_history, onClick = onLibrary)
@@ -211,7 +212,7 @@ fun ProfileScreen(
                 }
             }
 
-            item { SectionLabel("PREFERENCES & SUPPORT") }
+            item { SectionLabel(stringResource(R.string.preferences_support)) }
             item {
                 SettingsCard {
                     SettingsRow(
@@ -225,10 +226,10 @@ fun ProfileScreen(
                 }
             }
 
-            item { SectionLabel("PRIVACY") }
+            item { SectionLabel(stringResource(R.string.privacy_text)) }
             item {
                 SettingsCard {
-                    SettingsRow(Icons.Outlined.Share, titleText = "Share App", onClick = { context.shareApp() })
+                    SettingsRow(Icons.Outlined.Share, titleText = stringResource(R.string.share_app), onClick = { context.shareApp() })
                     RowDivider()
                     SettingsRow(Icons.Outlined.StarBorder, R.string.rate_us, onClick = {
                         showRateDialog = true
@@ -472,14 +473,14 @@ private fun RateUsDialog(
                     )
                 }
                 Text(
-                    text = "Enjoying DramaX?",
+                    text = stringResource(R.string.rateus_dialog_title),
                     color = Color.White,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.ExtraBold,
                     letterSpacing = 0.sp
                 )
                 Text(
-                    text = "Your review will improve the\nquality of this application",
+                    text = stringResource(R.string.rateus_dialog_subtitle),
                     color = Color.White,
                     fontSize = 14.sp,
                     lineHeight = 18.sp,
@@ -508,7 +509,7 @@ private fun RateUsDialog(
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF3F59))
                 ) {
-                    Text("Rate us", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.rate_us), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
                 Spacer(modifier = Modifier.height(10.dp))
                 Button(
@@ -519,7 +520,7 @@ private fun RateUsDialog(
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF0F0F0))
                 ) {
-                    Text("Not Now", color = Color.Black, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.not_now), color = Color.Black, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -1039,13 +1040,19 @@ private fun Context.openPrivacyPolicy() {
 }
 
 private fun Context.shareApp() {
-    val shareIntent = Intent(Intent.ACTION_SEND)
-        .setType("text/plain")
-        .putExtra(
-            Intent.EXTRA_TEXT,
-            "Watch short dramas on DramaX: https://play.google.com/store/apps/details?id=$packageName"
+    val shareText = getString(R.string.share_app_message, packageName)
+
+    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_TEXT, shareText)
+    }
+
+    startActivity(
+        Intent.createChooser(
+            shareIntent,
+            getString(R.string.share_app_chooser_title)
         )
-    startActivity(Intent.createChooser(shareIntent, "Share DramaX"))
+    )
 }
 
 private fun Context.openPlayStoreRating() {

@@ -39,6 +39,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -50,6 +51,8 @@ import com.drama.x.drama.series.dramax.dramaseries.model.PlannerViewModel
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
+import com.drama.x.drama.series.dramax.dramaseries.R
+
 
 private val Background = Color(0xFF09090B)
 private val Panel = Color(0xFF161519)
@@ -133,8 +136,8 @@ private fun PlannerHeader(onBack: () -> Unit) {
         }
         Spacer(Modifier.width(12.dp))
         Column {
-            Text("Planner", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
-            Text("Schedule saved dramas and reminders.", color = Color(0xFFCDB5BC), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+            Text(stringResource(R.string.nav_planner), color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+            Text(stringResource(R.string.schedule_planner_msg), color = Color(0xFFCDB5BC), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
         }
     }
 }
@@ -169,9 +172,9 @@ private fun ScheduleBuilder(
         }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
-            Text(selectedFilm?.title ?: if (hasSavedFilms) "Choose a saved drama" else "Save dramas first", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, maxLines = 2, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
+            Text(selectedFilm?.title ?: if (hasSavedFilms) stringResource(R.string.choose_saved_drama) else stringResource(R.string.save_drama_first), color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, maxLines = 2, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
             Text(
-                if (selectedFilm != null) scheduleLabel(selectedDayOffset, selectedHour) else "Use + on Home or Shorts to build this list.",
+                if (selectedFilm != null) scheduleLabel(selectedDayOffset, selectedHour) else stringResource(R.string.schedule_label_msg),
                 color = if (selectedFilm != null) Gold else Color(0xFFCDB5BC),
                 fontSize = 12.sp,
                 lineHeight = 16.sp,
@@ -214,7 +217,7 @@ private fun ScheduleBuilder(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Filled.CalendarMonth, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
-            Text(if (selectedFilm != null) "Schedule Reminder" else "Select Saved Drama", color = if (selectedFilm != null) Color.White else Color(0xFF8F828B), fontSize = 16.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+            Text(if (selectedFilm != null) stringResource(R.string.schedule_reminder) else stringResource(R.string.select_saved_drama), color = if (selectedFilm != null) Color.White else Color(0xFF8F828B), fontSize = 16.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
         }
     }
 }

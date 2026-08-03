@@ -1560,7 +1560,11 @@ private fun EpisodeOptionsSheet(
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    "$currentEpisode/$safeTotal",
+                    text = stringResource(
+                        R.string.episode_count,
+                        currentEpisode,
+                        safeTotal
+                    ),
                     color = Color(0xFF9D8A91),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold
@@ -1594,7 +1598,11 @@ private fun EpisodeOptionsSheet(
             ) {
                 if (hasPrevPage) {
                     PagerPill(
-                        text = "Episodes ${(page - 1) * EPISODES_PER_PAGE + 1} - ${page * EPISODES_PER_PAGE}",
+                        text = stringResource(
+                            R.string.episodes_range,
+                            (page - 1) * EPISODES_PER_PAGE + 1,
+                            page * EPISODES_PER_PAGE
+                        ),
                         leading = true,
                         onClick = { page-- }
                     )
@@ -1602,7 +1610,11 @@ private fun EpisodeOptionsSheet(
                 }
                 if (hasNextPage) {
                     PagerPill(
-                        text = "Episodes ${pageEnd + 1} - ${(pageEnd + EPISODES_PER_PAGE).coerceAtMost(safeTotal)}",
+                        text = stringResource(
+                            R.string.episodes_range,
+                            pageEnd + 1,
+                            (pageEnd + EPISODES_PER_PAGE).coerceAtMost(safeTotal)
+                        ),
                         leading = false,
                         onClick = { page++ }
                     )
@@ -1644,25 +1656,27 @@ private fun EpisodeCell(
                 )
             }
         }
-        Spacer(Modifier.weight(1f))
+        if(isLocked){
+            Spacer(Modifier.weight(1f))
+        }
         Text(
             episode.toString(),
             color = if (isPlaying) Gold else if (isLocked) Color(0xFF9D8FA0) else Color.White,
             fontSize = 16.sp,
             fontWeight = FontWeight.ExtraBold
         )
-        if (isPlaying) {
-            Text(
-                "PLAYING",
-                color = Gold,
-                fontSize = 8.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 0.5.sp
-            )
-        } else {
-            Spacer(Modifier.height(10.dp))
-        }
-        Spacer(Modifier.weight(1f))
+//        if (isPlaying) {
+//            Text(
+//                "PLAYING",
+//                color = Gold,
+//                fontSize = 8.sp,
+//                fontWeight = FontWeight.Black,
+//                letterSpacing = 0.5.sp
+//            )
+//        } else {
+//            Spacer(Modifier.height(10.dp))
+//        }
+//        Spacer(Modifier.weight(1f))
     }
 }
 
@@ -1747,19 +1761,19 @@ private fun SubtitleOptionsSheet(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 SizeOption(
-                    label = "Small",
+                    label = stringResource(R.string.subtitle_small),
                     glyphSize = 15.sp,
                     selected = pendingSize == SubtitleSize.SMALL,
                     onClick = { pendingSize = SubtitleSize.SMALL; onSizeChange(SubtitleSize.SMALL) }
                 )
                 SizeOption(
-                    label = "Medium",
+                    label = stringResource(R.string.subtitle_medium),
                     glyphSize = 19.sp,
                     selected = pendingSize == SubtitleSize.MEDIUM,
                     onClick = { pendingSize = SubtitleSize.MEDIUM; onSizeChange(SubtitleSize.MEDIUM) }
                 )
                 SizeOption(
-                    label = "Large",
+                    label = stringResource(R.string.subtitle_large),
                     glyphSize = 24.sp,
                     selected = pendingSize == SubtitleSize.LARGE,
                     onClick = { pendingSize = SubtitleSize.LARGE; onSizeChange(SubtitleSize.LARGE) }
@@ -1938,14 +1952,6 @@ private fun RadioDot(selected: Boolean) {
 }
 
 
-private val ReportReasons = listOf(
-    "Episode error",
-    "Paid film too long",
-    "Low Quality",
-    "Subtitle missing",
-    "Inaccurate Subtitle",
-    "Other"
-)
 
 @Composable
 private fun FeedbackFormSheet(
@@ -1957,6 +1963,16 @@ private fun FeedbackFormSheet(
     onSubmit: () -> Unit,
     onDismiss: () -> Unit
 ) {
+
+    val reportReasons = listOf(
+        stringResource(R.string.report_reason_episode_error),
+        stringResource(R.string.report_reason_paid_film_too_long),
+        stringResource(R.string.report_reason_low_quality),
+        stringResource(R.string.report_reason_subtitle_missing),
+        stringResource(R.string.report_reason_inaccurate_subtitle),
+        stringResource(R.string.report_reason_other)
+    )
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -2038,8 +2054,9 @@ private fun FeedbackFormSheet(
             Spacer(Modifier.height(10.dp))
 
             Column {
-                ReportReasons.forEach { reason ->
+                reportReasons.forEach { reason ->
                     val selected = reason == selectedReason
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -2048,15 +2065,17 @@ private fun FeedbackFormSheet(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            reason,
+                            text = reason,
                             color = if (selected) Color(0xFFFF5168) else Color.White,
                             fontSize = 15.sp,
                             fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.SemiBold,
                             modifier = Modifier.weight(1f)
                         )
+
                         ReasonRadio(selected = selected)
                     }
-                    if (reason != ReportReasons.last()) {
+
+                    if (reason != reportReasons.last()) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -2255,7 +2274,7 @@ private fun ShareOptionsSheet(
                 .padding(20.dp)
         ) {
             Text(
-                "share text",
+                stringResource(R.string.share),
                 color = Color.White,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.ExtraBold
@@ -2308,7 +2327,7 @@ private fun ShareOptionsSheet(
 
             if (shareApps.isEmpty()) {
                 Text(
-                    "Loading share apps",
+                    stringResource(R.string.loading_share_apps),
                     color = Color(0xFF8F8791),
                     fontSize = 13.sp
                 )

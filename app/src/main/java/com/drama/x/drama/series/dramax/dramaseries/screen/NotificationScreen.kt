@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -45,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drama.x.drama.series.dramax.dramaseries.data.AppNotification
 import com.drama.x.drama.series.dramax.dramaseries.model.NotificationViewModel
+import com.drama.x.drama.series.dramax.dramaseries.R
 
 private val Background = Color(0xFF09090B)
 private val Panel = Color(0xFF161519)
@@ -96,7 +98,7 @@ fun NotificationScreen(
                 ) {
                     item {
                         Text(
-                            "Recent activity",
+                            stringResource(R.string.recent_activity),
                             color = Color.White,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.ExtraBold,
@@ -183,8 +185,8 @@ private fun NotificationHeader(
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("Inbox", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
-                Text("Planner reminders and reward updates in one place.", color = Muted, fontSize = 12.sp, lineHeight = 17.sp, letterSpacing = 0.sp)
+                Text(stringResource(R.string.inbox), color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+                Text(stringResource(R.string.notification_desc), color = Muted, fontSize = 12.sp, lineHeight = 17.sp, letterSpacing = 0.sp)
             }
             CountPill("$unreadCount new")
         }
@@ -204,7 +206,7 @@ private fun ClearAllButton(isClearing: Boolean, onClearAll: () -> Unit) {
     ) {
         Icon(Icons.Filled.DeleteSweep, contentDescription = null, tint = SoftPink, modifier = Modifier.size(17.dp))
         Spacer(Modifier.width(5.dp))
-        Text(if (isClearing) "Clearing" else "Clear", color = SoftPink, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+        Text(if (isClearing) stringResource(R.string.clearing) else stringResource(R.string.clear), color = SoftPink, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
     }
 }
 
@@ -227,9 +229,9 @@ private fun CountPill(text: String) {
 private fun TypeChip(type: String) {
     Text(
         when (type) {
-            "planner" -> "Planner"
-            "reward" -> "Reward"
-            else -> "Update"
+            "planner" -> stringResource(R.string.nav_planner)
+            "reward" -> stringResource(R.string.nav_rewards)
+            else -> stringResource(R.string.update)
         },
         color = if (type == "reward") Gold else SoftPink,
         fontSize = 10.sp,
@@ -302,7 +304,7 @@ private fun NotificationRow(notification: AppNotification) {
             }
             Spacer(Modifier.height(5.dp))
             Text(
-                notification.body.ifBlank { "Open DramaX for the latest update." },
+                notification.body.ifBlank { stringResource(R.string.notification_body) },
                 color = Muted,
                 fontSize = 12.sp,
                 lineHeight = 17.sp,
@@ -328,10 +330,10 @@ private fun EmptyNotifications(isClearing: Boolean) {
                 Icon(Icons.Filled.Notifications, contentDescription = null, tint = SoftPink, modifier = Modifier.size(38.dp))
             }
             Spacer(Modifier.height(16.dp))
-            Text(if (isClearing) "Clearing inbox" else "No notifications yet", color = Color.White, fontSize = 21.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+            Text(if (isClearing) stringResource(R.string.clearing_inbox) else stringResource(R.string.no_notification_message), color = Color.White, fontSize = 21.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
             Spacer(Modifier.height(6.dp))
             Text(
-                if (isClearing) "Removing old updates..." else "Planner reminders and reward updates will appear here.",
+                if (isClearing) stringResource(R.string.removing_old_updates) else stringResource(R.string.planner_msg),
                 color = Muted,
                 fontSize = 13.sp,
                 lineHeight = 19.sp,

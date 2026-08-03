@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -75,6 +76,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -106,11 +108,11 @@ private val SoftPink = Color(0xFFFFC0C9)
 private val Gold = Color(0xFFF5C65B)
 private val CardPanel = Color(0xFF1A1A1A)
 
-private enum class HomeTab(val label: String) {
-    Popular("Popular"),
-    New("New"),
-    Ranking("Ranking"),
-    Categories("Categories")
+private enum class HomeTab(val label: Int) {
+    Popular(R.string.tab_popular),
+    New(R.string.tab_new),
+    Ranking(R.string.tab_ranking),
+    Categories(R.string.tab_categories)
 }
 
 private enum class CategorySheet {
@@ -118,25 +120,25 @@ private enum class CategorySheet {
     Sort
 }
 
-private enum class AudienceFilter(val label: String) {
-    All("All"),
-    Male("Male"),
-    Female("Female")
+private enum class AudienceFilter(val label: Int) {
+    All(R.string.filter_all),
+    Male(R.string.filter_male),
+    Female(R.string.filter_female)
 }
 
-private enum class CategoryFilter(val label: String) {
-    All("All"),
-    Modern("Modern"),
-    Historical("Historical"),
-    Fantasy("Fantasy"),
-    Romance("Romance")
+private enum class CategoryFilter(val label: Int) {
+    All(R.string.filter_all),
+    Modern(R.string.category_modern),
+    Historical(R.string.category_historical),
+    Fantasy(R.string.category_fantasy),
+    Romance(R.string.category_romance)
 }
 
-private enum class CategorySort(val label: String) {
-    Newest("Newest"),
-    Popular("Popular"),
-    Rating("Rating"),
-    Trending("Trending")
+private enum class CategorySort(val label: Int) {
+    Newest(R.string.sort_newest),
+    Popular(R.string.sort_popular),
+    Rating(R.string.sort_rating),
+    Trending(R.string.sort_trending)
 }
 
 @Composable
@@ -401,7 +403,7 @@ private fun LazyListScope.popularTab(
         )
     }
     item {
-        SectionHeader(title = "Featured Highlights")
+        SectionHeader(title = stringResource(R.string.featured_highlights))
         CompactPosterGrid(items = featuredItems, columns = 3, onOpenEpisodes = onOpenEpisodes)
     }
     item { ContinueWatching(feed.continueWatching, allCatalog, onOpenEpisodes) }
@@ -413,16 +415,22 @@ private fun LazyListScope.popularTab(
         )
     }
     item {
-        SectionHeader(title = "My Favorites", action = stringResource(R.string.see_all), onAction = onLibrary)
+        SectionHeader(title = stringResource(R.string.my_favorites), action = stringResource(R.string.see_all), onAction = onLibrary)
         FavoriteGrid(items = savedFilms.take(4), onOpenEpisodes = onOpenEpisodes)
     }
     item { Spacer(modifier = Modifier.height(14.dp)) }
 }
 
-private val newTabBadgeCycle = listOf("HOT", "NEW", "TRENDING", "NEW", "HOT", "NEW", "TRENDING", "HOT")
+@StringRes
+private val newTabBadgeCycle = listOf(
+    R.string.badge_hot,
+    R.string.badge_new,
+    R.string.trending_tag
+)
 
-private fun badgesFor(count: Int): List<String> =
+private fun badgesFor(count: Int): List<Int> =
     List(count) { i -> newTabBadgeCycle[i % newTabBadgeCycle.size] }
+
 
 private fun LazyListScope.newTab(
     items: List<DramaItem>,
@@ -432,7 +440,7 @@ private fun LazyListScope.newTab(
     val firstChunk = items.take(4)
     val restChunk = items.drop(4)
     item {
-        AccentTitle("Fresh on DramaX")
+        AccentTitle(stringResource(R.string.fresh_on_dramax))
         TallPosterGrid(items = firstChunk, onOpenEpisodes = onOpenEpisodes, badges = badgesFor(firstChunk.size))
         HomeSmallNativeAd(
             placementName = "native_search",
@@ -460,9 +468,9 @@ private fun LazyListScope.rankingTab(
                 .padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Weekly Top 20", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+            Text(stringResource(R.string.weekly_top_20), color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
             Spacer(Modifier.weight(1f))
-            Text("Updated 3h ago", color = Color(0xFF9CA3AF), fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
+            Text(stringResource(R.string.updated_3h_ago), color = Color(0xFF9CA3AF), fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
         }
     }
     items(items.take(3).withIndex().toList(), key = { (_, item) -> item.uniqueKey() }) { (index, item) ->
@@ -498,9 +506,9 @@ private fun LazyListScope.categoriesTab(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            ToolPill(Icons.Filled.FilterList, "FILTERS", onClick = { onOpenSheet(CategorySheet.Filters) })
+            ToolPill(Icons.Filled.FilterList, stringResource(R.string.filters), onClick = { onOpenSheet(CategorySheet.Filters) })
             Spacer(Modifier.weight(1f))
-            ToolPill(Icons.AutoMirrored.Filled.Sort, "SORT BY", onClick = { onOpenSheet(CategorySheet.Sort) })
+            ToolPill(Icons.AutoMirrored.Filled.Sort, stringResource(R.string.sort_by), onClick = { onOpenSheet(CategorySheet.Sort) })
         }
         val categoryItems = items
             .associateBy { it.uniqueKey() }.values.toList()  // O(n) instead of O(n²)
@@ -701,7 +709,7 @@ private fun HomeTopBar(
         ) {
             items(HomeTab.values().toList(), key = { it.label }) { tab ->
                 HomeTabChip(
-                    label = tab.label,
+                    label = stringResource(tab.label),
                     selected = selectedTab == tab,
                     onClick = { onTabSelected(tab) }
                 )
@@ -710,15 +718,8 @@ private fun HomeTopBar(
     }
 }
 
-private val fallbackHotTags = listOf(
-    "Billionaire",
-    "Revenge",
-    "CEO",
-    "Family",
-    "Romance",
-    "Thriller"
-)
 
+@Composable
 private fun List<DramaItem>.filterByCategoryControls(
     audience: AudienceFilter,
     category: CategoryFilter
@@ -745,11 +746,12 @@ private fun List<DramaItem>.sortForCategory(sort: CategorySort): List<DramaItem>
     }
 }
 
+@Composable
 private fun DramaItem.matchesAudience(audience: AudienceFilter): Boolean {
     if (audience == AudienceFilter.All) return true
     val haystack = searchableCategoryText()
-    val maleKeywords = listOf("action", "thriller", "revenge", "war", "crime", "ceo", "billionaire", "fantasy")
-    val femaleKeywords = listOf("romance", "love", "family", "heir", "bride", "wife", "autumn", "drama")
+    val maleKeywords = stringArrayResource(R.array.audience_keywords_male)
+    val femaleKeywords = stringArrayResource(R.array.audience_keywords_female)
     return when (audience) {
         AudienceFilter.All -> true
         AudienceFilter.Male -> maleKeywords.any { it in haystack }
@@ -757,15 +759,16 @@ private fun DramaItem.matchesAudience(audience: AudienceFilter): Boolean {
     }
 }
 
+@Composable
 private fun DramaItem.matchesCategory(category: CategoryFilter): Boolean {
     if (category == CategoryFilter.All) return true
     val haystack = searchableCategoryText()
     val keywords = when (category) {
-        CategoryFilter.All -> emptyList()
-        CategoryFilter.Modern -> listOf("modern", "ceo", "billionaire", "city", "office", "finance", "tech")
-        CategoryFilter.Historical -> listOf("historical", "king", "queen", "empire", "legacy", "dynasty", "ancient")
-        CategoryFilter.Fantasy -> listOf("fantasy", "magic", "crimson", "shadow", "void", "supernatural")
-        CategoryFilter.Romance -> listOf("romance", "love", "vow", "bride", "wife", "autumn")
+        CategoryFilter.All -> emptyArray()
+        CategoryFilter.Modern -> stringArrayResource(R.array.category_keywords_modern)
+        CategoryFilter.Historical -> stringArrayResource(R.array.category_keywords_historical)
+        CategoryFilter.Fantasy -> stringArrayResource(R.array.category_keywords_fantasy)
+        CategoryFilter.Romance -> stringArrayResource(R.array.category_keywords_romance)
     }
     return keywords.any { it in haystack }
 }
@@ -953,7 +956,7 @@ private fun CompactPosterCard(
                 .background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xD9000000))))
         )
         if (item.isPremium || item.rating.toFloatOrNull()?.let { it >= 4.8f } == true) {
-            CornerBadge("HOT", Pink, icon = R.drawable.fire, modifier = Modifier.align(Alignment.TopStart).padding(5.dp))
+            CornerBadge(stringResource(R.string.badge_hot), Pink, icon = R.drawable.fire, modifier = Modifier.align(Alignment.TopStart).padding(5.dp))
         }
         Column(
             modifier = Modifier
@@ -986,7 +989,7 @@ private fun CompactPosterCard(
 private fun TallPosterGrid(
     items: List<DramaItem>,
     onOpenEpisodes: (Int?) -> Unit,
-    badges: List<String?>
+    badges: List<Int?>
 ) {
     Column(
         modifier = Modifier
@@ -1000,7 +1003,7 @@ private fun TallPosterGrid(
                     val itemIndex = rowIndex * 2 + columnIndex
                     TallPosterCard(
                         item = item,
-                        badge = badges.getOrNull(itemIndex),
+                        badgeRes = badges.getOrNull(itemIndex), // Int?, matches badges' element type
                         onOpenEpisodes = onOpenEpisodes,
                         modifier = Modifier.weight(1f)
                     )
@@ -1014,7 +1017,7 @@ private fun TallPosterGrid(
 @Composable
 private fun TallPosterCard(
     item: DramaItem,
-    badge: String?,
+    @StringRes badgeRes: Int?,
     onOpenEpisodes: (Int?) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -1026,10 +1029,7 @@ private fun TallPosterCard(
             .border(
                 width = 1.dp,
                 brush = Brush.linearGradient(
-                    colors = listOf(
-                        Color(0x6BFF0000),
-                        Color(0x6BF4BE4E)
-                    ),
+                    colors = listOf(Color(0x6BFF0000), Color(0x6BF4BE4E)),
                     start = Offset(0f, 0f),
                     end = Offset.Infinite
                 ),
@@ -1043,22 +1043,23 @@ private fun TallPosterCard(
                 .fillMaxSize()
                 .background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xEE000000))))
         )
-        if (badge != null) {
+        if (badgeRes != null) {
             val badgeColor: Color
             val badgeIcon: Int
 
-            when (badge) {
-                "NEW" -> {
+            // Match on the resource id, not the resolved (and locale-dependent) string.
+            when (badgeRes) {
+                R.string.badge_new -> {
                     badgeColor = Color(0xFFEAB308)
                     badgeIcon = R.drawable.sticker
                 }
 
-                "TRENDING" -> {
+                R.string.trending_tag -> {
                     badgeColor = Color(0xFF54D84A)
                     badgeIcon = R.drawable.trend
                 }
 
-                "HOT" -> {
+                R.string.badge_hot -> {
                     badgeColor = Pink
                     badgeIcon = R.drawable.fire
                 }
@@ -1070,7 +1071,7 @@ private fun TallPosterCard(
             }
 
             CornerBadge(
-                text = badge,
+                text = stringResource(badgeRes),
                 color = badgeColor,
                 icon = badgeIcon,
                 modifier = Modifier
@@ -1105,7 +1106,7 @@ private fun FavoriteGrid(
     TallPosterGrid(
         items = items,
         onOpenEpisodes = onOpenEpisodes,
-        badges = listOf("HOT", null, "NEW", "NEW")
+        badges = listOf(R.string.badge_hot, null, R.string.badge_new, R.string.trending_tag)
     )
 }
 
@@ -1126,8 +1127,8 @@ private fun EmptyFavorites(onOpenEpisodes: (Int?) -> Unit) {
         Icon(Icons.Filled.Bookmark, contentDescription = null, tint = Gold, modifier = Modifier.size(22.dp))
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text("No favorites yet", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
-            Text("Bookmark a drama to add it here.", color = Color(0xFFC7B6BC), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+            Text(stringResource(R.string.no_favorites_yet), color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+            Text(stringResource(R.string.favorites_empty_message), color = Color(0xFFC7B6BC), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
         }
     }
 }
@@ -1214,16 +1215,38 @@ private fun RankingHeroRow(rank: Int, item: DramaItem, onOpenEpisodes: (Int?) ->
                 ), RoundedCornerShape(12.dp))
         ) {
             NetworkDramaImage(item.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, item.title)
+
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xE6000000)))))
-            CornerBadge("TOP $rank", Color(0xFF374151), icon = null, modifier =  Modifier.align(Alignment.BottomStart).padding(start = 10.dp, bottom = 40.dp))
+
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
             ) {
-                Text(item.title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
-                Text("${item.genre} - ${item.episodeTotal} Eps", color = Color(0xFFD1D5DB), fontSize = 10.sp, maxLines = 1, letterSpacing = 0.sp)
+                CornerBadge(
+                    stringResource(R.string.top_rank,rank),
+                    Color(0xFF374151),
+                    icon = null
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    item.title,
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Text(
+                    "${item.genre} - ${item.episodeTotal} Eps",
+                    color = Color(0xFFD1D5DB),
+                    fontSize = 10.sp
+                )
             }
+
             Text(item.rating, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.BottomEnd).padding(10.dp), letterSpacing = 0.sp)
         }
     }
@@ -1323,16 +1346,16 @@ private fun CategoryFilterSheet(
     var draftCategory by remember(selectedCategory) { mutableStateOf(selectedCategory) }
 
     CategoryModalScaffold(
-        title = "Filters",
+        title = stringResource(R.string.filters),
         onDismiss = onDismiss,
-        actionLabel = "Apply Filters",
+        actionLabel = stringResource(R.string.apply_filters),
         onApply = { onApply(draftAudience, draftCategory) }
     ) {
-        SheetCaption("AUDIENCE")
-        SheetChipRow(AudienceFilter.values().toList(), draftAudience, onSelected = { draftAudience = it }) { it.label }
+        SheetCaption(stringResource(R.string.audience))
+        SheetChipRow(AudienceFilter.values().toList(), draftAudience, onSelected = { draftAudience = it }) { stringResource(it.label) }
         Spacer(Modifier.height(18.dp))
-        SheetCaption("CATEGORY")
-        SheetChipRows(CategoryFilter.values().toList(), draftCategory, onSelected = { draftCategory = it }) { it.label }
+        SheetCaption(stringResource(R.string.category))
+        SheetChipRows(CategoryFilter.values().toList(), draftCategory, onSelected = { draftCategory = it }) { stringResource(it.label) }
     }
 }
 
@@ -1345,14 +1368,14 @@ private fun CategorySortSheet(
     var draftSort by remember(selectedSort) { mutableStateOf(selectedSort) }
 
     CategoryModalScaffold(
-        title = "Sort By",
+        title = stringResource(R.string.sort_by),
         onDismiss = onDismiss,
-        actionLabel = "Apply Sort",
+        actionLabel = stringResource(R.string.apply_sort),
         onApply = { onApply(draftSort) }
     ) {
         CategorySort.values().forEach { sort ->
             SortOptionRow(
-                label = sort.label,
+                label = stringResource( sort.label),
                 selected = draftSort == sort,
                 onClick = { draftSort = sort }
             )
@@ -1440,7 +1463,7 @@ private fun <T> SheetChipRow(
     options: List<T>,
     selected: T,
     onSelected: (T) -> Unit,
-    label: (T) -> String
+    label: @Composable (T) -> String
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         options.forEach { option ->
@@ -1458,7 +1481,7 @@ private fun <T> SheetChipRows(
     options: List<T>,
     selected: T,
     onSelected: (T) -> Unit,
-    label: (T) -> String
+    label: @Composable (T) -> String
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         options.chunked(3).forEach { rowOptions ->
@@ -1496,9 +1519,9 @@ private fun SortOptionRow(label: String, selected: Boolean, onClick: () -> Unit)
     ) {
         Icon(
             imageVector = when (label) {
-                "Newest" -> Icons.Filled.Star
-                "Popular" -> Icons.Filled.Bookmark
-                "Rating" -> Icons.Filled.Star
+                stringResource(R.string.sort_newest) -> Icons.Filled.Star
+                stringResource(R.string.sort_popular) -> Icons.Filled.Bookmark
+                stringResource(R.string.sort_rating) -> Icons.Filled.Star
                 else -> Icons.AutoMirrored.Filled.Sort
             },
             contentDescription = null,
@@ -1549,7 +1572,18 @@ private fun ContinueCard(item: ContinueWatchingItem, onOpenEpisodes: (Int?) -> U
     val totalEp = film.episodeTotal.coerceAtLeast(item.episodeNumber)
     val epsLeft = (totalEp - item.episodeNumber).coerceAtLeast(0)
     val minutesLeft = (epsLeft * 22 + 12).coerceAtLeast(1)
-    val timeLabel = if (minutesLeft >= 60) "${minutesLeft / 60}h ${minutesLeft % 60}m left" else "${minutesLeft}m left"
+    val timeLabel = if (minutesLeft >= 60) {
+        stringResource(
+            R.string.time_left_hours,
+            minutesLeft / 60,
+            minutesLeft % 60
+        )
+    } else {
+        stringResource(
+            R.string.time_left_minutes,
+            minutesLeft
+        )
+    }
     val subtitleText = "Ep ${item.episodeNumber} of $totalEp \u2022 $timeLabel"
 
     Column(
@@ -2005,37 +2039,7 @@ private fun PlusButton(saved: Boolean, size: Int = 50, onClick: () -> Unit) {
     }
 }
 
-@Composable
-private fun EmptyContinueWatching(onOpenEpisodes: (Int?) -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 18.dp)
-            .height(96.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(Brush.horizontalGradient(listOf(Color(0xFF20161B), Color(0xFF131316))))
-            .border(1.dp, Color(0xFF2B252B), RoundedCornerShape(12.dp))
-            .clickable { onOpenEpisodes(null) }
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color(0xFFFF5168)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = Color(0xFF250B12), modifier = Modifier.size(24.dp))
-        }
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text("Watch something", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
-            Text("Start a drama and it will appear here.", color = Color(0xFFC7B6BC), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
-        }
-        Text("START", color = Gold, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
-    }
-}
+
 
 @Composable
 private fun TagPill(text: String, color: Color, background: Color, modifier: Modifier = Modifier) {

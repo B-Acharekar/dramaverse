@@ -78,7 +78,6 @@
 
     <!-- Library / Search -->
     <string name="continue_watching_subtitle">최근 에피소드부터 이어서 보기</string>
-    <string name="continue_watching_empty">10초 이상 시청한 작품이 여기에 표시됩니다.</string>
     <string name="library_subtitle">저장, 시청, 추천 작품</string>
     <string name="watch_list">시청 목록</string>
     <string name="library_watch_list_subtitle">저장하거나 북마크한 작품</string>
@@ -218,4 +217,202 @@
     <string name="widget_home">홈</string>
     <string name="widget_my_list">내 목록</string>
     <string name="widget_uninstall">제거</string>
+
+    <string name="rateus_dialog_title">DramaX를 즐기고 계신가요?</string>
+    <string name="rateus_dialog_subtitle">리뷰를 남겨주시면 앱의 품질을 개선하는 데 큰 도움이 됩니다.</string>
+
+    <string name="not_now">나중에</string>
+    <string name="share_app_message">DramaX에서 숏드라마를 시청하세요: https://play.google.com/store/apps/details?id=%1$s</string>
+    <string name="share_app_chooser_title">DramaX 공유</string>
+    <string name="no_episode_found">에피소드를 찾을 수 없습니다</string>
+    <string name="episode_locked">에피소드 %1$d 잠김</string>
+    <string name="watch_ad_to_unlock">광고를 보고 잠금 해제</string>
+    <string name="recent_activity">최근 활동</string>
+    <string name="inbox">받은 편지함</string>
+    <string name="notification_desc">플래너 알림과 보상 업데이트를 한곳에서 확인하세요.</string>
+    <string name="clearing">삭제 중</string>
+    <string name="clear">삭제</string>
+    <string name="update">업데이트</string>
+    <string name="notification_body">최신 업데이트를 확인하려면 DramaX를 열어보세요.</string>
+    <string name="clearing_inbox">받은 편지함 삭제 중</string>
+    <string name="no_notification_message">아직 알림이 없습니다</string>
+    <string name="removing_old_updates">이전 업데이트를 삭제하는 중...</string>
+    <string name="planner_msg">플래너 알림과 보상 업데이트가 여기에 표시됩니다.</string>
+    <string name="schedule_planner_msg">저장한 드라마와 알림을 예약하세요.</string>
+    <string name="choose_saved_drama">저장된 드라마 선택</string>
+    <string name="save_drama_first">먼저 드라마를 저장하세요</string>
+    <string name="schedule_label_msg">홈 또는 Shorts에서 + 버튼을 눌러 목록을 만드세요.</string>
+    <string name="schedule_reminder">알림 예약</string>
+    <string name="select_saved_drama">저장된 드라마 선택</string>
+    <string name="episode_count">%1$d/%2$d</string>
+    <string name="episodes_range">에피소드 %1$d - %2$d</string>
+    <string name="subtitle_small">작게</string>
+    <string name="subtitle_medium">보통</string>
+    <string name="subtitle_large">크게</string>
+    <string name="report_reason_episode_error">에피소드 오류</string>
+    <string name="report_reason_paid_film_too_long">유료 작품이 너무 깁니다</string>
+    <string name="report_reason_low_quality">낮은 화질</string>
+    <string name="report_reason_subtitle_missing">자막 없음</string>
+    <string name="report_reason_inaccurate_subtitle">부정확한 자막</string>
+    <string name="report_reason_other">기타</string>
+    <string name="loading_share_apps">공유 앱 불러오는 중</string>
+    <string name="welcome_back_emoji">👋</string>
+    <string name="welcome_back_title">다시 오신 것을 환영합니다!</string>
+    <string name="welcome_back_description">다시 만나서 반갑습니다.\n무제한 드라마와 프로그램을 즐겨보세요!</string>
+    <string name="continue_text">계속</string>
+    <string name="auto_advancing">3초 후 자동으로 이동합니다...</string>
+
+    <string name="tab_popular">인기</string>
+    <string name="tab_new">신규</string>
+    <string name="tab_ranking">순위</string>
+    <string name="tab_categories">카테고리</string>
+
+    <string name="filter_all">전체</string>
+    <string name="filter_male">남성</string>
+    <string name="filter_female">여성</string>
+
+    <string name="category_modern">현대</string>
+    <string name="category_historical">시대극</string>
+    <string name="category_fantasy">판타지</string>
+    <string name="category_romance">로맨스</string>
+
+    <string name="sort_newest">최신순</string>
+    <string name="sort_popular">인기순</string>
+    <string name="sort_rating">평점순</string>
+    <string name="sort_trending">트렌드</string>
+
+    <string name="audience">시청자</string>
+    <string name="category">카테고리</string>
+    <string name="filters">필터</string>
+    <string name="sort_by">정렬 기준</string>
+
+    <string name="apply_filters">필터 적용</string>
+    <string name="apply_sort">정렬 적용</string>
+
+    <string name="featured_highlights">추천 작품</string>
+    <string name="fresh_on_dramax">DramaX 신규</string>
+    <string name="weekly_top_20">주간 TOP 20</string>
+
+    <string name="my_favorites">내 즐겨찾기</string>
+    <string name="no_favorites_yet">아직 즐겨찾기가 없습니다</string>
+    <string name="favorites_empty_message">드라마를 즐겨찾기에 추가하면 여기에 표시됩니다.</string>
+
+    <string name="watch_something">드라마를 시청해 보세요</string>
+    <string name="continue_watching_empty">드라마를 시작하면 여기에 표시됩니다.</string>
+
+    <string name="updated_3h_ago">3시간 전 업데이트</string>
+
+    <string name="badge_hot">HOT</string>
+    <string name="badge_new">NEW</string>
+    <string name="start">시작</string>
+
+    <string name="top_rank">TOP %1$d</string>
+
+    <string name="episode_info">%2$d화 중 %1$d화 • %3$s</string>
+
+    <string name="genre_episode_total">%1$s - 총 %2$d화</string>
+    <string name="genre_episode">%1$s - %2$d화</string>
+
+    <string name="rating_genre">%1$s - %2$s</string>
+
+    <string name="time_left_minutes">%1$d분 남음</string>
+    <string name="time_left_hours">%1$d시간 %2$d분 남음</string>
+
+    <string-array name="audience_keywords_male">
+        <item>액션</item>
+        <item>스릴러</item>
+        <item>복수</item>
+        <item>전쟁</item>
+        <item>범죄</item>
+        <item>CEO</item>
+        <item>억만장자</item>
+        <item>판타지</item>
+    </string-array>
+
+    <string-array name="audience_keywords_female">
+        <item>로맨스</item>
+        <item>사랑</item>
+        <item>가족</item>
+        <item>상속인</item>
+        <item>신부</item>
+        <item>아내</item>
+        <item>가을</item>
+        <item>드라마</item>
+    </string-array>
+
+    <string-array name="category_keywords_modern">
+        <item>현대</item>
+        <item>CEO</item>
+        <item>억만장자</item>
+        <item>도시</item>
+        <item>사무실</item>
+        <item>금융</item>
+        <item>기술</item>
+    </string-array>
+
+    <string-array name="category_keywords_historical">
+        <item>시대극</item>
+        <item>왕</item>
+        <item>여왕</item>
+        <item>제국</item>
+        <item>유산</item>
+        <item>왕조</item>
+        <item>고대</item>
+    </string-array>
+
+    <string-array name="category_keywords_fantasy">
+        <item>판타지</item>
+        <item>마법</item>
+        <item>진홍</item>
+        <item>그림자</item>
+        <item>공허</item>
+        <item>초자연</item>
+    </string-array>
+
+    <string-array name="category_keywords_romance">
+        <item>로맨스</item>
+        <item>사랑</item>
+        <item>맹세</item>
+        <item>신부</item>
+        <item>아내</item>
+        <item>가을</item>
+    </string-array>
+    <string name="trending_searches">인기 검색어</string>
+    <string name="hot_searches">급상승 검색어</string>
+    <string name="view_all">모두 보기</string>
+
+    <string name="badge_trending_first">인기 #1</string>
+    <string name="badge_new_release">신작</string>
+
+    <string name="results_found_for_query">"%2$s"에 대한 검색 결과 %1$d개</string>
+
+    <string name="no_results_found">검색 결과가 없습니다</string>
+    <string name="no_results_found_desc">"%1$s"와(과) 일치하는 드라마를 찾을 수 없습니다. 다른 키워드로 검색해 보세요.</string>
+    <string name="empty_state_mask_glyph">×</string>
+
+    <string name="no_dramas_loaded_title">아직 드라마가 로드되지 않았습니다</string>
+    <string name="no_dramas_loaded_desc">홈 화면에서 콘텐츠를 불러오면 검색에서 해당 드라마를 사용할 수 있습니다.</string>
+
+    <string name="genre_fallback">드라마</string>
+
+    <string name="fallback_description">부유한 후계자가 자신의 과거가 거짓이었다는 사실을 알게 되면서 비밀이 드러난다.</string>
+    <string name="fallback_genre_romance">로맨스</string>
+    <string name="fallback_genre_drama">드라마</string>
+    <string name="fallback_genre_thriller">스릴러</string>
+
+    <string name="history_watching">시청 기록</string>
+    <string name="items_watched">%1$d개 시청 완료</string>
+    <string name="nothing_watched_yet">아직 시청한 작품이 없습니다</string>
+    <string name="nothing_watched_yet_desc">드라마를 시청하면 전체 시청 기록이 여기에 표시됩니다.</string>
+
+    <string name="favorites_size">%1$d개</string>
+
+    <string name="select_all">모두 선택</string>
+    <string name="deselect_all">선택 해제</string>
+    <string name="long_press_to_select">길게 눌러 선택</string>
+
+    <string name="account_activity">계정 활동</string>
+    <string name="preferences">환경설정 및 지원</string>
+    <string name="privacy_text">개인정보 보호</string>
+    <string name="share_app">앱 공유</string>
 </resources>

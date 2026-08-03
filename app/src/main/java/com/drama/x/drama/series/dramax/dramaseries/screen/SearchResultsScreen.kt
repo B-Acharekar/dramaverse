@@ -187,9 +187,15 @@ private fun androidx.compose.foundation.lazy.LazyListScope.defaultSearchContent(
     onSearch: (String) -> Unit,
     onOpenShorts: (Int?) -> Unit
 ) {
-    val chips = hotItems.searchChips()
     item {
-        SearchSectionTitle(icon = Icons.AutoMirrored.Filled.TrendingUp, title = "Trending Searches", iconTint = SearchGold)
+        val chips = hotItems.searchChips(
+            fallback = listOf(
+                stringResource(R.string.fallback_genre_romance),
+                stringResource(R.string.fallback_genre_drama),
+                stringResource(R.string.fallback_genre_thriller)
+            )
+        )
+        SearchSectionTitle(icon = Icons.AutoMirrored.Filled.TrendingUp, title = stringResource(R.string.trending_searches), iconTint = SearchGold)
         LazyRow(
             contentPadding = PaddingValues(horizontal = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -199,47 +205,15 @@ private fun androidx.compose.foundation.lazy.LazyListScope.defaultSearchContent(
             }
         }
         Spacer(Modifier.height(22.dp))
-        SearchSectionTitle(icon = Icons.Filled.LocalFireDepartment, title = "Hot Searches", iconTint = SearchPink)
+        SearchSectionTitle(icon = Icons.Filled.LocalFireDepartment, title = stringResource(R.string.hot_searches), iconTint = SearchPink)
     }
     items(hotItems.take(8)) { film ->
-        SearchResultCard(film = film, query = "", badge = "HOT", onOpenShorts = onOpenShorts)
+        SearchResultCard(film = film, query = "", badge = stringResource(R.string.badge_hot), onOpenShorts = onOpenShorts)
     }
     if (hotItems.isEmpty()) {
         item {
             SearchEmptyCatalogMessage()
         }
-    }
-}
-
-private fun androidx.compose.foundation.lazy.LazyListScope.filteredSearchContent(
-    query: String,
-    results: List<DramaItem>,
-    onOpenShorts: (Int?) -> Unit
-) {
-    item {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "${results.size} Results found for \"$query\"",
-                color = Color(0xCCE5BDBE),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.sp,
-                modifier = Modifier.weight(1f)
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.FilterList, contentDescription = null, tint = SearchSoftPink, modifier = Modifier.size(14.dp))
-                Spacer(Modifier.width(4.dp))
-                Text("FILTERS", color = SearchSoftPink, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
-            }
-        }
-    }
-    items(results) { film ->
-        SearchResultCard(film = film, query = query, badge = if (film.isPremium) "NEW" else "HOT", onOpenShorts = onOpenShorts)
     }
 }
 
@@ -249,8 +223,15 @@ private fun androidx.compose.foundation.lazy.LazyListScope.emptySearchContent(
     onSearch: (String) -> Unit,
     onOpenShorts: (Int?) -> Unit
 ) {
-    val chips = recommendations.searchChips().take(4).ifEmpty { listOf("Romance", "Drama", "Thriller") }
     item {
+        val chips = recommendations.searchChips(
+            fallback = listOf(
+                stringResource(R.string.fallback_genre_romance),
+                stringResource(R.string.fallback_genre_drama),
+                stringResource(R.string.fallback_genre_thriller)
+            )
+        ).take(4)
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -273,13 +254,13 @@ private fun androidx.compose.foundation.lazy.LazyListScope.emptySearchContent(
                         .border(4.dp, SearchSoftPink, CircleShape)
                         .align(Alignment.Center)
                 )
-                Text("x", color = SearchSoftPink, fontSize = 28.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+                Text(stringResource(R.string.empty_state_mask_glyph), color = SearchSoftPink, fontSize = 28.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
             }
             Spacer(Modifier.height(20.dp))
-            Text("No results found", color = Color(0xFFE5E1E4), fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+            Text(stringResource(R.string.no_results_found), color = Color(0xFFE5E1E4), fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
             Spacer(Modifier.height(10.dp))
             Text(
-                "We couldn't find any dramas matching your search \"$query\". Try a different keyword.",
+                stringResource(R.string.no_results_found_desc, query),
                 color = Color(0xFFE5BDBE),
                 fontSize = 13.sp,
                 lineHeight = 19.sp,
@@ -295,6 +276,38 @@ private fun androidx.compose.foundation.lazy.LazyListScope.emptySearchContent(
             }
         }
         RecommendedForYou(recommendations.take(2), onSearch, onOpenShorts)
+    }
+}
+
+private fun androidx.compose.foundation.lazy.LazyListScope.filteredSearchContent(
+    query: String,
+    results: List<DramaItem>,
+    onOpenShorts: (Int?) -> Unit
+) {
+    item {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                stringResource(R.string.results_found_for_query, results.size, query),
+                color = Color(0xCCE5BDBE),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.sp,
+                modifier = Modifier.weight(1f)
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.FilterList, contentDescription = null, tint = SearchSoftPink, modifier = Modifier.size(14.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("FILTERS", color = SearchSoftPink, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+            }
+        }
+    }
+    items(results) { film ->
+        SearchResultCard(film = film, query = query, badge = if (film.isPremium) stringResource(R.string.badge_new) else stringResource(R.string.badge_hot), onOpenShorts = onOpenShorts)
     }
 }
 
@@ -437,7 +450,7 @@ private fun SearchResultCard(film: DramaItem, query: String, badge: String, onOp
             )
             Spacer(Modifier.height(5.dp))
             Text(
-                film.description.ifBlank { "Secrets unravel as a wealthy heir discovers the past is a lie." },
+                film.description.ifBlank { stringResource(R.string.fallback_description) },
                 color = Color(0x99E5BDBE),
                 fontSize = 13.sp,
                 lineHeight = 18.sp,
@@ -456,9 +469,9 @@ private fun RecommendedForYou(items: List<DramaItem>, onSearch: (String) -> Unit
     if (items.isEmpty()) return
     Column(modifier = Modifier.padding(horizontal = 20.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Recommended for You", color = Color(0xFFE5E1E4), fontSize = 20.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+            Text(stringResource(R.string.recommended_for_you), color = Color(0xFFE5E1E4), fontSize = 20.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
             Spacer(Modifier.weight(1f))
-            Text("VIEW ALL", color = SearchSoftPink, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp, modifier = Modifier.clickable { onSearch("hot") })
+            Text(stringResource(R.string.view_all), color = SearchSoftPink, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp, modifier = Modifier.clickable { onSearch("hot") })
         }
         Spacer(Modifier.height(14.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -475,7 +488,7 @@ private fun RecommendedForYou(items: List<DramaItem>, onSearch: (String) -> Unit
                     NetworkDramaImage(film.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, film.title)
                     Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xD0131315)))))
                     Column(Modifier.align(Alignment.BottomStart).padding(10.dp)) {
-                        Text(if (index == 0) "Trending #1" else "New Release", color = SearchGold, fontSize = 11.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+                        Text(if (index == 0) stringResource(R.string.badge_trending_first) else stringResource(R.string.badge_new_release), color = SearchGold, fontSize = 11.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
                         Text(film.title, color = Color(0xFFE5E1E4), fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, maxLines = 2, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
                     }
                 }
@@ -493,7 +506,7 @@ private fun SearchEmptyCatalogMessage() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            "No dramas loaded yet",
+            stringResource(R.string.no_dramas_loaded_title),
             color = Color(0xFFE5E1E4),
             fontSize = 18.sp,
             fontWeight = FontWeight.ExtraBold,
@@ -501,7 +514,7 @@ private fun SearchEmptyCatalogMessage() {
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            "Open Home once the feed is available, then Search will use those real dramas here.",
+            stringResource(R.string.no_dramas_loaded_desc),
             color = Color(0x99E5BDBE),
             fontSize = 13.sp,
             lineHeight = 18.sp,
@@ -514,7 +527,7 @@ private fun SearchEmptyCatalogMessage() {
 @Composable
 private fun GenreTag(genre: String) {
     Text(
-        genre.ifBlank { "DRAMA" }.uppercase().take(18),
+        genre.ifBlank { stringResource(R.string.genre_fallback) }.uppercase().take(18),
         color = Color(0xCCB8891A),
         fontSize = 10.sp,
         fontWeight = FontWeight.Black,
@@ -550,7 +563,7 @@ private fun highlightedTitle(title: String, query: String) = buildAnnotatedStrin
     }
 }
 
-private fun List<DramaItem>.searchChips(): List<String> {
+private fun List<DramaItem>.searchChips(fallback: List<String>): List<String> {
     return flatMap { item ->
         listOf(item.genre, item.title)
     }
@@ -558,5 +571,5 @@ private fun List<DramaItem>.searchChips(): List<String> {
         .filter { it.length in 3..18 }
         .distinctBy { it.lowercase() }
         .take(8)
-        .ifEmpty { listOf("Romance", "Drama", "Thriller") }
+        .ifEmpty { fallback }
 }

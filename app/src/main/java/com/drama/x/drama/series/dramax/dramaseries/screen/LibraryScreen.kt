@@ -224,8 +224,8 @@ private fun LibraryContent(
                 if (history.isNotEmpty()) {
                     item {
                         MyListSectionHeader(
-                            title = "History watching",
-                            action = "SEE ALL",
+                            title = stringResource(R.string.history_watching),
+                            action = stringResource(R.string.see_all),
                             onAction = { mode = MyListMode.History }
                         )
                     }
@@ -243,16 +243,16 @@ private fun LibraryContent(
 
                 item {
                     MyListSectionHeader(
-                        title = "My Favorites",
-                        action = "SEE ALL".takeIf { favorites.isNotEmpty() },
+                        title = stringResource(R.string.my_favorites),
+                        action = stringResource(R.string.see_all).takeIf { favorites.isNotEmpty() },
                         onAction = { mode = MyListMode.Favorites }
                     )
                 }
                 if (favorites.isEmpty()) {
                     item {
                         MyListEmptyMessage(
-                            title = "No favorites yet",
-                            body = "Bookmark dramas you like and they will be saved here."
+                            title = stringResource(R.string.no_favorites_yet),
+                            body = stringResource(R.string.favorites_empty_message)
                         )
                     }
                 } else {
@@ -279,8 +279,8 @@ private fun LibraryContent(
                 item {
                     val allSelected = history.isNotEmpty() && selectedHistoryIds.containsAll(history.map { it.film.id }.toSet())
                     HistoryAllHeader(
-                        title = "History watching",
-                        meta = "${history.size} ITEMS WATCHED",
+                        title = stringResource(R.string.history_watching),
+                        meta = stringResource(R.string.items_watched,history.size),
                         allSelected = allSelected,
                         selectionMode = isHistorySelectionMode,
                         onBack = { mode = MyListMode.Overview },
@@ -301,8 +301,8 @@ private fun LibraryContent(
                 if (history.isEmpty()) {
                     item {
                         MyListEmptyMessage(
-                            title = "Nothing watched yet",
-                            body = "Watch something and your full history will show here."
+                            title = stringResource(R.string.nothing_watched_yet),
+                            body = stringResource(R.string.nothing_watched_yet_desc)
                         )
                     }
                 } else {
@@ -363,8 +363,8 @@ private fun LibraryContent(
                 item {
                     val allSelected = favorites.isNotEmpty() && selectedFavoriteIds.containsAll(favorites.map { it.id }.toSet())
                     HistoryAllHeader(
-                        title = "My Favorites",
-                        meta = "${favorites.size} ITEMS",
+                        title = stringResource(R.string.my_favorites),
+                        meta = stringResource(R.string.favorites_size,favorites.size),
                         allSelected = allSelected,
                         selectionMode = isFavoritesSelectionMode,
                         onBack = { mode = MyListMode.Overview },
@@ -385,8 +385,8 @@ private fun LibraryContent(
                 if (favorites.isEmpty()) {
                     item {
                         MyListEmptyMessage(
-                            title = "No favorites yet",
-                            body = "Bookmark dramas you like and they will be saved here."
+                            title = stringResource(R.string.no_favorites_yet),
+                            body = stringResource(R.string.favorites_empty_message)
                         )
                     }
                 } else {
@@ -576,7 +576,7 @@ private fun HistoryAllHeader(
             Spacer(modifier = Modifier.weight(1f))
             if (selectionMode) {
                 Text(
-                    text = if (allSelected) "Deselect All" else "Select All",
+                    text = if (allSelected) stringResource(R.string.deselect_all) else stringResource(R.string.select_all),
                     color = Gold,
                     fontSize = 9.sp,
                     fontWeight = FontWeight.Black,
@@ -585,7 +585,7 @@ private fun HistoryAllHeader(
                 )
             } else {
                 Text(
-                    text = "Long-press to select",
+                    text = stringResource(R.string.long_press_to_select),
                     color = Color(0xFF6B6B6F),
                     fontSize = 9.sp,
                     fontWeight = FontWeight.Medium,

@@ -59,6 +59,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -77,6 +78,7 @@ import com.drama.x.drama.series.dramax.dramaseries.data.ShortsItem
 import com.drama.x.drama.series.dramax.dramaseries.data.SubtitleTrack
 import com.drama.x.drama.series.dramax.dramaseries.model.EpisodeViewModel
 import kotlinx.coroutines.launch
+import com.drama.x.drama.series.dramax.dramaseries.R
 
 // ── Design tokens ────────────────────────────────────────────────────────────
 private val EpBgDark       = Color(0xFF131315)
@@ -506,14 +508,46 @@ private fun EpTopBtn(onClick: () -> Unit, content: @Composable () -> Unit) {
 
 // ── Locked overlay ────────────────────────────────────────────────────────────
 @Composable
-private fun EpLockedOverlay(episodeNumber: Int, onUnlock: () -> Unit) {
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xCC000000)), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Icon(Icons.Filled.Lock, null, tint = EpLockRed, modifier = Modifier.size(56.dp))
-            Text("Episode $episodeNumber Locked", color = EpTextPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(EpPink)
-                .clickable(onClick = onUnlock).padding(horizontal = 32.dp, vertical = 12.dp)) {
-                Text("Watch Ad to Unlock", color = Color.White, fontWeight = FontWeight.Bold)
+private fun EpLockedOverlay(
+    episodeNumber: Int,
+    onUnlock: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xCC000000)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                Icons.Filled.Lock,
+                contentDescription = null,
+                tint = EpLockRed,
+                modifier = Modifier.size(56.dp)
+            )
+
+            Text(
+                text = stringResource(R.string.episode_locked, episodeNumber),
+                color = EpTextPrimary,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(EpPink)
+                    .clickable(onClick = onUnlock)
+                    .padding(horizontal = 32.dp, vertical = 12.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.watch_ad_to_unlock),
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
