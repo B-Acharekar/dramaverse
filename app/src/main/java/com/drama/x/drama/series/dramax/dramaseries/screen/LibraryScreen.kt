@@ -102,7 +102,7 @@ fun LibraryScreen(
     backendBaseUrl: String,
     onHome: () -> Unit,
     onShorts: () -> Unit,
-    onOpenShorts: (Int?) -> Unit,
+    onOpenShorts: (Int?, Int?) -> Unit,
     onSearch: (String) -> Unit = {},
     onRewards: () -> Unit,
     onPlanner: () -> Unit,
@@ -177,7 +177,7 @@ private fun LibraryContent(
     backendBaseUrl: String,
     viewModel: LibraryViewModel,
     onSearch: (String) -> Unit = {},
-    onOpenShorts: (Int?) -> Unit,
+    onOpenShorts: (Int?, Int?) -> Unit,
     nativeMyListAdState: NativeAdState,
     bottomBannerVisible: Boolean,
     onPlanner: () -> Unit
@@ -266,7 +266,7 @@ private fun LibraryContent(
                             }
                         }
                         item {
-                            FavoriteListCard(film = film, onOpenShorts = onOpenShorts)
+                            FavoriteListCard(film = film, onOpenShorts = { filmId -> onOpenShorts(filmId, null) })
                         }
                     }
                 }
@@ -342,7 +342,7 @@ private fun LibraryContent(
                                             else
                                                 selectedHistoryIds + filmId
                                         },
-                                        onOpen = { if (!isHistorySelectionMode) onOpenShorts(filmId.takeIf { it != 0 }) },
+                                        onOpen = { if (!isHistorySelectionMode) onOpenShorts(filmId.takeIf { it != 0 }, histItem.episodeNumber) },
                                         modifier = Modifier.weight(1f)
                                     )
                                 }
@@ -403,7 +403,7 @@ private fun LibraryContent(
                             val isChecked = film.id in selectedFavoriteIds
                             FavoriteListCard(
                                 film = film,
-                                onOpenShorts = { if (!isFavoritesSelectionMode) onOpenShorts(it) },
+                                onOpenShorts = { filmId -> if (!isFavoritesSelectionMode) onOpenShorts(filmId, null) },
                                 isChecked = isChecked,
                                 selectionMode = isFavoritesSelectionMode,
                                 onLongPress = {
@@ -765,12 +765,12 @@ private fun FavoriteGridCard(
 }
 
 @Composable
-private fun MyListHistoryPreviewCard(item: ContinueWatchingItem, onOpenShorts: (Int?) -> Unit) {
+private fun MyListHistoryPreviewCard(item: ContinueWatchingItem, onOpenShorts: (Int?, Int?) -> Unit) {
     val film = item.film
     Column(
         modifier = Modifier
             .width(112.dp)
-            .clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
+            .clickable { onOpenShorts(film.id.takeIf { it != 0 }, item.episodeNumber) }
     ) {
         Box(
             modifier = Modifier
@@ -802,7 +802,7 @@ private fun MyListHistoryPreviewCard(item: ContinueWatchingItem, onOpenShorts: (
 @Composable
 private fun MyListHistoryGridCard(
     item: ContinueWatchingItem,
-    onOpenShorts: (Int?) -> Unit,
+    onOpenShorts: (Int?, Int?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val film = item.film
@@ -814,7 +814,7 @@ private fun MyListHistoryGridCard(
             .wrapContentHeight()
             .clip(RoundedCornerShape(8.dp))
             .background(Color(0xFF1F1F1F))
-            .clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
+            .clickable { onOpenShorts(film.id.takeIf { it != 0 }, item.episodeNumber) }
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -855,7 +855,7 @@ private fun MyListHistoryGridCard(
                 modifier = Modifier
                     .clip(RoundedCornerShape(20.dp))
                     .background(Pink)
-                    .clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
+                    .clickable { onOpenShorts(film.id.takeIf { it != 0 }, item.episodeNumber) }
                     .padding(horizontal = 14.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -1028,7 +1028,7 @@ private fun AnimatedLibrarySection(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun FeaturedContinueCard(item: ContinueWatchingItem, onOpenShorts: (Int?) -> Unit) {
+private fun FeaturedContinueCard(item: ContinueWatchingItem, onOpenShorts: (Int?, Int?) -> Unit) {
     val film = item.film
     Box(
         modifier = Modifier
@@ -1038,7 +1038,7 @@ private fun FeaturedContinueCard(item: ContinueWatchingItem, onOpenShorts: (Int?
             .clip(RoundedCornerShape(16.dp))
             .background(Panel)
             .border(1.dp, Color(0x28FFFFFF), RoundedCornerShape(16.dp))
-            .clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
+            .clickable { onOpenShorts(film.id.takeIf { it != 0 }, item.episodeNumber) }
     ) {
         NetworkDramaImage(film.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, film.title)
         Box(
@@ -1110,7 +1110,7 @@ private fun LibraryFilmRail(
     emptyText: String,
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
-    onOpenShorts: (Int?) -> Unit
+    onOpenShorts: (Int?, Int?) -> Unit
 ) {
     Box(Modifier.padding(horizontal = 18.dp)) {
         Column {
@@ -1132,10 +1132,10 @@ private fun LibraryFilmRail(
 }
 
 @Composable
-private fun WatchHistorySection(
+private fun LibraryRowSection(
     title: String,
     items: List<ContinueWatchingItem>,
-    onOpenShorts: (Int?) -> Unit
+    onOpenShorts: (Int?, Int?) -> Unit
 ) {
     Box(Modifier.padding(horizontal = 18.dp)) {
         Column { LibraryHeader(title, stringResource(R.string.continue_watching_subtitle)) }
@@ -1160,7 +1160,7 @@ private fun WatchHistorySection(
 private fun LibraryGridSection(
     title: String,
     items: List<DramaItem>,
-    onOpenShorts: (Int?) -> Unit
+    onOpenShorts: (Int?, Int?) -> Unit
 ) {
     Box(Modifier.padding(horizontal = 18.dp)) {
         Column { LibraryHeader(title, null) }
@@ -1180,7 +1180,7 @@ private fun LibraryGridSection(
 }
 
 @Composable
-private fun TopStarsSection(stars: List<TopStar>, onOpenShorts: (Int?) -> Unit) {
+private fun TopStarsSection(stars: List<TopStar>, onOpenShorts: (Int?, Int?) -> Unit) {
     Box(Modifier.padding(horizontal = 18.dp)) {
         Column { LibraryHeader(stringResource(R.string.top_stars), stringResource(R.string.top_stars_subtitle)) }
     }
@@ -1192,7 +1192,7 @@ private fun TopStarsSection(stars: List<TopStar>, onOpenShorts: (Int?) -> Unit) 
             Column(
                 modifier = Modifier
                     .width(82.dp)
-                    .clickable { onOpenShorts(star.filmId.takeIf { it != 0 }) },
+                    .clickable { onOpenShorts(star.filmId.takeIf { it != 0 }, null) },
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Box(
@@ -1248,11 +1248,11 @@ private fun LibraryHeader(
 }
 
 @Composable
-private fun CompactLibraryCard(film: DramaItem, onOpenShorts: (Int?) -> Unit) {
+private fun CompactLibraryCard(film: DramaItem, onOpenShorts: (Int?, Int?) -> Unit) {
     Column(
         modifier = Modifier
             .width(138.dp)
-            .clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
+            .clickable { onOpenShorts(film.id.takeIf { it != 0 }, null) }
     ) {
         PosterBox(film, Modifier.fillMaxWidth().aspectRatio(0.72f))
         Spacer(modifier = Modifier.height(8.dp))
@@ -1261,12 +1261,12 @@ private fun CompactLibraryCard(film: DramaItem, onOpenShorts: (Int?) -> Unit) {
 }
 
 @Composable
-private fun HistoryCard(item: ContinueWatchingItem, onOpenShorts: (Int?) -> Unit) {
+private fun HistoryCard(item: ContinueWatchingItem, onOpenShorts: (Int?, Int?) -> Unit) {
     val film = item.film
     Column(
         modifier = Modifier
             .width(210.dp)
-            .clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
+            .clickable { onOpenShorts(film.id.takeIf { it != 0 }, item.episodeNumber) }
     ) {
         Box {
             PosterBox(film, Modifier.fillMaxWidth().height(118.dp))
@@ -1297,13 +1297,13 @@ private fun HistoryCard(item: ContinueWatchingItem, onOpenShorts: (Int?) -> Unit
 }
 
 @Composable
-private fun LargeLibraryCard(film: DramaItem, onOpenShorts: (Int?) -> Unit) {
+private fun LargeLibraryCard(film: DramaItem, onOpenShorts: (Int?, Int?) -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(238.dp)
             .clip(RoundedCornerShape(12.dp))
-            .clickable { onOpenShorts(film.id.takeIf { it != 0 }) }
+            .clickable { onOpenShorts(film.id.takeIf { it != 0 }, null) }
     ) {
         NetworkDramaImage(film.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, film.title)
         Box(

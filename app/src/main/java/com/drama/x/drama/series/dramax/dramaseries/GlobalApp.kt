@@ -52,11 +52,7 @@ class GlobalApp : AdsMultiDexApplication() {
         initBilling()
         DramaXWidgetProvider.refresh(this)
 
-        val lifecycleObserver = if (ResumeAdsEntryRule.shouldShowWelcomeOnResume()) {
-            AppLifecycleObserver()
-        } else {
-            null
-        }
+        val lifecycleObserver = AppLifecycleObserver()
         registerActivityLifecycleCallbacks(AppActivityLifecycleCallbacks(lifecycleObserver) { appResumed ->
             // Mark that welcome back screen should be shown on next home navigation
             if (appResumed) {

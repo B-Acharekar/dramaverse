@@ -64,12 +64,7 @@ class AppLifecycleObserver {
                 "ERAIN_GATE inter_welcome_back enableUaCheck=${config.enableUaCheck} sdkShouldDisplay=$sdkAllowed"
             )
             if (sdkAllowed) {
-                AdsManager.loadInterWelcome(
-                    activity = activity,
-                    onLoaded = {
-                        AdsManager.showInterWelcome(activity)
-                    }
-                )
+                AdsManager.loadInterWelcome(activity = activity)
             }
         }
 

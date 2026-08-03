@@ -27,13 +27,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
-import com.drama.x.drama.series.dramax.dramaseries.R
+
 private val HomeBackground = Color(0xFF09090B)
 private val Pink = Color(0xFFFF3E68)
 private val SoftPink = Color(0xFFFFC0C9)
@@ -99,7 +98,7 @@ fun WelcomeBackScreen(onFinished: () -> Unit) {
 
                     // Welcome back title
                     Text(
-                        text = stringResource(R.string.welcome_back_title),
+                        text = "Welcome Back!",
                         fontSize = 32.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = Color.White,
@@ -111,7 +110,7 @@ fun WelcomeBackScreen(onFinished: () -> Unit) {
 
                     // Description
                     Text(
-                        text = stringResource(R.string.welcome_back_description),
+                        text = "We're excited to see you again.\nEnjoy unlimited dramas and shows!",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = SoftPink,
@@ -137,7 +136,7 @@ fun WelcomeBackScreen(onFinished: () -> Unit) {
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = stringResource(R.string.continue_text),
+                            text = "Continue",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Black,
                             color = Color.White,
@@ -151,7 +150,7 @@ fun WelcomeBackScreen(onFinished: () -> Unit) {
         // Skip indicator at bottom
         if (showContent) {
             Text(
-                text = stringResource(R.string.auto_advancing),
+                text = "Auto-advancing in 3 seconds...",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF6B6B6F),

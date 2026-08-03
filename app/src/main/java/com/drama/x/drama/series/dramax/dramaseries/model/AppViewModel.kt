@@ -189,7 +189,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun openShorts(filmId: Int? = null) {
+    fun openShorts(filmId: Int? = null, episodeNumber: Int? = null) {
         // Debounce rapid navigation to prevent multiple simultaneous transitions
         viewModelScope.launch {
             val now = System.currentTimeMillis()
@@ -199,7 +199,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.update {
                 it.copy(
                     currentStep = AppStep.Shorts,
-                    selectedShortFilmId = filmId
+                    selectedShortFilmId = filmId,
+                    selectedEpisodeNumber = episodeNumber
                 )
             }
         }
@@ -215,7 +216,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.update {
                 it.copy(
                     currentStep = AppStep.Shorts,
-                    selectedShortFilmId = filmId
+                    selectedShortFilmId = filmId,
+                    selectedEpisodeNumber = episodeNumber
                 )
             }
         }

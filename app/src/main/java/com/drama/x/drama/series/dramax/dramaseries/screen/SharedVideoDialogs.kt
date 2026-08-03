@@ -275,22 +275,51 @@ internal fun SharedEpisodeOptionsSheet(
 }
 
 @Composable
-private fun SharedEpisodeCell(episode: Int, isPlaying: Boolean, isLocked: Boolean, onClick: () -> Unit) {
-    Column(modifier = Modifier.aspectRatio(0.92f).clip(RoundedCornerShape(14.dp))
-        .background(if (isPlaying) Color(0x33F5C65B) else Color(0xFF211D25))
-        .then(if (isPlaying) Modifier.border(1.5.dp, SharedGold, RoundedCornerShape(14.dp)) else Modifier)
-        .clickable(onClick = onClick).padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+private fun SharedEpisodeCell(
+    episode: Int,
+    isPlaying: Boolean,
+    isLocked: Boolean,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .aspectRatio(0.92f)
+            .clip(RoundedCornerShape(14.dp))
+            .background(if (isPlaying) Color(0x33F5C65B) else Color(0xFF211D25))
+            .then(
+                if (isPlaying) Modifier.border(
+                    1.5.dp,
+                    SharedGold,
+                    RoundedCornerShape(14.dp)
+                ) else Modifier
+            )
+            .clickable(onClick = onClick)
+            .padding(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Row(modifier = Modifier.fillMaxWidth()) {
             Spacer(Modifier.weight(1f))
-            if (isLocked) Icon(Icons.Filled.Lock, contentDescription = null,
-                tint = Color(0xFF6B6470), modifier = Modifier.size(12.dp))
+            if (isLocked) {
+                Icon(
+                    Icons.Filled.Lock,
+                    contentDescription = null,
+                    tint = Color(0xFF6B6470),
+                    modifier = Modifier.size(12.dp)
+                )
+            }
         }
+
         Spacer(Modifier.weight(1f))
-        Text(episode.toString(),
+
+        Text(
+            text = episode.toString(),
             color = if (isPlaying) SharedGold else if (isLocked) Color(0xFF9D8FA0) else Color.White,
-            fontSize = 16.sp, fontWeight = FontWeight.ExtraBold)
-        if (isPlaying) Text("PLAYING", color = SharedGold, fontSize = 8.sp, fontWeight = FontWeight.Black, letterSpacing = 0.5.sp)
-        else Spacer(Modifier.height(10.dp))
+            fontSize = 16.sp,
+            fontWeight = FontWeight.ExtraBold
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
         Spacer(Modifier.weight(1f))
     }
 }
