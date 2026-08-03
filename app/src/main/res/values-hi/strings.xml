@@ -9,8 +9,8 @@
     </string>
 
     <string name="splash_description">
-    आपके सबसे व्यस्त पलों के लिए चुनी गई
-    \nरोमांचक कहानियों का अनुभव करें।
+    रोमांचक कहानियों का अनुभव करें, खासतौर पर
+    \nआपके सबसे तेज़ पलों के लिए तैयार की गई।
     </string>
 
     <!-- Language screen -->
@@ -19,29 +19,29 @@
 
     <!-- Onboarding screen -->
     <string name="start_btn">शुरू करें</string>
-    <string name="next_btn">आगे</string>
-    <string name="onboarding_title_1">अद्भुत</string>
-    <string name="onboarding_accent_title_1">शॉर्ट ड्रामा खोजें</string>
-    <string name="onboarding_description_1">हज़ारों एपिसोड वाले एक्सक्लूसिव शॉर्ट ड्रामा देखें, हर खाली पल के लिए एकदम सही।</string>
+    <string name="next_btn">अगला</string>
+    <string name="onboarding_title_1">शानदार शॉर्ट ड्रामा</string>
+    <string name="onboarding_accent_title_1">खोजें</string>
+    <string name="onboarding_description_1">हज़ारों एपिसोड वाले एक्सक्लूसिव शॉर्ट ड्रामा देखें, हर खाली पल के लिए बिल्कुल सही।</string>
 
-    <string name="onboarding_title_2">कहानियों का अंतहीन</string>
-    <string name="onboarding_accent_title_2">संग्रह</string>
-    <string name="onboarding_description_2">रोमांस और फंतासी से लेकर थ्रिलर और बदले तक, हर दिन नई कहानियाँ खोजें।</string>
+    <string name="onboarding_title_2">अनगिनत कहानियों</string>
+    <string name="onboarding_accent_title_2">का संग्रह</string>
+    <string name="onboarding_description_2">रोमांस और फैंटेसी से लेकर थ्रिलर और बदले तक, हर दिन नई कहानियाँ खोजें।</string>
 
-    <string name="onboarding_title_3">कभी भी,</string>
-    <string name="onboarding_accent_title_3">कहीं भी देखें</string>
-    <string name="onboarding_description_3">एपिसोड डाउनलोड करें और जहाँ भी जाएँ अपने पसंदीदा ड्रामा का आनंद लें - बिना इंटरनेट के भी।</string>
+    <string name="onboarding_title_3">कभी भी देखें,</string>
+    <string name="onboarding_accent_title_3">कहीं भी</string>
+    <string name="onboarding_description_3">एपिसोड डाउनलोड करें और जहाँ भी जाएँ, अपने पसंदीदा ड्रामा का आनंद लें - ऑफ़लाइन भी।</string>
 
-    <string name="onboarding_title_4">दैनिक इनाम और मिशन</string>
-    <string name="onboarding_description_4">बस देखकर हर दिन मुफ़्त सिक्के कमाएँ। प्रीमियम एपिसोड अनलॉक करने के लिए मिशन पूरे करें।</string>
+    <string name="onboarding_title_4">रोज़ाना रिवॉर्ड्स और मिशन</string>
+    <string name="onboarding_description_4">सिर्फ़ देखकर हर दिन मुफ़्त सिक्के कमाएँ। प्रीमियम एपिसोड अनलॉक करने के लिए मिशन पूरे करें।</string>
 
-    <string name="welcome_title">आपका स्वागत है </string>
+    <string name="welcome_title">स्वागत है </string>
     <string name="welcome_accent_title">DramaX में</string>
     <string name="welcome_description">हज़ारों अविस्मरणीय कहानियाँ आपका इंतज़ार कर रही हैं, अभी देखना शुरू करें।</string>
     <string name="get_started">शुरू करें</string>
     <!-- Home screen — top bar / moods -->
     <string name="mood_hot">हॉट</string>
-    <string name="mood_happy">खुशनुमा</string>
+    <string name="mood_happy">खुशमिज़ाज</string>
     <string name="mood_emotional">भावुक</string>
     <string name="mood_action">एक्शन</string>
     <string name="mood_romance">रोमांस</string>
@@ -57,22 +57,21 @@
 
     <!-- Continue watching -->
     <string name="continue_watching">देखना जारी रखें</string>
-    <string name="continue_watching_subtitle">अपने आखिरी एपिसोड से जारी रखें</string>
-    <string name="continue_watching_empty">10 सेकंड या उससे अधिक देखी गई फ़िल्में यहाँ दिखेंगी।</string>
+    <string name="continue_watching_subtitle">अपने नवीनतम एपिसोड से जारी रखें</string>
     <string name="see_all">सभी देखें</string>
-    
+
     <!-- Trending / poster rails -->
     <string name="trending_now">अभी ट्रेंडिंग</string>
-    <string name="recommended_for_you">आपके लिए सुझाई गई</string>
+    <string name="recommended_for_you">आपके लिए अनुशंसित</string>
     <string name="trending_tag">ट्रेंडिंग</string>
-    <string name="episodes_count">%1$d एपि.</string>
+    <string name="episodes_count">%1$d एपिसोड</string>
     <string name="premium">प्रीमियम</string>
     <string name="rating_value">* %1$s</string>
 
     <!-- Top rated -->
-    <string name="top_rated_this_week">इस हफ्ते की टॉप रेटेड</string>
-    <string name="weekly_top_1">वीकली टॉप #1</string>
-    <string name="rating_genre_episodes">* %1$s    %2$s    %3$d एपि.</string>
+    <string name="top_rated_this_week">इस हफ्ते सबसे ज़्यादा रेटेड</string>
+    <string name="weekly_top_1">साप्ताहिक टॉप #1</string>
+    <string name="rating_genre_episodes">* %1$s    %2$s    %3$d एपिसोड</string>
 
     <!-- Action cards -->
     <string name="vip_short">VIP</string>
@@ -80,19 +79,19 @@
     <string name="unlock_all_episodes">आज ही सभी एपिसोड\nअनलॉक करें</string>
     <string name="schedule">शेड्यूल</string>
     <string name="daily_reward_short">50</string>
-    <string name="daily_rewards">दैनिक इनाम</string>
-    <string name="claim_daily_coins">अपने 50 सिक्के प्राप्त करें</string>
+    <string name="daily_rewards">रोज़ाना रिवॉर्ड्स</string>
+    <string name="claim_daily_coins">अपने 50 सिक्के क्लेम करें</string>
 
     <!-- Bottom navigation -->
     <string name="nav_home">होम</string>
     <string name="nav_shorts">शॉर्ट्स</string>
-    <string name="nav_library">मेरी सूची</string>
-    <string name="nav_rewards">इनाम</string>
+    <string name="nav_library">मेरी लिस्ट</string>
+    <string name="nav_rewards">रिवॉर्ड्स</string>
     <string name="nav_planner">प्लानर</string>
     <string name="nav_profile">प्रोफ़ाइल</string>
 
     <!-- Library / Search -->
-    <string name="library_subtitle">सेव की गई, देखी गई और आपके लिए चुनी गई</string>
+    <string name="library_subtitle">सेव किया गया, देखा गया, और आपके लिए चुना गया</string>
     <string name="watch_list">वॉच लिस्ट</string>
     <string name="library_watch_list_subtitle">सेव और बुकमार्क की गई फ़िल्में</string>
     <string name="library_watch_list_empty">सेव की गई फ़िल्में यहाँ दिखेंगी।</string>
@@ -103,15 +102,15 @@
     <string name="search_results_count">%1$d परिणाम</string>
     <string name="no_films_found">कोई फ़िल्म नहीं मिली।</string>
     <string name="no_films_yet">अभी तक कोई फ़िल्म नहीं है।</string>
-    <string name="library_load_error">अभी आपकी लाइब्रेरी रीफ़्रेश नहीं हो सकी।</string>
-    <string name="search_error">अभी खोज परिणाम लोड नहीं हो सके।</string>
+    <string name="library_load_error">अभी आपकी लाइब्रेरी रीफ़्रेश नहीं की जा सकी।</string>
+    <string name="search_error">अभी खोज परिणाम लोड नहीं किए जा सके।</string>
 
     <!-- Shorts Screen -->
 
     <!-- Toasts -->
-    <string name="saved_to_list">सूची में सेव किया गया</string>
-    <string name="removed_from_list">सूची से हटाया गया</string>
-    <string name="feedback_sent">फ़ीडबैक भेजा गया</string>
+    <string name="saved_to_list">लिस्ट में सेव हो गया</string>
+    <string name="removed_from_list">लिस्ट से हटा दिया गया</string>
+    <string name="feedback_sent">फ़ीडबैक भेज दिया गया</string>
 
     <!-- Actions -->
     <string name="share">शेयर करें</string>
@@ -128,7 +127,7 @@
 
     <!-- Description -->
     <string name="default_short_description">
-    रहस्य, रोमांस और बदले से भरा एक शॉर्ट ड्रामा।
+    रहस्यों, रोमांस और बदले से भरा एक शॉर्ट ड्रामा।
 </string>
 
     <string name="view_more">और देखें</string>
@@ -137,19 +136,19 @@
     <!-- Playback Options -->
     <string name="playback_options">प्लेबैक विकल्प</string>
 
-    <string name="auto_next_episode">अगला एपिसोड ऑटो चलाएं</string>
+    <string name="auto_next_episode">अगला एपिसोड ऑटो चलाएँ</string>
     <string name="auto_next_episode_desc">
-    इस एपिसोड के खत्म होने पर अगला एपिसोड अपने आप चलाएं।
+    इस एपिसोड के खत्म होते ही अगला एपिसोड अपने आप चलाएँ।
 </string>
 
-    <string name="auto_unlock_episodes">एपिसोड ऑटो अनलॉक करें</string>
+    <string name="auto_unlock_episodes">एपिसोड ऑटो अनलॉक</string>
     <string name="auto_unlock_episodes_desc">
-    मौजूदा एपिसोड खत्म होने के बाद केवल अगला लॉक एपिसोड अनलॉक करें।
+    मौजूदा एपिसोड खत्म होने के बाद सिर्फ़ अगला लॉक किया गया एपिसोड अनलॉक करें।
 </string>
 
     <!-- Feedback -->
     <string name="send_feedback">फ़ीडबैक भेजें</string>
-    <string name="feedback_hint">हमें बताएं क्या गलत हुआ...</string>
+    <string name="feedback_hint">हमें बताएं कि क्या गलत हुआ...</string>
     <string name="submit">सबमिट करें</string>
 
     <!-- Subtitle -->
@@ -162,7 +161,7 @@
     <string name="speed_15x">1.5x</string>
     <string name="speed_2x">2x</string>
     <string name="speed_custom">%1$sx</string>
-    
+
     <!-- Profile Screen -->
     <string name="default_username">ड्रामा प्रेमी</string>
     <string name="update_profile_photo">प्रोफ़ाइल फ़ोटो अपडेट करें</string>
@@ -182,14 +181,14 @@
     <!-- Quick Actions -->
     <string name="subscription">सब्सक्रिप्शन</string>
     <string name="wallet">वॉलेट</string>
-    <string name="downloads">डाउनलोड</string>
+    <string name="downloads">डाउनलोड्स</string>
 
     <!-- Sections -->
-    <string name="account_settings">अकाउंट सेटिंग्स</string>
+    <string name="account_settings">खाता सेटिंग्स</string>
     <string name="edit_profile">प्रोफ़ाइल एडिट करें</string>
     <string name="watch_history">वॉच हिस्ट्री</string>
     <string name="my_watchlist">मेरी वॉचलिस्ट</string>
-    <string name="preferences_support">प्राथमिकताएं और सहायता</string>
+    <string name="preferences_support">प्राथमिकताएँ और सहायता</string>
     <string name="language">भाषा</string>
     <string name="settings">सेटिंग्स</string>
     <string name="help_center">सहायता केंद्र</string>
@@ -205,7 +204,7 @@
     <string name="portuguese">पुर्तगाली</string>
     <string name="turkish">तुर्की</string>
     <string name="arabic">अरबी</string>
-    <string name="hindi">हिन्दी</string>
+    <string name="hindi">हिंदी</string>
     <string name="japanese">जापानी</string>
     <string name="korean">कोरियाई</string>
     <string name="chinese">चीनी</string>
@@ -216,20 +215,20 @@
     <string name="edit_profile_photo">प्रोफ़ाइल फ़ोटो एडिट करें</string>
     <!-- Uninstall flow -->
     <string name="uninstall_confirm_title">आपकी वॉच हिस्ट्री और पसंदीदा शॉर्ट ड्रामा\nअभी भी आपका इंतज़ार कर रहे हैं</string>
-    <string name="uninstall_confirm_description">कहानियों, इनामों और नए एपिसोड को कभी भी जारी रखने के लिए\nDramaX इंस्टॉल रखें।</string>
-    <string name="uninstall_try_again">फिर कोशिश करें</string>
+    <string name="uninstall_confirm_description">कहानियाँ, रिवॉर्ड्स और नए एपिसोड कभी भी जारी रखने के लिए\nDramaX इंस्टॉल रखें।</string>
+    <string name="uninstall_try_again">फिर से कोशिश करें</string>
     <string name="uninstall_still_want">फिर भी अनइंस्टॉल करना है</string>
-    <string name="uninstall_survey_title">उपयोग के दौरान आई समस्याएं</string>
+    <string name="uninstall_survey_title">इस्तेमाल के दौरान आई समस्याएँ</string>
     <string name="uninstall_reason_feature_not_working">फ़ीचर काम नहीं कर रहा</string>
     <string name="uninstall_reason_too_many_ads">बहुत ज़्यादा विज्ञापन</string>
     <string name="uninstall_reason_not_needed">मुझे इसकी ज़रूरत नहीं है</string>
     <string name="uninstall_reason_other">अन्य</string>
     <string name="uninstall_action">अनइंस्टॉल करें</string>
-    <string name="uninstall_open_failed">अनइंस्टॉल स्क्रीन खोलने में असमर्थ</string>
+    <string name="uninstall_open_failed">अनइंस्टॉल स्क्रीन नहीं खोली जा सकी</string>
     <!-- Home widget / uninstall flow -->
     <string name="widget_description" translatable="false">DramaX quick actions</string>
     <string name="widget_home">होम</string>
-    <string name="widget_my_list">मेरी सूची</string>
+    <string name="widget_my_list">मेरी लिस्ट</string>
     <string name="widget_uninstall">अनइंस्टॉल करें</string>
 
     <string name="welcome_to_home_temp">होम में आपका स्वागत है</string>
@@ -238,87 +237,258 @@
     <string name="report_an_issue_subtitle">अपने देखने के अनुभव को बेहतर बनाने में हमारी मदद करें</string>
 
     <string name="unlock_episode_title">देखना जारी रखने के लिए एपिसोड %1$d अनलॉक करें</string>
-    <string name="unlock_episode_desc">इस एपिसोड को स्थायी रूप से अनलॉक करने और कहानी जारी रखने के लिए एक विज्ञापन देखें।</string>
-    <string name="daily_progress">दैनिक प्रगति: %1$d/%2$d</string>
+    <string name="unlock_episode_desc">इस एपिसोड को हमेशा के लिए अनलॉक करने और कहानी जारी रखने के लिए एक विज्ञापन देखें।</string>
+    <string name="daily_progress">रोज़ाना प्रगति: %1$d/%2$d</string>
     <string name="watch_ad">विज्ञापन देखें</string>
-    <string name="unlock_permanent_note">विज्ञापनों से अनलॉक किए गए एपिसोड हमेशा के लिए आपके हैं।</string>
-    <string name="daily_limit_title">दैनिक मुफ़्त अनलॉक सीमा पूरी हुई</string>
-    <string name="daily_limit_desc">आपने आज के सभी %1$d मुफ़्त अनलॉक इस्तेमाल कर लिए हैं। कल और मुफ़्त अनलॉक उपलब्ध होंगे।</string>
+    <string name="unlock_permanent_note">विज्ञापन से अनलॉक किए गए एपिसोड हमेशा के लिए आपके हैं।</string>
+    <string name="daily_limit_title">रोज़ाना मुफ़्त अनलॉक सीमा पूरी हो गई</string>
+    <string name="daily_limit_desc">आपने आज के सभी %1$d मुफ़्त अनलॉक इस्तेमाल कर लिए हैं। कल और मुफ़्त अनलॉक मिलेंगे।</string>
     <string name="browse_free_episodes">मुफ़्त एपिसोड ब्राउज़ करें</string>
 
-    <!-- Missing keys added to satisfy references in Kotlin sources -->
-    <string name="episode_locked">एपिसोड लॉक है</string>
+    <string name="no_internet_title">इंटरनेट नहीं है</string>
+    <string name="no_internet_desc">इंटरनेट कनेक्शन नहीं है। ऐप इस्तेमाल करने के लिए कृपया इंटरनेट से कनेक्ट करें।</string>
+    <string name="connect_internet">इंटरनेट कनेक्ट करें</string>
+
+    <string name="rateus_dialog_title">DramaX पसंद आ रहा है?</string>
+    <string name="rateus_dialog_subtitle">आपकी समीक्षा इस ऐप की गुणवत्ता सुधारने में मदद करेगी</string>
+
+    <string name="not_now">अभी नहीं</string>
+    <string name="share_app_message">DramaX पर शॉर्ट ड्रामा देखें: https://play.google.com/store/apps/details?id=%1$s</string>
+    <string name="share_app_chooser_title">DramaX शेयर करें</string>
+    <string name="no_episode_found">कोई एपिसोड नहीं मिला</string>
+    <string name="episode_locked">एपिसोड %1$d लॉक है</string>
     <string name="watch_ad_to_unlock">अनलॉक करने के लिए विज्ञापन देखें</string>
-    <string name="history_watching">देखा जा रहा है</string>
-    <string name="my_favorites">मेरी पसंदीदा</string>
-    <string name="no_favorites_yet">अभी तक कोई पसंदीदा नहीं</string>
-    <string name="favorites_empty_message">आपने अभी तक कोई पसंदीदा नहीं जोड़ा है।</string>
-    <string name="deselect_all">सभी अनसिलेक्ट करें</string>
-    <string name="select_all">सभी चुनें</string>
-    <string name="long_press_to_select">चुनने के लिए लंबा दबाएं</string>
-    <string name="recent_activity">हालिया गतिविधि</string>
+    <string name="recent_activity">हाल की गतिविधि</string>
     <string name="inbox">इनबॉक्स</string>
-    <string name="notification_desc">आपके खाते और शो के बारे में अपडेट</string>
+    <string name="notification_desc">प्लानर रिमाइंडर और रिवॉर्ड अपडेट एक ही जगह पर।</string>
     <string name="clearing">साफ़ किया जा रहा है</string>
     <string name="clear">साफ़ करें</string>
     <string name="update">अपडेट करें</string>
-    <string name="notification_body">आपके पास नए अपडेट हैं</string>
+    <string name="notification_body">नवीनतम अपडेट के लिए DramaX खोलें।</string>
     <string name="clearing_inbox">इनबॉक्स साफ़ किया जा रहा है</string>
-    <string name="no_notification_message">अभी तक कोई सूचना नहीं</string>
-    <string name="removing_old_updates">पुराने अपडेट हटाए जा रहे हैं</string>
-    <string name="planner_msg">अपने देखने के रिमाइंडर शेड्यूल करें</string>
-    <string name="schedule_planner_msg">रिमाइंडर के लिए एक समय चुनें</string>
-    <string name="choose_saved_drama">एक सेव किया गया ड्रामा चुनें</string>
-    <string name="save_drama_first">शेड्यूल करने के लिए पहले एक ड्रामा सेव करें</string>
-    <string name="schedule_label_msg">शेड्यूल लेबल</string>
+    <string name="no_notification_message">अभी तक कोई सूचना नहीं है</string>
+    <string name="removing_old_updates">पुराने अपडेट हटाए जा रहे हैं...</string>
+    <string name="planner_msg">प्लानर रिमाइंडर और रिवॉर्ड अपडेट यहाँ दिखेंगे।</string>
+    <string name="schedule_planner_msg">सेव किए गए ड्रामा और रिमाइंडर शेड्यूल करें।</string>
+    <string name="choose_saved_drama">एक सेव किया हुआ ड्रामा चुनें</string>
+    <string name="save_drama_first">पहले ड्रामा सेव करें</string>
+    <string name="schedule_label_msg">यह लिस्ट बनाने के लिए होम या शॉर्ट्स पर + का इस्तेमाल करें।</string>
     <string name="schedule_reminder">रिमाइंडर शेड्यूल करें</string>
-    <string name="select_saved_drama">एक सेव किया गया ड्रामा चुनें</string>
-    <string name="account_activity">खाता गतिविधि</string>
-    <string name="privacy_text">अपनी गोपनीयता सेटिंग्स प्रबंधित करें</string>
-    <string name="share_app">ऐप शेयर करें</string>
-    <string name="rateus_dialog_title">DramaX को रेट करें</string>
-    <string name="rateus_dialog_subtitle">ऐप पसंद आ रहा है? एक रेटिंग दें!</string>
-    <string name="not_now">अभी नहीं</string>
-    <string name="share_app_message">DramaX देखें — ढेर सारे शॉर्ट ड्रामा!</string>
-    <string name="share_app_chooser_title">इसके ज़रिए शेयर करें</string>
-    <string name="fallback_genre_romance">रोमांस</string>
-    <string name="fallback_genre_drama">ड्रामा</string>
-    <string name="fallback_genre_thriller">थ्रिलर</string>
-    <string name="trending_searches">ट्रेंडिंग खोजें</string>
-    <string name="hot_searches">हॉट खोजें</string>
-    <string name="badge_hot">हॉट</string>
-    <string name="badge_new">नया</string>
-    <string name="empty_state_mask_glyph">कोई परिणाम नहीं</string>
-    <string name="no_results_found">कोई परिणाम नहीं मिला</string>
-    <string name="no_results_found_desc">कोई अलग खोज शब्द आज़माएं।</string>
-    <string name="results_found_for_query">"%1$s" के लिए परिणाम</string>
-    <string name="badge_new_release">नई रिलीज़</string>
-    <string name="badge_trending_first">ट्रेंडिंग #1</string>
-    <string name="fallback_description">रहस्य और मोड़ों से भरा एक शॉर्ट ड्रामा।</string>
-    <string name="view_all">सभी देखें</string>
-    <string name="genre_fallback">ड्रामा</string>
-    <string name="must_unlock_episode_first">कृपया पहले पिछले एपिसोड अनलॉक करें।</string>
-    <string name="episode_count">%1$d एपिसोड</string>
-    <string name="episodes_range">एपिसोड %1$d-%2$d</string>
+    <string name="select_saved_drama">सेव किया हुआ ड्रामा चुनें</string>
+    <string name="episode_count">%1$d/%2$d</string>
+    <string name="episodes_range">एपिसोड %1$d - %2$d</string>
+    <string name="must_unlock_episode_first">कृपया पहले के एपिसोड पहले अनलॉक करें।</string>
     <string name="subtitle_small">छोटा</string>
     <string name="subtitle_medium">मध्यम</string>
     <string name="subtitle_large">बड़ा</string>
-    <string name="report_reason_episode_error">एपिसोड प्लेबैक में त्रुटि</string>
-    <string name="report_reason_paid_film_too_long">पेड फ़िल्म बहुत लंबी</string>
-    <string name="report_reason_low_quality">कम क्वालिटी</string>
-    <string name="report_reason_subtitle_missing">सबटाइटल गायब</string>
+    <string name="report_reason_episode_error">एपिसोड में गड़बड़ी</string>
+    <string name="report_reason_paid_film_too_long">पेड फ़िल्म बहुत लंबी है</string>
+    <string name="report_reason_low_quality">कम गुणवत्ता</string>
+    <string name="report_reason_subtitle_missing">सबटाइटल नहीं है</string>
     <string name="report_reason_inaccurate_subtitle">गलत सबटाइटल</string>
     <string name="report_reason_other">अन्य</string>
-    <string name="loading_share_apps">ऐप्स लोड हो रहे हैं...</string>
+    <string name="loading_share_apps">शेयर ऐप्स लोड हो रहे हैं</string>
+    <string name="welcome_back_emoji">👋</string>
+    <string name="welcome_back_title">वापसी पर स्वागत है!</string>
+    <string name="welcome_back_description">आपको फिर से देखकर खुशी हुई।\nअनलिमिटेड ड्रामा और शोज़ का आनंद लें!</string>
+    <string name="continue_text">जारी रखें</string>
+    <string name="auto_advancing">3 सेकंड में अपने आप आगे बढ़ रहा है...</string>
+
+    <string name="tab_popular">लोकप्रिय</string>
+    <string name="tab_new">नया</string>
+    <string name="tab_ranking">रैंकिंग</string>
+    <string name="tab_categories">श्रेणियाँ</string>
+
+    <string name="filter_all">सभी</string>
+    <string name="filter_male">पुरुष</string>
+    <string name="filter_female">महिला</string>
+
+    <string name="category_modern">आधुनिक</string>
+    <string name="category_historical">ऐतिहासिक</string>
+    <string name="category_fantasy">फैंटेसी</string>
+    <string name="category_romance">रोमांस</string>
+
+    <string name="sort_newest">नवीनतम</string>
+    <string name="sort_popular">लोकप्रिय</string>
+    <string name="sort_rating">रेटिंग</string>
+    <string name="sort_trending">ट्रेंडिंग</string>
+
+    <string name="audience">ऑडियंस</string>
+    <string name="category">श्रेणी</string>
+    <string name="filters">फ़िल्टर</string>
+    <string name="sort_by">इसके अनुसार क्रमबद्ध करें</string>
+
+    <string name="apply_filters">फ़िल्टर लागू करें</string>
+    <string name="apply_sort">क्रम लागू करें</string>
+
+    <string name="featured_highlights">फीचर्ड हाइलाइट्स</string>
+    <string name="fresh_on_dramax">DramaX पर नया</string>
+    <string name="weekly_top_20">साप्ताहिक टॉप 20</string>
+
+    <string name="my_favorites">मेरे पसंदीदा</string>
+    <string name="no_favorites_yet">अभी तक कोई पसंदीदा नहीं है</string>
+    <string name="favorites_empty_message">यहाँ जोड़ने के लिए किसी ड्रामा को बुकमार्क करें।</string>
+
+    <string name="watch_something">कुछ देखें</string>
+    <string name="continue_watching_empty">कोई ड्रामा शुरू करें और वह यहाँ दिखेगा।</string>
+
+    <string name="updated_3h_ago">3 घंटे पहले अपडेट किया गया</string>
+
+    <string name="badge_hot">हॉट</string>
+    <string name="badge_new">नया</string>
+    <string name="start">शुरू करें</string>
+
+    <string name="top_rank">टॉप %1$d</string>
+
+    <string name="episode_info">एपि %1$d में से %2$d • %3$s</string>
+
+    <string name="genre_episode_total">%1$s - %2$d एपिसोड</string>
+    <string name="genre_episode">%1$s - एपि %2$d</string>
+
+    <string name="rating_genre">%1$s - %2$s</string>
+
+    <string name="time_left_minutes">%1$d मिनट बाकी</string>
+    <string name="time_left_hours">%1$dघं %2$dमि बाकी</string>
+
+    <string-array name="audience_keywords_male">
+        <item>action</item>
+        <item>thriller</item>
+        <item>revenge</item>
+        <item>war</item>
+        <item>crime</item>
+        <item>ceo</item>
+        <item>billionaire</item>
+        <item>fantasy</item>
+    </string-array>
+
+    <string-array name="audience_keywords_female">
+        <item>romance</item>
+        <item>love</item>
+        <item>family</item>
+        <item>heir</item>
+        <item>bride</item>
+        <item>wife</item>
+        <item>autumn</item>
+        <item>drama</item>
+    </string-array>
+
+    <string-array name="category_keywords_modern">
+        <item>modern</item>
+        <item>ceo</item>
+        <item>billionaire</item>
+        <item>city</item>
+        <item>office</item>
+        <item>finance</item>
+        <item>tech</item>
+    </string-array>
+
+    <string-array name="category_keywords_historical">
+        <item>historical</item>
+        <item>king</item>
+        <item>queen</item>
+        <item>empire</item>
+        <item>legacy</item>
+        <item>dynasty</item>
+        <item>ancient</item>
+    </string-array>
+
+    <string-array name="category_keywords_fantasy">
+        <item>fantasy</item>
+        <item>magic</item>
+        <item>crimson</item>
+        <item>shadow</item>
+        <item>void</item>
+        <item>supernatural</item>
+    </string-array>
+
+    <string-array name="category_keywords_romance">
+        <item>romance</item>
+        <item>love</item>
+        <item>vow</item>
+        <item>bride</item>
+        <item>wife</item>
+        <item>autumn</item>
+    </string-array>
+
+    <!-- Section headers -->
+    <string name="trending_searches">ट्रेंडिंग सर्च</string>
+    <string name="hot_searches">हॉट सर्च</string>
+    <string name="view_all">सभी देखें</string>
+
+    <!-- Badges -->
+    <string name="badge_trending_first">ट्रेंडिंग #1</string>
+    <string name="badge_new_release">नई रिलीज़</string>
+
+    <!-- Filters row -->
+    <string name="results_found_for_query">\"%2$s\" के लिए %1$d परिणाम मिले</string>
+
+    <!-- Empty search state -->
+    <string name="no_results_found">कोई परिणाम नहीं मिला</string>
+    <string name="no_results_found_desc">हमें आपकी खोज \"%1$s\" से मिलता-जुलता कोई ड्रामा नहीं मिला। कोई अलग कीवर्ड आज़माएँ।</string>
+    <string name="empty_state_mask_glyph">x</string>
+
+    <!-- Empty catalog state -->
+    <string name="no_dramas_loaded_title">अभी तक कोई ड्रामा लोड नहीं हुआ</string>
+    <string name="no_dramas_loaded_desc">फ़ीड उपलब्ध होने पर एक बार होम खोलें, फिर सर्च यहाँ उन असली ड्रामा का इस्तेमाल करेगा।</string>
+
+    <!-- Genre tag fallback -->
+    <string name="genre_fallback">ड्रामा</string>
+
+    <!-- Fallback content (used when API fields are blank) -->
+    <string name="fallback_description">जब एक अमीर वारिस को पता चलता है कि अतीत एक झूठ है, तो राज़ खुलने लगते हैं।</string>
+    <string name="fallback_genre_romance">रोमांस</string>
+    <string name="fallback_genre_drama">ड्रामा</string>
+    <string name="fallback_genre_thriller">थ्रिलर</string>
+    <string name="history_watching">वॉच हिस्ट्री</string>
     <string name="items_watched">%1$d आइटम देखे गए</string>
     <string name="nothing_watched_yet">अभी तक कुछ नहीं देखा गया</string>
-    <string name="nothing_watched_yet_desc">यहाँ प्रगति ट्रैक करने के लिए कुछ सेकंड के लिए एपिसोड देखें।</string>
-    <string name="favorites_size">%1$d पसंदीदा</string>
-    <string name="no_dramas_loaded_title">कोई ड्रामा लोड नहीं हुआ</string>
-    <string name="no_dramas_loaded_desc">अभी ड्रामा लोड नहीं हो सके। बाद में फिर कोशिश करें।</string>
+    <string name="nothing_watched_yet_desc">कुछ देखें और आपकी पूरी हिस्ट्री यहाँ दिखेगी।</string>
+    <string name="favorites_size">%1$d आइटम</string>
+    <string name="select_all">सभी चुनें</string>
+    <string name="deselect_all">सभी को अचयनित करें</string>
+    <string name="long_press_to_select">चुनने के लिए लॉन्ग-प्रेस करें</string>
+    <string name="account_activity">खाता गतिविधि</string>
+    <string name="preferences">प्राथमिकताएँ और सहायता</string>
+    <string name="privacy_text">गोपनीयता</string>
+    <string name="share_app">ऐप शेयर करें</string>
 
-    <string name="no_internet_title">कोई इंटरनेट नहीं</string>
-    <string name="no_internet_desc">इंटरनेट कनेक्शन नहीं है। ऐप का उपयोग करने के लिए कृपया इंटरनेट से कनेक्ट करें।</string>
-    <string name="connect_internet">इंटरनेट से कनेक्ट करें</string>
+    <!-- Header -->
+    <string name="notifications_title">सूचनाएँ</string>
+    <string name="all_caught_up">आप पूरी तरह अपडेट हैं</string>
+    <string name="unread_total_count">%1$d अपठित • कुल %2$d</string>
+
+    <!-- Inbox count pill -->
+    <string name="unread_new_count">%1$d नई</string>
+
+    <!-- Relative time fallback -->
+    <string name="time_now">अभी</string>
+
+    <!-- Report -->
+    <string name="report_issue">समस्या की रिपोर्ट करें</string>
+    <string name="report_issue_desc">अपने देखने के अनुभव को बेहतर बनाने में हमारी मदद करें</string>
+    <string name="please_select_reason">कृपया एक कारण चुनें</string>
+
+
+    <!-- Subtitle -->
+    <string name="subtitle_size_small">छोटा</string>
+    <string name="subtitle_size_medium">मध्यम</string>
+    <string name="subtitle_size_large">बड़ा</string>
+
+
+    <!-- Share Text -->
+    <string name="share_watch">देखें</string>
+    <string name="share_default_title">यह DramaX शॉर्ट</string>
+    <string name="share_episode_on">DramaX पर एपिसोड %1$d।</string>
+    <string name="share_get_app">ऐप पाएं:</string>
+
+    <!-- Video Caption -->
+    <string name="watch_great_content">यह शानदार कंटेंट देखें</string>
+    <string name="trending">ट्रेंडिंग</string>
+
+    <!-- Sidebar -->
+    <string name="share_label">शेयर करें</string>
+    <string name="episodes_label">एपिसोड</string>
+    <string name="cc_label">सबटाइटल</string>
+    <string name="speed_label">स्पीड</string>
 
 </resources>

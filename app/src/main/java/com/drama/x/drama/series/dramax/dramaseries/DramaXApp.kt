@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
@@ -39,6 +40,7 @@ import com.drama.x.drama.series.dramax.dramaseries.screen.WelcomeBackScreen
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdRemoteConfig
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdsManager
 
+@RequiresApi(Build.VERSION_CODES.P)
 @Composable
 fun DramaXApp(
     initialAction: String? = null,

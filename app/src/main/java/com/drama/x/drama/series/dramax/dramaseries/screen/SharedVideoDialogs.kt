@@ -107,14 +107,7 @@ internal const val SHARED_EPISODES_PER_PAGE = 30
 internal const val SHARED_EPISODES_PER_ROW  = 5
 internal const val SHARED_FREE_PREVIEW      = 3
 
-internal val SharedReportReasons = listOf(
-    "Episode error",
-    "Paid film too long",
-    "Low Quality",
-    "Subtitle missing",
-    "Inaccurate Subtitle",
-    "Other"
-)
+
 
 // ── SubtitleSize enum (shared) ──────────────────────────────────────────────
 internal enum class SharedSubtitleSize { SMALL, MEDIUM, LARGE }
@@ -385,14 +378,23 @@ internal fun SharedFeedbackFormSheet(
     onSubmit: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val SharedReportReasons = listOf(
+        stringResource(R.string.report_reason_episode_error),
+        stringResource(R.string.report_reason_paid_film_too_long),
+        stringResource(R.string.report_reason_low_quality),
+        stringResource(R.string.report_reason_subtitle_missing),
+        stringResource(R.string.report_reason_inaccurate_subtitle),
+        stringResource(R.string.report_reason_other)
+    )
+
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Column(modifier = Modifier.fillMaxWidth(0.86f).clip(RoundedCornerShape(26.dp))
             .background(Color(0xFF16121A)).border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(26.dp)).padding(20.dp)) {
             Row(verticalAlignment = Alignment.Top) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Report an Issue", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+                    Text(stringResource(R.string.report_issue), color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
                     Spacer(Modifier.height(4.dp))
-                    Text("Help us improve your viewing experience", color = Color(0xFF8F8791), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.report_issue_desc), color = Color(0xFF8F8791), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 }
                 Icon(Icons.Filled.Close, contentDescription = null, tint = Color(0xFF8F8791),
                     modifier = Modifier.size(22.dp).clickable(onClick = onDismiss))
@@ -410,7 +412,7 @@ internal fun SharedFeedbackFormSheet(
                 }
             }
             Spacer(Modifier.height(22.dp))
-            Text("Please select a reason", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            Text(stringResource(R.string.please_select_reason), color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(10.dp))
             Column {
                 SharedReportReasons.forEach { reason ->
@@ -477,9 +479,9 @@ internal fun SharedSubtitleOptionsSheet(
             }
             Spacer(Modifier.height(18.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                SharedSizeOption("Small",  15.sp, pendingSize == SharedSubtitleSize.SMALL)  { pendingSize = SharedSubtitleSize.SMALL;  onSizeChange(SharedSubtitleSize.SMALL) }
-                SharedSizeOption("Medium", 19.sp, pendingSize == SharedSubtitleSize.MEDIUM) { pendingSize = SharedSubtitleSize.MEDIUM; onSizeChange(SharedSubtitleSize.MEDIUM) }
-                SharedSizeOption("Large",  24.sp, pendingSize == SharedSubtitleSize.LARGE)  { pendingSize = SharedSubtitleSize.LARGE;  onSizeChange(SharedSubtitleSize.LARGE) }
+                SharedSizeOption(stringResource(R.string.subtitle_small),  15.sp, pendingSize == SharedSubtitleSize.SMALL)  { pendingSize = SharedSubtitleSize.SMALL;  onSizeChange(SharedSubtitleSize.SMALL) }
+                SharedSizeOption(stringResource(R.string.subtitle_medium), 19.sp, pendingSize == SharedSubtitleSize.MEDIUM) { pendingSize = SharedSubtitleSize.MEDIUM; onSizeChange(SharedSubtitleSize.MEDIUM) }
+                SharedSizeOption(stringResource(R.string.subtitle_large),  24.sp, pendingSize == SharedSubtitleSize.LARGE)  { pendingSize = SharedSubtitleSize.LARGE;  onSizeChange(SharedSubtitleSize.LARGE) }
             }
             Spacer(Modifier.height(20.dp))
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -556,7 +558,7 @@ internal fun SharedShareSheet(shareText: String, onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Column(modifier = Modifier.fillMaxWidth(0.86f).clip(RoundedCornerShape(26.dp))
             .background(Color(0xFF16121A)).border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(26.dp)).padding(20.dp)) {
-            Text("Share", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+            Text(stringResource(R.string.share), color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
             Spacer(Modifier.height(16.dp))
             Row(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
                 .background(Color(0xFF211D25)).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -573,7 +575,7 @@ internal fun SharedShareSheet(shareText: String, onDismiss: () -> Unit) {
             }
             Spacer(Modifier.height(20.dp))
             if (shareApps.isEmpty()) {
-                Text("Loading share apps…", color = Color(0xFF8F8791), fontSize = 13.sp)
+                Text(stringResource(R.string.loading_share_apps), color = Color(0xFF8F8791), fontSize = 13.sp)
             } else {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
                     items(shareApps, key = { it.packageName + it.activityName }) { app ->
@@ -722,7 +724,7 @@ internal fun SharedVideoCaption(
     onSeekTo: (Long) -> Unit,
     onWatchNowClick: () -> Unit
 ) {
-    val description = item.film.description.ifBlank { "Watch this great content" }
+    val description = item.film.description.ifBlank {stringResource(R.string.watch_great_content) }
     var descriptionExpanded by remember(item.film.id, item.episodeNumber) { mutableStateOf(false) }
     val showDescriptionToggle = description.length > 70
     
@@ -745,7 +747,7 @@ internal fun SharedVideoCaption(
                     .padding(horizontal = 8.dp, vertical = 3.dp)
             )
             Spacer(Modifier.width(8.dp))
-            Text("Trending", color = Color(0xFFE5BDBE), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+            Text(stringResource(R.string.trending), color = Color(0xFFE5BDBE), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
         }
         Spacer(Modifier.height(4.dp))
         Text(
@@ -772,7 +774,7 @@ internal fun SharedVideoCaption(
         if (showDescriptionToggle) {
             Spacer(Modifier.height(3.dp))
             Text(
-                text = if (descriptionExpanded) "View less" else "... View more",
+                text = if (descriptionExpanded) stringResource(R.string.view_less) else stringResource(R.string.view_more),
                 color = SharedGold,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.ExtraBold,
@@ -819,7 +821,7 @@ internal fun SharedVideoCaption(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "Watch Now",
+                    stringResource(R.string.watch_now),
                     color = Color.White,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold
@@ -938,7 +940,7 @@ internal fun SharedVideoSidebar(
         // Share Button
         SharedSideAction(
             icon = Icons.Filled.Share,
-            label = "Share",
+            label = stringResource(R.string.share_label),
             tint = Color.White,
             onClick = onShareClick
         )
@@ -947,7 +949,7 @@ internal fun SharedVideoSidebar(
         if (isEpisodeMode) {
             SharedSideAction(
                 icon = Icons.Filled.VideoLibrary,
-                label = "Episodes",
+                label = stringResource(R.string.episodes_label),
                 tint = Color.White,
                 onClick = onEpisodesClick
             )
@@ -965,7 +967,7 @@ internal fun SharedVideoSidebar(
         if (isEpisodeMode) {
             SharedSideTextAction(
                 value = formatSharedSpeed(playbackSpeed),
-                label = "Speed",
+                label = stringResource(R.string.speed_label),
                 onClick = onSpeedClick
             )
         }

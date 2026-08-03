@@ -9,7 +9,7 @@
     </string>
 
     <string name="splash_description">
-    あなたの忙しい毎日の合間にぴったりの、
+    あなたの忙しい毎日にぴったりの、
     \n迫力満点のストーリーをお届けします。
     </string>
 
@@ -18,27 +18,27 @@
     <string name="done">完了</string>
 
     <!-- Onboarding screen -->
-    <string name="start_btn">スタート</string>
+    <string name="start_btn">開始</string>
     <string name="next_btn">次へ</string>
-    <string name="onboarding_title_1">素晴らしい</string>
-    <string name="onboarding_accent_title_1">ショートドラマを発見</string>
-    <string name="onboarding_description_1">何千ものエピソードが揃った限定ショートドラマを視聴。ちょっとした空き時間にぴったりです。</string>
+    <string name="onboarding_title_1">驚きのショート</string>
+    <string name="onboarding_accent_title_1">ドラマを発見</string>
+    <string name="onboarding_description_1">何千もの話数を誇る限定ショートドラマを視聴。ちょっとした空き時間にぴったりです。</string>
 
-    <string name="onboarding_title_2">尽きない</string>
+    <string name="onboarding_title_2">尽きることのない</string>
     <string name="onboarding_accent_title_2">ストーリーコレクション</string>
-    <string name="onboarding_description_2">ロマンスやファンタジーからスリラー、復讐劇まで、毎日新しい物語を発見しよう。</string>
+    <string name="onboarding_description_2">ロマンス、ファンタジーからスリラー、復讐劇まで、毎日新しい物語を発見しよう。</string>
 
     <string name="onboarding_title_3">いつでも、</string>
     <string name="onboarding_accent_title_3">どこでも視聴</string>
-    <string name="onboarding_description_3">エピソードをダウンロードして、オフラインでもお気に入りのドラマを楽しめます。</string>
+    <string name="onboarding_description_3">話数をダウンロードして、オフラインでもお気に入りのドラマをどこでも楽しめます。</string>
 
-    <string name="onboarding_title_4">毎日の報酬とミッション</string>
-    <string name="onboarding_description_4">視聴するだけで毎日無料コインがもらえます。ミッションを達成してプレミアムエピソードを解放しよう。</string>
+    <string name="onboarding_title_4">デイリー報酬とミッション</string>
+    <string name="onboarding_description_4">視聴するだけで毎日無料コインを獲得。ミッションを達成してプレミアム話数をアンロックしよう。</string>
 
     <string name="welcome_title">ようこそ </string>
-    <string name="welcome_accent_title">DramaX</string>
-    <string name="welcome_description">数え切れないほどの感動的な物語があなたを待っています。今すぐ視聴を始めましょう。</string>
-    <string name="get_started">始める</string>
+    <string name="welcome_accent_title">DramaXへ</string>
+    <string name="welcome_description">忘れられない物語が何千もあなたを待っています。今すぐ視聴を始めましょう。</string>
+    <string name="get_started">はじめる</string>
     <!-- Home screen — top bar / moods -->
     <string name="mood_hot">話題</string>
     <string name="mood_happy">ハッピー</string>
@@ -46,7 +46,7 @@
     <string name="mood_action">アクション</string>
     <string name="mood_romance">ロマンス</string>
     <string name="mood_horror">ホラー</string>
-    <string name="mood_mind_blowing">衝撃</string>
+    <string name="mood_mind_blowing">衝撃的</string>
     <string name="mood_relax">リラックス</string>
 
     <!-- Hero section -->
@@ -56,28 +56,27 @@
     <string name="saved">保存済み</string>
 
     <!-- Continue watching -->
-    <string name="continue_watching">続きを見る</string>
-    <string name="continue_watching_subtitle">最後に見たエピソードから続けよう</string>
-    <string name="continue_watching_empty">10秒以上視聴した作品がここに表示されます。</string>
+    <string name="continue_watching">視聴を続ける</string>
+    <string name="continue_watching_subtitle">最新の話数から続きを視聴</string>
     <string name="see_all">すべて見る</string>
-    
+
     <!-- Trending / poster rails -->
     <string name="trending_now">今話題の作品</string>
     <string name="recommended_for_you">あなたへのおすすめ</string>
-    <string name="trending_tag">トレンド</string>
+    <string name="trending_tag">話題</string>
     <string name="episodes_count">全%1$d話</string>
     <string name="premium">プレミアム</string>
-    <string name="rating_value">★ %1$s</string>
+    <string name="rating_value">* %1$s</string>
 
     <!-- Top rated -->
     <string name="top_rated_this_week">今週の高評価作品</string>
     <string name="weekly_top_1">週間ランキング1位</string>
-    <string name="rating_genre_episodes">★ %1$s    %2$s    全%3$d話</string>
+    <string name="rating_genre_episodes">* %1$s    %2$s    全%3$d話</string>
 
     <!-- Action cards -->
     <string name="vip_short">VIP</string>
     <string name="join_vip_club">VIPクラブに参加</string>
-    <string name="unlock_all_episodes">今日、すべての\nエピソードを解放</string>
+    <string name="unlock_all_episodes">今日、すべての話数を\nアンロック</string>
     <string name="schedule">スケジュール</string>
     <string name="daily_reward_short">50</string>
     <string name="daily_rewards">デイリー報酬</string>
@@ -92,19 +91,19 @@
     <string name="nav_profile">プロフィール</string>
 
     <!-- Library / Search -->
-    <string name="library_subtitle">保存済み、視聴済み、あなたへのおすすめ</string>
-    <string name="watch_list">ウォッチリスト</string>
+    <string name="library_subtitle">保存済み、視聴済み、あなたへのおすすめ作品</string>
+    <string name="watch_list">視聴リスト</string>
     <string name="library_watch_list_subtitle">保存・ブックマークした作品</string>
-    <string name="library_watch_list_empty">保存した作品がここに表示されます。</string>
-    <string name="similar_films">似ている作品</string>
+    <string name="library_watch_list_empty">保存した作品はここに表示されます。</string>
+    <string name="similar_films">類似作品</string>
     <string name="top_stars">人気の出演者</string>
-    <string name="top_stars_subtitle">作品のキャスト情報から抽出</string>
+    <string name="top_stars_subtitle">利用可能な出演者データから抽出</string>
     <string name="search_films_hint">作品を検索...</string>
     <string name="search_results_count">%1$d件の結果</string>
     <string name="no_films_found">作品が見つかりませんでした。</string>
     <string name="no_films_yet">まだ作品がありません。</string>
-    <string name="library_load_error">現在マイリストを更新できません。</string>
-    <string name="search_error">現在検索結果を読み込めません。</string>
+    <string name="library_load_error">現在、ライブラリを更新できませんでした。</string>
+    <string name="search_error">現在、検索結果を読み込めませんでした。</string>
 
     <!-- Shorts Screen -->
 
@@ -115,20 +114,20 @@
 
     <!-- Actions -->
     <string name="share">共有</string>
-    <string name="episodes">エピソード</string>
+    <string name="episodes">話数</string>
     <string name="cc">字幕</string>
-    <string name="speed">再生速度</string>
+    <string name="speed">速度</string>
 
     <!-- Episode -->
-    <string name="episode_progress">エピソード %1$d/%2$d</string>
-    <string name="episode_title">エピソード %1$d</string>
+    <string name="episode_progress">第%1$d話/%2$d話</string>
+    <string name="episode_title">第%1$d話</string>
     <string name="playing">再生中</string>
     <string name="free">無料</string>
-    <string name="trending_number">トレンド1位</string>
+    <string name="trending_number">話題ランキング1位</string>
 
     <!-- Description -->
     <string name="default_short_description">
-    秘密、ロマンス、復讐が詰まったショートドラマ。
+    秘密、ロマンス、復讐に満ちたショートドラマ。
 </string>
 
     <string name="view_more">もっと見る</string>
@@ -137,14 +136,14 @@
     <!-- Playback Options -->
     <string name="playback_options">再生オプション</string>
 
-    <string name="auto_next_episode">自動で次のエピソードを再生</string>
+    <string name="auto_next_episode">次の話数を自動再生</string>
     <string name="auto_next_episode_desc">
-    このエピソードが終わると自動的に次のエピソードを再生します。
+    この話数が終了すると、次の話数を自動的に再生します。
 </string>
 
-    <string name="auto_unlock_episodes">エピソードを自動解放</string>
+    <string name="auto_unlock_episodes">話数を自動アンロック</string>
     <string name="auto_unlock_episodes_desc">
-    現在のエピソードが終了すると、次にロックされているエピソードのみを解放します。
+    現在の話数が終了した後、次のロックされた話数のみをアンロックします。
 </string>
 
     <!-- Feedback -->
@@ -162,7 +161,7 @@
     <string name="speed_15x">1.5倍</string>
     <string name="speed_2x">2倍</string>
     <string name="speed_custom">%1$s倍</string>
-    
+
     <!-- Profile Screen -->
     <string name="default_username">ドラマ好き</string>
     <string name="update_profile_photo">プロフィール写真を更新</string>
@@ -177,7 +176,7 @@
     <!-- Stats -->
     <string name="coins">コイン</string>
     <string name="watched">視聴済み</string>
-    <string name="episodes_cap">エピソード</string>
+    <string name="episodes_cap">話数</string>
 
     <!-- Quick Actions -->
     <string name="subscription">サブスクリプション</string>
@@ -196,7 +195,7 @@
     <string name="privacy">プライバシー</string>
     <string name="rate_us">評価する</string>
     <string name="privacy_policy">プライバシーポリシー</string>
-    <string name="vip_gold_member">VIPゴールドメンバー</string>
+    <string name="vip_gold_member">VIPゴールド会員</string>
 
     <!-- Language Picker -->
     <string name="english">英語</string>
@@ -215,8 +214,8 @@
     <string name="preset_avatar">プリセットアバター</string>
     <string name="edit_profile_photo">プロフィール写真を編集</string>
     <!-- Uninstall flow -->
-    <string name="uninstall_confirm_title">あなたの視聴履歴とお気に入りのショートドラマは\nまだここで待っています</string>
-    <string name="uninstall_confirm_description">DramaXをインストールしたままにして、\nいつでもストーリーや報酬、新しいエピソードを楽しみましょう。</string>
+    <string name="uninstall_confirm_title">視聴履歴やお気に入りのショートドラマが\nまだあなたを待っています</string>
+    <string name="uninstall_confirm_description">DramaXをインストールしたままにして、いつでも物語や\n報酬、新しい話数を楽しみましょう。</string>
     <string name="uninstall_try_again">もう一度試す</string>
     <string name="uninstall_still_want">それでもアンインストールする</string>
     <string name="uninstall_survey_title">利用中に発生した問題</string>
@@ -237,88 +236,259 @@
     <string name="report_an_issue">問題を報告</string>
     <string name="report_an_issue_subtitle">視聴体験の向上にご協力ください</string>
 
-    <string name="unlock_episode_title">エピソード%1$dを解放して視聴を続ける</string>
-    <string name="unlock_episode_desc">広告を視聴すると、このエピソードを永久に解放し、物語を続けられます。</string>
-    <string name="daily_progress">本日の進捗：%1$d/%2$d</string>
+    <string name="unlock_episode_title">視聴を続けるには第%1$d話をアンロック</string>
+    <string name="unlock_episode_desc">広告を視聴すると、この話数を永久にアンロックしてストーリーを続けられます。</string>
+    <string name="daily_progress">本日の進捗: %1$d/%2$d</string>
     <string name="watch_ad">広告を見る</string>
-    <string name="unlock_permanent_note">広告で解放したエピソードは永久にあなたのものです。</string>
-    <string name="daily_limit_title">本日の無料解放上限に達しました</string>
-    <string name="daily_limit_desc">本日の無料解放を%1$d回すべて使用しました。明日また無料解放が利用可能になります。</string>
-    <string name="browse_free_episodes">無料エピソードを見る</string>
+    <string name="unlock_permanent_note">広告でアンロックした話数は永久にあなたのものです。</string>
+    <string name="daily_limit_title">1日の無料アンロック上限に達しました</string>
+    <string name="daily_limit_desc">本日の無料アンロック%1$d回をすべて使用しました。無料アンロックは翌日にまた利用可能になります。</string>
+    <string name="browse_free_episodes">無料の話数を見る</string>
 
-    <!-- Missing keys added to satisfy references in Kotlin sources -->
-    <string name="episode_locked">エピソードがロックされています</string>
-    <string name="watch_ad_to_unlock">広告を見て解放</string>
-    <string name="history_watching">視聴中</string>
-    <string name="my_favorites">マイお気に入り</string>
-    <string name="no_favorites_yet">まだお気に入りがありません</string>
-    <string name="favorites_empty_message">まだお気に入りを追加していません。</string>
-    <string name="deselect_all">選択をすべて解除</string>
-    <string name="select_all">すべて選択</string>
-    <string name="long_press_to_select">長押しで選択</string>
+    <string name="no_internet_title">インターネット接続なし</string>
+    <string name="no_internet_desc">インターネット接続がありません。アプリを利用するにはインターネットに接続してください。</string>
+    <string name="connect_internet">インターネットに接続</string>
+
+    <string name="rateus_dialog_title">DramaXを楽しんでいますか？</string>
+    <string name="rateus_dialog_subtitle">あなたのレビューがこのアプリの品質向上に役立ちます</string>
+
+    <string name="not_now">後で</string>
+    <string name="share_app_message">DramaXでショートドラマを視聴しよう: https://play.google.com/store/apps/details?id=%1$s</string>
+    <string name="share_app_chooser_title">DramaXを共有</string>
+    <string name="no_episode_found">話数が見つかりません</string>
+    <string name="episode_locked">第%1$d話はロック中</string>
+    <string name="watch_ad_to_unlock">広告を見てアンロック</string>
     <string name="recent_activity">最近のアクティビティ</string>
     <string name="inbox">受信箱</string>
-    <string name="notification_desc">アカウントや番組に関する最新情報</string>
-    <string name="clearing">クリア中</string>
-    <string name="clear">クリア</string>
+    <string name="notification_desc">プランナーのリマインダーと報酬の更新情報を一か所で確認できます。</string>
+    <string name="clearing">削除中</string>
+    <string name="clear">削除</string>
     <string name="update">更新</string>
-    <string name="notification_body">新しい更新があります</string>
-    <string name="clearing_inbox">受信箱をクリア中</string>
-    <string name="no_notification_message">通知はまだありません</string>
-    <string name="removing_old_updates">古い更新を削除中</string>
-    <string name="planner_msg">視聴リマインダーをスケジュール</string>
-    <string name="schedule_planner_msg">リマインダーの時間を選択</string>
+    <string name="notification_body">最新のアップデートはDramaXでご確認ください。</string>
+    <string name="clearing_inbox">受信箱を削除中</string>
+    <string name="no_notification_message">まだ通知はありません</string>
+    <string name="removing_old_updates">古い更新情報を削除しています...</string>
+    <string name="planner_msg">プランナーのリマインダーと報酬の更新情報がここに表示されます。</string>
+    <string name="schedule_planner_msg">保存したドラマとリマインダーをスケジュール設定。</string>
     <string name="choose_saved_drama">保存したドラマを選択</string>
-    <string name="save_drama_first">スケジュールを設定するには先にドラマを保存してください</string>
-    <string name="schedule_label_msg">スケジュールラベル</string>
+    <string name="save_drama_first">まずドラマを保存してください</string>
+    <string name="schedule_label_msg">ホームまたはショートの+ボタンでこのリストを作成しましょう。</string>
     <string name="schedule_reminder">リマインダーを設定</string>
     <string name="select_saved_drama">保存したドラマを選択</string>
-    <string name="account_activity">アカウントアクティビティ</string>
-    <string name="privacy_text">プライバシー設定を管理</string>
-    <string name="share_app">アプリを共有</string>
-    <string name="rateus_dialog_title">DramaXを評価</string>
-    <string name="rateus_dialog_subtitle">楽しんでいただけていますか？評価をお願いします！</string>
-    <string name="not_now">今はしない</string>
-    <string name="share_app_message">DramaXをチェックしよう — たくさんのショートドラマが揃っています！</string>
-    <string name="share_app_chooser_title">共有方法を選択</string>
-    <string name="fallback_genre_romance">ロマンス</string>
-    <string name="fallback_genre_drama">ドラマ</string>
-    <string name="fallback_genre_thriller">スリラー</string>
-    <string name="trending_searches">トレンド検索</string>
-    <string name="hot_searches">人気検索</string>
-    <string name="badge_hot">HOT</string>
-    <string name="badge_new">NEW</string>
-    <string name="empty_state_mask_glyph">結果がありません</string>
-    <string name="no_results_found">結果が見つかりません</string>
-    <string name="no_results_found_desc">別のキーワードで検索してください。</string>
-    <string name="results_found_for_query">"%1$s"の検索結果</string>
-    <string name="badge_new_release">新着</string>
-    <string name="badge_trending_first">トレンド1位</string>
-    <string name="fallback_description">秘密とどんでん返しが詰まったショートドラマ。</string>
-    <string name="view_all">すべて見る</string>
-    <string name="genre_fallback">ドラマ</string>
-    <string name="must_unlock_episode_first">先に前のエピソードを解放してください。</string>
-    <string name="episode_count">%1$d話</string>
-    <string name="episodes_range">エピソード%1$d〜%2$d</string>
+    <string name="episode_count">%1$d/%2$d</string>
+    <string name="episodes_range">第%1$d話 - 第%2$d話</string>
+    <string name="must_unlock_episode_first">先に以前の話数をアンロックしてください。</string>
     <string name="subtitle_small">小</string>
     <string name="subtitle_medium">中</string>
     <string name="subtitle_large">大</string>
-    <string name="report_reason_episode_error">エピソードの再生エラー</string>
+    <string name="report_reason_episode_error">話数のエラー</string>
     <string name="report_reason_paid_film_too_long">有料作品が長すぎる</string>
     <string name="report_reason_low_quality">画質が低い</string>
     <string name="report_reason_subtitle_missing">字幕がない</string>
     <string name="report_reason_inaccurate_subtitle">字幕が不正確</string>
     <string name="report_reason_other">その他</string>
-    <string name="loading_share_apps">アプリを読み込み中...</string>
+    <string name="loading_share_apps">共有アプリを読み込み中</string>
+    <string name="welcome_back_emoji">👋</string>
+    <string name="welcome_back_title">おかえりなさい！</string>
+    <string name="welcome_back_description">また会えて嬉しいです。\n無制限のドラマや番組をお楽しみください！</string>
+    <string name="continue_text">続ける</string>
+    <string name="auto_advancing">3秒後に自動的に進みます...</string>
+
+    <string name="tab_popular">人気</string>
+    <string name="tab_new">新着</string>
+    <string name="tab_ranking">ランキング</string>
+    <string name="tab_categories">カテゴリー</string>
+
+    <string name="filter_all">すべて</string>
+    <string name="filter_male">男性</string>
+    <string name="filter_female">女性</string>
+
+    <string name="category_modern">モダン</string>
+    <string name="category_historical">時代劇</string>
+    <string name="category_fantasy">ファンタジー</string>
+    <string name="category_romance">ロマンス</string>
+
+    <string name="sort_newest">新着順</string>
+    <string name="sort_popular">人気順</string>
+    <string name="sort_rating">評価順</string>
+    <string name="sort_trending">話題順</string>
+
+    <string name="audience">対象層</string>
+    <string name="category">カテゴリー</string>
+    <string name="filters">絞り込み</string>
+    <string name="sort_by">並び替え</string>
+
+    <string name="apply_filters">絞り込みを適用</string>
+    <string name="apply_sort">並び替えを適用</string>
+
+    <string name="featured_highlights">注目のハイライト</string>
+    <string name="fresh_on_dramax">DramaXの新着</string>
+    <string name="weekly_top_20">週間トップ20</string>
+
+    <string name="my_favorites">お気に入り</string>
+    <string name="no_favorites_yet">まだお気に入りがありません</string>
+    <string name="favorites_empty_message">ドラマをブックマークするとここに追加されます。</string>
+
+    <string name="watch_something">何か視聴する</string>
+    <string name="continue_watching_empty">ドラマを視聴し始めるとここに表示されます。</string>
+
+    <string name="updated_3h_ago">3時間前に更新</string>
+
+    <string name="badge_hot">話題</string>
+    <string name="badge_new">新着</string>
+    <string name="start">開始</string>
+
+    <string name="top_rank">トップ%1$d</string>
+
+    <string name="episode_info">第%1$d話 / 全%2$d話 • %3$s</string>
+
+    <string name="genre_episode_total">%1$s - 全%2$d話</string>
+    <string name="genre_episode">%1$s - 第%2$d話</string>
+
+    <string name="rating_genre">%1$s - %2$s</string>
+
+    <string name="time_left_minutes">残り%1$d分</string>
+    <string name="time_left_hours">残り%1$d時間%2$d分</string>
+
+    <string-array name="audience_keywords_male">
+        <item>action</item>
+        <item>thriller</item>
+        <item>revenge</item>
+        <item>war</item>
+        <item>crime</item>
+        <item>ceo</item>
+        <item>billionaire</item>
+        <item>fantasy</item>
+    </string-array>
+
+    <string-array name="audience_keywords_female">
+        <item>romance</item>
+        <item>love</item>
+        <item>family</item>
+        <item>heir</item>
+        <item>bride</item>
+        <item>wife</item>
+        <item>autumn</item>
+        <item>drama</item>
+    </string-array>
+
+    <string-array name="category_keywords_modern">
+        <item>modern</item>
+        <item>ceo</item>
+        <item>billionaire</item>
+        <item>city</item>
+        <item>office</item>
+        <item>finance</item>
+        <item>tech</item>
+    </string-array>
+
+    <string-array name="category_keywords_historical">
+        <item>historical</item>
+        <item>king</item>
+        <item>queen</item>
+        <item>empire</item>
+        <item>legacy</item>
+        <item>dynasty</item>
+        <item>ancient</item>
+    </string-array>
+
+    <string-array name="category_keywords_fantasy">
+        <item>fantasy</item>
+        <item>magic</item>
+        <item>crimson</item>
+        <item>shadow</item>
+        <item>void</item>
+        <item>supernatural</item>
+    </string-array>
+
+    <string-array name="category_keywords_romance">
+        <item>romance</item>
+        <item>love</item>
+        <item>vow</item>
+        <item>bride</item>
+        <item>wife</item>
+        <item>autumn</item>
+    </string-array>
+
+    <!-- Section headers -->
+    <string name="trending_searches">話題の検索</string>
+    <string name="hot_searches">人気の検索</string>
+    <string name="view_all">すべて表示</string>
+
+    <!-- Badges -->
+    <string name="badge_trending_first">話題ランキング1位</string>
+    <string name="badge_new_release">新着作品</string>
+
+    <!-- Filters row -->
+    <string name="results_found_for_query">「%2$s」の検索結果 %1$d件</string>
+
+    <!-- Empty search state -->
+    <string name="no_results_found">結果が見つかりませんでした</string>
+    <string name="no_results_found_desc">「%1$s」に一致するドラマが見つかりませんでした。別のキーワードをお試しください。</string>
+    <string name="empty_state_mask_glyph">x</string>
+
+    <!-- Empty catalog state -->
+    <string name="no_dramas_loaded_title">まだドラマが読み込まれていません</string>
+    <string name="no_dramas_loaded_desc">フィードが利用可能になったら一度ホームを開いてください。その後、検索でこれらの実際のドラマが使用されます。</string>
+
+    <!-- Genre tag fallback -->
+    <string name="genre_fallback">ドラマ</string>
+
+    <!-- Fallback content (used when API fields are blank) -->
+    <string name="fallback_description">裕福な後継者が過去は嘘だったことに気づき、秘密が次々と明らかになる。</string>
+    <string name="fallback_genre_romance">ロマンス</string>
+    <string name="fallback_genre_drama">ドラマ</string>
+    <string name="fallback_genre_thriller">スリラー</string>
+    <string name="history_watching">視聴履歴</string>
     <string name="items_watched">%1$d件視聴済み</string>
     <string name="nothing_watched_yet">まだ何も視聴していません</string>
-    <string name="nothing_watched_yet_desc">数秒間エピソードを視聴すると、ここに進捗が記録されます。</string>
-    <string name="favorites_size">お気に入り%1$d件</string>
-    <string name="no_dramas_loaded_title">ドラマを読み込めません</string>
-    <string name="no_dramas_loaded_desc">現在ドラマを読み込めませんでした。後でもう一度お試しください。</string>
+    <string name="nothing_watched_yet_desc">何かを視聴すると、ここに視聴履歴がすべて表示されます。</string>
+    <string name="favorites_size">%1$d件</string>
+    <string name="select_all">すべて選択</string>
+    <string name="deselect_all">選択をすべて解除</string>
+    <string name="long_press_to_select">長押しして選択</string>
+    <string name="account_activity">アカウントのアクティビティ</string>
+    <string name="preferences">設定とサポート</string>
+    <string name="privacy_text">プライバシー</string>
+    <string name="share_app">アプリを共有</string>
 
-    <string name="no_internet_title">インターネット接続なし</string>
-    <string name="no_internet_desc">インターネット接続がありません。アプリを使用するにはインターネットに接続してください。</string>
-    <string name="connect_internet">インターネットに接続</string>
+    <!-- Header -->
+    <string name="notifications_title">通知</string>
+    <string name="all_caught_up">すべて確認済みです</string>
+    <string name="unread_total_count">未読%1$d件 • 合計%2$d件</string>
+
+    <!-- Inbox count pill -->
+    <string name="unread_new_count">新着%1$d件</string>
+
+    <!-- Relative time fallback -->
+    <string name="time_now">たった今</string>
+
+    <!-- Report -->
+    <string name="report_issue">問題を報告</string>
+    <string name="report_issue_desc">視聴体験の向上にご協力ください</string>
+    <string name="please_select_reason">理由を選択してください</string>
+
+
+    <!-- Subtitle -->
+    <string name="subtitle_size_small">小</string>
+    <string name="subtitle_size_medium">中</string>
+    <string name="subtitle_size_large">大</string>
+
+
+    <!-- Share Text -->
+    <string name="share_watch">視聴する</string>
+    <string name="share_default_title">このDramaXショート</string>
+    <string name="share_episode_on">DramaXで第%1$d話を配信中。</string>
+    <string name="share_get_app">アプリを入手:</string>
+
+    <!-- Video Caption -->
+    <string name="watch_great_content">この素晴らしいコンテンツを視聴</string>
+    <string name="trending">話題</string>
+
+    <!-- Sidebar -->
+    <string name="share_label">共有</string>
+    <string name="episodes_label">話数</string>
+    <string name="cc_label">字幕</string>
+    <string name="speed_label">速度</string>
 
 </resources>

@@ -451,4 +451,44 @@
     <string name="preferences">Preference &amp; Support</string>
     <string name="privacy_text">Privacy</string>
     <string name="share_app">Share App</string>
+
+    <!-- Header -->
+    <string name="notifications_title">Notifications</string>
+    <string name="all_caught_up">You are all caught up</string>
+    <string name="unread_total_count">%1$d unread • %2$d total</string>
+
+    <!-- Inbox count pill -->
+    <string name="unread_new_count">%1$d new</string>
+
+    <!-- Relative time fallback -->
+    <string name="time_now">Now</string>
+
+    <!-- Report -->
+    <string name="report_issue">Report an Issue</string>
+    <string name="report_issue_desc">Help us improve your viewing experience</string>
+    <string name="please_select_reason">Please select a reason</string>
+
+
+    <!-- Subtitle -->
+    <string name="subtitle_size_small">Small</string>
+    <string name="subtitle_size_medium">Medium</string>
+    <string name="subtitle_size_large">Large</string>
+
+
+    <!-- Share Text -->
+    <string name="share_watch">Watch</string>
+    <string name="share_default_title">this DramaX short</string>
+    <string name="share_episode_on">Episode %1$d on DramaX.</string>
+    <string name="share_get_app">Get the app:</string>
+
+    <!-- Video Caption -->
+    <string name="watch_great_content">Watch this great content</string>
+    <string name="trending">Trending</string>
+
+    <!-- Sidebar -->
+    <string name="share_label">Share</string>
+    <string name="episodes_label">Episodes</string>
+    <string name="cc_label">CC</string>
+    <string name="speed_label">Speed</string>
+
 </resources>

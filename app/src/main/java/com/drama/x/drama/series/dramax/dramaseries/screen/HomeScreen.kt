@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -106,11 +107,11 @@ private val SoftPink = Color(0xFFFFC0C9)
 private val Gold = Color(0xFFF5C65B)
 private val CardPanel = Color(0xFF1A1A1A)
 
-private enum class HomeTab(val label: String) {
-    Popular("Popular"),
-    New("New"),
-    Ranking("Ranking"),
-    Categories("Categories")
+private enum class HomeTab(@StringRes val label: Int) {
+    Popular(R.string.tab_popular),
+    New(R.string.tab_new),
+    Ranking(R.string.tab_ranking),
+    Categories(R.string.tab_categories)
 }
 
 private enum class CategorySheet {
@@ -118,25 +119,25 @@ private enum class CategorySheet {
     Sort
 }
 
-private enum class AudienceFilter(val label: String) {
-    All("All"),
-    Male("Male"),
-    Female("Female")
+private enum class AudienceFilter(@StringRes val label: Int) {
+    All(R.string.filter_all),
+    Male(R.string.filter_male),
+    Female(R.string.filter_female)
 }
 
-private enum class CategoryFilter(val label: String) {
-    All("All"),
-    Modern("Modern"),
-    Historical("Historical"),
-    Fantasy("Fantasy"),
-    Romance("Romance")
+private enum class CategoryFilter(@StringRes val label: Int) {
+    All(R.string.filter_all),
+    Modern(R.string.category_modern),
+    Historical(R.string.category_historical),
+    Fantasy(R.string.category_fantasy),
+    Romance(R.string.category_romance)
 }
 
-private enum class CategorySort(val label: String) {
-    Newest("Newest"),
-    Popular("Popular"),
-    Rating("Rating"),
-    Trending("Trending")
+private enum class CategorySort(@StringRes val label: Int) {
+    Newest(R.string.sort_newest),
+    Popular(R.string.sort_popular),
+    Rating(R.string.sort_rating),
+    Trending(R.string.sort_trending)
 }
 
 @Composable
@@ -401,7 +402,7 @@ private fun LazyListScope.popularTab(
         )
     }
     item {
-        SectionHeader(title = "Featured Highlights")
+        SectionHeader(title = stringResource(R.string.featured_highlights))
         CompactPosterGrid(items = featuredItems, columns = 3, onOpenEpisodes = onOpenEpisodes)
     }
     item { ContinueWatching(feed.continueWatching, allCatalog, onOpenEpisodes) }
@@ -413,7 +414,7 @@ private fun LazyListScope.popularTab(
         )
     }
     item {
-        SectionHeader(title = "My Favorites", action = stringResource(R.string.see_all), onAction = onLibrary)
+        SectionHeader(title = stringResource(R.string.my_favorites), action = stringResource(R.string.see_all), onAction = onLibrary)
         FavoriteGrid(items = savedFilms.take(4), onOpenEpisodes = onOpenEpisodes)
     }
     item { Spacer(modifier = Modifier.height(14.dp)) }
@@ -424,6 +425,17 @@ private val newTabBadgeCycle = listOf("HOT", "NEW", "TRENDING", "NEW", "HOT", "N
 private fun badgesFor(count: Int): List<String> =
     List(count) { i -> newTabBadgeCycle[i % newTabBadgeCycle.size] }
 
+/**
+ * Badge values ("HOT" / "NEW" / "TRENDING") are internal codes used for badge
+ * styling logic. This resolves them to the localized display text.
+ */
+@Composable
+private fun badgeDisplayText(code: String): String = when (code) {
+    "HOT" -> stringResource(R.string.badge_hot)
+    "NEW" -> stringResource(R.string.badge_new)
+    else -> code
+}
+
 private fun LazyListScope.newTab(
     items: List<DramaItem>,
     nativeSearchAdState: NativeAdState,
@@ -432,7 +444,7 @@ private fun LazyListScope.newTab(
     val firstChunk = items.take(4)
     val restChunk = items.drop(4)
     item {
-        AccentTitle("Fresh on DramaX")
+        AccentTitle(stringResource(R.string.fresh_on_dramax))
         TallPosterGrid(items = firstChunk, onOpenEpisodes = onOpenEpisodes, badges = badgesFor(firstChunk.size))
         HomeSmallNativeAd(
             placementName = "native_search",
@@ -460,9 +472,9 @@ private fun LazyListScope.rankingTab(
                 .padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Weekly Top 20", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+            Text(stringResource(R.string.weekly_top_20), color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
             Spacer(Modifier.weight(1f))
-            Text("Updated 3h ago", color = Color(0xFF9CA3AF), fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
+            Text(stringResource(R.string.updated_3h_ago), color = Color(0xFF9CA3AF), fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
         }
     }
     items(items.take(3).withIndex().toList(), key = { (_, item) -> item.uniqueKey() }) { (index, item) ->
@@ -498,9 +510,9 @@ private fun LazyListScope.categoriesTab(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            ToolPill(Icons.Filled.FilterList, "FILTERS", onClick = { onOpenSheet(CategorySheet.Filters) })
+            ToolPill(Icons.Filled.FilterList, stringResource(R.string.filters), onClick = { onOpenSheet(CategorySheet.Filters) })
             Spacer(Modifier.weight(1f))
-            ToolPill(Icons.AutoMirrored.Filled.Sort, "SORT BY", onClick = { onOpenSheet(CategorySheet.Sort) })
+            ToolPill(Icons.AutoMirrored.Filled.Sort, stringResource(R.string.sort_by), onClick = { onOpenSheet(CategorySheet.Sort) })
         }
         val categoryItems = items
             .associateBy { it.uniqueKey() }.values.toList()  // O(n) instead of O(n²)
@@ -701,7 +713,7 @@ private fun HomeTopBar(
         ) {
             items(HomeTab.values().toList(), key = { it.label }) { tab ->
                 HomeTabChip(
-                    label = tab.label,
+                    label = stringResource(tab.label),
                     selected = selectedTab == tab,
                     onClick = { onTabSelected(tab) }
                 )
@@ -953,7 +965,7 @@ private fun CompactPosterCard(
                 .background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xD9000000))))
         )
         if (item.isPremium || item.rating.toFloatOrNull()?.let { it >= 4.8f } == true) {
-            CornerBadge("HOT", Pink, icon = R.drawable.fire, modifier = Modifier.align(Alignment.TopStart).padding(5.dp))
+            CornerBadge(stringResource(R.string.badge_hot), Pink, icon = R.drawable.fire, modifier = Modifier.align(Alignment.TopStart).padding(5.dp))
         }
         Column(
             modifier = Modifier
@@ -971,7 +983,7 @@ private fun CompactPosterCard(
                 letterSpacing = 0.sp
             )
             Text(
-                "${item.genre} - ${item.episodeTotal} Eps",
+                stringResource(R.string.genre_episode_total, item.genre, item.episodeTotal),
                 color = Color(0xFFE2C0BE),
                 fontSize = 8.sp,
                 maxLines = 1,
@@ -1070,7 +1082,7 @@ private fun TallPosterCard(
             }
 
             CornerBadge(
-                text = badge,
+                text = badgeDisplayText(badge),
                 color = badgeColor,
                 icon = badgeIcon,
                 modifier = Modifier
@@ -1086,7 +1098,7 @@ private fun TallPosterCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Filled.Star, contentDescription = null, tint = Gold, modifier = Modifier.size(11.dp))
                 Spacer(Modifier.width(3.dp))
-                Text("${item.rating} - ${item.genre}", color = Gold, fontSize = 10.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
+                Text(stringResource(R.string.rating_genre, item.rating, item.genre), color = Gold, fontSize = 10.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
             }
             Text(item.title, color = Color(0xFFE2E2E2), fontSize = 14.sp, lineHeight = 18.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
         }
@@ -1126,8 +1138,8 @@ private fun EmptyFavorites(onOpenEpisodes: (Int?) -> Unit) {
         Icon(Icons.Filled.Bookmark, contentDescription = null, tint = Gold, modifier = Modifier.size(22.dp))
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text("No favorites yet", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
-            Text("Bookmark a drama to add it here.", color = Color(0xFFC7B6BC), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+            Text(stringResource(R.string.no_favorites_yet), color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+            Text(stringResource(R.string.favorites_empty_message), color = Color(0xFFC7B6BC), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
         }
     }
 }
@@ -1215,14 +1227,14 @@ private fun RankingHeroRow(rank: Int, item: DramaItem, onOpenEpisodes: (Int?) ->
         ) {
             NetworkDramaImage(item.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, item.title)
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xE6000000)))))
-            CornerBadge("TOP $rank", Color(0xFF374151), icon = null, modifier =  Modifier.align(Alignment.BottomStart).padding(start = 10.dp, bottom = 40.dp))
+            CornerBadge(stringResource(R.string.top_rank, rank), Color(0xFF374151), icon = null, modifier =  Modifier.align(Alignment.BottomStart).padding(start = 10.dp, bottom = 40.dp))
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
             ) {
                 Text(item.title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
-                Text("${item.genre} - ${item.episodeTotal} Eps", color = Color(0xFFD1D5DB), fontSize = 10.sp, maxLines = 1, letterSpacing = 0.sp)
+                Text(stringResource(R.string.genre_episode_total, item.genre, item.episodeTotal), color = Color(0xFFD1D5DB), fontSize = 10.sp, maxLines = 1, letterSpacing = 0.sp)
             }
             Text(item.rating, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.BottomEnd).padding(10.dp), letterSpacing = 0.sp)
         }
@@ -1255,7 +1267,7 @@ private fun RankingListRow(rank: Int, item: DramaItem, onOpenEpisodes: (Int?) ->
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(item.title, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
-            Text("${item.genre} - Ep ${item.episodeTotal}", color = Color(0xFF9CA3AF), fontSize = 10.sp, maxLines = 1, letterSpacing = 0.sp)
+            Text(stringResource(R.string.genre_episode, item.genre, item.episodeTotal), color = Color(0xFF9CA3AF), fontSize = 10.sp, maxLines = 1, letterSpacing = 0.sp)
         }
         Text(item.rating, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
     }
@@ -1323,15 +1335,15 @@ private fun CategoryFilterSheet(
     var draftCategory by remember(selectedCategory) { mutableStateOf(selectedCategory) }
 
     CategoryModalScaffold(
-        title = "Filters",
+        title = stringResource(R.string.filters),
         onDismiss = onDismiss,
-        actionLabel = "Apply Filters",
+        actionLabel = stringResource(R.string.apply_filters),
         onApply = { onApply(draftAudience, draftCategory) }
     ) {
-        SheetCaption("AUDIENCE")
+        SheetCaption(stringResource(R.string.audience))
         SheetChipRow(AudienceFilter.values().toList(), draftAudience, onSelected = { draftAudience = it }) { it.label }
         Spacer(Modifier.height(18.dp))
-        SheetCaption("CATEGORY")
+        SheetCaption(stringResource(R.string.category))
         SheetChipRows(CategoryFilter.values().toList(), draftCategory, onSelected = { draftCategory = it }) { it.label }
     }
 }
@@ -1345,14 +1357,14 @@ private fun CategorySortSheet(
     var draftSort by remember(selectedSort) { mutableStateOf(selectedSort) }
 
     CategoryModalScaffold(
-        title = "Sort By",
+        title = stringResource(R.string.sort_by),
         onDismiss = onDismiss,
-        actionLabel = "Apply Sort",
+        actionLabel = stringResource(R.string.apply_sort),
         onApply = { onApply(draftSort) }
     ) {
         CategorySort.values().forEach { sort ->
             SortOptionRow(
-                label = sort.label,
+                sort = sort,
                 selected = draftSort == sort,
                 onClick = { draftSort = sort }
             )
@@ -1440,12 +1452,12 @@ private fun <T> SheetChipRow(
     options: List<T>,
     selected: T,
     onSelected: (T) -> Unit,
-    label: (T) -> String
+    label: (T) -> Int
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         options.forEach { option ->
             FilterChoiceChip(
-                label = label(option),
+                label = stringResource(label(option)),
                 selected = selected == option,
                 onClick = { onSelected(option) }
             )
@@ -1458,7 +1470,7 @@ private fun <T> SheetChipRows(
     options: List<T>,
     selected: T,
     onSelected: (T) -> Unit,
-    label: (T) -> String
+    label: (T) -> Int
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         options.chunked(3).forEach { rowOptions ->
@@ -1483,7 +1495,7 @@ private fun FilterChoiceChip(label: String, selected: Boolean, onClick: () -> Un
 }
 
 @Composable
-private fun SortOptionRow(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun SortOptionRow(sort: CategorySort, selected: Boolean, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1495,18 +1507,18 @@ private fun SortOptionRow(label: String, selected: Boolean, onClick: () -> Unit)
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            imageVector = when (label) {
-                "Newest" -> Icons.Filled.Star
-                "Popular" -> Icons.Filled.Bookmark
-                "Rating" -> Icons.Filled.Star
-                else -> Icons.AutoMirrored.Filled.Sort
+            imageVector = when (sort) {
+                CategorySort.Newest -> Icons.Filled.Star
+                CategorySort.Popular -> Icons.Filled.Bookmark
+                CategorySort.Rating -> Icons.Filled.Star
+                CategorySort.Trending -> Icons.AutoMirrored.Filled.Sort
             },
             contentDescription = null,
             tint = if (selected) Pink else Color(0xFFE9C9CE),
             modifier = Modifier.size(16.dp)
         )
         Spacer(Modifier.width(12.dp))
-        Text(label, color = Color(0xFFEEDFE4), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+        Text(stringResource(sort.label), color = Color(0xFFEEDFE4), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
         Spacer(Modifier.weight(1f))
         Box(
             modifier = Modifier
@@ -1533,7 +1545,7 @@ private fun ContinueWatching(
     if (items.isEmpty()) {
         return  // Don't show the section at all
     }
-    
+
     SectionHeader(title = stringResource(R.string.continue_watching), action = stringResource(R.string.see_all))
     LazyRow(
         contentPadding = PaddingValues(horizontal = 18.dp),
@@ -1549,8 +1561,8 @@ private fun ContinueCard(item: ContinueWatchingItem, onOpenEpisodes: (Int?) -> U
     val totalEp = film.episodeTotal.coerceAtLeast(item.episodeNumber)
     val epsLeft = (totalEp - item.episodeNumber).coerceAtLeast(0)
     val minutesLeft = (epsLeft * 22 + 12).coerceAtLeast(1)
-    val timeLabel = if (minutesLeft >= 60) "${minutesLeft / 60}h ${minutesLeft % 60}m left" else "${minutesLeft}m left"
-    val subtitleText = "Ep ${item.episodeNumber} of $totalEp \u2022 $timeLabel"
+    val timeLabel = if (minutesLeft >= 60) stringResource(R.string.time_left_hours, minutesLeft / 60, minutesLeft % 60) else stringResource(R.string.time_left_minutes, minutesLeft)
+    val subtitleText = stringResource(R.string.episode_info, item.episodeNumber, totalEp, timeLabel)
 
     Column(
         modifier = Modifier
@@ -1647,8 +1659,8 @@ private fun ContinueCardFromDrama(drama: DramaItem, onOpenEpisodes: (Int?) -> Un
     val fakeEp = (totalEp * 0.45f).toInt().coerceAtLeast(1)
     val progress = fakeEp.toFloat() / totalEp
     val minutesLeft = ((totalEp - fakeEp) * 22 + 12).coerceAtLeast(1)
-    val timeLabel = if (minutesLeft >= 60) "${minutesLeft / 60}h ${minutesLeft % 60}m left" else "${minutesLeft}m left"
-    val subtitleText = "Ep $fakeEp of $totalEp \u2022 $timeLabel"
+    val timeLabel = if (minutesLeft >= 60) stringResource(R.string.time_left_hours, minutesLeft / 60, minutesLeft % 60) else stringResource(R.string.time_left_minutes, minutesLeft)
+    val subtitleText = stringResource(R.string.episode_info, fakeEp, totalEp, timeLabel)
 
     Column(
         modifier = Modifier
@@ -2030,10 +2042,10 @@ private fun EmptyContinueWatching(onOpenEpisodes: (Int?) -> Unit) {
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text("Watch something", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
-            Text("Start a drama and it will appear here.", color = Color(0xFFC7B6BC), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+            Text(stringResource(R.string.watch_something), color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+            Text(stringResource(R.string.continue_watching_empty), color = Color(0xFFC7B6BC), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
         }
-        Text("START", color = Gold, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
+        Text(stringResource(R.string.start), color = Gold, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 0.sp)
     }
 }
 

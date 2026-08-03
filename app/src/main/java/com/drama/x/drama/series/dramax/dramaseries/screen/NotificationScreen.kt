@@ -157,9 +157,9 @@ private fun NotificationHeader(
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("Notifications", color = Color.White, fontSize = 29.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+                Text(stringResource(R.string.notifications_title), color = Color.White, fontSize = 29.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
                 Text(
-                    if (totalCount == 0) "You are all caught up" else "$unreadCount unread • $totalCount total",
+                    if (totalCount == 0) stringResource(R.string.all_caught_up) else stringResource(R.string.unread_total_count, unreadCount, totalCount),
                     color = Muted,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -188,7 +188,7 @@ private fun NotificationHeader(
                 Text(stringResource(R.string.inbox), color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
                 Text(stringResource(R.string.notification_desc), color = Muted, fontSize = 12.sp, lineHeight = 17.sp, letterSpacing = 0.sp)
             }
-            CountPill("$unreadCount new")
+            CountPill(stringResource(R.string.unread_new_count, unreadCount))
         }
     }
 }
@@ -253,9 +253,11 @@ private fun notificationIcon(type: String) = when (type) {
 
 private fun notificationAccent(type: String): Color = if (type == "reward") Gold else SoftPink
 
+@Composable
 private fun compactNotificationTime(createdAt: String): String {
-    if (createdAt.isBlank()) return "Now"
-    return createdAt.substringBefore(".").replace("T", " ").takeLast(16).ifBlank { "Now" }
+    val now = stringResource(R.string.time_now)
+    if (createdAt.isBlank()) return now
+    return createdAt.substringBefore(".").replace("T", " ").takeLast(16).ifBlank { now }
 }
 
 @Composable

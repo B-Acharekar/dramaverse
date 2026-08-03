@@ -321,4 +321,9 @@
     <string name="no_internet_desc">Sem conexão com a internet. Conecte-se à internet para usar o aplicativo.</string>
     <string name="connect_internet">Conectar à Internet</string>
 
+    <string name="notifications_title">Notificações</string>
+    <string name="all_caught_up">Você está em dia</string>
+    <string name="unread_total_count">%1$d não lidas • %2$d no total</string>
+    <string name="unread_new_count">%1$d novas</string>
+    <string name="time_now">Agora</string>
 </resources>

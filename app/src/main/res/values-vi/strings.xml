@@ -5,12 +5,11 @@
     <string name="app_name_display">DramaX</string>
 
     <string name="splash_tagline">
-    Series Phim Ngắn
+    Phim ngắn đặc sắc
     </string>
 
     <string name="splash_description">
-    Trải nghiệm những câu chuyện kịch tính, được chọn lọc cho
-    \nnhững khoảnh khắc rảnh rỗi của bạn.
+    Trải nghiệm câu chuyện kịch tính, được tuyển chọn\ncho những khoảnh khắc ngắn ngủi của bạn.
     </string>
 
     <!-- Language screen -->
@@ -21,32 +20,32 @@
     <string name="start_btn">Bắt đầu</string>
     <string name="next_btn">Tiếp theo</string>
     <string name="onboarding_title_1">Khám phá những</string>
-    <string name="onboarding_accent_title_1">Bộ phim ngắn tuyệt vời</string>
-    <string name="onboarding_description_1">Xem những bộ phim ngắn độc quyền với hàng nghìn tập, hoàn hảo cho mọi khoảnh khắc rảnh rỗi.</string>
+    <string name="onboarding_accent_title_1">Phim ngắn tuyệt vời</string>
+    <string name="onboarding_description_1">Xem hàng nghìn tập phim ngắn độc quyền, hoàn hảo cho mọi khoảnh khắc rảnh rỗi.</string>
 
-    <string name="onboarding_title_2">Bộ sưu tập câu chuyện</string>
-    <string name="onboarding_accent_title_2">không hồi kết</string>
-    <string name="onboarding_description_2">Từ lãng mạn, kỳ ảo đến giật gân và trả thù, khám phá những câu chuyện mới mỗi ngày.</string>
+    <string name="onboarding_title_2">Bộ sưu tập</string>
+    <string name="onboarding_accent_title_2">Câu chuyện bất tận</string>
+    <string name="onboarding_description_2">Từ lãng mạn, giả tưởng đến kinh dị và báo thù, khám phá câu chuyện mới mỗi ngày.</string>
 
     <string name="onboarding_title_3">Xem mọi lúc,</string>
-    <string name="onboarding_accent_title_3">mọi nơi</string>
-    <string name="onboarding_description_3">Tải xuống các tập phim và thưởng thức những bộ phim yêu thích dù bạn ở đâu - kể cả khi ngoại tuyến.</string>
+    <string name="onboarding_accent_title_3">Mọi nơi</string>
+    <string name="onboarding_description_3">Tải tập phim và thưởng thức các bộ phim yêu thích ở bất cứ đâu - kể cả khi offline.</string>
 
     <string name="onboarding_title_4">Phần thưởng &amp; Nhiệm vụ hàng ngày</string>
-    <string name="onboarding_description_4">Kiếm xu miễn phí mỗi ngày chỉ bằng cách xem phim. Hoàn thành nhiệm vụ để mở khóa các tập phim cao cấp.</string>
+    <string name="onboarding_description_4">Kiếm xu miễn phí mỗi ngày chỉ bằng cách xem. Hoàn thành nhiệm vụ để mở khóa các tập cao cấp.</string>
 
-    <string name="welcome_title">Chào mừng bạn đến với </string>
+    <string name="welcome_title">Chào mừng đến với </string>
     <string name="welcome_accent_title">DramaX</string>
-    <string name="welcome_description">Hàng nghìn câu chuyện khó quên đang chờ đón bạn. Bắt đầu xem ngay bây giờ.</string>
+    <string name="welcome_description">Hàng nghìn câu chuyện khó quên đang chờ bạn. Bắt đầu xem ngay.</string>
     <string name="get_started">Bắt đầu ngay</string>
     <!-- Home screen — top bar / moods -->
-    <string name="mood_hot">Nổi bật</string>
+    <string name="mood_hot">Hot</string>
     <string name="mood_happy">Vui vẻ</string>
-    <string name="mood_emotional">Cảm động</string>
+    <string name="mood_emotional">Cảm xúc</string>
     <string name="mood_action">Hành động</string>
     <string name="mood_romance">Lãng mạn</string>
     <string name="mood_horror">Kinh dị</string>
-    <string name="mood_mind_blowing">Choáng ngợp</string>
+    <string name="mood_mind_blowing">Gây sốc</string>
     <string name="mood_relax">Thư giãn</string>
 
     <!-- Hero section -->
@@ -57,27 +56,26 @@
 
     <!-- Continue watching -->
     <string name="continue_watching">Tiếp tục xem</string>
-    <string name="continue_watching_subtitle">Tiếp tục từ tập phim gần nhất của bạn</string>
-    <string name="continue_watching_empty">Những phim đã xem từ 10 giây trở lên sẽ xuất hiện ở đây.</string>
+    <string name="continue_watching_subtitle">Tiếp tục từ tập mới nhất của bạn</string>
     <string name="see_all">XEM TẤT CẢ</string>
-    
+
     <!-- Trending / poster rails -->
     <string name="trending_now">Đang thịnh hành</string>
     <string name="recommended_for_you">Đề xuất cho bạn</string>
     <string name="trending_tag">THỊNH HÀNH</string>
-    <string name="episodes_count">%1$d Tập</string>
+    <string name="episodes_count">%1$d tập</string>
     <string name="premium">CAO CẤP</string>
     <string name="rating_value">* %1$s</string>
 
     <!-- Top rated -->
     <string name="top_rated_this_week">Đánh giá cao nhất tuần này</string>
     <string name="weekly_top_1">TOP #1 TUẦN</string>
-    <string name="rating_genre_episodes">* %1$s    %2$s    %3$d Tập</string>
+    <string name="rating_genre_episodes">* %1$s    %2$s    %3$d tập</string>
 
     <!-- Action cards -->
     <string name="vip_short">VIP</string>
     <string name="join_vip_club">Tham gia Câu lạc bộ VIP</string>
-    <string name="unlock_all_episodes">Mở khóa tất cả các tập\nngay hôm nay</string>
+    <string name="unlock_all_episodes">Mở khóa tất cả tập phim\nhôm nay</string>
     <string name="schedule">Lịch trình</string>
     <string name="daily_reward_short">50</string>
     <string name="daily_rewards">Phần thưởng hàng ngày</string>
@@ -88,7 +86,7 @@
     <string name="nav_shorts">Shorts</string>
     <string name="nav_library">Danh sách của tôi</string>
     <string name="nav_rewards">Phần thưởng</string>
-    <string name="nav_planner">Lịch xem</string>
+    <string name="nav_planner">Lịch trình</string>
     <string name="nav_profile">Hồ sơ</string>
 
     <!-- Library / Search -->
@@ -98,12 +96,12 @@
     <string name="library_watch_list_empty">Phim đã lưu sẽ xuất hiện ở đây.</string>
     <string name="similar_films">Phim tương tự</string>
     <string name="top_stars">Ngôi sao hàng đầu</string>
-    <string name="top_stars_subtitle">Được lấy từ dữ liệu diễn viên phim hiện có</string>
+    <string name="top_stars_subtitle">Được lấy từ dữ liệu diễn viên có sẵn</string>
     <string name="search_films_hint">Tìm kiếm phim...</string>
     <string name="search_results_count">%1$d kết quả</string>
-    <string name="no_films_found">Không tìm thấy phim nào.</string>
+    <string name="no_films_found">Không tìm thấy phim.</string>
     <string name="no_films_yet">Chưa có phim nào.</string>
-    <string name="library_load_error">Không thể làm mới thư viện của bạn ngay lúc này.</string>
+    <string name="library_load_error">Không thể làm mới thư viện ngay lúc này.</string>
     <string name="search_error">Không thể tải kết quả tìm kiếm ngay lúc này.</string>
 
     <!-- Shorts Screen -->
@@ -115,7 +113,7 @@
 
     <!-- Actions -->
     <string name="share">Chia sẻ</string>
-    <string name="episodes">Các tập</string>
+    <string name="episodes">Tập phim</string>
     <string name="cc">Phụ đề</string>
     <string name="speed">Tốc độ</string>
 
@@ -128,7 +126,7 @@
 
     <!-- Description -->
     <string name="default_short_description">
-    Một bộ phim ngắn đầy bí mật, lãng mạn và trả thù.
+    Một bộ phim ngắn đầy bí mật, lãng mạn và báo thù.
 </string>
 
     <string name="view_more">Xem thêm</string>
@@ -137,19 +135,19 @@
     <!-- Playback Options -->
     <string name="playback_options">Tùy chọn phát</string>
 
-    <string name="auto_next_episode">Tự động phát tập tiếp theo</string>
+    <string name="auto_next_episode">Tự động tập tiếp theo</string>
     <string name="auto_next_episode_desc">
     Tự động phát tập tiếp theo khi tập này kết thúc.
 </string>
 
-    <string name="auto_unlock_episodes">Tự động mở khóa tập phim</string>
+    <string name="auto_unlock_episodes">Tự động mở khóa tập</string>
     <string name="auto_unlock_episodes_desc">
     Chỉ mở khóa tập bị khóa tiếp theo sau khi tập hiện tại kết thúc.
 </string>
 
     <!-- Feedback -->
     <string name="send_feedback">Gửi phản hồi</string>
-    <string name="feedback_hint">Hãy cho chúng tôi biết điều gì đã xảy ra...</string>
+    <string name="feedback_hint">Hãy cho chúng tôi biết vấn đề bạn gặp phải...</string>
     <string name="submit">Gửi</string>
 
     <!-- Subtitle -->
@@ -158,29 +156,29 @@
 
     <!-- Speed -->
     <string name="speed_1x">1x</string>
-    <string name="speed_125x">1,25x</string>
-    <string name="speed_15x">1,5x</string>
+    <string name="speed_125x">1.25x</string>
+    <string name="speed_15x">1.5x</string>
     <string name="speed_2x">2x</string>
     <string name="speed_custom">%1$sx</string>
-    
+
     <!-- Profile Screen -->
     <string name="default_username">Người yêu phim</string>
-    <string name="update_profile_photo">Cập nhật ảnh đại diện</string>
+    <string name="update_profile_photo">Cập nhật ảnh hồ sơ</string>
     <string name="banner_image">Ảnh bìa</string>
     <string name="avatar_image">Ảnh đại diện</string>
     <string name="update_banner_image">Cập nhật ảnh bìa</string>
     <string name="update_avatar_image">Cập nhật ảnh đại diện</string>
-    <string name="choose_from_gallery">Chọn từ thư viện</string>
-    <string name="choose_an_avatar">Chọn một ảnh đại diện</string>
+    <string name="choose_from_gallery">Chọn từ Thư viện</string>
+    <string name="choose_an_avatar">Chọn ảnh đại diện</string>
     <string name="cancel">Hủy</string>
 
     <!-- Stats -->
     <string name="coins">XU</string>
     <string name="watched">ĐÃ XEM</string>
-    <string name="episodes_cap">TẬP PHIM</string>
+    <string name="episodes_cap">TẬP</string>
 
     <!-- Quick Actions -->
-    <string name="subscription">Gói đăng ký</string>
+    <string name="subscription">Đăng ký</string>
     <string name="wallet">Ví</string>
     <string name="downloads">Tải xuống</string>
 
@@ -188,7 +186,7 @@
     <string name="account_settings">CÀI ĐẶT TÀI KHOẢN</string>
     <string name="edit_profile">Chỉnh sửa hồ sơ</string>
     <string name="watch_history">Lịch sử xem</string>
-    <string name="my_watchlist">Danh sách theo dõi của tôi</string>
+    <string name="my_watchlist">Danh sách xem của tôi</string>
     <string name="preferences_support">TÙY CHỌN &amp; HỖ TRỢ</string>
     <string name="language">Ngôn ngữ</string>
     <string name="settings">Cài đặt</string>
@@ -199,27 +197,27 @@
     <string name="vip_gold_member">THÀNH VIÊN VIP VÀNG</string>
 
     <!-- Language Picker -->
-    <string name="english">Tiếng Anh</string>
-    <string name="spanish">Tiếng Tây Ban Nha</string>
-    <string name="german">Tiếng Đức</string>
-    <string name="portuguese">Tiếng Bồ Đào Nha</string>
-    <string name="turkish">Tiếng Thổ Nhĩ Kỳ</string>
-    <string name="arabic">Tiếng Ả Rập</string>
-    <string name="hindi">Tiếng Hindi</string>
-    <string name="japanese">Tiếng Nhật</string>
-    <string name="korean">Tiếng Hàn</string>
-    <string name="chinese">Tiếng Trung</string>
+    <string name="english">English</string>
+    <string name="spanish">Spanish</string>
+    <string name="german">Deutsch</string>
+    <string name="portuguese">Portuguese</string>
+    <string name="turkish">Turkish</string>
+    <string name="arabic">Arabic</string>
+    <string name="hindi">Hindi</string>
+    <string name="japanese">Japanese</string>
+    <string name="korean">Korean</string>
+    <string name="chinese">Chinese</string>
 
     <!-- Others -->
     <string name="profile_avatar">Ảnh đại diện hồ sơ</string>
     <string name="preset_avatar">Ảnh đại diện có sẵn</string>
-    <string name="edit_profile_photo">Chỉnh sửa ảnh đại diện</string>
+    <string name="edit_profile_photo">Chỉnh sửa ảnh hồ sơ</string>
     <!-- Uninstall flow -->
-    <string name="uninstall_confirm_title">Lịch sử xem và những bộ phim ngắn yêu thích\nvẫn đang chờ bạn</string>
-    <string name="uninstall_confirm_description">Giữ DramaX được cài đặt để tiếp tục các câu chuyện,\nphần thưởng và các tập phim mới bất cứ lúc nào.</string>
+    <string name="uninstall_confirm_title">Lịch sử xem và các bộ phim ngắn yêu thích\nvẫn đang chờ bạn</string>
+    <string name="uninstall_confirm_description">Giữ DramaX để tiếp tục câu chuyện,\nphần thưởng và các tập mới bất cứ lúc nào.</string>
     <string name="uninstall_try_again">Thử lại</string>
     <string name="uninstall_still_want">Vẫn muốn gỡ cài đặt</string>
-    <string name="uninstall_survey_title">Sự cố gặp phải trong quá trình sử dụng</string>
+    <string name="uninstall_survey_title">Vấn đề gặp phải khi sử dụng</string>
     <string name="uninstall_reason_feature_not_working">Tính năng không hoạt động</string>
     <string name="uninstall_reason_too_many_ads">Quá nhiều quảng cáo</string>
     <string name="uninstall_reason_not_needed">Tôi không cần nó</string>
@@ -227,98 +225,269 @@
     <string name="uninstall_action">Gỡ cài đặt</string>
     <string name="uninstall_open_failed">Không thể mở màn hình gỡ cài đặt</string>
     <!-- Home widget / uninstall flow -->
-    <string name="widget_description" translatable="false">DramaX quick actions</string>
+    <string name="widget_description" translatable="false">Thao tác nhanh DramaX</string>
     <string name="widget_home">Trang chủ</string>
     <string name="widget_my_list">Danh sách của tôi</string>
     <string name="widget_uninstall">Gỡ cài đặt</string>
 
-    <string name="welcome_to_home_temp">Chào mừng đến với trang chủ</string>
+    <string name="welcome_to_home_temp">Chào mừng đến Trang chủ</string>
 
-    <string name="report_an_issue">Báo cáo sự cố</string>
+    <string name="report_an_issue">Báo cáo vấn đề</string>
     <string name="report_an_issue_subtitle">Giúp chúng tôi cải thiện trải nghiệm xem của bạn</string>
 
     <string name="unlock_episode_title">Mở khóa Tập %1$d để tiếp tục xem</string>
-    <string name="unlock_episode_desc">Xem một quảng cáo để mở khóa vĩnh viễn tập phim này và tiếp tục câu chuyện.</string>
+    <string name="unlock_episode_desc">Xem quảng cáo để mở khóa vĩnh viễn tập này và tiếp tục câu chuyện.</string>
     <string name="daily_progress">Tiến độ hàng ngày: %1$d/%2$d</string>
     <string name="watch_ad">Xem quảng cáo</string>
-    <string name="unlock_permanent_note">Các tập được mở khóa bằng quảng cáo là của bạn mãi mãi.</string>
-    <string name="daily_limit_title">Đã đạt giới hạn mở khóa miễn phí hàng ngày</string>
-    <string name="daily_limit_desc">Bạn đã sử dụng hết %1$d lượt mở khóa miễn phí hôm nay. Sẽ có thêm lượt mở khóa miễn phí vào ngày mai.</string>
-    <string name="browse_free_episodes">Duyệt các tập phim miễn phí</string>
+    <string name="unlock_permanent_note">Các tập mở khóa bằng quảng cáo là của bạn mãi mãi.</string>
+    <string name="daily_limit_title">Đã hết giới hạn mở khóa miễn phí hàng ngày</string>
+    <string name="daily_limit_desc">Bạn đã sử dụng hết %1$d lần mở khóa miễn phí hôm nay. Nhiều lần mở khóa miễn phí hơn sẽ có sẵn vào ngày mai.</string>
+    <string name="browse_free_episodes">Duyệt tập miễn phí</string>
 
-    <!-- Missing keys added to satisfy references in Kotlin sources -->
-    <string name="episode_locked">Tập phim bị khóa</string>
+    <string name="no_internet_title">Không có Internet</string>
+    <string name="no_internet_desc">Không có kết nối internet. Vui lòng kết nối internet để sử dụng ứng dụng.</string>
+    <string name="connect_internet">Kết nối Internet</string>
+
+    <string name="rateus_dialog_title">Bạn có thích DramaX không?</string>
+    <string name="rateus_dialog_subtitle">Đánh giá của bạn sẽ giúp cải thiện chất lượng ứng dụng này</string>
+
+    <string name="not_now">Không phải bây giờ</string>
+    <string name="share_app_message">Xem phim ngắn trên DramaX: https://play.google.com/store/apps/details?id=%1$s</string>
+    <string name="share_app_chooser_title">Chia sẻ DramaX</string>
+    <string name="no_episode_found">Không tìm thấy tập nào</string>
+    <string name="episode_locked">Tập %1$d bị khóa</string>
     <string name="watch_ad_to_unlock">Xem quảng cáo để mở khóa</string>
-    <string name="history_watching">Đang xem</string>
-    <string name="my_favorites">Yêu thích của tôi</string>
-    <string name="no_favorites_yet">Chưa có mục yêu thích nào</string>
-    <string name="favorites_empty_message">Bạn chưa thêm mục yêu thích nào.</string>
-    <string name="deselect_all">Bỏ chọn tất cả</string>
-    <string name="select_all">Chọn tất cả</string>
-    <string name="long_press_to_select">Nhấn giữ để chọn</string>
     <string name="recent_activity">Hoạt động gần đây</string>
-    <string name="inbox">Hộp thư đến</string>
-    <string name="notification_desc">Cập nhật về tài khoản và chương trình của bạn</string>
+    <string name="inbox">Hộp thư</string>
+    <string name="notification_desc">Nhắc nhở lịch trình và cập nhật phần thưởng ở một nơi.</string>
     <string name="clearing">Đang xóa</string>
     <string name="clear">Xóa</string>
     <string name="update">Cập nhật</string>
-    <string name="notification_body">Bạn có bản cập nhật mới</string>
-    <string name="clearing_inbox">Đang xóa hộp thư đến</string>
+    <string name="notification_body">Mở DramaX để xem cập nhật mới nhất.</string>
+    <string name="clearing_inbox">Đang xóa Hộp thư</string>
     <string name="no_notification_message">Chưa có thông báo nào</string>
-    <string name="removing_old_updates">Đang xóa các cập nhật cũ</string>
-    <string name="planner_msg">Lên lịch nhắc nhở xem phim của bạn</string>
-    <string name="schedule_planner_msg">Chọn thời gian nhắc nhở</string>
-    <string name="choose_saved_drama">Chọn một bộ phim đã lưu</string>
-    <string name="save_drama_first">Lưu một bộ phim trước để lên lịch</string>
-    <string name="schedule_label_msg">Nhãn lịch trình</string>
+    <string name="removing_old_updates">Đang xóa các cập nhật cũ...</string>
+    <string name="planner_msg">Nhắc nhở lịch trình và cập nhật phần thưởng sẽ xuất hiện ở đây.</string>
+    <string name="schedule_planner_msg">Lên lịch các bộ phim đã lưu và nhắc nhở.</string>
+    <string name="choose_saved_drama">Chọn bộ phim đã lưu</string>
+    <string name="save_drama_first">Hãy lưu phim trước</string>
+    <string name="schedule_label_msg">Dùng + trên Trang chủ hoặc Shorts để tạo danh sách này.</string>
     <string name="schedule_reminder">Lên lịch nhắc nhở</string>
-    <string name="select_saved_drama">Chọn một bộ phim đã lưu</string>
-    <string name="account_activity">Hoạt động tài khoản</string>
-    <string name="privacy_text">Quản lý cài đặt quyền riêng tư của bạn</string>
-    <string name="share_app">Chia sẻ ứng dụng</string>
-    <string name="rateus_dialog_title">Đánh giá DramaX</string>
-    <string name="rateus_dialog_subtitle">Bạn thích ứng dụng này? Hãy để lại đánh giá!</string>
-    <string name="not_now">Để sau</string>
-    <string name="share_app_message">Khám phá DramaX — vô số bộ phim ngắn!</string>
-    <string name="share_app_chooser_title">Chia sẻ qua</string>
-    <string name="fallback_genre_romance">Lãng mạn</string>
-    <string name="fallback_genre_drama">Kịch tính</string>
-    <string name="fallback_genre_thriller">Giật gân</string>
-    <string name="trending_searches">Tìm kiếm thịnh hành</string>
-    <string name="hot_searches">Tìm kiếm nổi bật</string>
-    <string name="badge_hot">NỔI BẬT</string>
-    <string name="badge_new">MỚI</string>
-    <string name="empty_state_mask_glyph">Không có kết quả</string>
-    <string name="no_results_found">Không tìm thấy kết quả</string>
-    <string name="no_results_found_desc">Hãy thử một từ khóa tìm kiếm khác.</string>
-    <string name="results_found_for_query">Kết quả cho "%1$s"</string>
-    <string name="badge_new_release">MỚI PHÁT HÀNH</string>
-    <string name="badge_trending_first">THỊNH HÀNH #1</string>
-    <string name="fallback_description">Một bộ phim ngắn đầy bí mật và những bất ngờ.</string>
-    <string name="view_all">Xem tất cả</string>
-    <string name="genre_fallback">Kịch tính</string>
-    <string name="must_unlock_episode_first">Vui lòng mở khóa các tập trước đó trước.</string>
-    <string name="episode_count">%1$d tập</string>
-    <string name="episodes_range">Tập %1$d-%2$d</string>
+    <string name="select_saved_drama">Chọn bộ phim đã lưu</string>
+    <string name="episode_count">%1$d/%2$d</string>
+    <string name="episodes_range">Tập %1$d - %2$d</string>
+    <string name="must_unlock_episode_first">Vui lòng mở khóa các tập trước trước.</string>
     <string name="subtitle_small">Nhỏ</string>
     <string name="subtitle_medium">Vừa</string>
     <string name="subtitle_large">Lớn</string>
-    <string name="report_reason_episode_error">Lỗi phát tập phim</string>
+    <string name="report_reason_episode_error">Lỗi tập phim</string>
     <string name="report_reason_paid_film_too_long">Phim trả phí quá dài</string>
     <string name="report_reason_low_quality">Chất lượng thấp</string>
     <string name="report_reason_subtitle_missing">Thiếu phụ đề</string>
     <string name="report_reason_inaccurate_subtitle">Phụ đề không chính xác</string>
     <string name="report_reason_other">Khác</string>
-    <string name="loading_share_apps">Đang tải ứng dụng...</string>
-    <string name="items_watched">%1$d mục đã xem</string>
-    <string name="nothing_watched_yet">Chưa xem gì cả</string>
-    <string name="nothing_watched_yet_desc">Xem các tập phim trong vài giây để theo dõi tiến độ tại đây.</string>
-    <string name="favorites_size">%1$d mục yêu thích</string>
-    <string name="no_dramas_loaded_title">Không có phim nào được tải</string>
-    <string name="no_dramas_loaded_desc">Chúng tôi không thể tải phim ngay lúc này. Vui lòng thử lại sau.</string>
+    <string name="loading_share_apps">Đang tải ứng dụng chia sẻ</string>
+    <string name="welcome_back_emoji">👋</string>
+    <string name="welcome_back_title">Chào mừng trở lại!</string>
+    <string name="welcome_back_description">Chúng tôi rất vui được gặp lại bạn.\nThưởng thức phim và chương trình không giới hạn!</string>
+    <string name="continue_text">Tiếp tục</string>
+    <string name="auto_advancing">Tự động chuyển sau 3 giây...</string>
 
-    <string name="no_internet_title">Không có Internet</string>
-    <string name="no_internet_desc">Không có kết nối Internet. Vui lòng kết nối Internet để sử dụng ứng dụng.</string>
-    <string name="connect_internet">Kết nối Internet</string>
+    <string name="tab_popular">Phổ biến</string>
+    <string name="tab_new">Mới</string>
+    <string name="tab_ranking">Xếp hạng</string>
+    <string name="tab_categories">Thể loại</string>
+
+    <string name="filter_all">Tất cả</string>
+    <string name="filter_male">Nam</string>
+    <string name="filter_female">Nữ</string>
+
+    <string name="category_modern">Hiện đại</string>
+    <string name="category_historical">Cổ trang</string>
+    <string name="category_fantasy">Giả tưởng</string>
+    <string name="category_romance">Lãng mạn</string>
+
+    <string name="sort_newest">Mới nhất</string>
+    <string name="sort_popular">Phổ biến</string>
+    <string name="sort_rating">Đánh giá</string>
+    <string name="sort_trending">Thịnh hành</string>
+
+    <string name="audience">ĐỐI TƯỢNG</string>
+    <string name="category">THỂ LOẠI</string>
+    <string name="filters">BỘ LỌC</string>
+    <string name="sort_by">SẮP XẾP THEO</string>
+
+    <string name="apply_filters">Áp dụng bộ lọc</string>
+    <string name="apply_sort">Áp dụng sắp xếp</string>
+
+    <string name="featured_highlights">Điểm nổi bật</string>
+    <string name="fresh_on_dramax">Mới trên DramaX</string>
+    <string name="weekly_top_20">Top 20 tuần</string>
+
+    <string name="my_favorites">Yêu thích của tôi</string>
+    <string name="no_favorites_yet">Chưa có yêu thích nào</string>
+    <string name="favorites_empty_message">Đánh dấu một bộ phim để thêm vào đây.</string>
+
+    <string name="watch_something">Xem gì đó đi</string>
+    <string name="continue_watching_empty">Bắt đầu một bộ phim và nó sẽ xuất hiện ở đây.</string>
+
+    <string name="updated_3h_ago">Cập nhật 3 giờ trước</string>
+
+    <string name="badge_hot">HOT</string>
+    <string name="badge_new">MỚI</string>
+    <string name="start">BẮT ĐẦU</string>
+
+    <string name="top_rank">TOP %1$d</string>
+
+    <string name="episode_info">Tập %1$d/%2$d • %3$s</string>
+
+    <string name="genre_episode_total">%1$s - %2$d tập</string>
+    <string name="genre_episode">%1$s - Tập %2$d</string>
+
+    <string name="rating_genre">%1$s - %2$s</string>
+
+    <string name="time_left_minutes">Còn %1$d phút</string>
+    <string name="time_left_hours">Còn %1$d giờ %2$d phút</string>
+
+    <string-array name="audience_keywords_male">
+        <item>hành động</item>
+        <item>kinh dị</item>
+        <item>báo thù</item>
+        <item>chiến tranh</item>
+        <item>tội phạm</item>
+        <item>ceo</item>
+        <item>tỷ phú</item>
+        <item>giả tưởng</item>
+    </string-array>
+
+    <string-array name="audience_keywords_female">
+        <item>lãng mạn</item>
+        <item>tình yêu</item>
+        <item>gia đình</item>
+        <item>thừa kế</item>
+        <item>cô dâu</item>
+        <item>vợ</item>
+        <item>mùa thu</item>
+        <item>drama</item>
+    </string-array>
+
+    <string-array name="category_keywords_modern">
+        <item>hiện đại</item>
+        <item>ceo</item>
+        <item>tỷ phú</item>
+        <item>thành phố</item>
+        <item>văn phòng</item>
+        <item>tài chính</item>
+        <item>công nghệ</item>
+    </string-array>
+
+    <string-array name="category_keywords_historical">
+        <item>cổ trang</item>
+        <item>vua</item>
+        <item>hoàng hậu</item>
+        <item>đế chế</item>
+        <item>di sản</item>
+        <item>triều đại</item>
+        <item>cổ đại</item>
+    </string-array>
+
+    <string-array name="category_keywords_fantasy">
+        <item>giả tưởng</item>
+        <item>phép thuật</item>
+        <item>đỏ thẫm</item>
+        <item>bóng tối</item>
+        <item>hư không</item>
+        <item>siêu nhiên</item>
+    </string-array>
+
+    <string-array name="category_keywords_romance">
+        <item>lãng mạn</item>
+        <item>tình yêu</item>
+        <item>lời thề</item>
+        <item>cô dâu</item>
+        <item>vợ</item>
+        <item>mùa thu</item>
+    </string-array>
+
+    <!-- Section headers -->
+    <string name="trending_searches">Tìm kiếm thịnh hành</string>
+    <string name="hot_searches">Tìm kiếm hot</string>
+    <string name="view_all">XEM TẤT CẢ</string>
+
+    <!-- Badges -->
+    <string name="badge_trending_first">Thịnh hành #1</string>
+    <string name="badge_new_release">Phát hành mới</string>
+
+    <!-- Filters row -->
+    <string name="results_found_for_query">Tìm thấy %1$d kết quả cho \"%2$s\"</string>
+
+    <!-- Empty search state -->
+    <string name="no_results_found">Không tìm thấy kết quả</string>
+    <string name="no_results_found_desc">Chúng tôi không tìm thấy bộ phim nào khớp với tìm kiếm \"%1$s\". Hãy thử từ khóa khác.</string>
+    <string name="empty_state_mask_glyph">x</string>
+
+    <!-- Empty catalog state -->
+    <string name="no_dramas_loaded_title">Chưa tải được phim nào</string>
+    <string name="no_dramas_loaded_desc">Mở Trang chủ khi nguồn cấp có sẵn, sau đó Tìm kiếm sẽ sử dụng các bộ phim thực tế ở đây.</string>
+
+    <!-- Genre tag fallback -->
+    <string name="genre_fallback">DRAMA</string>
+
+    <!-- Fallback content (used when API fields are blank) -->
+    <string name="fallback_description">Bí mật được hé lộ khi một người thừa kế giàu có phát hiện quá khứ chỉ là lời nói dối.</string>
+    <string name="fallback_genre_romance">Lãng mạn</string>
+    <string name="fallback_genre_drama">Drama</string>
+    <string name="fallback_genre_thriller">Kinh dị</string>
+    <string name="history_watching">Lịch sử xem</string>
+    <string name="items_watched">%1$d MỤC ĐÃ XEM</string>
+    <string name="nothing_watched_yet">Chưa xem gì cả</string>
+    <string name="nothing_watched_yet_desc">Xem gì đó và toàn bộ lịch sử sẽ hiển thị ở đây.</string>
+    <string name="favorites_size">%1$d MỤC</string>
+    <string name="select_all">Chọn tất cả</string>
+    <string name="deselect_all">Bỏ chọn tất cả</string>
+    <string name="long_press_to_select">Nhấn giữ để chọn</string>
+    <string name="account_activity">Hoạt động tài khoản</string>
+    <string name="preferences">Tùy chọn &amp; Hỗ trợ</string>
+    <string name="privacy_text">Quyền riêng tư</string>
+    <string name="share_app">Chia sẻ ứng dụng</string>
+
+    <!-- Header -->
+    <string name="notifications_title">Thông báo</string>
+    <string name="all_caught_up">Bạn đã xem hết</string>
+    <string name="unread_total_count">%1$d chưa đọc • %2$d tổng cộng</string>
+
+    <!-- Inbox count pill -->
+    <string name="unread_new_count">%1$d mới</string>
+
+    <!-- Relative time fallback -->
+    <string name="time_now">Bây giờ</string>
+
+    <!-- Report -->
+    <string name="report_issue">Báo cáo vấn đề</string>
+    <string name="report_issue_desc">Giúp chúng tôi cải thiện trải nghiệm xem của bạn</string>
+    <string name="please_select_reason">Vui lòng chọn lý do</string>
+
+
+    <!-- Subtitle -->
+    <string name="subtitle_size_small">Nhỏ</string>
+    <string name="subtitle_size_medium">Vừa</string>
+    <string name="subtitle_size_large">Lớn</string>
+
+
+    <!-- Share Text -->
+    <string name="share_watch">Xem</string>
+    <string name="share_default_title">phim ngắn DramaX này</string>
+    <string name="share_episode_on">Tập %1$d trên DramaX.</string>
+    <string name="share_get_app">Tải ứng dụng:</string>
+
+    <!-- Video Caption -->
+    <string name="watch_great_content">Xem nội dung tuyệt vời này</string>
+    <string name="trending">Thịnh hành</string>
+
+    <!-- Sidebar -->
+    <string name="share_label">Chia sẻ</string>
+    <string name="episodes_label">Tập phim</string>
+    <string name="cc_label">Phụ đề</string>
+    <string name="speed_label">Tốc độ</string>
 
 </resources>

@@ -9,7 +9,7 @@
     </string>
 
     <string name="splash_description">
-    استمتع بسرد قصصي مشوّق، مُختار خصيصًا
+    عِش تجربة سرد قصصي مليء بالإثارة، مُختار خصيصًا
     \nلأسرع لحظاتك.
     </string>
 
@@ -20,17 +20,17 @@
     <!-- Onboarding screen -->
     <string name="start_btn">ابدأ</string>
     <string name="next_btn">التالي</string>
-    <string name="onboarding_title_1">اكتشف دراما</string>
-    <string name="onboarding_accent_title_1">قصيرة رائعة</string>
-    <string name="onboarding_description_1">شاهد دراما قصيرة حصرية بآلاف الحلقات، مثالية لكل لحظة فراغ.</string>
+    <string name="onboarding_title_1">اكتشف دراما قصيرة</string>
+    <string name="onboarding_accent_title_1">مذهلة</string>
+    <string name="onboarding_description_1">شاهد مسلسلات قصيرة حصرية تضم آلاف الحلقات، مثالية لكل لحظة فراغ.</string>
 
     <string name="onboarding_title_2">مجموعة قصص</string>
-    <string name="onboarding_accent_title_2">لا نهاية لها</string>
-    <string name="onboarding_description_2">من الرومانسية والخيال إلى الإثارة والانتقام، اكتشف قصصًا جديدة كل يوم.</string>
+    <string name="onboarding_accent_title_2">لا حصر لها</string>
+    <string name="onboarding_description_2">من الرومانسية والفانتازيا إلى الإثارة والانتقام، اكتشف قصصًا جديدة كل يوم.</string>
 
     <string name="onboarding_title_3">شاهد في أي وقت،</string>
     <string name="onboarding_accent_title_3">في أي مكان</string>
-    <string name="onboarding_description_3">حمّل الحلقات واستمتع بمسلسلاتك المفضلة أينما كنت - حتى بدون اتصال بالإنترنت.</string>
+    <string name="onboarding_description_3">حمّل الحلقات واستمتع بمسلسلاتك المفضلة أينما ذهبت - حتى بدون اتصال.</string>
 
     <string name="onboarding_title_4">مكافآت ومهام يومية</string>
     <string name="onboarding_description_4">اكسب عملات مجانية كل يوم بمجرد المشاهدة. أكمل المهام لفتح الحلقات المميزة.</string>
@@ -40,7 +40,7 @@
     <string name="welcome_description">آلاف القصص التي لا تُنسى في انتظارك، ابدأ المشاهدة الآن.</string>
     <string name="get_started">ابدأ الآن</string>
     <!-- Home screen — top bar / moods -->
-    <string name="mood_hot">الأكثر رواجًا</string>
+    <string name="mood_hot">رائج</string>
     <string name="mood_happy">سعيد</string>
     <string name="mood_emotional">عاطفي</string>
     <string name="mood_action">أكشن</string>
@@ -58,9 +58,8 @@
     <!-- Continue watching -->
     <string name="continue_watching">متابعة المشاهدة</string>
     <string name="continue_watching_subtitle">تابع من آخر حلقة شاهدتها</string>
-    <string name="continue_watching_empty">ستظهر هنا الأفلام التي شاهدتها لمدة 10 ثوانٍ أو أكثر.</string>
     <string name="see_all">عرض الكل</string>
-    
+
     <!-- Trending / poster rails -->
     <string name="trending_now">الأكثر رواجًا الآن</string>
     <string name="recommended_for_you">موصى به لك</string>
@@ -85,26 +84,26 @@
 
     <!-- Bottom navigation -->
     <string name="nav_home">الرئيسية</string>
-    <string name="nav_shorts">قصيرة</string>
+    <string name="nav_shorts">مقاطع قصيرة</string>
     <string name="nav_library">قائمتي</string>
     <string name="nav_rewards">المكافآت</string>
     <string name="nav_planner">المخطط</string>
     <string name="nav_profile">الملف الشخصي</string>
 
     <!-- Library / Search -->
-    <string name="library_subtitle">محفوظة، مشاهَدة، ومختارة لك</string>
+    <string name="library_subtitle">المحفوظات، ما شاهدته، ومقترحات لك</string>
     <string name="watch_list">قائمة المشاهدة</string>
-    <string name="library_watch_list_subtitle">الأفلام المحفوظة والمُعلَّمة</string>
+    <string name="library_watch_list_subtitle">الأفلام المحفوظة والمُشار إليها</string>
     <string name="library_watch_list_empty">ستظهر الأفلام المحفوظة هنا.</string>
     <string name="similar_films">أفلام مشابهة</string>
     <string name="top_stars">أبرز النجوم</string>
-    <string name="top_stars_subtitle">مأخوذة من بيانات طاقم العمل المتاحة</string>
+    <string name="top_stars_subtitle">مستمدة من بيانات طاقم العمل المتوفرة</string>
     <string name="search_films_hint">ابحث عن أفلام...</string>
     <string name="search_results_count">%1$d نتيجة</string>
     <string name="no_films_found">لم يتم العثور على أفلام.</string>
     <string name="no_films_yet">لا توجد أفلام بعد.</string>
-    <string name="library_load_error">تعذّر تحديث مكتبتك في الوقت الحالي.</string>
-    <string name="search_error">تعذّر تحميل نتائج البحث في الوقت الحالي.</string>
+    <string name="library_load_error">تعذّر تحديث مكتبتك الآن.</string>
+    <string name="search_error">تعذّر تحميل نتائج البحث الآن.</string>
 
     <!-- Shorts Screen -->
 
@@ -137,14 +136,14 @@
     <!-- Playback Options -->
     <string name="playback_options">خيارات التشغيل</string>
 
-    <string name="auto_next_episode">تشغيل الحلقة التالية تلقائيًا</string>
+    <string name="auto_next_episode">الحلقة التالية تلقائيًا</string>
     <string name="auto_next_episode_desc">
     تشغيل الحلقة التالية تلقائيًا عند انتهاء هذه الحلقة.
 </string>
 
     <string name="auto_unlock_episodes">فتح الحلقات تلقائيًا</string>
     <string name="auto_unlock_episodes_desc">
-    يتم فتح الحلقة المقفلة التالية فقط بعد انتهاء الحلقة الحالية.
+    افتح الحلقة المقفلة التالية فقط بعد انتهاء الحلقة الحالية.
 </string>
 
     <!-- Feedback -->
@@ -154,7 +153,7 @@
 
     <!-- Subtitle -->
     <string name="subtitles">الترجمة</string>
-    <string name="subtitle_on">مفعّلة</string>
+    <string name="subtitle_on">تشغيل</string>
 
     <!-- Speed -->
     <string name="speed_1x">1x</string>
@@ -162,21 +161,21 @@
     <string name="speed_15x">1.5x</string>
     <string name="speed_2x">2x</string>
     <string name="speed_custom">%1$sx</string>
-    
+
     <!-- Profile Screen -->
     <string name="default_username">عاشق الدراما</string>
     <string name="update_profile_photo">تحديث صورة الملف الشخصي</string>
-    <string name="banner_image">صورة البانر</string>
-    <string name="avatar_image">صورة الأفاتار</string>
-    <string name="update_banner_image">تحديث صورة البانر</string>
-    <string name="update_avatar_image">تحديث صورة الأفاتار</string>
+    <string name="banner_image">صورة الغلاف</string>
+    <string name="avatar_image">الصورة الرمزية</string>
+    <string name="update_banner_image">تحديث صورة الغلاف</string>
+    <string name="update_avatar_image">تحديث الصورة الرمزية</string>
     <string name="choose_from_gallery">اختر من المعرض</string>
-    <string name="choose_an_avatar">اختر أفاتار</string>
+    <string name="choose_an_avatar">اختر صورة رمزية</string>
     <string name="cancel">إلغاء</string>
 
     <!-- Stats -->
     <string name="coins">العملات</string>
-    <string name="watched">تمت المشاهدة</string>
+    <string name="watched">تمت مشاهدته</string>
     <string name="episodes_cap">الحلقات</string>
 
     <!-- Quick Actions -->
@@ -196,7 +195,7 @@
     <string name="privacy">الخصوصية</string>
     <string name="rate_us">قيّمنا</string>
     <string name="privacy_policy">سياسة الخصوصية</string>
-    <string name="vip_gold_member">عضو VIP ذهبي</string>
+    <string name="vip_gold_member">عضو VIP الذهبي</string>
 
     <!-- Language Picker -->
     <string name="english">الإنجليزية</string>
@@ -211,19 +210,19 @@
     <string name="chinese">الصينية</string>
 
     <!-- Others -->
-    <string name="profile_avatar">أفاتار الملف الشخصي</string>
-    <string name="preset_avatar">أفاتار جاهز</string>
+    <string name="profile_avatar">الصورة الرمزية للملف الشخصي</string>
+    <string name="preset_avatar">صورة رمزية جاهزة</string>
     <string name="edit_profile_photo">تعديل صورة الملف الشخصي</string>
     <!-- Uninstall flow -->
-    <string name="uninstall_confirm_title">سجل مشاهدتك ودراماتك القصيرة المفضلة\nما زالت بانتظارك</string>
-    <string name="uninstall_confirm_description">أبقِ DramaX مثبتًا لمتابعة القصص\nوالمكافآت والحلقات الجديدة في أي وقت.</string>
+    <string name="uninstall_confirm_title">سجل مشاهدتك ومسلسلاتك القصيرة المفضلة\nما زالت في انتظارك</string>
+    <string name="uninstall_confirm_description">أبقِ تطبيق DramaX مثبتًا لمتابعة القصص\nوالمكافآت والحلقات الجديدة في أي وقت.</string>
     <string name="uninstall_try_again">حاول مرة أخرى</string>
     <string name="uninstall_still_want">ما زلت أريد إلغاء التثبيت</string>
-    <string name="uninstall_survey_title">المشكلات التي واجهتها أثناء الاستخدام</string>
+    <string name="uninstall_survey_title">المشاكل التي واجهتها أثناء الاستخدام</string>
     <string name="uninstall_reason_feature_not_working">الميزة لا تعمل</string>
     <string name="uninstall_reason_too_many_ads">إعلانات كثيرة جدًا</string>
     <string name="uninstall_reason_not_needed">لا أحتاج إليه</string>
-    <string name="uninstall_reason_other">أخرى</string>
+    <string name="uninstall_reason_other">آخر</string>
     <string name="uninstall_action">إلغاء التثبيت</string>
     <string name="uninstall_open_failed">تعذّر فتح شاشة إلغاء التثبيت</string>
     <!-- Home widget / uninstall flow -->
@@ -232,93 +231,264 @@
     <string name="widget_my_list">قائمتي</string>
     <string name="widget_uninstall">إلغاء التثبيت</string>
 
-    <string name="welcome_to_home_temp">مرحبًا بك في الصفحة الرئيسية</string>
+    <string name="welcome_to_home_temp">مرحبًا بك في الرئيسية</string>
 
     <string name="report_an_issue">الإبلاغ عن مشكلة</string>
-    <string name="report_an_issue_subtitle">ساعدنا في تحسين تجربة المشاهدة الخاصة بك</string>
+    <string name="report_an_issue_subtitle">ساعدنا في تحسين تجربة المشاهدة لديك</string>
 
     <string name="unlock_episode_title">افتح الحلقة %1$d لمتابعة المشاهدة</string>
     <string name="unlock_episode_desc">شاهد إعلانًا لفتح هذه الحلقة بشكل دائم ومتابعة القصة.</string>
     <string name="daily_progress">التقدم اليومي: %1$d/%2$d</string>
     <string name="watch_ad">مشاهدة إعلان</string>
-    <string name="unlock_permanent_note">الحلقات التي يتم فتحها عبر الإعلانات تصبح ملكًا لك للأبد.</string>
-    <string name="daily_limit_title">تم الوصول إلى الحد اليومي للفتح المجاني</string>
-    <string name="daily_limit_desc">لقد استخدمت جميع عمليات الفتح المجانية البالغة %1$d لهذا اليوم. ستتوفر المزيد من عمليات الفتح المجانية غدًا.</string>
-    <string name="browse_free_episodes">تصفح الحلقات المجانية</string>
+    <string name="unlock_permanent_note">الحلقات التي يتم فتحها بالإعلانات تبقى لك للأبد.</string>
+    <string name="daily_limit_title">تم الوصول للحد اليومي للفتح المجاني</string>
+    <string name="daily_limit_desc">لقد استخدمت جميع عمليات الفتح المجانية البالغة %1$d اليوم. ستتوفر المزيد غدًا.</string>
+    <string name="browse_free_episodes">تصفّح الحلقات المجانية</string>
 
-    <!-- Missing keys added to satisfy references in Kotlin sources -->
-    <string name="episode_locked">الحلقة مقفلة</string>
+    <string name="no_internet_title">لا يوجد اتصال بالإنترنت</string>
+    <string name="no_internet_desc">لا يوجد اتصال بالإنترنت. يرجى الاتصال بالإنترنت لاستخدام التطبيق.</string>
+    <string name="connect_internet">اتصل بالإنترنت</string>
+
+    <string name="rateus_dialog_title">هل تستمتع بـ DramaX؟</string>
+    <string name="rateus_dialog_subtitle">تقييمك سيساعد في تحسين جودة هذا التطبيق</string>
+
+    <string name="not_now">ليس الآن</string>
+    <string name="share_app_message">شاهد الدراما القصيرة على DramaX: https://play.google.com/store/apps/details?id=%1$s</string>
+    <string name="share_app_chooser_title">مشاركة DramaX</string>
+    <string name="no_episode_found">لم يتم العثور على حلقات</string>
+    <string name="episode_locked">الحلقة %1$d مقفلة</string>
     <string name="watch_ad_to_unlock">شاهد إعلانًا للفتح</string>
-    <string name="history_watching">قيد المشاهدة</string>
-    <string name="my_favorites">مفضلاتي</string>
-    <string name="no_favorites_yet">لا توجد مفضلات بعد</string>
-    <string name="favorites_empty_message">لم تقم بإضافة أي مفضلات بعد.</string>
-    <string name="deselect_all">إلغاء تحديد الكل</string>
-    <string name="select_all">تحديد الكل</string>
-    <string name="long_press_to_select">اضغط مطولًا للتحديد</string>
     <string name="recent_activity">النشاط الأخير</string>
     <string name="inbox">صندوق الوارد</string>
-    <string name="notification_desc">تحديثات حول حسابك وعروضك</string>
+    <string name="notification_desc">تذكيرات المخطط وتحديثات المكافآت في مكان واحد.</string>
     <string name="clearing">جارٍ المسح</string>
     <string name="clear">مسح</string>
     <string name="update">تحديث</string>
-    <string name="notification_body">لديك تحديثات جديدة</string>
+    <string name="notification_body">افتح DramaX للحصول على آخر التحديثات.</string>
     <string name="clearing_inbox">جارٍ مسح صندوق الوارد</string>
     <string name="no_notification_message">لا توجد إشعارات بعد</string>
-    <string name="removing_old_updates">جارٍ إزالة التحديثات القديمة</string>
-    <string name="planner_msg">جدول تذكيرات المشاهدة الخاصة بك</string>
-    <string name="schedule_planner_msg">اختر وقتًا للتذكير</string>
+    <string name="removing_old_updates">جارٍ إزالة التحديثات القديمة...</string>
+    <string name="planner_msg">ستظهر هنا تذكيرات المخطط وتحديثات المكافآت.</string>
+    <string name="schedule_planner_msg">جدولة الدراما المحفوظة والتذكيرات.</string>
     <string name="choose_saved_drama">اختر دراما محفوظة</string>
-    <string name="save_drama_first">احفظ دراما أولًا للجدولة</string>
-    <string name="schedule_label_msg">تسمية الجدول</string>
+    <string name="save_drama_first">احفظ الدراما أولاً</string>
+    <string name="schedule_label_msg">استخدم + في الرئيسية أو المقاطع القصيرة لبناء هذه القائمة.</string>
     <string name="schedule_reminder">جدولة تذكير</string>
     <string name="select_saved_drama">اختر دراما محفوظة</string>
-    <string name="account_activity">نشاط الحساب</string>
-    <string name="privacy_text">إدارة إعدادات الخصوصية الخاصة بك</string>
-    <string name="share_app">مشاركة التطبيق</string>
-    <string name="rateus_dialog_title">قيّم DramaX</string>
-    <string name="rateus_dialog_subtitle">هل تستمتع بالتطبيق؟ اترك تقييمًا!</string>
-    <string name="not_now">ليس الآن</string>
-    <string name="share_app_message">اكتشف DramaX — الكثير من الدراما القصيرة!</string>
-    <string name="share_app_chooser_title">مشاركة عبر</string>
-    <string name="fallback_genre_romance">رومانسي</string>
-    <string name="fallback_genre_drama">دراما</string>
-    <string name="fallback_genre_thriller">إثارة</string>
-    <string name="trending_searches">عمليات البحث الرائجة</string>
-    <string name="hot_searches">عمليات البحث الأكثر رواجًا</string>
-    <string name="badge_hot">رائج</string>
-    <string name="badge_new">جديد</string>
-    <string name="empty_state_mask_glyph">لا توجد نتائج</string>
-    <string name="no_results_found">لم يتم العثور على نتائج</string>
-    <string name="no_results_found_desc">جرّب مصطلح بحث مختلف.</string>
-    <string name="results_found_for_query">نتائج البحث عن "%1$s"</string>
-    <string name="badge_new_release">إصدار جديد</string>
-    <string name="badge_trending_first">الرائج رقم 1</string>
-    <string name="fallback_description">دراما قصيرة مليئة بالأسرار والمفاجآت.</string>
-    <string name="view_all">عرض الكل</string>
-    <string name="genre_fallback">دراما</string>
-    <string name="must_unlock_episode_first">يرجى فتح الحلقات السابقة أولًا.</string>
-    <string name="episode_count">%1$d حلقة</string>
-    <string name="episodes_range">الحلقات %1$d-%2$d</string>
+    <string name="episode_count">%1$d/%2$d</string>
+    <string name="episodes_range">الحلقات %1$d - %2$d</string>
+    <string name="must_unlock_episode_first">يرجى فتح الحلقات السابقة أولاً.</string>
     <string name="subtitle_small">صغير</string>
     <string name="subtitle_medium">متوسط</string>
     <string name="subtitle_large">كبير</string>
-    <string name="report_reason_episode_error">خطأ في تشغيل الحلقة</string>
+    <string name="report_reason_episode_error">خطأ في الحلقة</string>
     <string name="report_reason_paid_film_too_long">الفيلم المدفوع طويل جدًا</string>
     <string name="report_reason_low_quality">جودة منخفضة</string>
     <string name="report_reason_subtitle_missing">الترجمة مفقودة</string>
     <string name="report_reason_inaccurate_subtitle">ترجمة غير دقيقة</string>
-    <string name="report_reason_other">أخرى</string>
-    <string name="loading_share_apps">جارٍ تحميل التطبيقات...</string>
+    <string name="report_reason_other">آخر</string>
+    <string name="loading_share_apps">جارٍ تحميل تطبيقات المشاركة</string>
+    <string name="welcome_back_emoji">👋</string>
+    <string name="welcome_back_title">مرحبًا بعودتك!</string>
+    <string name="welcome_back_description">يسعدنا رؤيتك مجددًا.\nاستمتع بدراما وعروض لا حدود لها!</string>
+    <string name="continue_text">متابعة</string>
+    <string name="auto_advancing">الانتقال تلقائيًا خلال 3 ثوانٍ...</string>
+
+    <string name="tab_popular">الأكثر شهرة</string>
+    <string name="tab_new">جديد</string>
+    <string name="tab_ranking">الترتيب</string>
+    <string name="tab_categories">الفئات</string>
+
+    <string name="filter_all">الكل</string>
+    <string name="filter_male">ذكور</string>
+    <string name="filter_female">إناث</string>
+
+    <string name="category_modern">عصري</string>
+    <string name="category_historical">تاريخي</string>
+    <string name="category_fantasy">فانتازيا</string>
+    <string name="category_romance">رومانسي</string>
+
+    <string name="sort_newest">الأحدث</string>
+    <string name="sort_popular">الأكثر شهرة</string>
+    <string name="sort_rating">التقييم</string>
+    <string name="sort_trending">الرائج</string>
+
+    <string name="audience">الجمهور</string>
+    <string name="category">الفئة</string>
+    <string name="filters">التصفية</string>
+    <string name="sort_by">الترتيب حسب</string>
+
+    <string name="apply_filters">تطبيق التصفية</string>
+    <string name="apply_sort">تطبيق الترتيب</string>
+
+    <string name="featured_highlights">أبرز المحتوى المميز</string>
+    <string name="fresh_on_dramax">جديد على DramaX</string>
+    <string name="weekly_top_20">أفضل 20 هذا الأسبوع</string>
+
+    <string name="my_favorites">مفضلتي</string>
+    <string name="no_favorites_yet">لا توجد مفضلات بعد</string>
+    <string name="favorites_empty_message">أضِف دراما إلى المفضلة لتظهر هنا.</string>
+
+    <string name="watch_something">شاهد شيئًا ما</string>
+    <string name="continue_watching_empty">ابدأ مشاهدة دراما وستظهر هنا.</string>
+
+    <string name="updated_3h_ago">تم التحديث قبل 3 ساعات</string>
+
+    <string name="badge_hot">رائج</string>
+    <string name="badge_new">جديد</string>
+    <string name="start">ابدأ</string>
+
+    <string name="top_rank">المركز %1$d</string>
+
+    <string name="episode_info">الحلقة %1$d من %2$d • %3$s</string>
+
+    <string name="genre_episode_total">%1$s - %2$d حلقة</string>
+    <string name="genre_episode">%1$s - الحلقة %2$d</string>
+
+    <string name="rating_genre">%1$s - %2$s</string>
+
+    <string name="time_left_minutes">تبقّى %1$d دقيقة</string>
+    <string name="time_left_hours">تبقّى %1$dس %2$dد</string>
+
+    <string-array name="audience_keywords_male">
+        <item>action</item>
+        <item>thriller</item>
+        <item>revenge</item>
+        <item>war</item>
+        <item>crime</item>
+        <item>ceo</item>
+        <item>billionaire</item>
+        <item>fantasy</item>
+    </string-array>
+
+    <string-array name="audience_keywords_female">
+        <item>romance</item>
+        <item>love</item>
+        <item>family</item>
+        <item>heir</item>
+        <item>bride</item>
+        <item>wife</item>
+        <item>autumn</item>
+        <item>drama</item>
+    </string-array>
+
+    <string-array name="category_keywords_modern">
+        <item>modern</item>
+        <item>ceo</item>
+        <item>billionaire</item>
+        <item>city</item>
+        <item>office</item>
+        <item>finance</item>
+        <item>tech</item>
+    </string-array>
+
+    <string-array name="category_keywords_historical">
+        <item>historical</item>
+        <item>king</item>
+        <item>queen</item>
+        <item>empire</item>
+        <item>legacy</item>
+        <item>dynasty</item>
+        <item>ancient</item>
+    </string-array>
+
+    <string-array name="category_keywords_fantasy">
+        <item>fantasy</item>
+        <item>magic</item>
+        <item>crimson</item>
+        <item>shadow</item>
+        <item>void</item>
+        <item>supernatural</item>
+    </string-array>
+
+    <string-array name="category_keywords_romance">
+        <item>romance</item>
+        <item>love</item>
+        <item>vow</item>
+        <item>bride</item>
+        <item>wife</item>
+        <item>autumn</item>
+    </string-array>
+
+    <!-- Section headers -->
+    <string name="trending_searches">عمليات البحث الرائجة</string>
+    <string name="hot_searches">عمليات البحث الشائعة</string>
+    <string name="view_all">عرض الكل</string>
+
+    <!-- Badges -->
+    <string name="badge_trending_first">الرائج رقم 1</string>
+    <string name="badge_new_release">إصدار جديد</string>
+
+    <!-- Filters row -->
+    <string name="results_found_for_query">تم العثور على %1$d نتيجة لـ \"%2$s\"</string>
+
+    <!-- Empty search state -->
+    <string name="no_results_found">لم يتم العثور على نتائج</string>
+    <string name="no_results_found_desc">لم نتمكن من العثور على أي دراما تطابق بحثك \"%1$s\". جرّب كلمة مختلفة.</string>
+    <string name="empty_state_mask_glyph">x</string>
+
+    <!-- Empty catalog state -->
+    <string name="no_dramas_loaded_title">لم يتم تحميل أي دراما بعد</string>
+    <string name="no_dramas_loaded_desc">افتح الرئيسية بمجرد توفر القائمة، وسيستخدم البحث بعد ذلك هذه الدراما الحقيقية.</string>
+
+    <!-- Genre tag fallback -->
+    <string name="genre_fallback">دراما</string>
+
+    <!-- Fallback content (used when API fields are blank) -->
+    <string name="fallback_description">تتكشف الأسرار حين يكتشف وريث ثري أن الماضي كان كذبة.</string>
+    <string name="fallback_genre_romance">رومانسي</string>
+    <string name="fallback_genre_drama">دراما</string>
+    <string name="fallback_genre_thriller">إثارة</string>
+    <string name="history_watching">سجل المشاهدة</string>
     <string name="items_watched">%1$d عنصر تمت مشاهدته</string>
     <string name="nothing_watched_yet">لم تتم مشاهدة أي شيء بعد</string>
-    <string name="nothing_watched_yet_desc">شاهد الحلقات لبضع ثوانٍ لتتبع التقدم هنا.</string>
-    <string name="favorites_size">%1$d مفضلة</string>
-    <string name="no_dramas_loaded_title">لم يتم تحميل أي دراما</string>
-    <string name="no_dramas_loaded_desc">تعذّر تحميل الدراما في الوقت الحالي. حاول مرة أخرى لاحقًا.</string>
+    <string name="nothing_watched_yet_desc">شاهد شيئًا ما وسيظهر سجلك الكامل هنا.</string>
+    <string name="favorites_size">%1$d عنصر</string>
+    <string name="select_all">تحديد الكل</string>
+    <string name="deselect_all">إلغاء تحديد الكل</string>
+    <string name="long_press_to_select">اضغط مطولًا للتحديد</string>
+    <string name="account_activity">نشاط الحساب</string>
+    <string name="preferences">التفضيلات والدعم</string>
+    <string name="privacy_text">الخصوصية</string>
+    <string name="share_app">مشاركة التطبيق</string>
 
-    <string name="no_internet_title">لا يوجد اتصال بالإنترنت</string>
-    <string name="no_internet_desc">لا يوجد اتصال بالإنترنت. يرجى الاتصال بالإنترنت لاستخدام التطبيق.</string>
-    <string name="connect_internet">الاتصال بالإنترنت</string>
+    <!-- Header -->
+    <string name="notifications_title">الإشعارات</string>
+    <string name="all_caught_up">لقد اطّلعت على كل شيء</string>
+    <string name="unread_total_count">%1$d غير مقروء • %2$d إجمالي</string>
+
+    <!-- Inbox count pill -->
+    <string name="unread_new_count">%1$d جديد</string>
+
+    <!-- Relative time fallback -->
+    <string name="time_now">الآن</string>
+
+    <!-- Report -->
+    <string name="report_issue">الإبلاغ عن مشكلة</string>
+    <string name="report_issue_desc">ساعدنا في تحسين تجربة المشاهدة لديك</string>
+    <string name="please_select_reason">يرجى اختيار سبب</string>
+
+
+    <!-- Subtitle -->
+    <string name="subtitle_size_small">صغير</string>
+    <string name="subtitle_size_medium">متوسط</string>
+    <string name="subtitle_size_large">كبير</string>
+
+
+    <!-- Share Text -->
+    <string name="share_watch">شاهد</string>
+    <string name="share_default_title">هذا المقطع القصير من DramaX</string>
+    <string name="share_episode_on">الحلقة %1$d على DramaX.</string>
+    <string name="share_get_app">احصل على التطبيق:</string>
+
+    <!-- Video Caption -->
+    <string name="watch_great_content">شاهد هذا المحتوى الرائع</string>
+    <string name="trending">رائج</string>
+
+    <!-- Sidebar -->
+    <string name="share_label">مشاركة</string>
+    <string name="episodes_label">الحلقات</string>
+    <string name="cc_label">الترجمة</string>
+    <string name="speed_label">السرعة</string>
 
 </resources>
