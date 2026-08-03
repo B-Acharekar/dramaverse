@@ -1,35 +1,44 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="app_name">DramaX</string>
 
     <!-- Splash Screen -->
     <string name="app_name_display">DramaX</string>
 
-    <string name="splash_tagline">Kısa Drama Dizileri</string>
-    <string name="splash_description">En kısa anlarınız için hazırlanmış sürükleyici hikâyelerin keyfini çıkarın.</string>
+    <string name="splash_tagline">
+    Kısa Dizi Serileri
+    </string>
+
+    <string name="splash_description">
+    En yoğun anlarınız için seçilmiş
+    \nsürükleyici hikaye anlatımını yaşayın.
+    </string>
 
     <!-- Language screen -->
     <string name="language_title">Dil</string>
-    <string name="done">TAMAM</string>
+    <string name="done">BİTTİ</string>
 
     <!-- Onboarding screen -->
     <string name="start_btn">Başla</string>
     <string name="next_btn">İleri</string>
+    <string name="onboarding_title_1">Harika</string>
+    <string name="onboarding_accent_title_1">Kısa Dizileri Keşfet</string>
+    <string name="onboarding_description_1">Her boş anınız için mükemmel, binlerce bölümden oluşan özel kısa dizileri izleyin.</string>
 
-    <string name="onboarding_title_1">Muhteşem</string>
-    <string name="onboarding_accent_title_1">kısa dizileri keşfet</string>
-    <string name="onboarding_description_1">Binlerce bölümü olan özel kısa dizileri izle, her boş an için mükemmel.</string>
+    <string name="onboarding_title_2">Sonu Gelmeyen Hikaye</string>
+    <string name="onboarding_accent_title_2">Koleksiyonu</string>
+    <string name="onboarding_description_2">Romantizm ve fantaziden gerilim ve intikama kadar, her gün yeni hikayeler keşfedin.</string>
 
-    <string name="onboarding_title_2">Sonsuz Hikayeler</string>
-    <string name="onboarding_accent_title_2">Koleksiyon</string>
-    <string name="onboarding_description_2">Romantik ve fantastikten gerilim ve intikama kadar her gün yeni hikayeler keşfet.</string>
-
-    <string name="onboarding_title_3">İstediğin zaman izle,</string>
-    <string name="onboarding_accent_title_3">her yerde</string>
-    <string name="onboarding_description_3">Bölümleri indir ve favori dizilerini gittiğin her yerde, çevrimdışıyken bile izle.</string>
+    <string name="onboarding_title_3">İstediğin zaman,</string>
+    <string name="onboarding_accent_title_3">istediğin yerde izle</string>
+    <string name="onboarding_description_3">Bölümleri indirin ve favori dizilerinizin keyfini nerede olursanız olun çıkarın - çevrimdışıyken bile.</string>
 
     <string name="onboarding_title_4">Günlük Ödüller ve Görevler</string>
-    <string name="onboarding_description_4">Sadece izleyerek her gün ücretsiz jeton kazanın. Premium bölümlerin kilidini açmak için görevleri tamamlayın.</string>
+    <string name="onboarding_description_4">Sadece izleyerek her gün ücretsiz coin kazanın. Premium bölümlerin kilidini açmak için görevleri tamamlayın.</string>
 
+    <string name="welcome_title">Hoş geldiniz </string>
+    <string name="welcome_accent_title">DramaX</string>
+    <string name="welcome_description">Binlerce unutulmaz hikaye sizi bekliyor. Şimdi izlemeye başlayın.</string>
+    <string name="get_started">Başlayın</string>
     <!-- Home screen — top bar / moods -->
     <string name="mood_hot">Popüler</string>
     <string name="mood_happy">Mutlu</string>
@@ -37,59 +46,64 @@
     <string name="mood_action">Aksiyon</string>
     <string name="mood_romance">Romantik</string>
     <string name="mood_horror">Korku</string>
-    <string name="mood_mind_blowing">Şaşırtıcı</string>
+    <string name="mood_mind_blowing">Akıl Almaz</string>
     <string name="mood_relax">Rahatlatıcı</string>
 
     <!-- Hero section -->
     <string name="featured">ÖNE ÇIKAN</string>
     <string name="watch_now">Şimdi İzle</string>
+    <string name="save">Kaydet</string>
+    <string name="saved">Kaydedildi</string>
 
     <!-- Continue watching -->
     <string name="continue_watching">İzlemeye Devam Et</string>
+    <string name="continue_watching_subtitle">Son bölümünüzden devam edin</string>
+    <string name="continue_watching_empty">10 saniye veya daha uzun süre izlenen filmler burada görünür.</string>
     <string name="see_all">TÜMÜNÜ GÖR</string>
-
+    
     <!-- Trending / poster rails -->
-    <string name="trending_now">Trend Olanlar</string>
-    <string name="recommended_for_you">Size Özel</string>
+    <string name="trending_now">Şu An Trend</string>
+    <string name="recommended_for_you">Size Özel Öneriler</string>
     <string name="trending_tag">TREND</string>
-    <string name="episodes_count">%1$d Bölüm</string>
+    <string name="episodes_count">%1$d Böl.</string>
     <string name="premium">PREMIUM</string>
-    <string name="rating_value">★ %1$s</string>
+    <string name="rating_value">* %1$s</string>
 
     <!-- Top rated -->
-    <string name="top_rated_this_week">Bu Haftanın En Beğenilenleri</string>
+    <string name="top_rated_this_week">Bu Haftanın En Çok Beğenilenleri</string>
     <string name="weekly_top_1">HAFTANIN 1 NUMARASI</string>
-    <string name="rating_genre_episodes">★ %1$s    %2$s    %3$d Bölüm</string>
+    <string name="rating_genre_episodes">* %1$s    %2$s    %3$d Böl.</string>
 
     <!-- Action cards -->
     <string name="vip_short">VIP</string>
     <string name="join_vip_club">VIP Kulübüne Katıl</string>
-    <string name="unlock_all_episodes">Bugün tüm\nbölümlerin kilidini aç</string>
+    <string name="unlock_all_episodes">Bugün tüm bölümlerin\nkilidini aç</string>
+    <string name="schedule">Program</string>
     <string name="daily_reward_short">50</string>
     <string name="daily_rewards">Günlük Ödüller</string>
-    <string name="claim_daily_coins">Günlük 50 jetonunu al</string>
+    <string name="claim_daily_coins">50 coininizi alın</string>
 
     <!-- Bottom navigation -->
     <string name="nav_home">Ana Sayfa</string>
-    <string name="nav_shorts">Shorts</string>
-    <string name="nav_library">Kütüphane</string>
+    <string name="nav_shorts">Kısalar</string>
+    <string name="nav_library">Listem</string>
     <string name="nav_rewards">Ödüller</string>
+    <string name="nav_planner">Planlayıcı</string>
     <string name="nav_profile">Profil</string>
 
     <!-- Library / Search -->
-    <string name="continue_watching_subtitle">Son bölümünden devam et</string>
-    <string name="library_subtitle">Kaydedilenler, izlenenler ve senin için seçilenler</string>
-    <string name="watch_list">İzleme listesi</string>
-    <string name="library_watch_list_subtitle">Kaydedilen ve işaretlenen filmler</string>
+    <string name="library_subtitle">Kaydedilen, izlenen ve sizin için seçilenler</string>
+    <string name="watch_list">İzleme Listesi</string>
+    <string name="library_watch_list_subtitle">Kaydedilen ve favorilere eklenen filmler</string>
     <string name="library_watch_list_empty">Kaydedilen filmler burada görünür.</string>
-    <string name="similar_films">Benzer filmler</string>
-    <string name="top_stars">En iyi yıldızlar</string>
-    <string name="top_stars_subtitle">Mevcut oyuncu verilerinden alındı</string>
+    <string name="similar_films">Benzer Filmler</string>
+    <string name="top_stars">En İyi Yıldızlar</string>
+    <string name="top_stars_subtitle">Mevcut film kadro verilerinden alınmıştır</string>
     <string name="search_films_hint">Film ara...</string>
     <string name="search_results_count">%1$d sonuç</string>
     <string name="no_films_found">Film bulunamadı.</string>
     <string name="no_films_yet">Henüz film yok.</string>
-    <string name="library_load_error">Kitaplığın şu anda yenilenemedi.</string>
+    <string name="library_load_error">Kitaplığınız şu anda yenilenemedi.</string>
     <string name="search_error">Arama sonuçları şu anda yüklenemedi.</string>
 
     <!-- Shorts Screen -->
@@ -102,7 +116,7 @@
     <!-- Actions -->
     <string name="share">Paylaş</string>
     <string name="episodes">Bölümler</string>
-    <string name="cc">Altyazılar</string>
+    <string name="cc">Altyazı</string>
     <string name="speed">Hız</string>
 
     <!-- Episode -->
@@ -110,26 +124,32 @@
     <string name="episode_title">Bölüm %1$d</string>
     <string name="playing">Oynatılıyor</string>
     <string name="free">Ücretsiz</string>
-    <string name="trending_number">Trend #1</string>
+    <string name="trending_number">1 Numaralı Trend</string>
 
     <!-- Description -->
-    <string name="default_short_description">Sırlar, romantizm ve intikamla dolu kısa bir dizi.</string>
+    <string name="default_short_description">
+    Sırlar, romantizm ve intikamla dolu kısa bir dizi.
+</string>
 
-    <string name="view_more">Daha Fazla Göster</string>
-    <string name="view_less">Daha Az Göster</string>
+    <string name="view_more">Daha fazla göster</string>
+    <string name="view_less">Daha az göster</string>
 
     <!-- Playback Options -->
-    <string name="playback_options">Oynatma Seçenekleri</string>
+    <string name="playback_options">Oynatma seçenekleri</string>
 
-    <string name="auto_next_episode">Sonraki bölümü otomatik oynat</string>
-    <string name="auto_next_episode_desc">Mevcut bölüm bittiğinde sonraki bölümü otomatik olarak oynat.</string>
+    <string name="auto_next_episode">Otomatik sonraki bölüm</string>
+    <string name="auto_next_episode_desc">
+    Bu bölüm bittiğinde bir sonraki bölümü otomatik olarak oynatır.
+</string>
 
-    <string name="auto_unlock_episodes">Bölümlerin kilidini otomatik aç</string>
-    <string name="auto_unlock_episodes_desc">Mevcut bölüm bittikten sonra yalnızca bir sonraki kilitli bölümün kilidini aç.</string>
+    <string name="auto_unlock_episodes">Bölümleri otomatik kilit aç</string>
+    <string name="auto_unlock_episodes_desc">
+    Mevcut bölüm bittikten sonra yalnızca bir sonraki kilitli bölümün kilidini açar.
+</string>
 
     <!-- Feedback -->
-    <string name="send_feedback">Geri Bildirim Gönder</string>
-    <string name="feedback_hint">Bize neyin yanlış gittiğini söyleyin...</string>
+    <string name="send_feedback">Geri bildirim gönder</string>
+    <string name="feedback_hint">Neyin yanlış gittiğini bize anlatın...</string>
     <string name="submit">Gönder</string>
 
     <!-- Subtitle -->
@@ -138,24 +158,25 @@
 
     <!-- Speed -->
     <string name="speed_1x">1x</string>
-    <string name="speed_125x">1.25x</string>
-    <string name="speed_15x">1.5x</string>
+    <string name="speed_125x">1,25x</string>
+    <string name="speed_15x">1,5x</string>
     <string name="speed_2x">2x</string>
     <string name="speed_custom">%1$sx</string>
-
-    <string name="default_username">Drama Hayranı</string>
+    
+    <!-- Profile Screen -->
+    <string name="default_username">Dizi Tutkunu</string>
     <string name="update_profile_photo">Profil Fotoğrafını Güncelle</string>
-    <string name="banner_image">Afiş Görseli</string>
+    <string name="banner_image">Banner Görseli</string>
     <string name="avatar_image">Avatar Görseli</string>
-    <string name="update_banner_image">Afiş Görselini Güncelle</string>
+    <string name="update_banner_image">Banner Görselini Güncelle</string>
     <string name="update_avatar_image">Avatar Görselini Güncelle</string>
     <string name="choose_from_gallery">Galeriden Seç</string>
     <string name="choose_an_avatar">Bir Avatar Seç</string>
     <string name="cancel">İptal</string>
 
     <!-- Stats -->
-    <string name="coins">JETON</string>
-    <string name="watched">İZLENDİ</string>
+    <string name="coins">COİN</string>
+    <string name="watched">İZLENEN</string>
     <string name="episodes_cap">BÖLÜMLER</string>
 
     <!-- Quick Actions -->
@@ -173,9 +194,9 @@
     <string name="settings">Ayarlar</string>
     <string name="help_center">Yardım Merkezi</string>
     <string name="privacy">GİZLİLİK</string>
-    <string name="rate_us">Bizi Değerlendir</string>
+    <string name="rate_us">Bizi Değerlendirin</string>
     <string name="privacy_policy">Gizlilik Politikası</string>
-    <string name="vip_gold_member">VIP ALTIN ÜYE</string>
+    <string name="vip_gold_member">VIP GOLD ÜYE</string>
 
     <!-- Language Picker -->
     <string name="english">İngilizce</string>
@@ -193,227 +214,111 @@
     <string name="profile_avatar">Profil avatarı</string>
     <string name="preset_avatar">Hazır avatar</string>
     <string name="edit_profile_photo">Profil fotoğrafını düzenle</string>
-
-    <string name="welcome_title">DramaX\'e Hoş Geldiniz </string>
-    <string name="welcome_accent_title">DramaX</string>
-    <string name="welcome_description">Binlerce unutulmaz hikâye sizi bekliyor. Hemen izlemeye başlayın.</string>
-    <string name="get_started">Başlayın</string>
     <!-- Uninstall flow -->
-    <string name="uninstall_confirm_title">İzleme geçmişin ve favori kısa dizilerin\nhala seni bekliyor</string>
-    <string name="uninstall_confirm_description">Hikayelere, ödüllere ve yeni bölümlere her zaman devam etmek için\nDramaX yüklü kalsın.</string>
-    <string name="uninstall_try_again">Tekrar dene</string>
+    <string name="uninstall_confirm_title">İzleme geçmişiniz ve favori kısa dizileriniz\nhâlâ sizi bekliyor</string>
+    <string name="uninstall_confirm_description">Hikayelere, ödüllere ve yeni bölümlere\nher zaman devam etmek için DramaX\'i yüklü tutun.</string>
+    <string name="uninstall_try_again">Tekrar Dene</string>
     <string name="uninstall_still_want">Yine de kaldırmak istiyorum</string>
     <string name="uninstall_survey_title">Kullanım sırasında karşılaşılan sorunlar</string>
     <string name="uninstall_reason_feature_not_working">Özellik çalışmıyor</string>
     <string name="uninstall_reason_too_many_ads">Çok fazla reklam</string>
-    <string name="uninstall_reason_not_needed">Buna ihtiyacım yok</string>
+    <string name="uninstall_reason_not_needed">İhtiyacım yok</string>
     <string name="uninstall_reason_other">Diğer</string>
     <string name="uninstall_action">Kaldır</string>
     <string name="uninstall_open_failed">Kaldırma ekranı açılamadı</string>
-
-    <string name="welcome_to_home_temp">Ana Sayfaya Hoş Geldiniz</string>
-
-    <!-- Widget strings -->
-    <string name="widget_home">Anasayfa</string>
+    <!-- Home widget / uninstall flow -->
+    <string name="widget_description" translatable="false">DramaX quick actions</string>
+    <string name="widget_home">Ana Sayfa</string>
     <string name="widget_my_list">Listem</string>
     <string name="widget_uninstall">Kaldır</string>
 
-    <string name="rateus_dialog_title">DramaX\'i beğeniyor musunuz?</string>
-    <string name="rateus_dialog_subtitle">Değerlendirmeniz, bu uygulamanın kalitesini geliştirmemize yardımcı olacaktır.</string>
+    <string name="welcome_to_home_temp">Ana sayfaya hoş geldiniz</string>
 
-    <string name="not_now">Şimdi değil</string>
-    <string name="share_app_message">DramaX\'te kısa dizileri izleyin: https://play.google.com/store/apps/details?id=%1$s</string>
-    <string name="share_app_chooser_title">DramaX\'i Paylaş</string>
-    <string name="no_episode_found">Bölüm bulunamadı</string>
-    <string name="episode_locked">%1$d. Bölüm Kilitli</string>
-    <string name="watch_ad_to_unlock">Kilidi Açmak İçin Reklam İzle</string>
+    <string name="report_an_issue">Sorun Bildir</string>
+    <string name="report_an_issue_subtitle">İzleme deneyiminizi geliştirmemize yardımcı olun</string>
+
+    <string name="unlock_episode_title">İzlemeye devam etmek için Bölüm %1$d\'in kilidini açın</string>
+    <string name="unlock_episode_desc">Bu bölümün kilidini kalıcı olarak açmak ve hikayeye devam etmek için bir reklam izleyin.</string>
+    <string name="daily_progress">Günlük İlerleme: %1$d/%2$d</string>
+    <string name="watch_ad">Reklam İzle</string>
+    <string name="unlock_permanent_note">Reklamla kilidi açılan bölümler sonsuza kadar sizindir.</string>
+    <string name="daily_limit_title">Günlük Ücretsiz Kilit Açma Limitine Ulaşıldı</string>
+    <string name="daily_limit_desc">Bugünkü %1$d ücretsiz kilit açma hakkınızın tamamını kullandınız. Daha fazla ücretsiz kilit açma yarın kullanılabilir olacak.</string>
+    <string name="browse_free_episodes">Ücretsiz Bölümlere Göz At</string>
+
+    <!-- Missing keys added to satisfy references in Kotlin sources -->
+    <string name="episode_locked">Bölüm kilitli</string>
+    <string name="watch_ad_to_unlock">Kilidi açmak için reklam izleyin</string>
+    <string name="history_watching">İzleniyor</string>
+    <string name="my_favorites">Favorilerim</string>
+    <string name="no_favorites_yet">Henüz favori yok</string>
+    <string name="favorites_empty_message">Henüz favori eklemediniz.</string>
+    <string name="deselect_all">Tüm seçimi kaldır</string>
+    <string name="select_all">Tümünü seç</string>
+    <string name="long_press_to_select">Seçmek için basılı tutun</string>
     <string name="recent_activity">Son Etkinlik</string>
     <string name="inbox">Gelen Kutusu</string>
-    <string name="notification_desc">Planlayıcı hatırlatmaları ve ödül güncellemeleri tek yerde.</string>
+    <string name="notification_desc">Hesabınız ve dizileriniz hakkındaki güncellemeler</string>
     <string name="clearing">Temizleniyor</string>
     <string name="clear">Temizle</string>
     <string name="update">Güncelle</string>
-    <string name="notification_body">En son güncellemeyi görmek için DramaX\'i açın.</string>
-    <string name="clearing_inbox">Gelen Kutusu Temizleniyor</string>
+    <string name="notification_body">Yeni güncellemeleriniz var</string>
+    <string name="clearing_inbox">Gelen kutusu temizleniyor</string>
     <string name="no_notification_message">Henüz bildirim yok</string>
-    <string name="removing_old_updates">Eski güncellemeler kaldırılıyor...</string>
-    <string name="planner_msg">Planlayıcı hatırlatmaları ve ödül güncellemeleri burada görünecek.</string>
-    <string name="schedule_planner_msg">Kaydedilen diziler ve hatırlatıcılar için plan oluşturun.</string>
-    <string name="choose_saved_drama">Kaydedilen Diziyi Seç</string>
-    <string name="save_drama_first">Önce bir dizi kaydedin</string>
-    <string name="schedule_label_msg">Bu listeyi oluşturmak için Ana Sayfa veya Shorts\'taki + düğmesini kullanın.</string>
+    <string name="removing_old_updates">Eski güncellemeler kaldırılıyor</string>
+    <string name="planner_msg">İzleme hatırlatıcılarınızı planlayın</string>
+    <string name="schedule_planner_msg">Hatırlatma için bir zaman seçin</string>
+    <string name="choose_saved_drama">Kaydedilmiş bir dizi seçin</string>
+    <string name="save_drama_first">Planlamak için önce bir dizi kaydedin</string>
+    <string name="schedule_label_msg">Program etiketi</string>
     <string name="schedule_reminder">Hatırlatıcı Planla</string>
-    <string name="select_saved_drama">Kaydedilen Diziyi Seç</string>
-    <string name="episode_count">%1$d/%2$d</string>
-    <string name="episodes_range">Bölümler %1$d - %2$d</string>
+    <string name="select_saved_drama">Kaydedilmiş bir dizi seçin</string>
+    <string name="account_activity">Hesap Etkinliği</string>
+    <string name="privacy_text">Gizlilik ayarlarınızı yönetin</string>
+    <string name="share_app">Uygulamayı Paylaş</string>
+    <string name="rateus_dialog_title">DramaX\'i Değerlendirin</string>
+    <string name="rateus_dialog_subtitle">Uygulamayı beğendiniz mi? Bir değerlendirme bırakın!</string>
+    <string name="not_now">Şimdi değil</string>
+    <string name="share_app_message">DramaX\'i keşfedin — bir sürü kısa dizi!</string>
+    <string name="share_app_chooser_title">Şununla paylaş</string>
+    <string name="fallback_genre_romance">Romantik</string>
+    <string name="fallback_genre_drama">Dram</string>
+    <string name="fallback_genre_thriller">Gerilim</string>
+    <string name="trending_searches">Trend Aramalar</string>
+    <string name="hot_searches">Popüler Aramalar</string>
+    <string name="badge_hot">POPÜLER</string>
+    <string name="badge_new">YENİ</string>
+    <string name="empty_state_mask_glyph">Sonuç yok</string>
+    <string name="no_results_found">Sonuç bulunamadı</string>
+    <string name="no_results_found_desc">Farklı bir arama terimi deneyin.</string>
+    <string name="results_found_for_query">"%1$s" için sonuçlar</string>
+    <string name="badge_new_release">YENİ ÇIKAN</string>
+    <string name="badge_trending_first">1 NUMARALI TREND</string>
+    <string name="fallback_description">Sırlar ve sürprizlerle dolu kısa bir dizi.</string>
+    <string name="view_all">Tümünü Gör</string>
+    <string name="genre_fallback">Dram</string>
+    <string name="must_unlock_episode_first">Lütfen önce önceki bölümlerin kilidini açın.</string>
+    <string name="episode_count">%1$d bölüm</string>
+    <string name="episodes_range">Bölüm %1$d-%2$d</string>
     <string name="subtitle_small">Küçük</string>
     <string name="subtitle_medium">Orta</string>
     <string name="subtitle_large">Büyük</string>
-    <string name="report_reason_episode_error">Bölüm hatası</string>
+    <string name="report_reason_episode_error">Bölüm oynatma hatası</string>
     <string name="report_reason_paid_film_too_long">Ücretli film çok uzun</string>
     <string name="report_reason_low_quality">Düşük kalite</string>
     <string name="report_reason_subtitle_missing">Altyazı eksik</string>
     <string name="report_reason_inaccurate_subtitle">Hatalı altyazı</string>
     <string name="report_reason_other">Diğer</string>
-    <string name="loading_share_apps">Paylaşım uygulamaları yükleniyor</string>
-    <string name="welcome_back_emoji">👋</string>
-    <string name="welcome_back_title">Tekrar Hoş Geldiniz!</string>
-    <string name="welcome_back_description">Sizi tekrar görmek harika.\nSınırsız drama ve dizilerin keyfini çıkarın!</string>
-    <string name="continue_text">Devam Et</string>
-    <string name="auto_advancing">3 saniye içinde otomatik ilerleniyor...</string>
+    <string name="loading_share_apps">Uygulamalar yükleniyor...</string>
+    <string name="items_watched">%1$d öğe izlendi</string>
+    <string name="nothing_watched_yet">Henüz bir şey izlenmedi</string>
+    <string name="nothing_watched_yet_desc">İlerlemeyi burada takip etmek için bölümleri birkaç saniye izleyin.</string>
+    <string name="favorites_size">%1$d favori</string>
+    <string name="no_dramas_loaded_title">Dizi yüklenemedi</string>
+    <string name="no_dramas_loaded_desc">Şu anda dizileri yükleyemedik. Daha sonra tekrar deneyin.</string>
 
-    <string name="tab_popular">Popüler</string>
-    <string name="tab_new">Yeni</string>
-    <string name="tab_ranking">Sıralama</string>
-    <string name="tab_categories">Kategoriler</string>
+    <string name="no_internet_title">İnternet Yok</string>
+    <string name="no_internet_desc">İnternet bağlantısı yok. Uygulamayı kullanmak için lütfen internete bağlanın.</string>
+    <string name="connect_internet">İnternete Bağlan</string>
 
-    <string name="filter_all">Tümü</string>
-    <string name="filter_male">Erkek</string>
-    <string name="filter_female">Kadın</string>
-
-    <string name="category_modern">Modern</string>
-    <string name="category_historical">Tarihi</string>
-    <string name="category_fantasy">Fantastik</string>
-    <string name="category_romance">Romantik</string>
-
-    <string name="sort_newest">En Yeni</string>
-    <string name="sort_popular">Popüler</string>
-    <string name="sort_rating">Puan</string>
-    <string name="sort_trending">Trend</string>
-
-    <string name="audience">KİTLE</string>
-    <string name="category">KATEGORİ</string>
-    <string name="filters">FİLTRELER</string>
-    <string name="sort_by">SIRALAMA</string>
-
-    <string name="apply_filters">Filtreleri Uygula</string>
-    <string name="apply_sort">Sıralamayı Uygula</string>
-
-    <string name="featured_highlights">Öne Çıkanlar</string>
-    <string name="fresh_on_dramax">DramaX\'teki Yeniler</string>
-    <string name="weekly_top_20">Haftalık İlk 20</string>
-
-    <string name="my_favorites">Favorilerim</string>
-    <string name="no_favorites_yet">Henüz favori yok</string>
-    <string name="favorites_empty_message">Bir diziyi favorilere ekleyin, burada görünsün.</string>
-
-    <string name="watch_something">Bir şey izle</string>
-    <string name="continue_watching_empty">Bir dizi izlemeye başlayın, burada görünecek.</string>
-
-    <string name="updated_3h_ago">3 saat önce güncellendi</string>
-
-    <string name="badge_hot">HOT</string>
-    <string name="badge_new">YENİ</string>
-    <string name="start">BAŞLAT</string>
-
-    <string name="top_rank">İLK %1$d</string>
-
-    <string name="episode_info">%2$d bölümden %1$d. Bölüm • %3$s</string>
-
-    <string name="genre_episode_total">%1$s - %2$d Bölüm</string>
-    <string name="genre_episode">%1$s - Bölüm %2$d</string>
-
-    <string name="rating_genre">%1$s - %2$s</string>
-
-    <string name="time_left_minutes">%1$d dk kaldı</string>
-    <string name="time_left_hours">%1$d sa %2$d dk kaldı</string>
-
-    <string-array name="audience_keywords_male">
-        <item>aksiyon</item>
-        <item>gerilim</item>
-        <item>intikam</item>
-        <item>savaş</item>
-        <item>suç</item>
-        <item>CEO</item>
-        <item>milyarder</item>
-        <item>fantastik</item>
-    </string-array>
-
-    <string-array name="audience_keywords_female">
-        <item>romantik</item>
-        <item>aşk</item>
-        <item>aile</item>
-        <item>mirasçı</item>
-        <item>gelin</item>
-        <item>eş</item>
-        <item>sonbahar</item>
-        <item>drama</item>
-    </string-array>
-
-    <string-array name="category_keywords_modern">
-        <item>modern</item>
-        <item>CEO</item>
-        <item>milyarder</item>
-        <item>şehir</item>
-        <item>ofis</item>
-        <item>finans</item>
-        <item>teknoloji</item>
-    </string-array>
-
-    <string-array name="category_keywords_historical">
-        <item>tarihi</item>
-        <item>kral</item>
-        <item>kraliçe</item>
-        <item>imparatorluk</item>
-        <item>miras</item>
-        <item>hanedan</item>
-        <item>antik</item>
-    </string-array>
-
-    <string-array name="category_keywords_fantasy">
-        <item>fantastik</item>
-        <item>büyü</item>
-        <item>kızıl</item>
-        <item>gölge</item>
-        <item>boşluk</item>
-        <item>doğaüstü</item>
-    </string-array>
-
-    <string-array name="category_keywords_romance">
-        <item>romantik</item>
-        <item>aşk</item>
-        <item>yemin</item>
-        <item>gelin</item>
-        <item>eş</item>
-        <item>sonbahar</item>
-    </string-array>
-
-    <string name="trending_searches">Trend Aramalar</string>
-    <string name="hot_searches">Popüler Aramalar</string>
-    <string name="view_all">TÜMÜNÜ GÖR</string>
-
-    <string name="badge_trending_first">Trend #1</string>
-    <string name="badge_new_release">Yeni Yayın</string>
-
-    <string name="results_found_for_query">"%2$s" için %1$d sonuç bulundu</string>
-
-    <string name="no_results_found">Sonuç bulunamadı</string>
-    <string name="no_results_found_desc">"%1$s" aramanızla eşleşen herhangi bir dizi bulunamadı. Farklı bir anahtar kelime deneyin.</string>
-    <string name="empty_state_mask_glyph">×</string>
-
-    <string name="no_dramas_loaded_title">Henüz dizi yüklenmedi</string>
-    <string name="no_dramas_loaded_desc">İçerik hazır olduğunda Ana Sayfa\'yı açın. Ardından Arama burada gerçek dizileri kullanacaktır.</string>
-
-    <string name="genre_fallback">DRAMA</string>
-
-    <string name="fallback_description">Zengin bir varis geçmişinin bir yalandan ibaret olduğunu keşfedince sırlar birer birer ortaya çıkar.</string>
-    <string name="fallback_genre_romance">Romantik</string>
-    <string name="fallback_genre_drama">Drama</string>
-    <string name="fallback_genre_thriller">Gerilim</string>
-
-    <string name="history_watching">İzleme Geçmişi</string>
-    <string name="items_watched">%1$d ÖĞE İZLENDİ</string>
-    <string name="nothing_watched_yet">Henüz hiçbir şey izlemediniz</string>
-    <string name="nothing_watched_yet_desc">Bir dizi izleyin, tüm izleme geçmişiniz burada görünecektir.</string>
-
-    <string name="favorites_size">%1$d ÖĞE</string>
-
-    <string name="select_all">Tümünü Seç</string>
-    <string name="deselect_all">Seçimi Kaldır</string>
-    <string name="long_press_to_select">Seçmek için uzun basın</string>
-
-    <string name="account_activity">Hesap Etkinliği</string>
-    <string name="preferences">Tercihler ve Destek</string>
-    <string name="privacy_text">Gizlilik</string>
-    <string name="share_app">Uygulamayı Paylaş</string>
 </resources>

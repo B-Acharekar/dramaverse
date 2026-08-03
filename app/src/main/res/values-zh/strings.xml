@@ -1,11 +1,17 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="app_name">DramaX</string>
 
     <!-- Splash Screen -->
     <string name="app_name_display">DramaX</string>
 
-    <string name="splash_tagline">短剧系列</string>
-    <string name="splash_description">随时随地体验精心打造的精彩剧情，充分利用您的碎片时间。</string>
+    <string name="splash_tagline">
+    短剧系列
+    </string>
+
+    <string name="splash_description">
+    体验精彩纷呈的故事，专为
+    \n您的碎片时间精心打造。
+    </string>
 
     <!-- Language screen -->
     <string name="language_title">语言</string>
@@ -14,83 +20,91 @@
     <!-- Onboarding screen -->
     <string name="start_btn">开始</string>
     <string name="next_btn">下一步</string>
-
     <string name="onboarding_title_1">发现精彩</string>
     <string name="onboarding_accent_title_1">短剧</string>
-    <string name="onboarding_description_1">观看拥有数千集的独家短剧，适合每一个空闲时刻。</string>
+    <string name="onboarding_description_1">观看独家短剧，数千集内容，适合每一个空闲时刻。</string>
 
-    <string name="onboarding_title_2">无尽故事</string>
-    <string name="onboarding_accent_title_2">合集</string>
-    <string name="onboarding_description_2">从爱情、奇幻到惊悚和复仇，每天发现新的故事。</string>
+    <string name="onboarding_title_2">无穷无尽的</string>
+    <string name="onboarding_accent_title_2">故事合集</string>
+    <string name="onboarding_description_2">从浪漫、奇幻到惊悚、复仇，每天都能发现新故事。</string>
 
-    <string name="onboarding_title_3">随时观看，</string>
-    <string name="onboarding_accent_title_3">随地享受</string>
-    <string name="onboarding_description_3">下载剧集，无论去哪里都能欣赏你喜欢的短剧，离线也可以。</string>
+    <string name="onboarding_title_3">随时随地</string>
+    <string name="onboarding_accent_title_3">尽情观看</string>
+    <string name="onboarding_description_3">下载剧集，随时随地享受您喜爱的短剧 —— 即使离线也能观看。</string>
 
-    <string name="onboarding_title_4">每日奖励与任务</string>
-    <string name="onboarding_description_4">每天观看即可获得免费金币，完成任务即可解锁高级剧集。</string>
+    <string name="onboarding_title_4">每日奖励和任务</string>
+    <string name="onboarding_description_4">每天只需观看即可赚取免费金币。完成任务即可解锁付费剧集。</string>
 
+    <string name="welcome_title">欢迎来到 </string>
+    <string name="welcome_accent_title">DramaX</string>
+    <string name="welcome_description">数千个令人难忘的故事正在等着您，现在就开始观看吧。</string>
+    <string name="get_started">开始使用</string>
     <!-- Home screen — top bar / moods -->
     <string name="mood_hot">热门</string>
-    <string name="mood_happy">开心</string>
+    <string name="mood_happy">欢乐</string>
     <string name="mood_emotional">感人</string>
     <string name="mood_action">动作</string>
-    <string name="mood_romance">爱情</string>
+    <string name="mood_romance">浪漫</string>
     <string name="mood_horror">恐怖</string>
-    <string name="mood_mind_blowing">震撼</string>
-    <string name="mood_relax">放松</string>
+    <string name="mood_mind_blowing">脑洞大开</string>
+    <string name="mood_relax">轻松</string>
 
     <!-- Hero section -->
-    <string name="featured">精选推荐</string>
+    <string name="featured">精选</string>
     <string name="watch_now">立即观看</string>
+    <string name="save">收藏</string>
+    <string name="saved">已收藏</string>
 
     <!-- Continue watching -->
     <string name="continue_watching">继续观看</string>
+    <string name="continue_watching_subtitle">从您上次观看的剧集继续</string>
+    <string name="continue_watching_empty">观看时长达到10秒或以上的影片将显示在这里。</string>
     <string name="see_all">查看全部</string>
-
+    
     <!-- Trending / poster rails -->
-    <string name="trending_now">热门推荐</string>
-    <string name="recommended_for_you">为你推荐</string>
+    <string name="trending_now">正在热播</string>
+    <string name="recommended_for_you">为您推荐</string>
     <string name="trending_tag">热门</string>
     <string name="episodes_count">%1$d 集</string>
-    <string name="premium">高级</string>
-    <string name="rating_value">★ %1$s</string>
+    <string name="premium">付费</string>
+    <string name="rating_value">* %1$s</string>
 
     <!-- Top rated -->
-    <string name="top_rated_this_week">本周高评分</string>
-    <string name="weekly_top_1">本周第一</string>
-    <string name="rating_genre_episodes">★ %1$s    %2$s    %3$d 集</string>
+    <string name="top_rated_this_week">本周最佳评分</string>
+    <string name="weekly_top_1">本周第1名</string>
+    <string name="rating_genre_episodes">* %1$s    %2$s    %3$d 集</string>
 
     <!-- Action cards -->
     <string name="vip_short">VIP</string>
-    <string name="join_vip_club">加入 VIP 会员</string>
-    <string name="unlock_all_episodes">立即解锁\n全部剧集</string>
+    <string name="join_vip_club">加入VIP俱乐部</string>
+    <string name="unlock_all_episodes">今天解锁\n全部剧集</string>
+    <string name="schedule">日程</string>
     <string name="daily_reward_short">50</string>
     <string name="daily_rewards">每日奖励</string>
-    <string name="claim_daily_coins">领取每日 50 金币</string>
+    <string name="claim_daily_coins">领取50金币</string>
 
     <!-- Bottom navigation -->
     <string name="nav_home">首页</string>
-    <string name="nav_shorts">短剧</string>
-    <string name="nav_library">片库</string>
+    <string name="nav_shorts">短视频</string>
+    <string name="nav_library">我的列表</string>
     <string name="nav_rewards">奖励</string>
+    <string name="nav_planner">计划</string>
     <string name="nav_profile">我的</string>
 
     <!-- Library / Search -->
-    <string name="continue_watching_subtitle">从最新一集继续观看</string>
-    <string name="library_subtitle">已保存、已观看和为你精选</string>
+    <string name="library_subtitle">已收藏、已观看以及为您精选的内容</string>
     <string name="watch_list">观看列表</string>
-    <string name="library_watch_list_subtitle">已保存和已收藏的影片</string>
-    <string name="library_watch_list_empty">已保存的影片会显示在这里。</string>
+    <string name="library_watch_list_subtitle">已收藏和标记的影片</string>
+    <string name="library_watch_list_empty">收藏的影片将显示在这里。</string>
     <string name="similar_films">相似影片</string>
     <string name="top_stars">热门明星</string>
-    <string name="top_stars_subtitle">来自可用演员数据</string>
+    <string name="top_stars_subtitle">来自现有的影片演员数据</string>
     <string name="search_films_hint">搜索影片...</string>
     <string name="search_results_count">%1$d 个结果</string>
     <string name="no_films_found">未找到影片。</string>
     <string name="no_films_yet">暂无影片。</string>
-    <string name="library_load_error">现在无法刷新你的片库。</string>
-    <string name="search_error">现在无法加载搜索结果。</string>
+    <string name="library_load_error">暂时无法刷新您的资料库。</string>
+    <string name="search_error">暂时无法加载搜索结果。</string>
 
     <!-- Shorts Screen -->
 
@@ -110,10 +124,12 @@
     <string name="episode_title">第 %1$d 集</string>
     <string name="playing">播放中</string>
     <string name="free">免费</string>
-    <string name="trending_number">热门 #1</string>
+    <string name="trending_number">热门第1名</string>
 
     <!-- Description -->
-    <string name="default_short_description">一部充满秘密、爱情与复仇的精彩短剧。</string>
+    <string name="default_short_description">
+    一部充满秘密、浪漫与复仇的短剧。
+</string>
 
     <string name="view_more">查看更多</string>
     <string name="view_less">收起</string>
@@ -122,14 +138,18 @@
     <string name="playback_options">播放设置</string>
 
     <string name="auto_next_episode">自动播放下一集</string>
-    <string name="auto_next_episode_desc">当前剧集结束后自动播放下一集。</string>
+    <string name="auto_next_episode_desc">
+    本集结束后自动播放下一集。
+</string>
 
     <string name="auto_unlock_episodes">自动解锁剧集</string>
-    <string name="auto_unlock_episodes_desc">当前剧集结束后，仅自动解锁下一集已锁定内容。</string>
+    <string name="auto_unlock_episodes_desc">
+    当前剧集结束后，仅自动解锁下一个锁定的剧集。
+</string>
 
     <!-- Feedback -->
     <string name="send_feedback">发送反馈</string>
-    <string name="feedback_hint">请告诉我们遇到了什么问题……</string>
+    <string name="feedback_hint">告诉我们出了什么问题...</string>
     <string name="submit">提交</string>
 
     <!-- Subtitle -->
@@ -142,15 +162,16 @@
     <string name="speed_15x">1.5x</string>
     <string name="speed_2x">2x</string>
     <string name="speed_custom">%1$sx</string>
-
-    <string name="default_username">追剧达人</string>
-    <string name="update_profile_photo">更新个人资料照片</string>
+    
+    <!-- Profile Screen -->
+    <string name="default_username">短剧爱好者</string>
+    <string name="update_profile_photo">更新头像</string>
     <string name="banner_image">横幅图片</string>
-    <string name="avatar_image">头像</string>
+    <string name="avatar_image">头像图片</string>
     <string name="update_banner_image">更新横幅图片</string>
-    <string name="update_avatar_image">更新头像</string>
+    <string name="update_avatar_image">更新头像图片</string>
     <string name="choose_from_gallery">从相册选择</string>
-    <string name="choose_an_avatar">选择一个头像</string>
+    <string name="choose_an_avatar">选择头像</string>
     <string name="cancel">取消</string>
 
     <!-- Stats -->
@@ -165,9 +186,9 @@
 
     <!-- Sections -->
     <string name="account_settings">账户设置</string>
-    <string name="edit_profile">编辑个人资料</string>
-    <string name="watch_history">观看历史</string>
-    <string name="my_watchlist">我的收藏</string>
+    <string name="edit_profile">编辑资料</string>
+    <string name="watch_history">观看记录</string>
+    <string name="my_watchlist">我的追剧列表</string>
     <string name="preferences_support">偏好设置与支持</string>
     <string name="language">语言</string>
     <string name="settings">设置</string>
@@ -175,7 +196,7 @@
     <string name="privacy">隐私</string>
     <string name="rate_us">给我们评分</string>
     <string name="privacy_policy">隐私政策</string>
-    <string name="vip_gold_member">VIP 黄金会员</string>
+    <string name="vip_gold_member">VIP黄金会员</string>
 
     <!-- Language Picker -->
     <string name="english">英语</string>
@@ -192,16 +213,11 @@
     <!-- Others -->
     <string name="profile_avatar">个人头像</string>
     <string name="preset_avatar">预设头像</string>
-    <string name="edit_profile_photo">编辑个人资料照片</string>
-
-    <string name="welcome_title">欢迎来到 </string>
-    <string name="welcome_accent_title">DramaX</string>
-    <string name="welcome_description">数千个令人难忘的故事正在等着你。立即开始观看。</string>
-    <string name="get_started">开始使用</string>
+    <string name="edit_profile_photo">编辑头像</string>
     <!-- Uninstall flow -->
-    <string name="uninstall_confirm_title">你的观看记录和喜爱的短剧\n仍在等你</string>
-    <string name="uninstall_confirm_description">保留 DramaX，随时继续观看故事、\n领取奖励和新剧集。</string>
-    <string name="uninstall_try_again">再试一次</string>
+    <string name="uninstall_confirm_title">您的观看记录和喜爱的短剧\n仍在等着您</string>
+    <string name="uninstall_confirm_description">保留 DramaX，随时继续观看故事、\n领取奖励和获取新剧集。</string>
+    <string name="uninstall_try_again">重试</string>
     <string name="uninstall_still_want">仍要卸载</string>
     <string name="uninstall_survey_title">使用过程中遇到的问题</string>
     <string name="uninstall_reason_feature_not_working">功能无法使用</string>
@@ -209,211 +225,100 @@
     <string name="uninstall_reason_not_needed">我不需要它</string>
     <string name="uninstall_reason_other">其他</string>
     <string name="uninstall_action">卸载</string>
-    <string name="uninstall_open_failed">无法打开卸载页面</string>
-
-    <string name="welcome_to_home_temp">欢迎来到首页</string>
-
-    <!-- Widget strings -->
-    <string name="widget_home">主页</string>
+    <string name="uninstall_open_failed">无法打开卸载界面</string>
+    <!-- Home widget / uninstall flow -->
+    <string name="widget_description" translatable="false">DramaX quick actions</string>
+    <string name="widget_home">首页</string>
     <string name="widget_my_list">我的列表</string>
     <string name="widget_uninstall">卸载</string>
 
-    <string name="rateus_dialog_title">喜欢 DramaX 吗？</string>
-    <string name="rateus_dialog_subtitle">您的评价将帮助我们提升这款应用的质量。</string>
+    <string name="welcome_to_home_temp">欢迎回到首页</string>
 
-    <string name="not_now">暂不</string>
-    <string name="share_app_message">在 DramaX 观看短剧：https://play.google.com/store/apps/details?id=%1$s</string>
-    <string name="share_app_chooser_title">分享 DramaX</string>
-    <string name="no_episode_found">未找到剧集</string>
-    <string name="episode_locked">第 %1$d 集已锁定</string>
+    <string name="report_an_issue">反馈问题</string>
+    <string name="report_an_issue_subtitle">帮助我们改善您的观看体验</string>
+
+    <string name="unlock_episode_title">解锁第 %1$d 集以继续观看</string>
+    <string name="unlock_episode_desc">观看一段广告即可永久解锁本集，继续观看剧情。</string>
+    <string name="daily_progress">每日进度：%1$d/%2$d</string>
+    <string name="watch_ad">观看广告</string>
+    <string name="unlock_permanent_note">通过观看广告解锁的剧集将永久归您所有。</string>
+    <string name="daily_limit_title">已达每日免费解锁上限</string>
+    <string name="daily_limit_desc">您今天的 %1$d 次免费解锁次数已用完，更多免费解锁将于明天开放。</string>
+    <string name="browse_free_episodes">浏览免费剧集</string>
+
+    <!-- Missing keys added to satisfy references in Kotlin sources -->
+    <string name="episode_locked">剧集已锁定</string>
     <string name="watch_ad_to_unlock">观看广告解锁</string>
-    <string name="recent_activity">最近活动</string>
+    <string name="history_watching">正在观看</string>
+    <string name="my_favorites">我的收藏</string>
+    <string name="no_favorites_yet">暂无收藏</string>
+    <string name="favorites_empty_message">您还没有添加任何收藏。</string>
+    <string name="deselect_all">取消全选</string>
+    <string name="select_all">全选</string>
+    <string name="long_press_to_select">长按以选择</string>
+    <string name="recent_activity">最近动态</string>
     <string name="inbox">收件箱</string>
-    <string name="notification_desc">计划提醒和奖励更新都在这里查看。</string>
-    <string name="clearing">正在清除</string>
+    <string name="notification_desc">有关您的账户和剧集的更新</string>
+    <string name="clearing">清除中</string>
     <string name="clear">清除</string>
     <string name="update">更新</string>
-    <string name="notification_body">打开 DramaX 查看最新更新。</string>
+    <string name="notification_body">您有新的更新</string>
     <string name="clearing_inbox">正在清空收件箱</string>
     <string name="no_notification_message">暂无通知</string>
-    <string name="removing_old_updates">正在移除旧更新...</string>
-    <string name="planner_msg">计划提醒和奖励更新将在这里显示。</string>
-    <string name="schedule_planner_msg">安排已保存的短剧和提醒。</string>
-    <string name="choose_saved_drama">选择已保存的短剧</string>
-    <string name="save_drama_first">请先保存短剧</string>
-    <string name="schedule_label_msg">在首页或 Shorts 点击 + 创建此列表。</string>
-    <string name="schedule_reminder">设置提醒</string>
-    <string name="select_saved_drama">选择已保存的短剧</string>
-    <string name="episode_count">%1$d/%2$d</string>
-    <string name="episodes_range">第 %1$d - %2$d 集</string>
+    <string name="removing_old_updates">正在移除旧的更新</string>
+    <string name="planner_msg">安排您的观看提醒</string>
+    <string name="schedule_planner_msg">选择提醒时间</string>
+    <string name="choose_saved_drama">选择一部已收藏的短剧</string>
+    <string name="save_drama_first">请先收藏一部短剧再进行安排</string>
+    <string name="schedule_label_msg">日程标签</string>
+    <string name="schedule_reminder">安排提醒</string>
+    <string name="select_saved_drama">选择一部已收藏的短剧</string>
+    <string name="account_activity">账户动态</string>
+    <string name="privacy_text">管理您的隐私设置</string>
+    <string name="share_app">分享应用</string>
+    <string name="rateus_dialog_title">给 DramaX 评分</string>
+    <string name="rateus_dialog_subtitle">喜欢这款应用吗？给我们评分吧！</string>
+    <string name="not_now">暂不</string>
+    <string name="share_app_message">快来看看 DramaX —— 海量精彩短剧！</string>
+    <string name="share_app_chooser_title">分享方式</string>
+    <string name="fallback_genre_romance">浪漫</string>
+    <string name="fallback_genre_drama">剧情</string>
+    <string name="fallback_genre_thriller">惊悚</string>
+    <string name="trending_searches">热门搜索</string>
+    <string name="hot_searches">热搜</string>
+    <string name="badge_hot">热门</string>
+    <string name="badge_new">新</string>
+    <string name="empty_state_mask_glyph">暂无结果</string>
+    <string name="no_results_found">未找到结果</string>
+    <string name="no_results_found_desc">请尝试其他搜索词。</string>
+    <string name="results_found_for_query">"%1$s" 的搜索结果</string>
+    <string name="badge_new_release">新上线</string>
+    <string name="badge_trending_first">热门第1名</string>
+    <string name="fallback_description">一部充满秘密与反转的短剧。</string>
+    <string name="view_all">查看全部</string>
+    <string name="genre_fallback">剧情</string>
+    <string name="must_unlock_episode_first">请先解锁之前的剧集。</string>
+    <string name="episode_count">%1$d 集</string>
+    <string name="episodes_range">第 %1$d-%2$d 集</string>
     <string name="subtitle_small">小</string>
     <string name="subtitle_medium">中</string>
     <string name="subtitle_large">大</string>
-    <string name="report_reason_episode_error">剧集错误</string>
-    <string name="report_reason_paid_film_too_long">付费影片过长</string>
-    <string name="report_reason_low_quality">画质较差</string>
+    <string name="report_reason_episode_error">剧集播放错误</string>
+    <string name="report_reason_paid_film_too_long">付费影片时间过长</string>
+    <string name="report_reason_low_quality">画质低</string>
     <string name="report_reason_subtitle_missing">缺少字幕</string>
     <string name="report_reason_inaccurate_subtitle">字幕不准确</string>
     <string name="report_reason_other">其他</string>
-    <string name="loading_share_apps">正在加载分享应用</string>
-    <string name="welcome_back_emoji">👋</string>
-    <string name="welcome_back_title">欢迎回来！</string>
-    <string name="welcome_back_description">很高兴再次见到您。\n尽情享受无限精彩短剧！</string>
-    <string name="continue_text">继续</string>
-    <string name="auto_advancing">3 秒后自动继续...</string>
-
-    <string name="tab_popular">热门</string>
-    <string name="tab_new">最新</string>
-    <string name="tab_ranking">排行榜</string>
-    <string name="tab_categories">分类</string>
-
-    <string name="filter_all">全部</string>
-    <string name="filter_male">男性</string>
-    <string name="filter_female">女性</string>
-
-    <string name="category_modern">现代</string>
-    <string name="category_historical">古装</string>
-    <string name="category_fantasy">奇幻</string>
-    <string name="category_romance">爱情</string>
-
-    <string name="sort_newest">最新</string>
-    <string name="sort_popular">热门</string>
-    <string name="sort_rating">评分</string>
-    <string name="sort_trending">趋势</string>
-
-    <string name="audience">受众</string>
-    <string name="category">分类</string>
-    <string name="filters">筛选</string>
-    <string name="sort_by">排序方式</string>
-
-    <string name="apply_filters">应用筛选</string>
-    <string name="apply_sort">应用排序</string>
-
-    <string name="featured_highlights">精选推荐</string>
-    <string name="fresh_on_dramax">DramaX 最新上线</string>
-    <string name="weekly_top_20">每周 Top 20</string>
-
-    <string name="my_favorites">我的收藏</string>
-    <string name="no_favorites_yet">暂无收藏</string>
-    <string name="favorites_empty_message">收藏短剧后将显示在这里。</string>
-
-    <string name="watch_something">开始观看</string>
-    <string name="continue_watching_empty">开始观看一部短剧，它将显示在这里。</string>
-
-    <string name="updated_3h_ago">3 小时前更新</string>
-
-    <string name="badge_hot">热门</string>
-    <string name="badge_new">最新</string>
-    <string name="start">开始</string>
-
-    <string name="top_rank">TOP %1$d</string>
-
-    <string name="episode_info">第 %1$d / %2$d 集 • %3$s</string>
-
-    <string name="genre_episode_total">%1$s · 共 %2$d 集</string>
-    <string name="genre_episode">%1$s · 第 %2$d 集</string>
-
-    <string name="rating_genre">%1$s · %2$s</string>
-
-    <string name="time_left_minutes">剩余 %1$d 分钟</string>
-    <string name="time_left_hours">剩余 %1$d 小时 %2$d 分钟</string>
-
-    <string-array name="audience_keywords_male">
-        <item>动作</item>
-        <item>惊悚</item>
-        <item>复仇</item>
-        <item>战争</item>
-        <item>犯罪</item>
-        <item>总裁</item>
-        <item>亿万富翁</item>
-        <item>奇幻</item>
-    </string-array>
-
-    <string-array name="audience_keywords_female">
-        <item>爱情</item>
-        <item>恋爱</item>
-        <item>家庭</item>
-        <item>继承人</item>
-        <item>新娘</item>
-        <item>妻子</item>
-        <item>秋天</item>
-        <item>剧情</item>
-    </string-array>
-
-    <string-array name="category_keywords_modern">
-        <item>现代</item>
-        <item>总裁</item>
-        <item>亿万富翁</item>
-        <item>都市</item>
-        <item>办公室</item>
-        <item>金融</item>
-        <item>科技</item>
-    </string-array>
-
-    <string-array name="category_keywords_historical">
-        <item>古装</item>
-        <item>国王</item>
-        <item>女王</item>
-        <item>帝国</item>
-        <item>传承</item>
-        <item>王朝</item>
-        <item>古代</item>
-    </string-array>
-
-    <string-array name="category_keywords_fantasy">
-        <item>奇幻</item>
-        <item>魔法</item>
-        <item>猩红</item>
-        <item>暗影</item>
-        <item>虚空</item>
-        <item>超自然</item>
-    </string-array>
-
-    <string-array name="category_keywords_romance">
-        <item>爱情</item>
-        <item>恋爱</item>
-        <item>誓言</item>
-        <item>新娘</item>
-        <item>妻子</item>
-        <item>秋天</item>
-    </string-array>
-
-    <string name="trending_searches">热门搜索</string>
-    <string name="hot_searches">热搜</string>
-    <string name="view_all">查看全部</string>
-
-    <string name="badge_trending_first">热门 #1</string>
-    <string name="badge_new_release">最新上线</string>
-
-    <string name="results_found_for_query">找到 %1$d 条与“%2$s”相关的结果</string>
-
-    <string name="no_results_found">未找到结果</string>
-    <string name="no_results_found_desc">未找到与“%1$s”匹配的短剧，请尝试其他关键词。</string>
-    <string name="empty_state_mask_glyph">×</string>
-
-    <string name="no_dramas_loaded_title">暂无已加载的短剧</string>
-    <string name="no_dramas_loaded_desc">当首页内容加载后，搜索将使用这些真实短剧数据。</string>
-
-    <string name="genre_fallback">短剧</string>
-
-    <string name="fallback_description">一位富有的继承人发现过去竟是一场谎言，尘封的秘密逐渐浮出水面。</string>
-    <string name="fallback_genre_romance">爱情</string>
-    <string name="fallback_genre_drama">剧情</string>
-    <string name="fallback_genre_thriller">悬疑</string>
-
-    <string name="history_watching">观看历史</string>
+    <string name="loading_share_apps">正在加载应用...</string>
     <string name="items_watched">已观看 %1$d 项</string>
-    <string name="nothing_watched_yet">暂无观看记录</string>
-    <string name="nothing_watched_yet_desc">开始观看短剧后，完整历史记录将显示在这里。</string>
+    <string name="nothing_watched_yet">尚未观看任何内容</string>
+    <string name="nothing_watched_yet_desc">观看几秒钟的剧集即可在此处追踪进度。</string>
+    <string name="favorites_size">%1$d 个收藏</string>
+    <string name="no_dramas_loaded_title">未加载任何短剧</string>
+    <string name="no_dramas_loaded_desc">目前无法加载短剧，请稍后重试。</string>
 
-    <string name="favorites_size">%1$d 项</string>
+    <string name="no_internet_title">无网络连接</string>
+    <string name="no_internet_desc">没有网络连接。请连接网络以使用本应用。</string>
+    <string name="connect_internet">连接网络</string>
 
-    <string name="select_all">全选</string>
-    <string name="deselect_all">取消全选</string>
-    <string name="long_press_to_select">长按进行选择</string>
-
-    <string name="account_activity">账户活动</string>
-    <string name="preferences">偏好设置与支持</string>
-    <string name="privacy_text">隐私</string>
-    <string name="share_app">分享应用</string>
 </resources>

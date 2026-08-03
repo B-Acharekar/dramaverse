@@ -851,7 +851,7 @@ private fun JSONObject.toDramaItemOrNull(): DramaItem? {
         imageUrl = image,
         rating = firstString("rating", "rate", "score").ifBlank { "4.8" },
         episodeTotal = firstInt("episode_total", "episodes_count", "total_episodes", "eps").takeIf { it > 0 } ?: 45,
-        genre = firstString("genre", "category", "tag").ifBlank { "Romance" },
+        genre = firstString("genre", "category", "tag", "genres", "genre_name", "category_name", "tags").ifBlank { "Romance" },
         isPremium = firstBoolean("is_vip", "isVip", "vip", "is_premium", "premium") ||
             firstInt("price", "coin_price", "unlock_price") > 0,
         likeCount = firstInt("like_count", "likes", "likes_count", "likeCount", "favorite_count")
@@ -864,12 +864,30 @@ private fun JSONObject.firstString(vararg keys: String): String {
         if (value is String && value.isNotBlank()) return value
         if (value is Number) return value.toString()
         if (value is JSONObject) {
-            value.firstString("url", "src", "path", "thumb", "image", "poster", "cover").takeIf { it.isNotBlank() }?.let { return it }
+            value.firstString(*keys)
+                .takeIf { it.isNotBlank() }
+                ?.let { return it }
+            value.firstString("url", "src", "path", "thumb", "image", "poster", "cover")
+                .takeIf { it.isNotBlank() }
+                ?.let { return it }
+            value.firstString("name", "title", "label", "tag", "genre", "category", "description")
+                .takeIf { it.isNotBlank() }
+                ?.let { return it }
         }
         if (value is JSONArray && value.length() > 0) {
             when (val first = value.opt(0)) {
                 is String -> if (first.isNotBlank()) return first
-                is JSONObject -> first.firstString("url", "src", "path", "thumb", "image", "poster", "cover").takeIf { it.isNotBlank() }?.let { return it }
+                is JSONObject -> {
+                    first.firstString(*keys)
+                        .takeIf { it.isNotBlank() }
+                        ?.let { return it }
+                    first.firstString("url", "src", "path", "thumb", "image", "poster", "cover")
+                        .takeIf { it.isNotBlank() }
+                        ?.let { return it }
+                    first.firstString("name", "title", "label", "tag", "genre", "category", "description")
+                        .takeIf { it.isNotBlank() }
+                        ?.let { return it }
+                }
             }
         }
     }

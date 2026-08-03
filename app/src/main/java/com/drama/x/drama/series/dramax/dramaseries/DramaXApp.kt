@@ -166,9 +166,9 @@ fun DramaXApp(
 
         AppStep.Home -> HomeScreen(
             backendBaseUrl = uiState.backendBaseUrl,
-            onOpenEpisodes = { filmId, episodeNumber ->
-                // Open Episodes screen when clicking a film
-                viewModel.openEpisodes(filmId, episodeNumber)
+            onOpenEpisodes = { filmId ->
+                // Open Episodes screen when clicking a film (episode number handled elsewhere)
+                viewModel.openEpisodes(filmId)
             },
             onOpenShorts = {
                 // Open generic Shorts screen for casual browsing

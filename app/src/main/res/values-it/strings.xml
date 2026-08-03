@@ -1,103 +1,114 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="app_name">DramaX</string>
+
+    <!-- Splash Screen -->
     <string name="app_name_display">DramaX</string>
 
-    <!-- Splash -->
-    <string name="splash_tagline">D R A M M I\nC O R T I\nI L L I M I T A T I</string>
-    <string name="splash_description">Vivi storie coinvolgenti, selezionate per accompagnare ogni tuo momento.</string>
+    <string name="splash_tagline">
+    Serie Drammatiche Brevi
+    </string>
 
-    <!-- Language -->
+    <string name="splash_description">
+    Vivi storie ad alta tensione, selezionate per
+    \nogni tuo momento libero.
+    </string>
+
+    <!-- Language screen -->
     <string name="language_title">Lingua</string>
     <string name="done">FATTO</string>
 
-    <!-- Onboarding -->
+    <!-- Onboarding screen -->
     <string name="start_btn">Inizia</string>
     <string name="next_btn">Avanti</string>
-
-    <string name="onboarding_title_1">Scopri fantastici</string>
-    <string name="onboarding_accent_title_1">drammi brevi</string>
+    <string name="onboarding_title_1">Scopri incredibili</string>
+    <string name="onboarding_accent_title_1">Drammi brevi</string>
     <string name="onboarding_description_1">Guarda drammi brevi esclusivi con migliaia di episodi, perfetti per ogni momento libero.</string>
 
-    <string name="onboarding_title_2">Storie infinite</string>
-    <string name="onboarding_accent_title_2">Collezione</string>
-    <string name="onboarding_description_2">Dal romance e fantasy ai thriller e alla vendetta, scopri nuove storie ogni giorno.</string>
+    <string name="onboarding_title_2">Collezione infinita</string>
+    <string name="onboarding_accent_title_2">di storie</string>
+    <string name="onboarding_description_2">Dal romanticismo e fantasy ai thriller e alla vendetta, scopri nuove storie ogni giorno.</string>
 
-    <string name="onboarding_title_3">Guarda quando vuoi,</string>
-    <string name="onboarding_accent_title_3">ovunque</string>
-    <string name="onboarding_description_3">Scarica episodi e goditi i tuoi drammi preferiti ovunque tu vada, anche offline.</string>
+    <string name="onboarding_title_3">Guarda ovunque,</string>
+    <string name="onboarding_accent_title_3">in qualsiasi momento</string>
+    <string name="onboarding_description_3">Scarica gli episodi e goditi i tuoi drammi preferiti ovunque tu vada, anche offline.</string>
 
-    <string name="onboarding_title_4">Ricompense e Missioni Giornaliere</string>
-    <string name="onboarding_description_4">Guadagna monete gratis ogni giorno guardando i contenuti. Completa le missioni per sbloccare episodi premium.</string>
+    <string name="onboarding_title_4">Ricompense e missioni giornaliere</string>
+    <string name="onboarding_description_4">Guadagna monete gratuite ogni giorno semplicemente guardando. Completa missioni per sbloccare episodi premium.</string>
 
-    <!-- Home -->
-    <string name="mood_hot">Hot</string>
-    <string name="mood_happy">Felice</string>
+    <string name="welcome_title">Benvenuto su </string>
+    <string name="welcome_accent_title">DramaX</string>
+    <string name="welcome_description">Migliaia di storie indimenticabili ti aspettano. Inizia a guardare ora.</string>
+    <string name="get_started">Inizia ora</string>
+    <!-- Home screen — top bar / moods -->
+    <string name="mood_hot">Popolare</string>
+    <string name="mood_happy">Allegro</string>
     <string name="mood_emotional">Emozionante</string>
     <string name="mood_action">Azione</string>
     <string name="mood_romance">Romantico</string>
     <string name="mood_horror">Horror</string>
-    <string name="mood_mind_blowing">Sorprendente</string>
+    <string name="mood_mind_blowing">Sbalorditivo</string>
     <string name="mood_relax">Relax</string>
 
-    <!-- Hero -->
+    <!-- Hero section -->
     <string name="featured">IN EVIDENZA</string>
     <string name="watch_now">Guarda ora</string>
     <string name="save">Salva</string>
     <string name="saved">Salvato</string>
 
-    <!-- Continue Watching -->
+    <!-- Continue watching -->
     <string name="continue_watching">Continua a guardare</string>
-    <string name="continue_watching_subtitle">Riprendi dall\'ultimo episodio visto</string>
+    <string name="continue_watching_subtitle">Continua dal tuo ultimo episodio</string>
+    <string name="continue_watching_empty">I film visti per 10 secondi o più appariranno qui.</string>
     <string name="see_all">VEDI TUTTO</string>
-
-    <!-- Trending -->
-    <string name="trending_now">Di tendenza</string>
+    
+    <!-- Trending / poster rails -->
+    <string name="trending_now">Di tendenza ora</string>
     <string name="recommended_for_you">Consigliati per te</string>
     <string name="trending_tag">TENDENZA</string>
-    <string name="episodes_count">%1$d episodi</string>
+    <string name="episodes_count">%1$d ep.</string>
     <string name="premium">PREMIUM</string>
-    <string name="rating_value">★ %1$s</string>
+    <string name="rating_value">* %1$s</string>
 
-    <!-- Top Rated -->
-    <string name="top_rated_this_week">I più votati della settimana</string>
-    <string name="weekly_top_1">TOP #1 DELLA SETTIMANA</string>
-    <string name="rating_genre_episodes">★ %1$s    %2$s    %3$d episodi</string>
+    <!-- Top rated -->
+    <string name="top_rated_this_week">I più votati questa settimana</string>
+    <string name="weekly_top_1">TOP DELLA SETTIMANA #1</string>
+    <string name="rating_genre_episodes">* %1$s    %2$s    %3$d ep.</string>
 
-    <!-- Actions -->
+    <!-- Action cards -->
     <string name="vip_short">VIP</string>
-    <string name="join_vip_club">Unisciti al Club VIP</string>
+    <string name="join_vip_club">Unisciti al club VIP</string>
     <string name="unlock_all_episodes">Sblocca tutti gli episodi\noggi</string>
     <string name="schedule">Programma</string>
     <string name="daily_reward_short">50</string>
     <string name="daily_rewards">Ricompense giornaliere</string>
-    <string name="claim_daily_coins">Riscatta le tue 50 monete</string>
+    <string name="claim_daily_coins">Ritira le tue 50 monete</string>
 
-    <!-- Bottom Navigation -->
+    <!-- Bottom navigation -->
     <string name="nav_home">Home</string>
-    <string name="nav_shorts">Shorts</string>
-    <string name="nav_library">Libreria</string>
+    <string name="nav_shorts">Short</string>
+    <string name="nav_library">La mia lista</string>
     <string name="nav_rewards">Ricompense</string>
-    <string name="nav_planner">Planner</string>
+    <string name="nav_planner">Pianificatore</string>
     <string name="nav_profile">Profilo</string>
 
-    <!-- Library -->
-    <string name="library_subtitle">Salvati, guardati e consigliati per te</string>
-    <string name="watch_list">Lista di visione</string>
-    <string name="library_watch_list_subtitle">Film salvati e aggiunti ai preferiti</string>
+    <!-- Library / Search -->
+    <string name="library_subtitle">Salvati, guardati e selezionati per te</string>
+    <string name="watch_list">Lista dei preferiti</string>
+    <string name="library_watch_list_subtitle">Film salvati e contrassegnati</string>
     <string name="library_watch_list_empty">I film salvati appariranno qui.</string>
     <string name="similar_films">Film simili</string>
-    <string name="top_stars">Attori principali</string>
-    <string name="top_stars_subtitle">Basato sui dati disponibili del cast</string>
+    <string name="top_stars">Star principali</string>
+    <string name="top_stars_subtitle">Ricavato dai dati del cast disponibili</string>
     <string name="search_films_hint">Cerca film...</string>
     <string name="search_results_count">%1$d risultati</string>
     <string name="no_films_found">Nessun film trovato.</string>
-    <string name="no_films_yet">Nessun film disponibile.</string>
-    <string name="library_load_error">Impossibile aggiornare la libreria in questo momento.</string>
-    <string name="search_error">Impossibile caricare i risultati della ricerca.</string>
+    <string name="no_films_yet">Ancora nessun film.</string>
+    <string name="library_load_error">Impossibile aggiornare la tua libreria in questo momento.</string>
+    <string name="search_error">Impossibile caricare i risultati di ricerca in questo momento.</string>
 
-    <!-- Toast -->
+    <!-- Shorts Screen -->
+
+    <!-- Toasts -->
     <string name="saved_to_list">Salvato nella lista</string>
     <string name="removed_from_list">Rimosso dalla lista</string>
     <string name="feedback_sent">Feedback inviato</string>
@@ -105,7 +116,7 @@
     <!-- Actions -->
     <string name="share">Condividi</string>
     <string name="episodes">Episodi</string>
-    <string name="cc">CC</string>
+    <string name="cc">Sottotitoli</string>
     <string name="speed">Velocità</string>
 
     <!-- Episode -->
@@ -116,17 +127,25 @@
     <string name="trending_number">Tendenza #1</string>
 
     <!-- Description -->
-    <string name="default_short_description">Un breve dramma ricco di segreti, amore e vendetta.</string>
-    <string name="view_more">Mostra altro</string>
-    <string name="view_less">Mostra meno</string>
+    <string name="default_short_description">
+    Un dramma breve pieno di segreti, romanticismo e vendetta.
+</string>
 
-    <!-- Playback -->
+    <string name="view_more">Mostra di più</string>
+    <string name="view_less">Mostra di meno</string>
+
+    <!-- Playback Options -->
     <string name="playback_options">Opzioni di riproduzione</string>
-    <string name="auto_next_episode">Riproduci automaticamente il prossimo episodio</string>
-    <string name="auto_next_episode_desc">Riproduce automaticamente il prossimo episodio quando quello attuale termina.</string>
 
-    <string name="auto_unlock_episodes">Sblocco automatico degli episodi</string>
-    <string name="auto_unlock_episodes_desc">Sblocca solo il prossimo episodio bloccato dopo la fine di quello attuale.</string>
+    <string name="auto_next_episode">Episodio successivo automatico</string>
+    <string name="auto_next_episode_desc">
+    Riproduce automaticamente l\'episodio successivo al termine di quello attuale.
+</string>
+
+    <string name="auto_unlock_episodes">Sblocco automatico episodi</string>
+    <string name="auto_unlock_episodes_desc">
+    Sblocca solo il successivo episodio bloccato dopo il termine di quello attuale.
+</string>
 
     <!-- Feedback -->
     <string name="send_feedback">Invia feedback</string>
@@ -139,25 +158,25 @@
 
     <!-- Speed -->
     <string name="speed_1x">1x</string>
-    <string name="speed_125x">1.25x</string>
-    <string name="speed_15x">1.5x</string>
+    <string name="speed_125x">1,25x</string>
+    <string name="speed_15x">1,5x</string>
     <string name="speed_2x">2x</string>
     <string name="speed_custom">%1$sx</string>
-
-    <!-- Profile -->
-    <string name="default_username">Appassionato di Drama</string>
+    
+    <!-- Profile Screen -->
+    <string name="default_username">Appassionato di drammi</string>
     <string name="update_profile_photo">Aggiorna foto profilo</string>
     <string name="banner_image">Immagine banner</string>
-    <string name="avatar_image">Avatar</string>
-    <string name="update_banner_image">Aggiorna banner</string>
-    <string name="update_avatar_image">Aggiorna avatar</string>
+    <string name="avatar_image">Immagine avatar</string>
+    <string name="update_banner_image">Aggiorna immagine banner</string>
+    <string name="update_avatar_image">Aggiorna immagine avatar</string>
     <string name="choose_from_gallery">Scegli dalla galleria</string>
     <string name="choose_an_avatar">Scegli un avatar</string>
     <string name="cancel">Annulla</string>
 
     <!-- Stats -->
     <string name="coins">MONETE</string>
-    <string name="watched">VISTI</string>
+    <string name="watched">GUARDATI</string>
     <string name="episodes_cap">EPISODI</string>
 
     <!-- Quick Actions -->
@@ -168,9 +187,9 @@
     <!-- Sections -->
     <string name="account_settings">IMPOSTAZIONI ACCOUNT</string>
     <string name="edit_profile">Modifica profilo</string>
-    <string name="watch_history">Cronologia</string>
-    <string name="my_watchlist">La mia lista</string>
-    <string name="preferences_support">PREFERENZE E SUPPORTO</string>
+    <string name="watch_history">Cronologia visualizzazioni</string>
+    <string name="my_watchlist">La mia watchlist</string>
+    <string name="preferences_support">PREFERENZE E ASSISTENZA</string>
     <string name="language">Lingua</string>
     <string name="settings">Impostazioni</string>
     <string name="help_center">Centro assistenza</string>
@@ -195,225 +214,111 @@
     <string name="profile_avatar">Avatar del profilo</string>
     <string name="preset_avatar">Avatar predefinito</string>
     <string name="edit_profile_photo">Modifica foto profilo</string>
-
-    <string name="welcome_title">Benvenuto su </string>
-    <string name="welcome_accent_title">DramaX</string>
-    <string name="welcome_description">Migliaia di storie indimenticabili ti aspettano. Inizia a guardare ora.</string>
-    <string name="get_started">Inizia</string>
     <!-- Uninstall flow -->
-    <string name="uninstall_confirm_title">La cronologia e i tuoi drammi brevi preferiti\nti stanno ancora aspettando</string>
-    <string name="uninstall_confirm_description">Tieni DramaX installato per continuare storie,\nricompense e nuovi episodi in qualsiasi momento.</string>
+    <string name="uninstall_confirm_title">La tua cronologia e i tuoi drammi brevi preferiti\nti stanno ancora aspettando</string>
+    <string name="uninstall_confirm_description">Mantieni DramaX installato per continuare storie,\nricompense e nuovi episodi in qualsiasi momento.</string>
     <string name="uninstall_try_again">Riprova</string>
-    <string name="uninstall_still_want">Voglio ancora disinstallare</string>
-    <string name="uninstall_survey_title">Problemi riscontrati durante uso</string>
+    <string name="uninstall_still_want">Voglio comunque disinstallare</string>
+    <string name="uninstall_survey_title">Problemi riscontrati durante l\'utilizzo</string>
     <string name="uninstall_reason_feature_not_working">La funzione non funziona</string>
-    <string name="uninstall_reason_too_many_ads">Troppi annunci</string>
-    <string name="uninstall_reason_not_needed">Non mi serve</string>
+    <string name="uninstall_reason_too_many_ads">Troppe pubblicità</string>
+    <string name="uninstall_reason_not_needed">Non ne ho bisogno</string>
     <string name="uninstall_reason_other">Altro</string>
     <string name="uninstall_action">Disinstalla</string>
     <string name="uninstall_open_failed">Impossibile aprire la schermata di disinstallazione</string>
-    <string name="welcome_to_home_temp">Benvenuto nella Home</string>
-
-    <!-- Widget strings -->
+    <!-- Home widget / uninstall flow -->
+    <string name="widget_description" translatable="false">DramaX quick actions</string>
     <string name="widget_home">Home</string>
-    <string name="widget_my_list">La mia Lista</string>
+    <string name="widget_my_list">La mia lista</string>
     <string name="widget_uninstall">Disinstalla</string>
 
-    <string name="rateus_dialog_title">Ti piace DramaX?</string>
-    <string name="rateus_dialog_subtitle">La tua recensione ci aiuterà a migliorare la qualità di questa applicazione.</string>
-    <string name="not_now">Non ora</string>
-    <string name="share_app_message">Guarda brevi drama su DramaX: https://play.google.com/store/apps/details?id=%1$s</string>
-    <string name="share_app_chooser_title">Condividi DramaX</string>
-    <string name="no_episode_found">Nessun episodio trovato</string>
-    <string name="episode_locked">Episodio %1$d bloccato</string>
-    <string name="watch_ad_to_unlock">Guarda un annuncio per sbloccare</string>
-    <string name="recent_activity">Attività recenti</string>
+    <string name="welcome_to_home_temp">Benvenuto nella home</string>
+
+    <string name="report_an_issue">Segnala un problema</string>
+    <string name="report_an_issue_subtitle">Aiutaci a migliorare la tua esperienza di visione</string>
+
+    <string name="unlock_episode_title">Sblocca l\'episodio %1$d per continuare a guardare</string>
+    <string name="unlock_episode_desc">Guarda una pubblicità per sbloccare permanentemente questo episodio e continuare la storia.</string>
+    <string name="daily_progress">Progresso giornaliero: %1$d/%2$d</string>
+    <string name="watch_ad">Guarda pubblicità</string>
+    <string name="unlock_permanent_note">Gli episodi sbloccati con la pubblicità sono tuoi per sempre.</string>
+    <string name="daily_limit_title">Limite giornaliero di sblocchi gratuiti raggiunto</string>
+    <string name="daily_limit_desc">Hai utilizzato tutti i %1$d sblocchi gratuiti di oggi. Altri sblocchi gratuiti saranno disponibili domani.</string>
+    <string name="browse_free_episodes">Sfoglia episodi gratuiti</string>
+
+    <!-- Missing keys added to satisfy references in Kotlin sources -->
+    <string name="episode_locked">Episodio bloccato</string>
+    <string name="watch_ad_to_unlock">Guarda una pubblicità per sbloccare</string>
+    <string name="history_watching">In visione</string>
+    <string name="my_favorites">I miei preferiti</string>
+    <string name="no_favorites_yet">Ancora nessun preferito</string>
+    <string name="favorites_empty_message">Non hai ancora aggiunto preferiti.</string>
+    <string name="deselect_all">Deseleziona tutto</string>
+    <string name="select_all">Seleziona tutto</string>
+    <string name="long_press_to_select">Tieni premuto per selezionare</string>
+    <string name="recent_activity">Attività recente</string>
     <string name="inbox">Posta in arrivo</string>
-    <string name="notification_desc">Promemoria del planner e aggiornamenti delle ricompense in un unico posto.</string>
-    <string name="clearing">Pulizia in corso</string>
+    <string name="notification_desc">Aggiornamenti sul tuo account e le tue serie</string>
+    <string name="clearing">Cancellazione in corso</string>
     <string name="clear">Cancella</string>
     <string name="update">Aggiorna</string>
-    <string name="notification_body">Apri DramaX per vedere l\'ultimo aggiornamento.</string>
-    <string name="clearing_inbox">Pulizia della posta in arrivo</string>
-    <string name="no_notification_message">Nessuna notifica</string>
-    <string name="removing_old_updates">Rimozione dei vecchi aggiornamenti...</string>
-    <string name="planner_msg">I promemoria del planner e gli aggiornamenti delle ricompense appariranno qui.</string>
-    <string name="schedule_planner_msg">Pianifica drama salvati e promemoria.</string>
-    <string name="choose_saved_drama">Scegli un drama salvato</string>
-    <string name="save_drama_first">Salva prima un drama</string>
-    <string name="schedule_label_msg">Usa + nella Home o in Shorts per creare questo elenco.</string>
-    <string name="schedule_reminder">Programma promemoria</string>
-    <string name="select_saved_drama">Seleziona drama salvato</string>
-    <string name="episode_count">%1$d/%2$d</string>
-    <string name="episodes_range">Episodi %1$d - %2$d</string>
-    <string name="subtitle_small">Piccoli</string>
-    <string name="subtitle_medium">Medi</string>
-    <string name="subtitle_large">Grandi</string>
-    <string name="report_reason_episode_error">Errore episodio</string>
-    <string name="report_reason_paid_film_too_long">Film a pagamento troppo lungo</string>
-    <string name="report_reason_low_quality">Bassa qualità</string>
-    <string name="report_reason_subtitle_missing">Sottotitoli mancanti</string>
-    <string name="report_reason_inaccurate_subtitle">Sottotitoli imprecisi</string>
-    <string name="report_reason_other">Altro</string>
-    <string name="loading_share_apps">Caricamento delle app di condivisione</string>
-    <string name="welcome_back_emoji">👋</string>
-    <string name="welcome_back_title">Bentornato!</string>
-    <string name="welcome_back_description">Siamo felici di rivederti.\nGoditi drama e serie senza limiti!</string>
-    <string name="continue_text">Continua</string>
-    <string name="auto_advancing">Avanzamento automatico tra 3 secondi...</string>
-
-    <string name="tab_popular">Popolari</string>
-    <string name="tab_new">Nuovi</string>
-    <string name="tab_ranking">Classifica</string>
-    <string name="tab_categories">Categorie</string>
-
-    <string name="filter_all">Tutti</string>
-    <string name="filter_male">Uomo</string>
-    <string name="filter_female">Donna</string>
-
-    <string name="category_modern">Moderno</string>
-    <string name="category_historical">Storico</string>
-    <string name="category_fantasy">Fantasy</string>
-    <string name="category_romance">Romantico</string>
-
-    <string name="sort_newest">Più recenti</string>
-    <string name="sort_popular">Popolari</string>
-    <string name="sort_rating">Valutazione</string>
-    <string name="sort_trending">Di tendenza</string>
-
-    <string name="audience">PUBBLICO</string>
-    <string name="category">CATEGORIA</string>
-    <string name="filters">FILTRI</string>
-    <string name="sort_by">ORDINA PER</string>
-
-    <string name="apply_filters">Applica filtri</string>
-    <string name="apply_sort">Applica ordinamento</string>
-
-    <string name="featured_highlights">In evidenza</string>
-    <string name="fresh_on_dramax">Novità su DramaX</string>
-    <string name="weekly_top_20">Top 20 della settimana</string>
-
-    <string name="my_favorites">I miei preferiti</string>
-    <string name="no_favorites_yet">Nessun preferito</string>
-    <string name="favorites_empty_message">Aggiungi un drama ai preferiti per trovarlo qui.</string>
-
-    <string name="watch_something">Guarda qualcosa</string>
-    <string name="continue_watching_empty">Inizia un drama e apparirà qui.</string>
-
-    <string name="updated_3h_ago">Aggiornato 3 ore fa</string>
-
-    <string name="badge_hot">HOT</string>
-    <string name="badge_new">NUOVO</string>
-    <string name="start">INIZIA</string>
-
-    <string name="top_rank">TOP %1$d</string>
-
-    <string name="episode_info">Ep. %1$d di %2$d • %3$s</string>
-
-    <string name="genre_episode_total">%1$s - %2$d episodi</string>
-    <string name="genre_episode">%1$s - Ep. %2$d</string>
-
-    <string name="rating_genre">%1$s - %2$s</string>
-
-    <string name="time_left_minutes">%1$d min rimasti</string>
-    <string name="time_left_hours">%1$d h %2$d min rimasti</string>
-
-    <string-array name="audience_keywords_male">
-        <item>azione</item>
-        <item>thriller</item>
-        <item>vendetta</item>
-        <item>guerra</item>
-        <item>crimine</item>
-        <item>CEO</item>
-        <item>miliardario</item>
-        <item>fantasy</item>
-    </string-array>
-
-    <string-array name="audience_keywords_female">
-        <item>romantico</item>
-        <item>amore</item>
-        <item>famiglia</item>
-        <item>erede</item>
-        <item>sposa</item>
-        <item>moglie</item>
-        <item>autunno</item>
-        <item>drama</item>
-    </string-array>
-
-    <string-array name="category_keywords_modern">
-        <item>moderno</item>
-        <item>CEO</item>
-        <item>miliardario</item>
-        <item>città</item>
-        <item>ufficio</item>
-        <item>finanza</item>
-        <item>tecnologia</item>
-    </string-array>
-
-    <string-array name="category_keywords_historical">
-        <item>storico</item>
-        <item>re</item>
-        <item>regina</item>
-        <item>impero</item>
-        <item>eredità</item>
-        <item>dinastia</item>
-        <item>antico</item>
-    </string-array>
-
-    <string-array name="category_keywords_fantasy">
-        <item>fantasy</item>
-        <item>magia</item>
-        <item>cremisi</item>
-        <item>ombra</item>
-        <item>vuoto</item>
-        <item>soprannaturale</item>
-    </string-array>
-
-    <string-array name="category_keywords_romance">
-        <item>romantico</item>
-        <item>amore</item>
-        <item>promessa</item>
-        <item>sposa</item>
-        <item>moglie</item>
-        <item>autunno</item>
-    </string-array>
-
+    <string name="notification_body">Hai nuovi aggiornamenti</string>
+    <string name="clearing_inbox">Cancellazione posta in arrivo in corso</string>
+    <string name="no_notification_message">Ancora nessuna notifica</string>
+    <string name="removing_old_updates">Rimozione vecchi aggiornamenti in corso</string>
+    <string name="planner_msg">Pianifica i promemoria per la visione</string>
+    <string name="schedule_planner_msg">Scegli un orario per il promemoria</string>
+    <string name="choose_saved_drama">Scegli un dramma salvato</string>
+    <string name="save_drama_first">Salva prima un dramma per pianificare</string>
+    <string name="schedule_label_msg">Etichetta del programma</string>
+    <string name="schedule_reminder">Pianifica promemoria</string>
+    <string name="select_saved_drama">Seleziona un dramma salvato</string>
+    <string name="account_activity">Attività account</string>
+    <string name="privacy_text">Gestisci le tue impostazioni sulla privacy</string>
+    <string name="share_app">Condividi app</string>
+    <string name="rateus_dialog_title">Valuta DramaX</string>
+    <string name="rateus_dialog_subtitle">Ti piace l\'app? Lascia una valutazione!</string>
+    <string name="not_now">Non ora</string>
+    <string name="share_app_message">Scopri DramaX — tantissimi drammi brevi!</string>
+    <string name="share_app_chooser_title">Condividi tramite</string>
+    <string name="fallback_genre_romance">Romantico</string>
+    <string name="fallback_genre_drama">Drammatico</string>
+    <string name="fallback_genre_thriller">Thriller</string>
     <string name="trending_searches">Ricerche di tendenza</string>
     <string name="hot_searches">Ricerche popolari</string>
-    <string name="view_all">VEDI TUTTO</string>
-
-    <string name="badge_trending_first">Tendenza n. 1</string>
-    <string name="badge_new_release">Nuova uscita</string>
-
-    <string name="results_found_for_query">Trovati %1$d risultati per "%2$s"</string>
-
+    <string name="badge_hot">POPOLARE</string>
+    <string name="badge_new">NUOVO</string>
+    <string name="empty_state_mask_glyph">Nessun risultato</string>
     <string name="no_results_found">Nessun risultato trovato</string>
-    <string name="no_results_found_desc">Non abbiamo trovato alcun drama corrispondente alla ricerca "%1$s". Prova con un\'altra parola chiave.</string>
-    <string name="empty_state_mask_glyph">×</string>
+    <string name="no_results_found_desc">Prova un termine di ricerca diverso.</string>
+    <string name="results_found_for_query">Risultati per "%1$s"</string>
+    <string name="badge_new_release">NUOVA USCITA</string>
+    <string name="badge_trending_first">TENDENZA #1</string>
+    <string name="fallback_description">Un dramma breve pieno di segreti e colpi di scena.</string>
+    <string name="view_all">Vedi tutto</string>
+    <string name="genre_fallback">Drammatico</string>
+    <string name="must_unlock_episode_first">Sblocca prima gli episodi precedenti.</string>
+    <string name="episode_count">%1$d episodi</string>
+    <string name="episodes_range">Episodi %1$d-%2$d</string>
+    <string name="subtitle_small">Piccolo</string>
+    <string name="subtitle_medium">Medio</string>
+    <string name="subtitle_large">Grande</string>
+    <string name="report_reason_episode_error">Errore di riproduzione dell\'episodio</string>
+    <string name="report_reason_paid_film_too_long">Film a pagamento troppo lungo</string>
+    <string name="report_reason_low_quality">Bassa qualità</string>
+    <string name="report_reason_subtitle_missing">Sottotitolo mancante</string>
+    <string name="report_reason_inaccurate_subtitle">Sottotitolo impreciso</string>
+    <string name="report_reason_other">Altro</string>
+    <string name="loading_share_apps">Caricamento app...</string>
+    <string name="items_watched">%1$d elementi guardati</string>
+    <string name="nothing_watched_yet">Ancora niente guardato</string>
+    <string name="nothing_watched_yet_desc">Guarda gli episodi per qualche secondo per tracciare i progressi qui.</string>
+    <string name="favorites_size">%1$d preferiti</string>
+    <string name="no_dramas_loaded_title">Nessun dramma caricato</string>
+    <string name="no_dramas_loaded_desc">Impossibile caricare i drammi in questo momento. Riprova più tardi.</string>
 
-    <string name="no_dramas_loaded_title">Nessun drama caricato</string>
-    <string name="no_dramas_loaded_desc">Apri la Home quando il catalogo sarà disponibile, quindi la ricerca utilizzerà questi drama.</string>
+    <string name="no_internet_title">Nessuna connessione Internet</string>
+    <string name="no_internet_desc">Nessuna connessione Internet. Connettiti a Internet per usare l\'app.</string>
+    <string name="connect_internet">Connetti a Internet</string>
 
-    <string name="genre_fallback">DRAMA</string>
-
-    <string name="fallback_description">I segreti vengono alla luce quando un ricco erede scopre che il passato era una menzogna.</string>
-    <string name="fallback_genre_romance">Romantico</string>
-    <string name="fallback_genre_drama">Drama</string>
-    <string name="fallback_genre_thriller">Thriller</string>
-
-    <string name="history_watching">Cronologia di visione</string>
-    <string name="items_watched">%1$d ELEMENTI GUARDATI</string>
-    <string name="nothing_watched_yet">Non hai ancora guardato nulla</string>
-    <string name="nothing_watched_yet_desc">Guarda un drama e qui verrà mostrata tutta la tua cronologia.</string>
-
-    <string name="favorites_size">%1$d ELEMENTI</string>
-
-    <string name="select_all">Seleziona tutto</string>
-    <string name="deselect_all">Deseleziona tutto</string>
-    <string name="long_press_to_select">Tieni premuto per selezionare</string>
-
-    <string name="account_activity">Attività dell\'account</string>
-    <string name="preferences">Preferenze e supporto</string>
-    <string name="privacy_text">Privacy</string>
-    <string name="share_app">Condividi app</string>
 </resources>
