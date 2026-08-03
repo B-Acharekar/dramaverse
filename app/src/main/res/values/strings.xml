@@ -58,9 +58,8 @@
     <!-- Continue watching -->
     <string name="continue_watching">Continue Watching</string>
     <string name="continue_watching_subtitle">Continue from your latest episode</string>
-    <string name="continue_watching_empty">Films watched for 10 seconds or more will appear here.</string>
     <string name="see_all">SEE ALL</string>
-    
+
     <!-- Trending / poster rails -->
     <string name="trending_now">Trending Now</string>
     <string name="recommended_for_you">Recommended For You</string>
@@ -162,7 +161,7 @@
     <string name="speed_15x">1.5x</string>
     <string name="speed_2x">2x</string>
     <string name="speed_custom">%1$sx</string>
-    
+
     <!-- Profile Screen -->
     <string name="default_username">Drama Enthusiast</string>
     <string name="update_profile_photo">Update Profile Photo</string>
@@ -243,82 +242,213 @@
     <string name="watch_ad">Watch Ad</string>
     <string name="unlock_permanent_note">Episodes unlocked with ads are yours forever.</string>
     <string name="daily_limit_title">Daily Free Unlock Limit Reached</string>
-    <string name="daily_limit_desc">You have used all %1$d free unlocks today. More free unlocks will be available tomorrow.</string>
+    <string name="daily_limit_desc">You\'ve used all %1$d free unlocks today. More free unlocks will be available tomorrow.</string>
     <string name="browse_free_episodes">Browse Free Episodes</string>
-
-    <!-- Missing keys added to satisfy references in Kotlin sources -->
-    <string name="episode_locked">Episode locked</string>
-    <string name="watch_ad_to_unlock">Watch an ad to unlock</string>
-    <string name="history_watching">Watching</string>
-    <string name="my_favorites">My Favorites</string>
-    <string name="no_favorites_yet">No favorites yet</string>
-    <string name="favorites_empty_message">You have not added any favorites yet.</string>
-    <string name="deselect_all">Deselect all</string>
-    <string name="select_all">Select all</string>
-    <string name="long_press_to_select">Long-press to select</string>
-    <string name="recent_activity">Recent Activity</string>
-    <string name="inbox">Inbox</string>
-    <string name="notification_desc">Updates about your account and shows</string>
-    <string name="clearing">Clearing</string>
-    <string name="clear">Clear</string>
-    <string name="update">Update</string>
-    <string name="notification_body">You have new updates</string>
-    <string name="clearing_inbox">Clearing inbox</string>
-    <string name="no_notification_message">No notifications yet</string>
-    <string name="removing_old_updates">Removing old updates</string>
-    <string name="planner_msg">Schedule your watch reminders</string>
-    <string name="schedule_planner_msg">Choose a time to be reminded</string>
-    <string name="choose_saved_drama">Choose a saved drama</string>
-    <string name="save_drama_first">Save a drama first to schedule</string>
-    <string name="schedule_label_msg">Schedule label</string>
-    <string name="schedule_reminder">Schedule Reminder</string>
-    <string name="select_saved_drama">Select a saved drama</string>
-    <string name="account_activity">Account Activity</string>
-    <string name="privacy_text">Manage your privacy settings</string>
-    <string name="share_app">Share App</string>
-    <string name="rateus_dialog_title">Rate DramaX</string>
-    <string name="rateus_dialog_subtitle">Enjoying the app? Leave a rating!</string>
-    <string name="not_now">Not now</string>
-    <string name="share_app_message">Check out DramaX — tons of short dramas!</string>
-    <string name="share_app_chooser_title">Share via</string>
-    <string name="fallback_genre_romance">Romance</string>
-    <string name="fallback_genre_drama">Drama</string>
-    <string name="fallback_genre_thriller">Thriller</string>
-    <string name="trending_searches">Trending searches</string>
-    <string name="hot_searches">Hot searches</string>
-    <string name="badge_hot">HOT</string>
-    <string name="badge_new">NEW</string>
-    <string name="empty_state_mask_glyph">No results</string>
-    <string name="no_results_found">No results found</string>
-    <string name="no_results_found_desc">Try a different search term.</string>
-    <string name="results_found_for_query">Results for "%1$s"</string>
-    <string name="badge_new_release">NEW RELEASE</string>
-    <string name="badge_trending_first">TRENDING #1</string>
-    <string name="fallback_description">A short drama packed with secrets and twists.</string>
-    <string name="view_all">View all</string>
-    <string name="genre_fallback">Drama</string>
-    <string name="must_unlock_episode_first">Please unlock earlier episodes first.</string>
-    <string name="episode_count">%1$d episodes</string>
-    <string name="episodes_range">Episodes %1$d-%2$d</string>
-    <string name="subtitle_small">Small</string>
-    <string name="subtitle_medium">Medium</string>
-    <string name="subtitle_large">Large</string>
-    <string name="report_reason_episode_error">Episode playback error</string>
-    <string name="report_reason_paid_film_too_long">Paid film too long</string>
-    <string name="report_reason_low_quality">Low quality</string>
-    <string name="report_reason_subtitle_missing">Subtitle missing</string>
-    <string name="report_reason_inaccurate_subtitle">Inaccurate subtitle</string>
-    <string name="report_reason_other">Other</string>
-    <string name="loading_share_apps">Loading apps...</string>
-    <string name="items_watched">%1$d items watched</string>
-    <string name="nothing_watched_yet">Nothing watched yet</string>
-    <string name="nothing_watched_yet_desc">Watch episodes for a few seconds to track progress here.</string>
-    <string name="favorites_size">%1$d favorites</string>
-    <string name="no_dramas_loaded_title">No dramas loaded</string>
-    <string name="no_dramas_loaded_desc">We could not load dramas right now. Try again later.</string>
 
     <string name="no_internet_title">No Internet</string>
     <string name="no_internet_desc">No internet connection. Please connect to the internet to use the app.</string>
     <string name="connect_internet">Connect Internet</string>
 
+    <string name="rateus_dialog_title">Enjoying DramaX?</string>
+    <string name="rateus_dialog_subtitle">Your review will improve the quality of this application</string>
+
+    <string name="not_now">Not now</string>
+    <string name="share_app_message">Watch short dramas on DramaX: https://play.google.com/store/apps/details?id=%1$s</string>
+    <string name="share_app_chooser_title">Share DramaX</string>
+    <string name="no_episode_found">No episodes found</string>
+    <string name="episode_locked">Episode %1$d Locked</string>
+    <string name="watch_ad_to_unlock">Watch Ad to Unlock</string>
+    <string name="recent_activity">Recent Activity</string>
+    <string name="inbox">Inbox</string>
+    <string name="notification_desc">Planner reminders and reward updates in one place.</string>
+    <string name="clearing">Clearing</string>
+    <string name="clear">Clear</string>
+    <string name="update">Update</string>
+    <string name="notification_body">Open DramaX for the latest update.</string>
+    <string name="clearing_inbox">Clearing Inbox</string>
+    <string name="no_notification_message">No notification yet</string>
+    <string name="removing_old_updates">Removing old updated...</string>
+    <string name="planner_msg">Planner reminders and reward updates will appear here.</string>
+    <string name="schedule_planner_msg">Schedule saved dramas and reminders.</string>
+    <string name="choose_saved_drama">Choose a saved drama</string>
+    <string name="save_drama_first">Save dramas first</string>
+    <string name="schedule_label_msg">Use + on Home or Shorts to build this list.</string>
+    <string name="schedule_reminder">Schedule Reminder</string>
+    <string name="select_saved_drama">Select Saved Drama</string>
+    <string name="episode_count">%1$d/%2$d</string>
+    <string name="episodes_range">Episodes %1$d - %2$d</string>
+        <string name="must_unlock_episode_first">Please unlock earlier episodes first.</string>
+    <string name="subtitle_small">Small</string>
+    <string name="subtitle_medium">Medium</string>
+    <string name="subtitle_large">Large</string>
+    <string name="report_reason_episode_error">Episode error</string>
+    <string name="report_reason_paid_film_too_long">Paid film too long</string>
+    <string name="report_reason_low_quality">Low Quality</string>
+    <string name="report_reason_subtitle_missing">Subtitle missing</string>
+    <string name="report_reason_inaccurate_subtitle">Inaccurate Subtitle</string>
+    <string name="report_reason_other">Other</string>
+    <string name="loading_share_apps">Loading share apps</string>
+    <string name="welcome_back_emoji">👋</string>
+    <string name="welcome_back_title">Welcome Back!</string>
+    <string name="welcome_back_description">We\'re excited to see you again.\nEnjoy unlimited dramas and shows!</string>
+    <string name="continue_text">Continue</string>
+    <string name="auto_advancing">Auto-advancing in 3 seconds...</string>
+
+    <string name="tab_popular">Popular</string>
+    <string name="tab_new">New</string>
+    <string name="tab_ranking">Ranking</string>
+    <string name="tab_categories">Categories</string>
+
+    <string name="filter_all">All</string>
+    <string name="filter_male">Male</string>
+    <string name="filter_female">Female</string>
+
+    <string name="category_modern">Modern</string>
+    <string name="category_historical">Historical</string>
+    <string name="category_fantasy">Fantasy</string>
+    <string name="category_romance">Romance</string>
+
+    <string name="sort_newest">Newest</string>
+    <string name="sort_popular">Popular</string>
+    <string name="sort_rating">Rating</string>
+    <string name="sort_trending">Trending</string>
+
+    <string name="audience">AUDIENCE</string>
+    <string name="category">CATEGORY</string>
+    <string name="filters">FILTERS</string>
+    <string name="sort_by">SORT BY</string>
+
+    <string name="apply_filters">Apply Filters</string>
+    <string name="apply_sort">Apply Sort</string>
+
+    <string name="featured_highlights">Featured Highlights</string>
+    <string name="fresh_on_dramax">Fresh on DramaX</string>
+    <string name="weekly_top_20">Weekly Top 20</string>
+
+    <string name="my_favorites">My Favorites</string>
+    <string name="no_favorites_yet">No favorites yet</string>
+    <string name="favorites_empty_message">Bookmark a drama to add it here.</string>
+
+    <string name="watch_something">Watch something</string>
+    <string name="continue_watching_empty">Start a drama and it will appear here.</string>
+
+    <string name="updated_3h_ago">Updated 3h ago</string>
+
+    <string name="badge_hot">HOT</string>
+    <string name="badge_new">NEW</string>
+    <string name="start">START</string>
+
+    <string name="top_rank">TOP %1$d</string>
+
+    <string name="episode_info">Ep %1$d of %2$d • %3$s</string>
+
+    <string name="genre_episode_total">%1$s - %2$d Eps</string>
+    <string name="genre_episode">%1$s - Ep %2$d</string>
+
+    <string name="rating_genre">%1$s - %2$s</string>
+
+    <string name="time_left_minutes">%1$dm left</string>
+    <string name="time_left_hours">%1$dh %2$dm left</string>
+
+    <string-array name="audience_keywords_male">
+        <item>action</item>
+        <item>thriller</item>
+        <item>revenge</item>
+        <item>war</item>
+        <item>crime</item>
+        <item>ceo</item>
+        <item>billionaire</item>
+        <item>fantasy</item>
+    </string-array>
+
+    <string-array name="audience_keywords_female">
+        <item>romance</item>
+        <item>love</item>
+        <item>family</item>
+        <item>heir</item>
+        <item>bride</item>
+        <item>wife</item>
+        <item>autumn</item>
+        <item>drama</item>
+    </string-array>
+
+    <string-array name="category_keywords_modern">
+        <item>modern</item>
+        <item>ceo</item>
+        <item>billionaire</item>
+        <item>city</item>
+        <item>office</item>
+        <item>finance</item>
+        <item>tech</item>
+    </string-array>
+
+    <string-array name="category_keywords_historical">
+        <item>historical</item>
+        <item>king</item>
+        <item>queen</item>
+        <item>empire</item>
+        <item>legacy</item>
+        <item>dynasty</item>
+        <item>ancient</item>
+    </string-array>
+
+    <string-array name="category_keywords_fantasy">
+        <item>fantasy</item>
+        <item>magic</item>
+        <item>crimson</item>
+        <item>shadow</item>
+        <item>void</item>
+        <item>supernatural</item>
+    </string-array>
+
+    <string-array name="category_keywords_romance">
+        <item>romance</item>
+        <item>love</item>
+        <item>vow</item>
+        <item>bride</item>
+        <item>wife</item>
+        <item>autumn</item>
+    </string-array>
+
+    <!-- Section headers -->
+    <string name="trending_searches">Trending Searches</string>
+    <string name="hot_searches">Hot Searches</string>
+    <string name="view_all">VIEW ALL</string>
+
+    <!-- Badges -->
+    <string name="badge_trending_first">Trending #1</string>
+    <string name="badge_new_release">New Release</string>
+
+    <!-- Filters row -->
+    <string name="results_found_for_query">%1$d Results found for \"%2$s\"</string>
+
+    <!-- Empty search state -->
+    <string name="no_results_found">No results found</string>
+    <string name="no_results_found_desc">We couldn\'t find any dramas matching your search \"%1$s\". Try a different keyword.</string>
+    <string name="empty_state_mask_glyph">x</string>
+
+    <!-- Empty catalog state -->
+    <string name="no_dramas_loaded_title">No dramas loaded yet</string>
+    <string name="no_dramas_loaded_desc">Open Home once the feed is available, then Search will use those real dramas here.</string>
+
+    <!-- Genre tag fallback -->
+    <string name="genre_fallback">DRAMA</string>
+
+    <!-- Fallback content (used when API fields are blank) -->
+    <string name="fallback_description">Secrets unravel as a wealthy heir discovers the past is a lie.</string>
+    <string name="fallback_genre_romance">Romance</string>
+    <string name="fallback_genre_drama">Drama</string>
+    <string name="fallback_genre_thriller">Thriller</string>
+    <string name="history_watching">History Watching</string>
+    <string name="items_watched">%1$d ITEMS WATCHED</string>
+    <string name="nothing_watched_yet">Nothing watched yet</string>
+    <string name="nothing_watched_yet_desc">Watch something and your full history will show here.</string>
+    <string name="favorites_size">%1$d ITEMS</string>
+    <string name="select_all">Select all</string>
+    <string name="deselect_all">Deselect all</string>
+    <string name="long_press_to_select">Long-press to select</string>
+    <string name="account_activity">Account Activity</string>
+    <string name="preferences">Preference &amp; Support</string>
+    <string name="privacy_text">Privacy</string>
+    <string name="share_app">Share App</string>
 </resources>
