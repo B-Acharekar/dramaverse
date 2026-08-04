@@ -273,6 +273,17 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun openEpisodes(filmId: Int, episodeNumber: Int? = null) {
+        _uiState.update {
+            it.copy(
+                currentStep = AppStep.Episodes,
+                selectedEpisodeFilmId = filmId,
+                selectedEpisodeNumber = episodeNumber,
+                selectedShortFilmId = null
+            )
+        }
+    }
+
     fun openWelcomeBack() {
         _uiState.update { it.copy(currentStep = AppStep.WelcomeBack) }
     }

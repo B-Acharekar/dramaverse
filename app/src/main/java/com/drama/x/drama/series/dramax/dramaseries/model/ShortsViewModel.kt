@@ -159,6 +159,59 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    /**
+     * Returns true if we're in episode mode (viewing a specific drama's episodes only).
+     * In this mode, the pager should not load additional dramas.
+     */
+    fun isInEpisodeMode(): Boolean = currentInitialFilmId != null && currentInitialFilmId != 0
+
+    /**
+     * Load a drama's episodes for episode mode when entering from generic feed (Watch Now).
+     * Replaces the mixed feed with just this drama's episodes.
+     */
+    fun loadDramaEpisodesForWatchNow(
+        backendBaseUrl: String,
+        filmId: Int,
+        startEpisode: Int = 1
+    ) {
+        val isGenericFeed = currentInitialFilmId == null || currentInitialFilmId == 0
+        if (!isGenericFeed) return  // Already in episode mode
+
+        currentInitialFilmId = filmId
+        viewModelScope.launch {
+            _uiState.update { ShortsUiState(isLoading = true) }
+            
+            withContext(Dispatchers.IO) {
+                repository.loadPlayback(
+                    backendBaseUrl = backendBaseUrl,
+                    filmId = filmId,
+                    episodeNumber = startEpisode,
+                    language = selectedLanguageCode()
+                )
+            }.onSuccess { firstItem ->
+                if (firstItem.playUrl.isBlank()) return@onSuccess
+                val totalEpisodes = firstItem.film.episodeTotal.coerceAtLeast(1)
+                val initialItems = (1..totalEpisodes).map { epNum ->
+                    if (epNum == startEpisode) {
+                        firstItem
+                    } else {
+                        firstItem.copy(
+                            episodeNumber = epNum,
+                            playUrl = "",
+                            isLocked = epNum > 7
+                        )
+                    }
+                }
+                _uiState.update {
+                    it.copy(isLoading = false, items = initialItems, errorMessage = null)
+                }
+                // Load remaining episodes in background
+                loadEpisodeFeed(backendBaseUrl, filmId, firstItem, startEpisode)
+            }
+            ensurePlayback(startEpisode - 1, backendBaseUrl)
+        }
+    }
+
     fun ensurePlayback(index: Int, backendBaseUrl: String) {
         val item = _uiState.value.items.getOrNull(index) ?: return
         if (item.playUrl.isNotBlank() || item.film.id == 0) return

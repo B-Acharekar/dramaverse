@@ -122,7 +122,6 @@
     <!-- Episode -->
     <string name="episode_progress">Episódio %1$d/%2$d</string>
     <string name="episode_title">Episódio %1$d</string>
-    <string name="playing">Reproduzindo</string>
     <string name="free">Grátis</string>
     <string name="trending_number">Em Alta #1</string>
 

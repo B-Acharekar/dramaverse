@@ -58,7 +58,7 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:contentDescription="@string/widget_my_list"
-            android:src="@drawable/widget_bookmark" />
+            android:src="@drawable/widget_mylist" />
 
         <TextView
             android:layout_width="0dp"

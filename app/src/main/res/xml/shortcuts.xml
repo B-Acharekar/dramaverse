@@ -14,7 +14,7 @@
     </shortcut>
     <shortcut
         android:enabled="true"
-        android:icon="@drawable/shortcut_bookmark"
+        android:icon="@drawable/shortcut_mylist"
         android:shortcutDisabledMessage="@string/widget_my_list"
         android:shortcutId="shortcut_my_list"
         android:shortcutLongLabel="@string/widget_my_list"

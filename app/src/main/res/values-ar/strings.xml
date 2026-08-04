@@ -121,7 +121,6 @@
     <!-- Episode -->
     <string name="episode_progress">الحلقة %1$d/%2$d</string>
     <string name="episode_title">الحلقة %1$d</string>
-    <string name="playing">قيد التشغيل</string>
     <string name="free">مجاني</string>
     <string name="trending_number">الرائج رقم 1</string>
 
@@ -480,6 +479,7 @@
     <string name="share_default_title">هذا المقطع القصير من DramaX</string>
     <string name="share_episode_on">الحلقة %1$d على DramaX.</string>
     <string name="share_get_app">احصل على التطبيق:</string>
+    <string name="copied_to_clipboard">تم النسخ إلى الحافظة</string>
 
     <!-- Video Caption -->
     <string name="watch_great_content">شاهد هذا المحتوى الرائع</string>

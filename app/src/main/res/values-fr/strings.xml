@@ -121,7 +121,6 @@
     <!-- Episode -->
     <string name="episode_progress">Épisode %1$d/%2$d</string>
     <string name="episode_title">Épisode %1$d</string>
-    <string name="playing">En cours de lecture</string>
     <string name="free">Gratuit</string>
     <string name="trending_number">Tendance #1</string>
 
@@ -480,6 +479,7 @@
     <string name="share_default_title">ce court métrage DramaX</string>
     <string name="share_episode_on">Épisode %1$d sur DramaX.</string>
     <string name="share_get_app">Téléchargez l\'application :</string>
+    <string name="copied_to_clipboard">copié dans le presse-papiers</string>
 
     <!-- Video Caption -->
     <string name="watch_great_content">Regardez ce super contenu</string>

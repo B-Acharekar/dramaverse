@@ -121,7 +121,6 @@
     <!-- Episode -->
     <string name="episode_progress">Episode %1$d/%2$d</string>
     <string name="episode_title">Episode %1$d</string>
-    <string name="playing">Playing</string>
     <string name="free">Free</string>
     <string name="trending_number">Trending #1</string>
 
@@ -480,6 +479,7 @@
     <string name="share_default_title">this DramaX short</string>
     <string name="share_episode_on">Episode %1$d on DramaX.</string>
     <string name="share_get_app">Get the app:</string>
+    <string name="copied_to_clipboard">copied to clipboard</string>
 
     <!-- Video Caption -->
     <string name="watch_great_content">Watch this great content</string>

@@ -121,7 +121,6 @@
     <!-- Episode -->
     <string name="episode_progress">第%1$d話/%2$d話</string>
     <string name="episode_title">第%1$d話</string>
-    <string name="playing">再生中</string>
     <string name="free">無料</string>
     <string name="trending_number">話題ランキング1位</string>
 
@@ -480,6 +479,7 @@
     <string name="share_default_title">このDramaXショート</string>
     <string name="share_episode_on">DramaXで第%1$d話を配信中。</string>
     <string name="share_get_app">アプリを入手:</string>
+    <string name="copied_to_clipboard">クリップボードにコピーしました</string>
 
     <!-- Video Caption -->
     <string name="watch_great_content">この素晴らしいコンテンツを視聴</string>

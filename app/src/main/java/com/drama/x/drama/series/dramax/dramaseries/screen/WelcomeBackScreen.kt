@@ -27,10 +27,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.drama.x.drama.series.dramax.dramaseries.R
 import kotlinx.coroutines.delay
 
 private val HomeBackground = Color(0xFF09090B)
@@ -40,12 +42,6 @@ private val SoftPink = Color(0xFFFFC0C9)
 @Composable
 fun WelcomeBackScreen(onFinished: () -> Unit) {
     var showContent by remember { mutableStateOf(false) }
-
-    // Auto-advance after 3 seconds
-    LaunchedEffect(Unit) {
-        delay(3000)
-        onFinished()
-    }
 
     // Trigger content animation on first composition
     LaunchedEffect(Unit) {
@@ -91,14 +87,14 @@ fun WelcomeBackScreen(onFinished: () -> Unit) {
                 ) {
                     // Welcome Back emoji/icon
                     Text(
-                        text = "👋",
+                        text = stringResource(R.string.welcome_back_emoji),
                         fontSize = 64.sp,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
 
                     // Welcome back title
                     Text(
-                        text = "Welcome Back!",
+                        text = stringResource(R.string.welcome_back_title),
                         fontSize = 32.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = Color.White,
@@ -110,7 +106,7 @@ fun WelcomeBackScreen(onFinished: () -> Unit) {
 
                     // Description
                     Text(
-                        text = "We're excited to see you again.\nEnjoy unlimited dramas and shows!",
+                        text = stringResource(R.string.welcome_back_description),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = SoftPink,
@@ -136,7 +132,7 @@ fun WelcomeBackScreen(onFinished: () -> Unit) {
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Continue",
+                            text = stringResource(R.string.start),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Black,
                             color = Color.White,
@@ -145,20 +141,6 @@ fun WelcomeBackScreen(onFinished: () -> Unit) {
                     }
                 }
             }
-        }
-
-        // Skip indicator at bottom
-        if (showContent) {
-            Text(
-                text = "Auto-advancing in 3 seconds...",
-                fontSize = 10.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF6B6B6F),
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 24.dp),
-                textAlign = TextAlign.Center
-            )
         }
     }
 }

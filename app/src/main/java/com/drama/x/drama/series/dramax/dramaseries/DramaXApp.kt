@@ -191,7 +191,8 @@ fun DramaXApp(
             onHome = ::openHomeWithBackAd,
             onLibrary = viewModel::openLibrary,
             onRewards = viewModel::openRewards,
-            onProfile = viewModel::openProfile
+            onProfile = viewModel::openProfile,
+            onNavigateToEpisodes = viewModel::openEpisodes
         )
 
         AppStep.Episodes -> ShortsScreen(
@@ -202,7 +203,8 @@ fun DramaXApp(
             onHome = ::openHomeWithBackAd,
             onLibrary = viewModel::openLibrary,
             onRewards = viewModel::openRewards,
-            onProfile = viewModel::openProfile
+            onProfile = viewModel::openProfile,
+            onNavigateToEpisodes = viewModel::openEpisodes
         )
 
         AppStep.Library -> LibraryScreen(

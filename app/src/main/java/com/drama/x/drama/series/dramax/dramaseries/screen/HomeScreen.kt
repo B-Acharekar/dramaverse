@@ -70,6 +70,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -857,8 +858,6 @@ fun DramaXTopAppBar(
         Spacer(modifier = Modifier.weight(1f))
         if (showActions) {
             AppHeaderIcon(Icons.Filled.Search, onSearchClick, Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(16.dp))
-            AppHeaderIcon(Icons.Filled.Notifications, onNotificationsClick, Modifier.size(width = 16.dp, height = 20.dp))
         }
     }
 }
@@ -1227,16 +1226,22 @@ private fun RankingHeroRow(rank: Int, item: DramaItem, onOpenEpisodes: (Int?) ->
         ) {
             NetworkDramaImage(item.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, item.title)
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xE6000000)))))
-            CornerBadge(stringResource(R.string.top_rank, rank), Color(0xFF374151), icon = null, modifier =  Modifier.align(Alignment.BottomStart).padding(start = 10.dp, bottom = 40.dp))
+            
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
+                    .fillMaxWidth()
                     .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
             ) {
+                Row(verticalAlignment = Alignment.Bottom) {
+                    CornerBadge(stringResource(R.string.top_rank, rank), Color(0xFF374151), icon = null, modifier = Modifier)
+                    Spacer(Modifier.weight(1f))
+                    Text(item.rating, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
+                }
+                Spacer(Modifier.height(8.dp))
                 Text(item.title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
                 Text(stringResource(R.string.genre_episode_total, item.genre, item.episodeTotal), color = Color(0xFFD1D5DB), fontSize = 10.sp, maxLines = 1, letterSpacing = 0.sp)
             }
-            Text(item.rating, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.BottomEnd).padding(10.dp), letterSpacing = 0.sp)
         }
     }
 }
@@ -1911,8 +1916,33 @@ fun BottomNavigationBar(
     ) {
         NavItem(Icons.Filled.Home, stringResource(R.string.nav_home), selected == "Home", onHome)
         NavItem(Icons.Filled.Explore, stringResource(R.string.nav_shorts), selected == "Shorts", onShorts)
-        NavItem(Icons.Filled.Bookmark, stringResource(R.string.nav_library), selected == "Library", onLibrary)
+        NavItemWithDrawable(R.drawable.nav_mylist, stringResource(R.string.nav_library), selected == "Library", onLibrary)
         NavItem(Icons.Filled.Person, stringResource(R.string.nav_profile), selected == "Profile", onProfile)
+    }
+}
+
+@Composable
+private fun NavItemWithDrawable(drawableRes: Int, label: String, selected: Boolean, onClick: () -> Unit) {
+    val tint = if (selected) Gold else Color(0xFF9B858E)
+    val background = if (selected) Color(0x1FF5C65B) else Color.Transparent
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier
+            .width(58.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(background)
+            .clickable(onClick = onClick)
+            .padding(vertical = 4.dp)
+    ) {
+        Image(
+            painter = painterResource(drawableRes),
+            contentDescription = null,
+            modifier = Modifier
+                .size(if (selected) 25.dp else 22.dp),
+            colorFilter = ColorFilter.tint(tint)
+        )
+        Text(label, color = tint, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
     }
 }
 

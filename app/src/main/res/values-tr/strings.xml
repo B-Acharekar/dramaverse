@@ -120,7 +120,6 @@
     <!-- Episode -->
     <string name="episode_progress">Bölüm %1$d/%2$d</string>
     <string name="episode_title">Bölüm %1$d</string>
-    <string name="playing">Oynatılıyor</string>
     <string name="free">Ücretsiz</string>
     <string name="trending_number">Trend #1</string>
 
@@ -479,6 +478,7 @@
     <string name="share_default_title">bu DramaX kısa dizisi</string>
     <string name="share_episode_on">DramaX\'te Bölüm %1$d.</string>
     <string name="share_get_app">Uygulamayı indirin:</string>
+    <string name="copied_to_clipboard">panoya kopyalandı</string>
 
     <!-- Video Caption -->
     <string name="watch_great_content">Bu harika içeriği izleyin</string>

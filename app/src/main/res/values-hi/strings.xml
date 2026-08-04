@@ -121,7 +121,6 @@
     <!-- Episode -->
     <string name="episode_progress">एपिसोड %1$d/%2$d</string>
     <string name="episode_title">एपिसोड %1$d</string>
-    <string name="playing">चल रहा है</string>
     <string name="free">मुफ़्त</string>
     <string name="trending_number">ट्रेंडिंग #1</string>
 
@@ -480,6 +479,7 @@
     <string name="share_default_title">यह DramaX शॉर्ट</string>
     <string name="share_episode_on">DramaX पर एपिसोड %1$d।</string>
     <string name="share_get_app">ऐप पाएं:</string>
+    <string name="copied_to_clipboard">क्लिपबोर्ड में कॉपी किया गया</string>
 
     <!-- Video Caption -->
     <string name="watch_great_content">यह शानदार कंटेंट देखें</string>
