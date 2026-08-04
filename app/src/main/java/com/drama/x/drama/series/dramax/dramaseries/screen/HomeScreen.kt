@@ -1916,6 +1916,7 @@ private fun HomeSmallNativeAd(
 /**
  * Custom dark-themed native ad matching app UI.
  * Uses dark background (#16121A) and app CTA color (#FF3F59).
+ * Layout: Horizontal with media on the right (matching reference image).
  */
 @Composable
 private fun CustomDarkNativeAd(
@@ -1929,7 +1930,7 @@ private fun CustomDarkNativeAd(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight(),
-        height = 120.dp // Medium-sized native ad
+        height = 180.dp // Taller for horizontal layout with visible media
     )
 }
 

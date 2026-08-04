@@ -21,121 +21,128 @@
 
     <!-- Dark card matching app theme -->
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/ad_card"
+        android:id="@+id/ad_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_native_home_dark"
+        android:background="@drawable/bg_native_ads_dark"
         android:padding="12dp"
         android:layoutDirection="ltr"
         tools:ignore="HardcodedText,SpUsage">
 
-        <!-- Left content section -->
-        <LinearLayout
-            android:id="@+id/left_content"
+        <!-- App icon -->
+        <ImageView
+            android:id="@+id/ad_app_icon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:adjustViewBounds="true"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- "Ad" badge -->
+        <TextView
+            android:id="@+id/ad_icon_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_ad_icon_dark"
+            android:paddingHorizontal="6dp"
+            android:paddingVertical="2dp"
+            android:text="Ad"
+            android:textColor="#FFFFFF"
+            android:textSize="9sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@id/ad_app_icon"
+            app:layout_constraintTop_toTopOf="@id/ad_app_icon" />
+
+        <!-- Headline (Placed on the same line to the right of the Ad badge) -->
+        <TextView
+            android:id="@+id/ad_headline"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="12dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:lineHeight="18sp"
+            app:layout_constraintStart_toEndOf="@id/ad_icon_text"
+            app:layout_constraintEnd_toStartOf="@id/ad_media"
+            app:layout_constraintTop_toTopOf="@id/ad_app_icon"
+            tools:text="Start your crypto journey today!" />
+
+        <!-- Advertiser -->
+        <TextView
+            android:id="@+id/ad_advertiser"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:layout_marginEnd="12dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="#4A9FFF"
+            android:textSize="12sp"
+            android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@id/ad_media"
-            app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginEnd="12dp">
+            app:layout_constraintTop_toBottomOf="@id/ad_headline"
+            tools:text="Bybit: Buy Bitcoin and Crypto" />
 
-            <!-- Header row with icon and "Ad" badge -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+        <!-- Body text -->
+        <TextView
+            android:id="@+id/ad_body"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:layout_marginEnd="12dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textColor="#CCCCCC"
+            android:textSize="11sp"
+            android:lineHeight="15sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/ad_media"
+            app:layout_constraintTop_toBottomOf="@id/ad_advertiser"
+            tools:text="Ready to make your first crypto trade? Bybit is here to guide your every step! 🚀" />
 
-                <ImageView
-                    android:id="@+id/ad_app_icon"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:adjustViewBounds="true"
-                    android:contentDescription="@null"
-                    android:scaleType="centerCrop" />
-
-                <TextView
-                    android:id="@+id/adAttribution"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:background="@drawable/bg_ad_icon_dark"
-                    android:paddingHorizontal="6dp"
-                    android:paddingVertical="2dp"
-                    android:text="Ad"
-                    android:textColor="#AAAAAA"
-                    android:textSize="9sp"
-                    android:textStyle="bold" />
-
-            </LinearLayout>
-
-            <!-- Headline -->
-            <TextView
-                android:id="@+id/ad_headline"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:ellipsize="end"
-                android:maxLines="2"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:lineHeight="18sp"
-                tools:text="Start your crypto journey today!" />
-
-            <!-- Advertiser -->
-            <TextView
-                android:id="@+id/ad_advertiser"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textColor="#4A9FFF"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                tools:text="Bybit: Buy Bitcoin and Crypto" />
-
-            <!-- Body text -->
-            <TextView
-                android:id="@+id/ad_body"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:ellipsize="end"
-                android:maxLines="2"
-                android:textColor="#CCCCCC"
-                android:textSize="11sp"
-                android:lineHeight="15sp"
-                tools:text="Ready to make your first crypto trade? Bybit is here to guide your every step! 🚀" />
-
-            <!-- CTA button -->
-            <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/ad_call_to_action"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_native_home_cta_pink"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFF"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:letterSpacing="0"
-                tools:text="Explore more" />
-
-        </LinearLayout>
-
-        <!-- Right side: MediaView (visible) -->
+        <!-- MediaView on right side -->
         <com.google.android.gms.ads.nativead.MediaView
             android:id="@+id/ad_media"
             android:layout_width="140dp"
             android:layout_height="140dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- CTA button - FULL WIDTH at bottom -->
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/ad_call_to_action"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_native_cta_dark"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:letterSpacing="0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/ad_media"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:text="Explore more" />
 
         <!-- Hidden required asset stubs -->
+        <TextView
+            android:id="@+id/adAttribution"
+            android:layout_width="1dp"
+            android:layout_height="1dp"
+            android:visibility="invisible"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <TextView
             android:id="@+id/ad_price"
             android:layout_width="1dp"

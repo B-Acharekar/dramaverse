@@ -235,7 +235,7 @@ object AdsManager {
             activity = activity,
             placementName = "native_home",
             config = rawConfig.withSdkDisplayGate(sdkShouldDisplay),
-            layoutRes = R.layout.layout_native_home_dark, // Custom dark theme layout
+            layoutRes = R.layout.layout_native_home_medium, // Use medium layout with media on right
             liveData = _nativeHomeAdLive
         )
     }
