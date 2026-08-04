@@ -51,7 +51,7 @@ object AdRemoteConfig {
         "native_my_list",
         "native_search",
         "native_shortvideo_fullscreen",
-        "banner_collapsible_home",
+        "banner_collapsible_all",
         "inter_back",
         "native_all",
         "inter_all",
@@ -73,7 +73,7 @@ object AdRemoteConfig {
     val nativeHome: AdUnitConfig get() = placement("native_home")
     val nativeMyList: AdUnitConfig get() = placement("native_my_list")
     val nativeSearch: AdUnitConfig get() = placement("native_search")
-    val bannerCollapsibleHome: AdUnitConfig get() = placement("banner_collapsible_home")
+    val bannerCollapsibleHome: AdUnitConfig get() = placement("banner_collapsible_all")
     val interBack: AdUnitConfig get() = placement("inter_back")
     val rewardAll: AdUnitConfig get() = placement("reward_all")
     val nativeShortVideoFullscreen: AdUnitConfig get() = placement("native_shortvideo_fullscreen")

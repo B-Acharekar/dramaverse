@@ -23,7 +23,7 @@
   "native_home": { "id": "ca-app-pub-3940256099942544/2247696110", "isEnable": true, "enable_ua_check": false },
   "native_my_list": { "id": "ca-app-pub-3940256099942544/2247696110", "isEnable": true, "enable_ua_check": false },
   "native_shortvideo_fullscreen": { "id": "ca-app-pub-3940256099942544/2247696110", "isEnable": true, "enable_ua_check": false },
-  "banner_collapsible_all": { "id": "ca-app-pub-3940256099942544/2099601279", "isEnable": true },
+  "banner_collapsible_all": { "id": "ca-app-pub-3940256099942544/6300978111", "isEnable": true },
   "inter_back": { "id": "ca-app-pub-3940256099942544/1033173712", "isEnable": true, "timeoutMs": 3500, "enable_ua_check": false },
   "native_all": { "id": "", "isEnable": false },
   "inter_all": { "id": "", "isEnable": false },
