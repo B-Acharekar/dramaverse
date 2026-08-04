@@ -118,6 +118,7 @@ import com.drama.x.drama.series.dramax.dramaseries.ads.AdsManager
 import com.drama.x.drama.series.dramax.dramaseries.ads.NativeAdState
 import com.drama.x.drama.series.dramax.dramaseries.data.ShortsItem
 import com.drama.x.drama.series.dramax.dramaseries.data.SubtitleTrack
+import com.drama.x.drama.series.dramax.dramaseries.data.UnlockedEpisodesStore
 import com.drama.x.drama.series.dramax.dramaseries.model.ShortsViewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
@@ -166,6 +167,7 @@ fun ShortsScreen(
     onLibrary: () -> Unit,
     onRewards: () -> Unit,
     onProfile:() -> Unit,
+    onNavigateToEpisodes: (filmId: Int, episodeNumber: Int?) -> Unit = { _, _ -> },
     viewModel: ShortsViewModel = viewModel()
 ) {
 
@@ -192,7 +194,28 @@ fun ShortsScreen(
     var dailyUnlocksUsed by remember { mutableStateOf(0) }
     var unlockedEpisodeKeys by remember { mutableStateOf(setOf<String>()) }
     var episodeModeKeys by remember { mutableStateOf(setOf<String>()) }
+    var episodeModeFilmIds by remember { mutableStateOf(setOf<Int>()) }  // Track films in episode mode
     var nativeShortVideoAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
+
+    // Load persisted unlocked episodes
+    val unlockedEpisodesStore = remember { UnlockedEpisodesStore(context) }
+    LaunchedEffect(Unit) {
+        unlockedEpisodesStore.resetDailyUnlocksIfNeeded()
+        unlockedEpisodeKeys = unlockedEpisodesStore.getUnlockedEpisodes()
+        dailyUnlocksUsed = unlockedEpisodesStore.getDailyUnlocksUsed()
+    }
+
+    // Keep daily unlocks in sync with storage (updates when ad is watched)
+    LaunchedEffect(dailyUnlocksUsed) {
+        // Verify the in-memory count matches storage (in case of external changes)
+        if (dailyUnlocksUsed != unlockedEpisodesStore.getDailyUnlocksUsed()) {
+            // Only update from storage if we're out of sync (defensive check)
+            val storedValue = unlockedEpisodesStore.getDailyUnlocksUsed()
+            if (storedValue != dailyUnlocksUsed && dailyUnlocksUsed < storedValue) {
+                dailyUnlocksUsed = storedValue
+            }
+        }
+    }
 
     LaunchedEffect(activity, uiState.items.size) {
         activity?.let { 
@@ -252,7 +275,7 @@ fun ShortsScreen(
             val pageIndex = feedPages.indexOfFirst { page ->
                 page is ShortsFeedPage.Video && page.item.episodeNumber == targetEp
             }
-            if (pageIndex > 0 && pageIndex < feedPages.size) {
+            if (pageIndex >= 0 && pageIndex < feedPages.size) {
                 pagerState.scrollToPage(pageIndex)
             }
             initialPageScrolled = true
@@ -280,8 +303,49 @@ fun ShortsScreen(
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
         onDispose {
-            // Restore system bars when leaving ShortsScreen
-            insetsController?.show(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars())
+            // Restore only status bar when leaving ShortsScreen, keep navigation bar hidden
+            insetsController?.show(WindowInsetsCompat.Type.statusBars())
+            insetsController?.hide(WindowInsetsCompat.Type.navigationBars())
+        }
+    }
+
+    // --- Episode mode: Prevent scrolling outside current drama's episodes ---
+    LaunchedEffect(pagerState.currentPage, feedPages.size, episodeModeFilmIds) {
+        if (feedPages.isEmpty()) return@LaunchedEffect
+        
+        val currentPage = pagerState.currentPage
+        if (currentPage >= feedPages.size) return@LaunchedEffect
+        
+        val currentFeedPage = feedPages.getOrNull(currentPage)
+        
+        // If on an ad page, that's ok - just return (don't auto-skip)
+        if (currentFeedPage is ShortsFeedPage.NativeFullscreenAd) return@LaunchedEffect
+        
+        if (currentFeedPage !is ShortsFeedPage.Video) return@LaunchedEffect
+        
+        val currentFilmId = currentFeedPage.item.film.id
+        val isInEpisodeMode = isEpisodeEntry || episodeModeFilmIds.contains(currentFilmId)
+        
+        if (!isInEpisodeMode) return@LaunchedEffect
+        
+        // Find the episode boundaries for the current drama (only video pages, not ads)
+        val firstVideoPageOfDrama = feedPages.indexOfFirst { page ->
+            page is ShortsFeedPage.Video && page.item.film.id == currentFilmId
+        }
+        val lastVideoPageOfDrama = feedPages.indexOfLast { page ->
+            page is ShortsFeedPage.Video && page.item.film.id == currentFilmId
+        }
+        
+        if (firstVideoPageOfDrama < 0 || lastVideoPageOfDrama < 0) return@LaunchedEffect
+        
+        // Check if current page is before first episode or after last episode of this drama
+        val currentIsBeforeDrama = currentPage < firstVideoPageOfDrama && feedPages[currentPage] !is ShortsFeedPage.NativeFullscreenAd
+        val currentIsAfterDrama = currentPage > lastVideoPageOfDrama && feedPages[currentPage] !is ShortsFeedPage.NativeFullscreenAd
+        
+        if (currentIsBeforeDrama) {
+            pagerState.scrollToPage(firstVideoPageOfDrama)
+        } else if (currentIsAfterDrama) {
+            pagerState.scrollToPage(lastVideoPageOfDrama)
         }
     }
 
@@ -290,6 +354,8 @@ fun ShortsScreen(
             .fillMaxSize()
             .background(ShortsBackground)
     ) {
+        val coroutineScope = rememberCoroutineScope()
+        
         if (uiState.items.isEmpty()) {
             ShortsSkeleton()
         } else {
@@ -305,7 +371,7 @@ fun ShortsScreen(
                     )
 
                     is ShortsFeedPage.Video -> {
-                        val isEpisodeModeForItem = initialFilmId != null || episodeModeKeys.contains(feedPage.item.episodeKey())
+                        val isEpisodeModeForItem = initialFilmId != null || episodeModeFilmIds.contains(feedPage.item.film.id) || episodeModeKeys.contains(feedPage.item.episodeKey())
                         ShortsPage(
                         item = feedPage.item,
                         itemIndex = feedPage.itemIndex,
@@ -370,15 +436,23 @@ fun ShortsScreen(
                             )
                         },
                         onEpisodeFinished = { index, item, position, duration ->
+                            // For auto-next, we scroll the pager instead of modifying the current item
+                            val autoNextEnabled = autoNext
                             viewModel.completeEpisodeAndMaybePlayNext(
                                 backendBaseUrl = backendBaseUrl,
                                 itemIndex = index,
                                 item = item,
                                 progressSeconds = (position / 1000).toInt(),
                                 durationSeconds = duration.takeIf { it > 0L }?.let { (it / 1000).toInt() },
-                                autoNext = autoNext,
+                                autoNext = false,  // Don't auto-switch in viewmodel
                                 autoUnlock = autoUnlock
                             )
+                            // Handle auto-next at UI layer by scrolling pager to next page
+                            if (autoNextEnabled && item.episodeNumber < item.film.episodeTotal) {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                                }
+                            }
                         },
                         onProgressCheckpoint = { item, position, duration ->
                             viewModel.saveWatchProgress(
@@ -405,8 +479,10 @@ fun ShortsScreen(
                             unlockedEpisodeKeys.contains("$filmId:$episodeNumber")
                         },
                         unlockedEpisodeKeys = unlockedEpisodeKeys,
+                        unlockedEpisodesStore = unlockedEpisodesStore,
                         onUnlockedEpisodeReady = { targetItem ->
                             episodeModeKeys = episodeModeKeys + targetItem.episodeKey()
+                            episodeModeFilmIds = episodeModeFilmIds + targetItem.film.id  // Add film to episode mode
                             isPlaying = true
                             viewModel.playEpisode(
                                 backendBaseUrl = backendBaseUrl,
@@ -422,6 +498,8 @@ fun ShortsScreen(
                                     onRewardEarned = {
                                         dailyUnlocksUsed++
                                         unlockedEpisodeKeys = unlockedEpisodeKeys + "${targetItem.film.id}:${targetItem.episodeNumber}"
+                                        unlockedEpisodesStore.unlockEpisode(targetItem.film.id, targetItem.episodeNumber)
+                                        unlockedEpisodesStore.incrementDailyUnlocks()
                                         viewModel.unlockEpisode(
                                             backendBaseUrl = backendBaseUrl,
                                             filmId = targetItem.film.id,
@@ -437,6 +515,7 @@ fun ShortsScreen(
                                 // No activity available, skip ad and unlock directly (fallback)
                                 dailyUnlocksUsed++
                                 unlockedEpisodeKeys = unlockedEpisodeKeys + "${targetItem.film.id}:${targetItem.episodeNumber}"
+                                unlockedEpisodesStore.unlockEpisode(targetItem.film.id, targetItem.episodeNumber)
                                 viewModel.unlockEpisode(
                                     backendBaseUrl = backendBaseUrl,
                                     filmId = targetItem.film.id,
@@ -445,8 +524,25 @@ fun ShortsScreen(
                                 onDone(true)
                             }
                         },
+                        onScrollToEpisode = { filmId, episodeNumber ->
+                            // Find the page for the selected episode
+                            val targetPageIndex = feedPages.indexOfFirst { page ->
+                                page is ShortsFeedPage.Video && 
+                                page.item.film.id == filmId && 
+                                page.item.episodeNumber == episodeNumber
+                            }
+                            if (targetPageIndex >= 0) {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(targetPageIndex)
+                                }
+                            }
+                        },
                         onHideControls = {
                             controlsVisible = false
+                        },
+                        onEnterEpisodeMode = { filmId ->
+                            // Navigate to episode mode screen instead of staying in shorts
+                            onNavigateToEpisodes(filmId, null)
                         }
                     )
                     }
@@ -454,7 +550,7 @@ fun ShortsScreen(
             }
         }
         val currentVideoItem = currentVideoPage?.item
-        val isCurrentEpisodeMode = isEpisodeEntry || currentVideoItem?.let { episodeModeKeys.contains(it.episodeKey()) } == true
+        val isCurrentEpisodeMode = isEpisodeEntry || currentVideoItem?.let { episodeModeFilmIds.contains(it.film.id) || episodeModeKeys.contains(it.episodeKey()) } == true
         if (controlsVisible && currentFeedPage is ShortsFeedPage.Video && !isCurrentEpisodeMode) {
             BottomNavigationBar(
                 selected = "Shorts",
@@ -549,8 +645,11 @@ private fun ShortsPage(
     dailyUnlockLimit: Int,
     isEpisodeUnlockedLocally: (filmId: Int, episodeNumber: Int) -> Boolean,
     unlockedEpisodeKeys: Set<String>,
+    unlockedEpisodesStore: UnlockedEpisodesStore,
     onUnlockedEpisodeReady: (ShortsItem) -> Unit,
     onWatchAdToUnlock: (ShortsItem, onDone: (Boolean) -> Unit) -> Unit,
+    onEnterEpisodeMode: (filmId: Int) -> Unit,
+    onScrollToEpisode: (filmId: Int, episodeNumber: Int) -> Unit = { _, _ -> },
     onHideControls: () -> Unit = {},
 ) {
     var videoReady by remember(item.playUrl) { mutableStateOf(false) }
@@ -589,6 +688,8 @@ private fun ShortsPage(
     var showDailyLimitDialog by remember { mutableStateOf(false) }
     var isWatchingAd by remember(item.film.id, item.episodeNumber) { mutableStateOf(false) }
 
+    val activity = remember(context) { context.findActivity() }
+
     val isLocked = item.isPaywalled() && !isEpisodeUnlockedLocally(item.film.id, item.episodeNumber)
     val fullEpisodeTarget = remember(item, isLocked) {
         if (!isLocked && item.episodeNumber == 1 && item.film.episodeTotal > 1) {
@@ -598,11 +699,45 @@ private fun ShortsPage(
         }
     }
 
+    // Auto-show unlock dialog when swiping to a locked episode
+    LaunchedEffect(isActive, isLocked, item.episodeNumber) {
+        if (isActive && isLocked && unlockTargetItem == null) {
+            if (dailyUnlocksUsed >= dailyUnlockLimit) {
+                showDailyLimitDialog = true
+            } else {
+                unlockTargetItem = item
+            }
+        }
+    }
+
+    // Auto-show ad to unlock when autoUnlock is enabled and episode is locked
+    LaunchedEffect(autoUnlock, isActive, isLocked) {
+        if (autoUnlock && isActive && isLocked && !isWatchingAd) {
+            if (dailyUnlocksUsed >= dailyUnlockLimit) {
+                showDailyLimitDialog = true
+            } else {
+                // Auto-show rewarded ad to unlock the locked episode
+                // Trigger the watch ad callback which handles the unlock
+                activity?.let { act ->
+                    isWatchingAd = true
+                    onWatchAdToUnlock(item) { unlocked ->
+                        isWatchingAd = false
+                        if (unlocked) {
+                            // Clear the unlock dialog if it was previously shown
+                            unlockTargetItem = null
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // Auto-hide overlay after 5 seconds of playback in Episode mode
-    LaunchedEffect(isEpisodeMode, isPlaying, isActive, controlsVisible) {
-        if (isEpisodeMode && isPlaying && isActive && controlsVisible) {
+    // BUT: Don't auto-hide if any popup is visible (episodes, subtitles, etc.)
+    LaunchedEffect(isEpisodeMode, isPlaying, isActive, controlsVisible, hasPopup) {
+        if (isEpisodeMode && isPlaying && isActive && controlsVisible && !hasPopup) {
             delay(5000L)
-            if (isActive && controlsVisible) { // Double-check still active and controls visible
+            if (isActive && controlsVisible && !hasPopup) { // Double-check still active, controls visible, and no popup
                 onHideControls()
             }
         }
@@ -779,9 +914,8 @@ private fun ShortsPage(
                             }
                         } else {
                             // Not in episode mode - "Watch Now" should open Episode mode starting from Episode 1
-                            // The item should be Episode 1 (or current episode)
-                            val episodeToPlay = item.copy(episodeNumber = 1, isLocked = 1 > FREE_SHORTS_PREVIEW_EPISODES)
-                            onUnlockedEpisodeReady(episodeToPlay)
+                            // Call callback to reload feed with only this drama's episodes
+                            onEnterEpisodeMode(item.film.id)
                         }
                     }
                 )
@@ -895,6 +1029,8 @@ private fun ShortsPage(
                             unlockTargetItem = targetItem
                         }
                     } else {
+                        // Scroll to the target episode
+                        onScrollToEpisode(item.film.id, episode)
                         onUnlockedEpisodeReady(targetItem)
                     }
                 },
@@ -1738,18 +1874,6 @@ private fun EpisodeCell(
             fontSize = 16.sp,
             fontWeight = FontWeight.ExtraBold
         )
-//        if (isPlaying) {
-//            Text(
-//                "PLAYING",
-//                color = Gold,
-//                fontSize = 8.sp,
-//                fontWeight = FontWeight.Black,
-//                letterSpacing = 0.5.sp
-//            )
-//        } else {
-//            Spacer(Modifier.height(10.dp))
-//        }
-//        Spacer(Modifier.weight(1f))
     }
 }
 
@@ -2062,14 +2186,14 @@ private fun FeedbackFormSheet(
             Row(verticalAlignment = Alignment.Top) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "Report an Issue",
+                        stringResource(R.string.report_an_issue),
                         color = Color.White,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.ExtraBold
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "Help us improve your viewing experience",
+                        stringResource(R.string.report_an_issue_subtitle),
                         color = Color(0xFF8F8791),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold
@@ -2114,17 +2238,17 @@ private fun FeedbackFormSheet(
                     )
                 }
             }
-
             Spacer(Modifier.height(22.dp))
 
             Text(
-                "Please select a reason",
+                stringResource(R.string.please_select_reason),
                 color = Color.White,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold
             )
 
             Spacer(Modifier.height(10.dp))
+
 
             Column {
                 reportReasons.forEach { reason ->
@@ -2217,8 +2341,7 @@ private fun FeedbackOptionsSheet(
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            dismissOnClickOutside = false
+            usePlatformDefaultWidth = false
         )
     ) {
         Column(
@@ -2331,7 +2454,7 @@ private fun ShareOptionsSheet(
     val context = LocalContext.current
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
-    val copiedText = "copied to clipboard"
+    val copiedText = stringResource(R.string.copied_to_clipboard)
 
     val shareApps by produceState<List<InstalledShareApp>>(initialValue = emptyList(), shareText) {
         value = withContext(Dispatchers.IO) { context.resolveShareApps(shareText) }

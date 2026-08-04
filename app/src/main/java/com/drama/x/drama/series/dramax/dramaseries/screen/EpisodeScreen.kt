@@ -158,6 +158,19 @@ fun EpisodeScreen(
 
     val currentItem = uiState.episodes.getOrNull(pagerState.currentPage)
 
+    // Auto-show unlock dialog when swiping to a locked episode
+    LaunchedEffect(currentItem, pagerState.currentPage) {
+        if (currentItem != null && viewModel.isEpisodeLocked(currentItem.episodeNumber)) {
+            if (unlockTarget == null) {
+                if (uiState.dailyUnlocksUsed >= uiState.dailyUnlockLimit) {
+                    showDailyLimit = true
+                } else {
+                    unlockTarget = currentItem
+                }
+            }
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize().background(EpBgDark)) {
         when {
             uiState.isLoading -> Box(Modifier.fillMaxSize(), Alignment.Center) {
@@ -249,7 +262,35 @@ fun EpisodeScreen(
                 autoNext          = autoNext,
                 autoUnlock        = autoUnlock,
                 onAutoNextChange  = { autoNext = it },
-                onAutoUnlockChange= { autoUnlock = it },
+                onAutoUnlockChange= { enabled ->
+                    autoUnlock = enabled
+                    // If enabling auto-unlock and current episode is locked, show ad automatically
+                    if (enabled && currentItem != null && viewModel.isEpisodeLocked(currentItem.episodeNumber)) {
+                        // Check if has daily unlocks available
+                        if (uiState.dailyUnlocksUsed >= uiState.dailyUnlockLimit) {
+                            // Show daily limit dialog instead
+                            showDailyLimit = true
+                        } else {
+                            // Auto-show rewarded ad to unlock
+                            activity?.let { act ->
+                                isWatchingAd = true
+                                AdsManager.loadAndShowRewardAll(
+                                    activity = act,
+                                    onRewardEarned = {
+                                        viewModel.unlockEpisode(backendBaseUrl, currentItem.film.id, currentItem.episodeNumber)
+                                        isWatchingAd = false
+                                        // Clear the unlock dialog if it was previously shown
+                                        unlockTarget = null
+                                        isPlaying = true
+                                    },
+                                    onFinished = {
+                                        isWatchingAd = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                },
                 onDismiss         = { showPlaybackOpts = false }
             )
         }
