@@ -250,6 +250,20 @@
 
     <string name="rateus_dialog_title">DramaXを楽しんでいますか？</string>
     <string name="rateus_dialog_subtitle">あなたのレビューがこのアプリの品質向上に役立ちます</string>
+    <string name="rate_dialog_sad_title">それは残念です</string>
+    <string name="rate_dialog_neutral_title">どのように改善できますか？</string>
+    <string name="rate_dialog_happy_title">気に入っていただけて嬉しいです！</string>
+    <string name="please_select_rating">評価を選択してください</string>
+    <string name="select_rating">評価を選択</string>
+    <string name="rate_on_play_store">Play Storeで評価</string>
+    <string name="feedback_dialog_title">改善にご協力ください</string>
+    <string name="feedback_dialog_subtitle">問題点やDramaXの改善方法を教えてください</string>
+    <string name="thanks_for_feedback">フィードバックありがとうございます！</string>
+    <string name="please_enter_feedback">フィードバックを入力してください</string>
+    <string name="submit_feedback">フィードバックを送信</string>
+    <string name="error_sending_feedback">フィードバック送信エラー</string>
+    <string name="thanks_for_rating">評価ありがとうございます！</string>
+    <string name="ok">OK</string>
 
     <string name="not_now">後で</string>
     <string name="share_app_message">DramaXでショートドラマを視聴しよう: https://play.google.com/store/apps/details?id=%1$s</string>

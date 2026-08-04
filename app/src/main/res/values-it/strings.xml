@@ -250,6 +250,20 @@
 
     <string name="rateus_dialog_title">Ti sta piacendo DramaX?</string>
     <string name="rateus_dialog_subtitle">La tua recensione contribuirà a migliorare la qualità di questa app</string>
+    <string name="rate_dialog_sad_title">Ci dispiace sentirlo</string>
+    <string name="rate_dialog_neutral_title">Come possiamo migliorare?</string>
+    <string name="rate_dialog_happy_title">Siamo felici che ti piaccia!</string>
+    <string name="please_select_rating">Seleziona una valutazione</string>
+    <string name="select_rating">Seleziona valutazione</string>
+    <string name="rate_on_play_store">Valuta su Play Store</string>
+    <string name="feedback_dialog_title">Aiutaci a migliorare</string>
+    <string name="feedback_dialog_subtitle">Dicci cosa è andato storto o come possiamo migliorare DramaX</string>
+    <string name="thanks_for_feedback">Grazie per il tuo feedback!</string>
+    <string name="please_enter_feedback">Inserisci il tuo feedback</string>
+    <string name="submit_feedback">Invia feedback</string>
+    <string name="error_sending_feedback">Errore nell\'invio del feedback</string>
+    <string name="thanks_for_rating">Grazie per la tua valutazione!</string>
+    <string name="ok">OK</string>
 
     <string name="not_now">Non ora</string>
     <string name="share_app_message">Guarda drama brevi su DramaX: https://play.google.com/store/apps/details?id=%1$s</string>

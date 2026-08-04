@@ -249,6 +249,20 @@
 
     <string name="rateus_dialog_title">DramaX\'i beğeniyor musunuz?</string>
     <string name="rateus_dialog_subtitle">Değerlendirmeniz bu uygulamanın kalitesini artıracaktır</string>
+    <string name="rate_dialog_sad_title">Bunu duyduğumuza üzüldük</string>
+    <string name="rate_dialog_neutral_title">Nasıl geliştirebiliriz?</string>
+    <string name="rate_dialog_happy_title">Beğenmenize sevindik!</string>
+    <string name="please_select_rating">Lütfen bir değerlendirme seçin</string>
+    <string name="select_rating">Değerlendirme Seç</string>
+    <string name="rate_on_play_store">Play Store\'da değerlendir</string>
+    <string name="feedback_dialog_title">Gelişmemize yardımcı olun</string>
+    <string name="feedback_dialog_subtitle">Neyin yanlış gittiğini veya DramaX\'i nasıl geliştirebileceğimizi bize bildirin</string>
+    <string name="thanks_for_feedback">Geri bildiriminiz için teşekkürler!</string>
+    <string name="please_enter_feedback">Lütfen geri bildiriminizi girin</string>
+    <string name="submit_feedback">Geri Bildirim Gönder</string>
+    <string name="error_sending_feedback">Geri bildirim gönderme hatası</string>
+    <string name="thanks_for_rating">Değerlendirmeniz için teşekkürler!</string>
+    <string name="ok">Tamam</string>
 
     <string name="not_now">Şimdi değil</string>
     <string name="share_app_message">DramaX\'te kısa diziler izleyin: https://play.google.com/store/apps/details?id=%1$s</string>

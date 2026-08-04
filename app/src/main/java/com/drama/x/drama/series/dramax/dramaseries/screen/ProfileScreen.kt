@@ -60,6 +60,7 @@ import kotlinx.coroutines.withContext
 import com.drama.x.drama.series.dramax.dramaseries.R
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdsManager
 import com.drama.x.drama.series.dramax.dramaseries.data.LocaleHelper
+import com.drama.x.drama.series.dramax.dramaseries.data.RatingManager
 import com.drama.x.drama.series.dramax.dramaseries.model.LanguageViewModel
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -253,13 +254,19 @@ fun ProfileScreen(
     }
 
     if (showRateDialog) {
-        RateUsDialog(
-            onDismiss = { showRateDialog = false },
-            onRate = {
-                showRateDialog = false
-                context.openPlayStoreRating()
-            }
-        )
+        val ratingManager = remember { RatingManager.getInstance(context) }
+        
+        if (ratingManager.hasRated()) {
+            AlreadyRatedDialog(onDismiss = { showRateDialog = false })
+        } else {
+            AppRatingDialog(
+                onDismiss = { showRateDialog = false },
+                onRated = {
+                    showRateDialog = false
+                    onRateUs()
+                }
+            )
+        }
     }
 
     if (showPrivacyDialog) {

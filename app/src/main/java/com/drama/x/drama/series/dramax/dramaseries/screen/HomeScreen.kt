@@ -92,6 +92,7 @@ import com.drama.x.drama.series.dramax.dramaseries.ads.NativeAdState
 import com.drama.x.drama.series.dramax.dramaseries.data.ContinueWatchingItem
 import com.drama.x.drama.series.dramax.dramaseries.data.DramaItem
 import com.drama.x.drama.series.dramax.dramaseries.data.HomeFeed
+import com.drama.x.drama.series.dramax.dramaseries.data.RatingManager
 import com.drama.x.drama.series.dramax.dramaseries.data.allCatalogItems
 import com.drama.x.drama.series.dramax.dramaseries.model.HomeViewModel
 import kotlinx.coroutines.Dispatchers
@@ -163,6 +164,10 @@ fun HomeScreen(
     var selectedCategorySort by remember { mutableStateOf(CategorySort.Newest) }
     var nativeSearchAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
     var nativeHomeAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
+    
+    // Rating dialog state
+    var showRatingDialog by remember { mutableStateOf(false) }
+    val ratingManager = remember { RatingManager.getInstance(context) }
 
     LaunchedEffect(backendBaseUrl) {
         viewModel.loadHome(backendBaseUrl)
@@ -224,6 +229,11 @@ fun HomeScreen(
                 bottomBannerVisible = bottomBannerVisible,
                 onToggleWatchList = { film, enabled ->
                     viewModel.setReminder(backendBaseUrl, film, enabled)
+                    // Trigger rating dialog when adding to favorites
+                    if (enabled && ratingManager.canShowRatingDialog()) {
+                        showRatingDialog = true
+                        ratingManager.markDialogShown()
+                    }
                 }
             )
         }
@@ -264,6 +274,14 @@ fun HomeScreen(
 
             null -> Unit
         }
+    }
+    
+    // Rating dialog
+    if (showRatingDialog) {
+        AppRatingDialog(
+            onDismiss = { showRatingDialog = false },
+            onRated = { showRatingDialog = false }
+        )
     }
 }
 
@@ -395,10 +413,11 @@ private fun LazyListScope.popularTab(
             onToggleWatchList = onToggleWatchList
         )
     }
+    // Native ad below banner (hero carousel) in Popular tab
     item {
-        HomeSmallNativeAd(
-            placementName = "native_search",
-            state = nativeSearchAdState,
+        CustomDarkNativeAd(
+            placementName = "native_home",
+            state = nativeHomeAdState,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
         )
     }
@@ -409,8 +428,8 @@ private fun LazyListScope.popularTab(
     item { ContinueWatching(feed.continueWatching, allCatalog, onOpenEpisodes) }
     item {
         HomeSmallNativeAd(
-            placementName = "native_home",
-            state = nativeHomeAdState,
+            placementName = "native_search",
+            state = nativeSearchAdState,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
         )
     }
@@ -1891,6 +1910,26 @@ private fun HomeSmallNativeAd(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight()
+    )
+}
+
+/**
+ * Custom dark-themed native ad matching app UI.
+ * Uses dark background (#16121A) and app CTA color (#FF3F59).
+ */
+@Composable
+private fun CustomDarkNativeAd(
+    placementName: String,
+    state: NativeAdState,
+    modifier: Modifier = Modifier
+) {
+    ErainNativeAdHost(
+        placementName = placementName,
+        state = state,
+        modifier = modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
+        height = 120.dp // Medium-sized native ad
     )
 }
 

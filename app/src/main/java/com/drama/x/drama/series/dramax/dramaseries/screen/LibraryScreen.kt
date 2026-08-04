@@ -256,12 +256,14 @@ private fun LibraryContent(
                         )
                     }
                 } else {
+                    // Show native ad after every 3 movies in My Favorites (Overview mode)
                     favorites.forEachIndexed { index, film ->
-                        if (index % 3 == 0) {
+                        // Show native ad at first position (index 0) and then after every 3 items
+                        if (index % 3 == 0 && index > 0) {
                             item {
                                 MyListNativeAd(
                                     state = nativeMyListAdState,
-                                    modifier = Modifier.padding(horizontal = 18.dp)
+                                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp)
                                 )
                             }
                         }
@@ -298,6 +300,13 @@ private fun LibraryContent(
                         }
                     )
                 }
+                // Fixed native ad at the top
+                item {
+                    MyListNativeAd(
+                        state = nativeMyListAdState,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
                 if (history.isEmpty()) {
                     item {
                         MyListEmptyMessage(
@@ -306,18 +315,9 @@ private fun LibraryContent(
                         )
                     }
                 } else {
-                    // Build rows of 3 items, inserting native ad every 3 rows (every 9 items)
+                    // Build rows of 3 items that scroll under the fixed ad
                     val chunked = history.chunked(3)
                     chunked.forEachIndexed { rowIndex, rowItems ->
-                        // Native ad every 3 rows (before row 0, 3, 6, ...)
-                        if (rowIndex % 3 == 0) {
-                            item {
-                                MyListNativeAd(
-                                    state = nativeMyListAdState,
-                                    modifier = Modifier.padding(horizontal = 16.dp)
-                                )
-                            }
-                        }
                         item(key = "hist_row_$rowIndex") {
                             Row(
                                 modifier = Modifier
@@ -390,12 +390,14 @@ private fun LibraryContent(
                         )
                     }
                 } else {
+                    // Show native ad after every 3 movies in My Favorites (See All mode)
                     favorites.forEachIndexed { index, film ->
-                        if (index % 3 == 0) {
+                        // Show native ad at first position (index 0) and then after every 3 items
+                        if (index % 3 == 0 && index > 0) {
                             item {
                                 MyListNativeAd(
                                     state = nativeMyListAdState,
-                                    modifier = Modifier.padding(horizontal = 18.dp)
+                                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp)
                                 )
                             }
                         }
@@ -425,6 +427,10 @@ private fun LibraryContent(
     }
 }
 
+/**
+ * Native ad matching movie thumbnail layout in My List.
+ * Custom dark theme with app CTA color.
+ */
 @Composable
 private fun MyListNativeAd(
     state: NativeAdState,
@@ -436,7 +442,7 @@ private fun MyListNativeAd(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight(),
-        height = 104.dp
+        height = 104.dp // Matches movie card height
     )
 }
 

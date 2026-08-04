@@ -119,6 +119,7 @@ import com.drama.x.drama.series.dramax.dramaseries.ads.NativeAdState
 import com.drama.x.drama.series.dramax.dramaseries.data.ShortsItem
 import com.drama.x.drama.series.dramax.dramaseries.data.SubtitleTrack
 import com.drama.x.drama.series.dramax.dramaseries.data.UnlockedEpisodesStore
+import com.drama.x.drama.series.dramax.dramaseries.data.RatingManager
 import com.drama.x.drama.series.dramax.dramaseries.model.ShortsViewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
@@ -196,6 +197,10 @@ fun ShortsScreen(
     var episodeModeKeys by remember { mutableStateOf(setOf<String>()) }
     var episodeModeFilmIds by remember { mutableStateOf(setOf<Int>()) }  // Track films in episode mode
     var nativeShortVideoAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
+    
+    // Rating dialog state
+    var showRatingDialog by remember { mutableStateOf(false) }
+    val ratingManager = remember { RatingManager.getInstance(context) }
 
     // Load persisted unlocked episodes
     val unlockedEpisodesStore = remember { UnlockedEpisodesStore(context) }
@@ -434,6 +439,11 @@ fun ShortsScreen(
                                 film = item.film,
                                 enabled = enabled
                             )
+                            // Trigger rating dialog when adding to favorites
+                            if (enabled && ratingManager.canShowRatingDialog()) {
+                                showRatingDialog = true
+                                ratingManager.markDialogShown()
+                            }
                         },
                         onEpisodeFinished = { index, item, position, duration ->
                             // For auto-next, we scroll the pager instead of modifying the current item
@@ -452,6 +462,11 @@ fun ShortsScreen(
                                 coroutineScope.launch {
                                     pagerState.animateScrollToPage(pagerState.currentPage + 1)
                                 }
+                            }
+                            // Trigger rating dialog after episode completion (but not if auto-next is enabled)
+                            if (!autoNextEnabled && ratingManager.canShowRatingDialog()) {
+                                showRatingDialog = true
+                                ratingManager.markDialogShown()
                             }
                         },
                         onProgressCheckpoint = { item, position, duration ->
@@ -484,12 +499,28 @@ fun ShortsScreen(
                             episodeModeKeys = episodeModeKeys + targetItem.episodeKey()
                             episodeModeFilmIds = episodeModeFilmIds + targetItem.film.id  // Add film to episode mode
                             isPlaying = true
-                            viewModel.playEpisode(
-                                backendBaseUrl = backendBaseUrl,
-                                itemIndex = feedPage.itemIndex,
-                                currentItem = feedPage.item,
-                                episodeNumber = targetItem.episodeNumber
-                            )
+                            
+                            // Find the correct page index for the unlocked episode
+                            val targetPageIndex = feedPages.indexOfFirst { page ->
+                                page is ShortsFeedPage.Video && 
+                                page.item.film.id == targetItem.film.id && 
+                                page.item.episodeNumber == targetItem.episodeNumber
+                            }
+                            
+                            if (targetPageIndex >= 0) {
+                                // Navigate to the unlocked episode's position in the list
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(targetPageIndex)
+                                }
+                            } else {
+                                // Fallback: use old behavior if episode not found in list
+                                viewModel.playEpisode(
+                                    backendBaseUrl = backendBaseUrl,
+                                    itemIndex = feedPage.itemIndex,
+                                    currentItem = feedPage.item,
+                                    episodeNumber = targetItem.episodeNumber
+                                )
+                            }
                         },
                         onWatchAdToUnlock = { targetItem, onDone ->
                             activity?.let { act ->
@@ -567,6 +598,14 @@ fun ShortsScreen(
         if (bottomBannerVisible && currentFeedPage is ShortsFeedPage.Video && !isCurrentEpisodeMode) {
             AppBottomBanner(modifier = Modifier.align(Alignment.BottomCenter))
         }
+    }
+    
+    // Rating dialog
+    if (showRatingDialog) {
+        AppRatingDialog(
+            onDismiss = { showRatingDialog = false },
+            onRated = { showRatingDialog = false }
+        )
     }
 }
 
@@ -1029,9 +1068,9 @@ private fun ShortsPage(
                             unlockTargetItem = targetItem
                         }
                     } else {
-                        // Scroll to the target episode
+                        // Episode is already unlocked, just scroll to it
                         onScrollToEpisode(item.film.id, episode)
-                        onUnlockedEpisodeReady(targetItem)
+                        showEpisodeOptions = false
                     }
                 },
                 modifier = Modifier.align(Alignment.Center),

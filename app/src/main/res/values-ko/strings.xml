@@ -250,6 +250,20 @@
 
     <string name="rateus_dialog_title">DramaX가 마음에 드시나요?</string>
     <string name="rateus_dialog_subtitle">회원님의 리뷰가 앱 품질 향상에 도움이 됩니다</string>
+    <string name="rate_dialog_sad_title">그렇게 생각하시니 유감입니다</string>
+    <string name="rate_dialog_neutral_title">어떻게 개선할 수 있을까요?</string>
+    <string name="rate_dialog_happy_title">좋아하신다니 기쁩니다!</string>
+    <string name="please_select_rating">평점을 선택해주세요</string>
+    <string name="select_rating">평점 선택</string>
+    <string name="rate_on_play_store">Play 스토어에서 평가</string>
+    <string name="feedback_dialog_title">개선을 도와주세요</string>
+    <string name="feedback_dialog_subtitle">문제점이나 DramaX 개선 방법을 알려주세요</string>
+    <string name="thanks_for_feedback">피드백 감사합니다!</string>
+    <string name="please_enter_feedback">피드백을 입력해주세요</string>
+    <string name="submit_feedback">피드백 제출</string>
+    <string name="error_sending_feedback">피드백 전송 오류</string>
+    <string name="thanks_for_rating">평가해 주셔서 감사합니다!</string>
+    <string name="ok">확인</string>
 
     <string name="not_now">나중에</string>
     <string name="share_app_message">DramaX에서 숏드라마 시청하기: https://play.google.com/store/apps/details?id=%1$s</string>

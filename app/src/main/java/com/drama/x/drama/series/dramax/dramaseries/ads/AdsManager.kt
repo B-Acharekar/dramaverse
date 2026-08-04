@@ -235,7 +235,7 @@ object AdsManager {
             activity = activity,
             placementName = "native_home",
             config = rawConfig.withSdkDisplayGate(sdkShouldDisplay),
-            layoutRes = R.layout.layout_native_home_small,
+            layoutRes = R.layout.layout_native_home_dark, // Custom dark theme layout
             liveData = _nativeHomeAdLive
         )
     }
@@ -271,7 +271,7 @@ object AdsManager {
             activity = activity,
             placementName = "native_my_list",
             config = rawConfig.withSdkDisplayGate(sdkShouldDisplay),
-            layoutRes = R.layout.layout_native_home_small,
+            layoutRes = R.layout.layout_native_home_dark, // Custom dark theme layout
             liveData = _nativeMyListAdLive
         )
     }

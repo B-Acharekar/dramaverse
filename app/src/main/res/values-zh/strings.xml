@@ -249,6 +249,20 @@
 
     <string name="rateus_dialog_title">喜欢DramaX吗？</string>
     <string name="rateus_dialog_subtitle">你的评价将帮助提升应用质量</string>
+    <string name="rate_dialog_sad_title">很遗憾听到这个</string>
+    <string name="rate_dialog_neutral_title">我们如何改进？</string>
+    <string name="rate_dialog_happy_title">很高兴你喜欢！</string>
+    <string name="please_select_rating">请选择评分</string>
+    <string name="select_rating">选择评分</string>
+    <string name="rate_on_play_store">在Play商店评分</string>
+    <string name="feedback_dialog_title">帮助我们改进</string>
+    <string name="feedback_dialog_subtitle">告诉我们哪里出了问题或如何改进DramaX</string>
+    <string name="thanks_for_feedback">感谢您的反馈！</string>
+    <string name="please_enter_feedback">请输入您的反馈</string>
+    <string name="submit_feedback">提交反馈</string>
+    <string name="error_sending_feedback">发送反馈时出错</string>
+    <string name="thanks_for_rating">感谢您的评分！</string>
+    <string name="ok">确定</string>
 
     <string name="not_now">暂不</string>
     <string name="share_app_message">在DramaX观看短剧：https://play.google.com/store/apps/details?id=%1$s</string>
