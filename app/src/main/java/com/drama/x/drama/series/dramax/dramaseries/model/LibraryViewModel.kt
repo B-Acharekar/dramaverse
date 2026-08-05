@@ -56,14 +56,17 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             repository.clearHistory(backendBaseUrl)
                 .onSuccess {
-                    // Reload library after clearing
-                    loadLibrary(backendBaseUrl)
+                    // Update UI immediately with cleared history
+                    _uiState.update { state ->
+                        state.feed?.let { feed ->
+                            state.copy(feed = feed.copy(watchHistory = emptyList()))
+                        } ?: state
+                    }
                 }
         }
     }
 
-    /** Removes only the specified history items from the local UI state immediately,
-     *  then calls clearHistory on backend if all items are removed, otherwise does a local-only removal. */
+    /** Removes only the specified history items from the local UI state immediately. */
     fun removeHistoryItems(
         backendBaseUrl: String,
         itemFilmIds: Set<Int>
@@ -73,25 +76,26 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             val remainingHistory = currentFeed.watchHistory.filter { it.film.id !in itemFilmIds }
             val updatedFeed = currentFeed.copy(watchHistory = remainingHistory)
             _uiState.update { it.copy(feed = updatedFeed) }
-            // If no history left, clear on backend too
+            // If no history left, clear local storage too
             if (remainingHistory.isEmpty()) {
                 repository.clearHistory(backendBaseUrl)
             }
         }
     }
 
-    /** Removes only the specified favorite items from the local UI state immediately and updates storage. */
+    /** Removes only the specified favorite items from the local UI state immediately. */
     fun removeFavoriteItems(
         backendBaseUrl: String,
         itemFilmIds: Set<Int>
     ) {
         viewModelScope.launch {
             val currentFeed = _uiState.value.feed ?: return@launch
+            val removedFilms = currentFeed.watchList.filter { it.id in itemFilmIds }
             val remainingFavorites = currentFeed.watchList.filter { it.id !in itemFilmIds }
             val updatedFeed = currentFeed.copy(watchList = remainingFavorites)
             _uiState.update { it.copy(feed = updatedFeed) }
-            // Toggle watchlist off for each removed film
-            currentFeed.watchList.filter { it.id in itemFilmIds }.forEach { film ->
+            // Toggle watchlist off for each removed film (local-only now)
+            removedFilms.forEach { film ->
                 repository.toggleWatchList(backendBaseUrl, film, false)
             }
         }
@@ -99,11 +103,19 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
 
     fun toggleWatchList(backendBaseUrl: String, film: com.drama.x.drama.series.dramax.dramaseries.data.DramaItem, enable: Boolean) {
         viewModelScope.launch {
+            // Update UI immediately
+            _uiState.update { state ->
+                state.feed?.let { feed ->
+                    val updatedWatchList = if (enable) {
+                        (listOf(film) + feed.watchList).distinctBy { it.id }
+                    } else {
+                        feed.watchList.filterNot { it.id == film.id }
+                    }
+                    state.copy(feed = feed.copy(watchList = updatedWatchList))
+                } ?: state
+            }
+            // Save locally (no backend call)
             repository.toggleWatchList(backendBaseUrl, film, enable)
-                .onSuccess {
-                    // Reload library after toggle
-                    loadLibrary(backendBaseUrl)
-                }
         }
     }
 }

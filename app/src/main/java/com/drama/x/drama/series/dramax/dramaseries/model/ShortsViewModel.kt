@@ -32,7 +32,10 @@ data class ShortsUiState(
 
 class ShortsViewModel(application: Application) : AndroidViewModel(application) {
     private val appContext = application.applicationContext
-    private val repository = ShortsRepository(AuthRepository(application.applicationContext))
+    private val repository = ShortsRepository(
+        AuthRepository(application.applicationContext),
+        application.applicationContext
+    )
     private val savedWatchListStore = SavedWatchListStore(application.applicationContext)
     private val savedWatchHistoryStore = SavedWatchHistoryStore(application.applicationContext)
     private val _uiState = MutableStateFlow(ShortsUiState())
@@ -150,8 +153,8 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
         if (state.isLoadingMore || state.items.isEmpty()) return
         // In episode mode we never load more generic content — the episode list is finite
         if (currentInitialFilmId != null && currentInitialFilmId != 0) return
-        // Prefetch next page earlier (at 50% threshold instead of 75%) for smoother scrolling
-        if (currentIndex < state.items.lastIndex - 4) return
+        // Optimized: Prefetch earlier (at 60% threshold instead of 75%) for smoother scrolling
+        if (currentIndex < state.items.lastIndex - 3) return
         viewModelScope.launch {
             _uiState.update { it.copy(isLoadingMore = true) }
             loadPage(backendBaseUrl, null, genericFeedOpenNonce)
@@ -314,16 +317,13 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
     ) {
         val filmId = film.id
         if (filmId == 0) return
-        if (enabled) {
-            savedWatchListStore.save(film)
-        } else {
-            savedWatchListStore.remove(filmId)
-        }
+        // Repository now handles local save, so UI updates immediately
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 repository.setReminder(
                     backendBaseUrl = backendBaseUrl,
                     filmId = filmId,
+                    film = film,
                     enabled = enabled,
                     language = selectedLanguageCode()
                 )
@@ -432,7 +432,7 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
         progressSeconds: Int,
         durationSeconds: Int?
     ) {
-        if (item.film.id == 0 || progressSeconds < 10) return
+        if (item.film.id == 0 || progressSeconds < 1) return
         savedWatchHistoryStore.save(
             film = item.film,
             episodeNumber = item.episodeNumber,

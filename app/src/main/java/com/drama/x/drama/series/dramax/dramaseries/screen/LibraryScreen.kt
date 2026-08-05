@@ -67,7 +67,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -150,7 +152,8 @@ fun LibraryScreen(
                 onOpenShorts = onOpenShorts,
                 nativeMyListAdState = nativeMyListAdState,
                 bottomBannerVisible = bottomBannerVisible,
-                onPlanner = onPlanner
+                onPlanner = onPlanner,
+                modifier = Modifier.fillMaxSize()
             )
         }
         BottomNavigationBar(
@@ -180,7 +183,8 @@ private fun LibraryContent(
     onOpenShorts: (Int?, Int?) -> Unit,
     nativeMyListAdState: NativeAdState,
     bottomBannerVisible: Boolean,
-    onPlanner: () -> Unit
+    onPlanner: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var mode by remember { mutableStateOf(MyListMode.Overview) }
     val history = feed.watchHistory
@@ -199,6 +203,111 @@ private fun LibraryContent(
         isFavoritesSelectionMode = false
     }
 
+    // For History mode, use Box with fixed native ad at top
+    if (mode == MyListMode.History) {
+        Box(modifier = modifier) {
+            // Measure the height of the fixed header + ad section dynamically
+            var headerHeight by remember { mutableStateOf(0.dp) }
+            val density = LocalDensity.current
+            
+            // Scrollable content
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    top = headerHeight, // Dynamic space based on measured header + ad height
+                    bottom = 104.dp + if (bottomBannerVisible) AppBottomBannerHeight else 0.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                if (history.isEmpty()) {
+                    item {
+                        MyListEmptyMessage(
+                            title = stringResource(R.string.nothing_watched_yet),
+                            body = stringResource(R.string.nothing_watched_yet_desc)
+                        )
+                    }
+                } else {
+                    // Build rows of 3 items that scroll under the fixed ad when scrolling down
+                    val chunked = history.chunked(3)
+                    chunked.forEachIndexed { rowIndex, rowItems ->
+                        item(key = "hist_row_$rowIndex") {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                rowItems.forEach { histItem ->
+                                    val filmId = histItem.film.id
+                                    val isChecked = filmId in selectedHistoryIds
+                                    HistoryGridCard(
+                                        item = histItem,
+                                        isChecked = isChecked,
+                                        selectionMode = isHistorySelectionMode,
+                                        onLongPress = {
+                                            isHistorySelectionMode = true
+                                            selectedHistoryIds = selectedHistoryIds + filmId
+                                        },
+                                        onToggleCheck = {
+                                            selectedHistoryIds = if (isChecked)
+                                                selectedHistoryIds - filmId
+                                            else
+                                                selectedHistoryIds + filmId
+                                        },
+                                        onOpen = { if (!isHistorySelectionMode) onOpenShorts(filmId.takeIf { it != 0 }, histItem.episodeNumber) },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                // Fill empty slots in last row
+                                repeat(3 - rowItems.size) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Fixed header and native ad at top - measure its height
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(HomeBackground)
+                    .onGloballyPositioned { coordinates ->
+                        headerHeight = with(density) { coordinates.size.height.toDp() }
+                    }
+            ) {
+                Spacer(modifier = Modifier.statusBarsPadding())
+                val allSelected = history.isNotEmpty() && selectedHistoryIds.containsAll(history.map { it.film.id }.toSet())
+                HistoryAllHeader(
+                    title = stringResource(R.string.history_watching),
+                    meta = stringResource(R.string.items_watched, history.size),
+                    allSelected = allSelected,
+                    selectionMode = isHistorySelectionMode,
+                    onBack = { mode = MyListMode.Overview },
+                    onSelectAll = {
+                        isHistorySelectionMode = true
+                        selectedHistoryIds = if (allSelected) emptySet()
+                        else history.map { it.film.id }.toSet()
+                    },
+                    onDelete = {
+                        if (selectedHistoryIds.isNotEmpty()) {
+                            viewModel.removeHistoryItems(backendBaseUrl, selectedHistoryIds)
+                            selectedHistoryIds = emptySet()
+                            isHistorySelectionMode = false
+                        }
+                    }
+                )
+                MyListNativeAd(
+                    state = nativeMyListAdState,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
+        }
+        return
+    }
+
+    // For Overview and Favorites modes, use standard LazyColumn
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 104.dp + if (bottomBannerVisible) AppBottomBannerHeight else 0.dp),
@@ -256,104 +365,35 @@ private fun LibraryContent(
                         )
                     }
                 } else {
-                    // Show native ad after every 3 movies in My Favorites (Overview mode)
-                    favorites.forEachIndexed { index, film ->
-                        // Show native ad at first position (index 0) and then after every 3 items
-                        if (index % 3 == 0 && index > 0) {
-                            item {
+                    // My List Overview: Place native ad directly below Favorite title, then after every 3 items
+                    // Pattern: Title → Native Ad → 3 items → Native Ad → 3 items...
+                    // Limit to 12 items max
+                    item(key = "fav_overview_ad_first") {
+                        MyListNativeAd(
+                            state = nativeMyListAdState,
+                            modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp)
+                        )
+                    }
+                    favorites.take(12).forEachIndexed { index, film ->
+                        item(key = "fav_overview_${film.id}") {
+                            FavoriteListCard(film = film, onOpenShorts = { filmId -> onOpenShorts(filmId, null) })
+                        }
+                        // Show native ad after every 3 items
+                        if ((index + 1) % 3 == 0) {
+                            item(key = "fav_overview_ad_${index + 1}") {
                                 MyListNativeAd(
                                     state = nativeMyListAdState,
                                     modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp)
                                 )
                             }
                         }
-                        item {
-                            FavoriteListCard(film = film, onOpenShorts = { filmId -> onOpenShorts(filmId, null) })
-                        }
                     }
                 }
             }
 
             MyListMode.History -> {
-                item {
-                    Spacer(modifier = Modifier.statusBarsPadding())
-                }
-                item {
-                    val allSelected = history.isNotEmpty() && selectedHistoryIds.containsAll(history.map { it.film.id }.toSet())
-                    HistoryAllHeader(
-                        title = stringResource(R.string.history_watching),
-                        meta = stringResource(R.string.items_watched,history.size),
-                        allSelected = allSelected,
-                        selectionMode = isHistorySelectionMode,
-                        onBack = { mode = MyListMode.Overview },
-                        onSelectAll = {
-                            isHistorySelectionMode = true
-                            selectedHistoryIds = if (allSelected) emptySet()
-                            else history.map { it.film.id }.toSet()
-                        },
-                        onDelete = {
-                            if (selectedHistoryIds.isNotEmpty()) {
-                                viewModel.removeHistoryItems(backendBaseUrl, selectedHistoryIds)
-                                selectedHistoryIds = emptySet()
-                                isHistorySelectionMode = false
-                            }
-                        }
-                    )
-                }
-                // Fixed native ad at the top
-                item {
-                    MyListNativeAd(
-                        state = nativeMyListAdState,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                    )
-                }
-                if (history.isEmpty()) {
-                    item {
-                        MyListEmptyMessage(
-                            title = stringResource(R.string.nothing_watched_yet),
-                            body = stringResource(R.string.nothing_watched_yet_desc)
-                        )
-                    }
-                } else {
-                    // Build rows of 3 items that scroll under the fixed ad
-                    val chunked = history.chunked(3)
-                    chunked.forEachIndexed { rowIndex, rowItems ->
-                        item(key = "hist_row_$rowIndex") {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                rowItems.forEach { histItem ->
-                                    val filmId = histItem.film.id
-                                    val isChecked = filmId in selectedHistoryIds
-                                    HistoryGridCard(
-                                        item = histItem,
-                                        isChecked = isChecked,
-                                        selectionMode = isHistorySelectionMode,
-                                        onLongPress = {
-                                            isHistorySelectionMode = true
-                                            selectedHistoryIds = selectedHistoryIds + filmId
-                                        },
-                                        onToggleCheck = {
-                                            selectedHistoryIds = if (isChecked)
-                                                selectedHistoryIds - filmId
-                                            else
-                                                selectedHistoryIds + filmId
-                                        },
-                                        onOpen = { if (!isHistorySelectionMode) onOpenShorts(filmId.takeIf { it != 0 }, histItem.episodeNumber) },
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
-                                // Fill empty slots in last row
-                                repeat(3 - rowItems.size) {
-                                    Spacer(modifier = Modifier.weight(1f))
-                                }
-                            }
-                        }
-                    }
-                }
+                // History mode is handled separately with fixed native ad at top
+                // This case should not be reached due to early return above
             }
 
             MyListMode.Favorites -> {
@@ -390,17 +430,15 @@ private fun LibraryContent(
                         )
                     }
                 } else {
-                    // Show native ad after every 3 movies in My Favorites (See All mode)
+                    // See All Favorite: Place native ad at first position, then after every 3 items
+                    // Pattern: Native Ad → 3 items → Native Ad → 3 items...
+                    item(key = "fav_ad_first") {
+                        MyListNativeAd(
+                            state = nativeMyListAdState,
+                            modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp)
+                        )
+                    }
                     favorites.forEachIndexed { index, film ->
-                        // Show native ad at first position (index 0) and then after every 3 items
-                        if (index % 3 == 0 && index > 0) {
-                            item {
-                                MyListNativeAd(
-                                    state = nativeMyListAdState,
-                                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp)
-                                )
-                            }
-                        }
                         item(key = "fav_${film.id}") {
                             val isChecked = film.id in selectedFavoriteIds
                             FavoriteListCard(
@@ -419,6 +457,15 @@ private fun LibraryContent(
                                         selectedFavoriteIds + film.id
                                 }
                             )
+                        }
+                        // Show native ad after every 3 items
+                        if ((index + 1) % 3 == 0) {
+                            item(key = "fav_ad_${index + 1}") {
+                                MyListNativeAd(
+                                    state = nativeMyListAdState,
+                                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp)
+                                )
+                            }
                         }
                     }
                 }

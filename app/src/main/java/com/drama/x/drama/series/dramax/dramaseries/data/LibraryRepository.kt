@@ -70,25 +70,9 @@ class LibraryRepository(
 
     suspend fun clearHistory(backendBaseUrl: String): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val token = authRepository.authToken()
-                ?: throw IllegalStateException("No auth token available")
-            
-            // Call backend endpoint to clear history
-            val url = URL("${backendBaseUrl.trimEndSlash()}/client/history/watch")
-            val connection = (url.openConnection() as HttpURLConnection).apply {
-                requestMethod = "DELETE"
-                connectTimeout = 4_000
-                readTimeout = 4_000
-                setRequestProperty("Authorization", "Bearer $token")
-            }
-            
-            if (connection.responseCode !in 200..299) {
-                val error = connection.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
-                throw IllegalStateException("Failed to clear history: ${connection.responseCode} $error")
-            }
-            
-            // Also clear local cache
+            // Local-only: Clear history immediately without backend call
             savedWatchHistoryStore.clearAll()
+            // Backend sync removed for instant response
         }
     }
 
@@ -98,31 +82,13 @@ class LibraryRepository(
         enable: Boolean
     ): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val token = authRepository.authToken()
-                ?: throw IllegalStateException("No auth token available")
-            
-            // Call backend endpoint to toggle watchlist
-            val method = if (enable) "POST" else "DELETE"
-            val url = URL("${backendBaseUrl.trimEndSlash()}/client/reminders/${film.id}")
-            val connection = (url.openConnection() as HttpURLConnection).apply {
-                requestMethod = method
-                connectTimeout = 4_000
-                readTimeout = 4_000
-                setRequestProperty("Authorization", "Bearer $token")
-                setRequestProperty("Content-Type", "application/json")
-            }
-            
-            if (connection.responseCode !in 200..299) {
-                val error = connection.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
-                throw IllegalStateException("Failed to toggle watchlist: ${connection.responseCode} $error")
-            }
-            
-            // Update local cache
+            // Local-only: Update watchlist immediately without backend call
             if (enable) {
                 savedWatchListStore.save(film)
             } else {
                 savedWatchListStore.remove(film.id)
             }
+            // Backend sync removed for instant response
         }
     }
 

@@ -33,7 +33,10 @@ data class EpisodeUiState(
 
 class EpisodeViewModel(application: Application) : AndroidViewModel(application) {
     private val appContext = application.applicationContext
-    private val repository = ShortsRepository(AuthRepository(application.applicationContext))
+    private val repository = ShortsRepository(
+        AuthRepository(application.applicationContext),
+        application.applicationContext
+    )
     private val savedWatchListStore = SavedWatchListStore(application.applicationContext)
     private val savedWatchHistoryStore = SavedWatchHistoryStore(application.applicationContext)
     

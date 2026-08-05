@@ -175,7 +175,26 @@ fun ShortsScreen(
     BackHandler(onBack = onBack)
 
     val uiState by viewModel.uiState.collectAsState()
-    val feedPages = remember(uiState.items) { uiState.items.withNativeAdPages() }
+    
+    // Track which films should have episodes in sequential order
+    var episodeModeFilmIds by remember { mutableStateOf(setOf<Int>()) }
+    
+    val feedPages = remember(uiState.items, episodeModeFilmIds) { 
+        derivedStateOf { 
+            // Reorganize items to ensure episode mode dramas have sequential episodes
+            val reorganizedItems = if (episodeModeFilmIds.isEmpty()) {
+                uiState.items
+            } else {
+                val episodeModeItems = uiState.items.filter { it.film.id in episodeModeFilmIds }
+                    .sortedBy { it.episodeNumber }
+                val otherItems = uiState.items.filter { it.film.id !in episodeModeFilmIds }
+                
+                // Merge: episode mode items first in order, then others
+                episodeModeItems + otherItems
+            }
+            reorganizedItems.withNativeAdPages() 
+        }
+    }.value
     val pagerState = rememberPagerState { feedPages.size.coerceAtLeast(1) }
     val currentFeedPage = feedPages.getOrNull(pagerState.currentPage)
     val currentVideoPage = currentFeedPage as? ShortsFeedPage.Video
@@ -195,7 +214,6 @@ fun ShortsScreen(
     var dailyUnlocksUsed by remember { mutableStateOf(0) }
     var unlockedEpisodeKeys by remember { mutableStateOf(setOf<String>()) }
     var episodeModeKeys by remember { mutableStateOf(setOf<String>()) }
-    var episodeModeFilmIds by remember { mutableStateOf(setOf<Int>()) }  // Track films in episode mode
     var nativeShortVideoAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
     
     // Rating dialog state
@@ -249,20 +267,12 @@ fun ShortsScreen(
             viewModel.loadMoreIfNeeded(currentVideoPage.itemIndex, backendBaseUrl)
         }
         
-        // Prefetch adjacent videos for smooth transitions
+        // Optimized: Only prefetch next video to reduce memory pressure and improve responsiveness
         val nextPage = pagerState.currentPage + 1
         if (nextPage < feedPages.size) {
             val nextFeedPage = feedPages.getOrNull(nextPage)
             if (nextFeedPage is ShortsFeedPage.Video) {
                 viewModel.ensurePlayback(nextFeedPage.itemIndex, backendBaseUrl)
-            }
-        }
-        
-        val prevPage = pagerState.currentPage - 1
-        if (prevPage >= 0) {
-            val prevFeedPage = feedPages.getOrNull(prevPage)
-            if (prevFeedPage is ShortsFeedPage.Video) {
-                viewModel.ensurePlayback(prevFeedPage.itemIndex, backendBaseUrl)
             }
         }
     }
@@ -315,7 +325,26 @@ fun ShortsScreen(
     }
 
     // --- Episode mode: Prevent scrolling outside current drama's episodes ---
-    LaunchedEffect(pagerState.currentPage, feedPages.size, episodeModeFilmIds) {
+    // Optimized: Cache episode boundaries to avoid repeated O(n) scans
+    val episodeBoundaries = remember(feedPages, episodeModeFilmIds) {
+        derivedStateOf {
+            val boundaries = mutableMapOf<Int, Pair<Int, Int>>()
+            episodeModeFilmIds.forEach { filmId ->
+                val firstPage = feedPages.indexOfFirst { page ->
+                    page is ShortsFeedPage.Video && page.item.film.id == filmId
+                }
+                val lastPage = feedPages.indexOfLast { page ->
+                    page is ShortsFeedPage.Video && page.item.film.id == filmId
+                }
+                if (firstPage >= 0 && lastPage >= 0) {
+                    boundaries[filmId] = firstPage to lastPage
+                }
+            }
+            boundaries
+        }
+    }.value
+
+    LaunchedEffect(pagerState.currentPage, episodeBoundaries, isEpisodeEntry) {
         if (feedPages.isEmpty()) return@LaunchedEffect
         
         val currentPage = pagerState.currentPage
@@ -329,19 +358,12 @@ fun ShortsScreen(
         if (currentFeedPage !is ShortsFeedPage.Video) return@LaunchedEffect
         
         val currentFilmId = currentFeedPage.item.film.id
-        val isInEpisodeMode = isEpisodeEntry || episodeModeFilmIds.contains(currentFilmId)
+        val isInEpisodeMode = isEpisodeEntry || episodeBoundaries.containsKey(currentFilmId)
         
         if (!isInEpisodeMode) return@LaunchedEffect
         
-        // Find the episode boundaries for the current drama (only video pages, not ads)
-        val firstVideoPageOfDrama = feedPages.indexOfFirst { page ->
-            page is ShortsFeedPage.Video && page.item.film.id == currentFilmId
-        }
-        val lastVideoPageOfDrama = feedPages.indexOfLast { page ->
-            page is ShortsFeedPage.Video && page.item.film.id == currentFilmId
-        }
-        
-        if (firstVideoPageOfDrama < 0 || lastVideoPageOfDrama < 0) return@LaunchedEffect
+        // Use cached boundaries instead of rescanning
+        val (firstVideoPageOfDrama, lastVideoPageOfDrama) = episodeBoundaries[currentFilmId] ?: return@LaunchedEffect
         
         // Check if current page is before first episode or after last episode of this drama
         val currentIsBeforeDrama = currentPage < firstVideoPageOfDrama && feedPages[currentPage] !is ShortsFeedPage.NativeFullscreenAd
@@ -778,6 +800,16 @@ private fun ShortsPage(
             delay(5000L)
             if (isActive && controlsVisible && !hasPopup) { // Double-check still active, controls visible, and no popup
                 onHideControls()
+            }
+        }
+    }
+
+    // Save watch progress when user exits the player (cleanup on dispose)
+    DisposableEffect(item.film.id, item.episodeNumber) {
+        onDispose {
+            // Save progress if user has watched for at least 1 second and video is not locked
+            if (positionMs >= 1000L && durationMs > 0L && !isLocked) {
+                onProgressCheckpoint(item, positionMs, durationMs)
             }
         }
     }

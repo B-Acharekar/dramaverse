@@ -75,8 +75,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         @Volatile
         private var pendingPostLanguageRecreate = false
         
-        // Reduced from 300ms to 100ms for snappier navigation response
-        private const val NAVIGATION_DEBOUNCE_MS = 100L
+        // Optimized: Reduced from 100ms to 50ms for faster UI response while still preventing double-taps
+        private const val NAVIGATION_DEBOUNCE_MS = 50L
     }
 
     init {

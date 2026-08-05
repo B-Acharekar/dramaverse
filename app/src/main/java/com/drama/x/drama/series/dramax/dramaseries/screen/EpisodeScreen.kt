@@ -408,6 +408,16 @@ private fun EpisodePage(
     var speed    by remember { mutableStateOf(1f) }
     var ccEnabled by remember { mutableStateOf(true) }
 
+    // Save watch progress when user exits the player (cleanup on dispose)
+    DisposableEffect(item.film.id, item.episodeNumber) {
+        onDispose {
+            // Save progress if user has watched for at least 1 second and video is not locked
+            if (position >= 1000L && duration > 0L && !isLocked) {
+                onProgressUpdate(position, duration)
+            }
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
 
         // Video

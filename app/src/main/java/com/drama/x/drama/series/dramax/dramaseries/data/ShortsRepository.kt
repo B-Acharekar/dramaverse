@@ -28,8 +28,10 @@ data class EpisodeInfo(
 private const val FREE_SHORTS_PREVIEW_EPISODES = 7
 
 class ShortsRepository(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    context: android.content.Context
 ) {
+    private val savedWatchListStore = SavedWatchListStore(context.applicationContext)
     suspend fun loadFilms(
         backendBaseUrl: String,
         language: String = "en",
@@ -148,13 +150,18 @@ class ShortsRepository(
     suspend fun setReminder(
         backendBaseUrl: String,
         filmId: Int,
+        film: DramaItem?,
         enabled: Boolean,
         language: String = "en"
-    ): Result<Unit> = postClientAction(
-        backendBaseUrl = backendBaseUrl,
-        path = "client/films/$filmId/${if (enabled) "reminder" else "unreminder"}",
-        language = language
-    )
+    ): Result<Unit> = runCatching {
+        // Local-only: Save/remove immediately without backend call
+        if (enabled && film != null) {
+            savedWatchListStore.save(film)
+        } else {
+            savedWatchListStore.remove(filmId)
+        }
+        // Backend sync removed for instant response
+    }
 
     suspend fun unlockEpisode(
         backendBaseUrl: String,

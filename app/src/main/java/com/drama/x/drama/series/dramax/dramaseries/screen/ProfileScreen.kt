@@ -1027,9 +1027,8 @@ private fun LanguagePickerSelectionRing(selected: Boolean) {
 
 @Composable
 private fun ProfileTopBar() {
-    val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     DramaXTopAppBar(
-        topInset = topInset,
+        topInset = 0.dp, // Remove top inset since Scaffold innerPadding already handles status bar
         showActions = false
     )
 }

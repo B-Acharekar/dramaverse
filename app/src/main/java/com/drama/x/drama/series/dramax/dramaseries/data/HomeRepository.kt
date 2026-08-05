@@ -105,13 +105,12 @@ class HomeRepository(
                 ?: authRepository.registerDevice(backendBaseUrl, language).getOrThrow().token
                 ?: throw IllegalStateException("Device auth did not return a bearer token.")
 
-            // 3. NETWORK: Fetch with EXTENDED timeout (increased from 2800ms to 5000ms)
-            // Reason: Network can be unpredictable. 5s is user-acceptable and allows pages 2-4 to complete more often
-            withTimeoutOrNull(5000) {
+            // 3. NETWORK: Fetch with reasonable timeout (reduced from 5000ms to 4000ms)
+            // Optimized: Faster timeout for better perceived performance
+            withTimeoutOrNull(4000) {
                 withContext(Dispatchers.IO) {
-                    // Increased from 2200ms to 3500ms for page 1
-                    // Pages 2-4 now have more time to complete in background
-                    fetchHomeFeed(backendBaseUrl, language, token, timeoutMillis = 3500)
+                    // Reduced from 3500ms to 3000ms for faster initial load
+                    fetchHomeFeed(backendBaseUrl, language, token, timeoutMillis = 3000)
                 }
             }?.let { rawFeed ->
                 // Cache writes are also on IO to avoid UI blocking
@@ -173,20 +172,13 @@ class HomeRepository(
         language: String = "en"
     ): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
+            // Local-only: Save/remove immediately without backend call
             if (enabled) {
                 savedWatchListStore.save(film)
             } else {
                 savedWatchListStore.remove(film.id)
             }
-            val token = authRepository.authToken()
-                ?: authRepository.registerDevice(backendBaseUrl, language).getOrThrow().token
-                ?: throw IllegalStateException("Device auth did not return a bearer token.")
-            postClientAction(
-                backendBaseUrl = backendBaseUrl,
-                path = "client/films/${film.id}/${if (enabled) "reminder" else "unreminder"}",
-                language = language,
-                token = token
-            )
+            // Backend sync removed for instant response
         }
     }
 
