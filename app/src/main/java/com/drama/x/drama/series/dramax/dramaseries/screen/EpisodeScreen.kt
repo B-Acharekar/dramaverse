@@ -107,8 +107,6 @@ fun EpisodeScreen(
     onProfile: () -> Unit,
     viewModel: EpisodeViewModel = viewModel()
 ) {
-    BackHandler(onBack = onBack)
-
     val uiState        by viewModel.uiState.collectAsState()
     val context        = LocalContext.current
     val activity       = remember(context) { context.findActivity() }
@@ -119,6 +117,24 @@ fun EpisodeScreen(
     // side-bar interaction state
     var liked             by remember { mutableStateOf(false) }
     var bookmarked        by remember { mutableStateOf(false) }
+    
+    // Rating dialog state for Flow 1 and Flow 2
+    var showRatingDialog by remember { mutableStateOf(false) }
+    val favoriteTracker = remember { com.drama.x.drama.series.dramax.dramaseries.data.FirstFavoriteTracker.getInstance(context) }
+    val triggerHelper = remember { com.drama.x.drama.series.dramax.dramaseries.data.RatingTriggerHelper.getInstance(context) }
+    
+    BackHandler {
+        // Flow 1: Trigger rating when exiting video player
+        val shouldShowRating = triggerHelper.shouldTriggerAfterVideoExit(
+            interstitialShown = false // TODO: Track if interstitial ad was shown on back
+        )
+        if (shouldShowRating) {
+            showRatingDialog = true
+            triggerHelper.markDialogShown()
+        }
+        onBack()
+    }
+    
     // popup visibility
     var showEpisodeList   by remember { mutableStateOf(false) }
     var showPlaybackOpts  by remember { mutableStateOf(false) }
@@ -206,7 +222,23 @@ fun EpisodeScreen(
                         totalEpisodes   = uiState.episodes.size,
                         onTogglePlay    = { isPlaying = !isPlaying },
                         onLike          = { liked = !liked },
-                        onBookmark      = { bookmarked = !bookmarked },
+                        onBookmark      = { 
+                            val newBookmarkState = !bookmarked
+                            bookmarked = newBookmarkState
+                            
+                            // Flow 2: Check if rating should trigger (first favorite only)
+                            if (newBookmarkState) {
+                                val wasFirstFavorite = favoriteTracker.markFavoriteAdded()
+                                val shouldShowRating = triggerHelper.shouldTriggerAfterAddToFavorites(
+                                    interstitialShown = false, // TODO: Track if ad was shown
+                                    isFirstFavorite = wasFirstFavorite
+                                )
+                                if (shouldShowRating) {
+                                    showRatingDialog = true
+                                    triggerHelper.markDialogShown()
+                                }
+                            }
+                        },
                         onShare         = { showShareSheet = true },
                         onEpisodes      = { showEpisodeList = true },
                         onSubtitle      = { showSubtitleOpts = true },
@@ -377,6 +409,15 @@ fun EpisodeScreen(
                 dailyUnlockLimit  = uiState.dailyUnlockLimit,
                 onBrowseEpisodes  = { showDailyLimit = false; showEpisodeList = true },
                 onDismiss         = { showDailyLimit = false }
+            )
+        }
+        
+        // Rating dialog for Flow 1 and Flow 2
+        if (showRatingDialog) {
+            AppRatingDialog(
+                onDismiss = { showRatingDialog = false },
+                onRated = { showRatingDialog = false },
+                isManualTrigger = false // Automatic trigger
             )
         }
     }

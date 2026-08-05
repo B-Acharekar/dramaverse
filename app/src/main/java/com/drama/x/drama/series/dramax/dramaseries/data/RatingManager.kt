@@ -13,10 +13,19 @@ private const val KEY_SESSION_ID = "session_id"
 /**
  * Manages app rating state across the application.
  * 
- * Rules:
- * - Rating popup shows only once per session
- * - Once user has rated (via Play Store or feedback), never show again
- * - Triggers: Complete episode, exit player, add to favorites
+ * New Rules (Updated):
+ * - Show rating dialog only once per app session
+ * - First eligible trigger can display the rate dialog
+ * - Once shown, don't show again during same session
+ * - If user is already Rated, never show again
+ * - New session starts after app completely closed and reopened
+ * - Monetization: If Interstitial Ad displayed for current trigger, skip Rate dialog only for that trigger
+ * 
+ * Triggers:
+ * - Flow 1: Complete watching (exit player or start next episode) - pauses video if shown
+ * - Flow 2: First favorite/add to My List - pauses video if shown during playback
+ * - Flow 3: Return to Home from another screen/tab (no Interstitial Ad shown)
+ * - Manual: Rate App in Settings
  */
 class RatingManager(context: Context) {
     private val prefs: SharedPreferences = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -45,16 +54,35 @@ class RatingManager(context: Context) {
     }
     
     /**
-     * Check if rating dialog can be shown.
+     * Check if rating dialog can be shown (for automatic triggers).
      * Returns true only if:
      * - User has not rated the app yet
      * - Dialog has not been shown in this session
+     * 
+     * For automatic triggers like Flow 1, 2, 3.
      */
     fun canShowRatingDialog(): Boolean {
         val hasRated = hasRated()
         val shownThisSession = prefs.getBoolean(KEY_SHOWN_THIS_SESSION, false)
         
         Log.d(TAG, "canShowRatingDialog: hasRated=$hasRated, shownThisSession=$shownThisSession")
+        return !hasRated && !shownThisSession
+    }
+    
+    /**
+     * Check if rating dialog can be shown from Settings (manual trigger).
+     * For manual trigger: Show dialog if not shown in current session.
+     * If already rated, caller should show "Thanks for your rating!" message.
+     * 
+     * Returns true only if:
+     * - User has not rated the app yet
+     * - Dialog has not been shown in this session
+     */
+    fun canShowRatingDialogFromSettings(): Boolean {
+        val hasRated = hasRated()
+        val shownThisSession = prefs.getBoolean(KEY_SHOWN_THIS_SESSION, false)
+        
+        Log.d(TAG, "canShowRatingDialogFromSettings: hasRated=$hasRated, shownThisSession=$shownThisSession")
         return !hasRated && !shownThisSession
     }
     

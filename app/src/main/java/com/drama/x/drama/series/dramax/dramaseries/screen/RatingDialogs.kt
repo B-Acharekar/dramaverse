@@ -38,12 +38,17 @@ private const val TAG = "RatingDialogs"
  * Enhanced rating dialog with emoji feedback and star selection.
  * Supports:
  * - 1-3 stars: Show feedback dialog
- * - 4-5 stars: Launch In-App Review or redirect to Play Store
+ * - 4-5 stars: Launch In-App Review (automatic) or Play Store (manual from Settings)
+ * 
+ * @param onDismiss Called when dialog is dismissed
+ * @param onRated Called when user completes rating (4-5 stars) or feedback (1-3 stars)
+ * @param isManualTrigger True if triggered from Settings "Rate App" button, false for automatic triggers
  */
 @Composable
 fun AppRatingDialog(
     onDismiss: () -> Unit,
-    onRated: () -> Unit
+    onRated: () -> Unit,
+    isManualTrigger: Boolean = false
 ) {
     val context = LocalContext.current
     val ratingManager = remember { RatingManager.getInstance(context) }
@@ -161,12 +166,21 @@ fun AppRatingDialog(
                                     showFeedbackDialog = true
                                 }
                                 selectedRating in 4..5 -> {
-                                    // High rating - launch In-App Review or Play Store
+                                    // High rating - mark as rated first
                                     ratingManager.markAsRated()
-                                    context.launchInAppReview(onComplete = {
+                                    
+                                    if (isManualTrigger) {
+                                        // Manual trigger (from Settings) - open Play Store directly
+                                        context.openPlayStoreRating()
                                         onRated()
                                         onDismiss()
-                                    })
+                                    } else {
+                                        // Automatic trigger - launch In-App Review
+                                        context.launchInAppReview(onComplete = {
+                                            onRated()
+                                            onDismiss()
+                                        })
+                                    }
                                 }
                             }
                         },

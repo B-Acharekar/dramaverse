@@ -172,9 +172,8 @@ fun ShortsScreen(
     viewModel: ShortsViewModel = viewModel()
 ) {
 
-    BackHandler(onBack = onBack)
-
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
     
     // Track which films should have episodes in sequential order
     var episodeModeFilmIds by remember { mutableStateOf(setOf<Int>()) }
@@ -198,7 +197,6 @@ fun ShortsScreen(
     val pagerState = rememberPagerState { feedPages.size.coerceAtLeast(1) }
     val currentFeedPage = feedPages.getOrNull(pagerState.currentPage)
     val currentVideoPage = currentFeedPage as? ShortsFeedPage.Video
-    val context = LocalContext.current
     val activity = remember(context) { context.findActivity() }
     var controlsVisible by remember { mutableStateOf(true) }
     var isPlaying by remember { mutableStateOf(true) }
@@ -218,7 +216,21 @@ fun ShortsScreen(
     
     // Rating dialog state
     var showRatingDialog by remember { mutableStateOf(false) }
-    val ratingManager = remember { RatingManager.getInstance(context) }
+    val ratingManager = remember { com.drama.x.drama.series.dramax.dramaseries.data.RatingManager.getInstance(context) }
+    val favoriteTracker = remember { com.drama.x.drama.series.dramax.dramaseries.data.FirstFavoriteTracker.getInstance(context) }
+    val triggerHelper = remember { com.drama.x.drama.series.dramax.dramaseries.data.RatingTriggerHelper.getInstance(context) }
+    
+    BackHandler {
+        // Flow 1: Trigger rating when exiting video player
+        val shouldShowRating = triggerHelper.shouldTriggerAfterVideoExit(
+            interstitialShown = false // TODO: Track if interstitial ad was shown on back
+        )
+        if (shouldShowRating) {
+            showRatingDialog = true
+            triggerHelper.markDialogShown()
+        }
+        onBack()
+    }
 
     // Load persisted unlocked episodes
     val unlockedEpisodesStore = remember { UnlockedEpisodesStore(context) }
@@ -461,10 +473,17 @@ fun ShortsScreen(
                                 film = item.film,
                                 enabled = enabled
                             )
-                            // Trigger rating dialog when adding to favorites
-                            if (enabled && ratingManager.canShowRatingDialog()) {
+                        },
+                        onFavoriteAdded = {
+                            // Flow 2: Trigger rating when adding first favorite
+                            val wasFirstFavorite = favoriteTracker.markFavoriteAdded()
+                            val shouldShowRating = triggerHelper.shouldTriggerAfterAddToFavorites(
+                                interstitialShown = false, // TODO: Track if ad was shown
+                                isFirstFavorite = wasFirstFavorite
+                            )
+                            if (shouldShowRating) {
                                 showRatingDialog = true
-                                ratingManager.markDialogShown()
+                                triggerHelper.markDialogShown()
                             }
                         },
                         onEpisodeFinished = { index, item, position, duration ->
@@ -485,10 +504,15 @@ fun ShortsScreen(
                                     pagerState.animateScrollToPage(pagerState.currentPage + 1)
                                 }
                             }
-                            // Trigger rating dialog after episode completion (but not if auto-next is enabled)
-                            if (!autoNextEnabled && ratingManager.canShowRatingDialog()) {
-                                showRatingDialog = true
-                                ratingManager.markDialogShown()
+                            // Flow 1: Trigger rating dialog after episode completion (when not auto-next)
+                            if (!autoNextEnabled) {
+                                val shouldShowRating = triggerHelper.shouldTriggerAfterVideoExit(
+                                    interstitialShown = false
+                                )
+                                if (shouldShowRating) {
+                                    showRatingDialog = true
+                                    triggerHelper.markDialogShown()
+                                }
                             }
                         },
                         onProgressCheckpoint = { item, position, duration ->
@@ -626,7 +650,8 @@ fun ShortsScreen(
     if (showRatingDialog) {
         AppRatingDialog(
             onDismiss = { showRatingDialog = false },
-            onRated = { showRatingDialog = false }
+            onRated = { showRatingDialog = false },
+            isManualTrigger = false // Automatic trigger
         )
     }
 }
@@ -698,6 +723,7 @@ private fun ShortsPage(
     onSubmitFeedback: (ShortsItem, String) -> Unit,
     onLikeClick: (ShortsItem, Boolean) -> Unit,
     onReminderClick: (ShortsItem, Boolean) -> Unit,
+    onFavoriteAdded: () -> Unit,
     onEpisodeFinished: (Int, ShortsItem, Long, Long) -> Unit,
     onProgressCheckpoint: (ShortsItem, Long, Long) -> Unit,
     onToggleCc: () -> Unit,
@@ -926,6 +952,12 @@ private fun ShortsPage(
                 onBookmarkClick = { newBookmarked ->
                     reminderOn = newBookmarked
                     onReminderClick(item, newBookmarked)
+                    
+                    // Flow 2: Trigger rating handled by parent
+                    if (newBookmarked) {
+                        onFavoriteAdded()
+                    }
+                    
                     Toast
                         .makeText(context, if (newBookmarked) savedToListText else removedFromListText, Toast.LENGTH_SHORT)
                         .show()

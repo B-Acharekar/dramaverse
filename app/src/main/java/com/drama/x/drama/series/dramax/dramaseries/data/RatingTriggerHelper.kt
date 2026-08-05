@@ -14,39 +14,92 @@ private const val TAG = "RatingTriggerHelper"
 
 /**
  * Helper class to trigger rating dialogs at appropriate moments.
- * Manages the logic for when to show rating prompts based on user actions.
+ * 
+ * Updated Trigger Flows:
+ * - Flow 1: Complete watching (exit video player or start next episode)
+ * - Flow 2: First favorite/add to My List
+ * - Flow 3: Return to Home from another screen (no Interstitial Ad shown)
+ * 
+ * Rules:
+ * - Show only once per session
+ * - First eligible trigger shows the dialog
+ * - If Interstitial Ad is shown for the trigger, skip rating for that trigger only
+ * - Never show if user already rated
  */
 class RatingTriggerHelper(private val context: Context) {
     private val ratingManager = RatingManager.getInstance(context)
     
     /**
-     * Trigger rating after completing an episode and returning to home.
+     * Flow 1: Trigger after completing episode and exiting video player.
+     * Called when user exits player or starts next episode.
+     * 
+     * @param interstitialShown True if an Interstitial Ad was shown for this trigger
+     * @return True if rating dialog should be shown
      */
-    fun triggerAfterEpisodeComplete() {
-        if (ratingManager.canShowRatingDialog()) {
-            Log.d(TAG, "Triggered rating after episode complete")
-            ratingManager.markDialogShown()
+    fun shouldTriggerAfterVideoExit(interstitialShown: Boolean = false): Boolean {
+        if (interstitialShown) {
+            Log.d(TAG, "Flow 1: Skipped - Interstitial Ad shown")
+            return false
         }
+        
+        if (ratingManager.canShowRatingDialog()) {
+            Log.d(TAG, "Flow 1: Triggered after video exit")
+            return true
+        }
+        return false
     }
     
     /**
-     * Trigger rating after exiting player.
+     * Flow 2: Trigger after adding first item to favorites/My List.
+     * 
+     * @param interstitialShown True if an Interstitial Ad was shown for this trigger
+     * @param isFirstFavorite True if this is the first time user adds to favorites
+     * @return True if rating dialog should be shown
      */
-    fun triggerAfterExitPlayer() {
-        if (ratingManager.canShowRatingDialog()) {
-            Log.d(TAG, "Triggered rating after exit player")
-            ratingManager.markDialogShown()
+    fun shouldTriggerAfterAddToFavorites(interstitialShown: Boolean = false, isFirstFavorite: Boolean = true): Boolean {
+        if (interstitialShown) {
+            Log.d(TAG, "Flow 2: Skipped - Interstitial Ad shown")
+            return false
         }
+        
+        if (!isFirstFavorite) {
+            Log.d(TAG, "Flow 2: Skipped - Not first favorite")
+            return false
+        }
+        
+        if (ratingManager.canShowRatingDialog()) {
+            Log.d(TAG, "Flow 2: Triggered after add to favorites")
+            return true
+        }
+        return false
     }
     
     /**
-     * Trigger rating after adding to favorites/watchlist.
+     * Flow 3: Trigger when returning to Home from another screen/tab.
+     * Only triggers if no Interstitial Ad was shown.
+     * 
+     * @param interstitialShown True if an Interstitial Ad was shown during navigation
+     * @return True if rating dialog should be shown
      */
-    fun triggerAfterAddToFavorites() {
-        if (ratingManager.canShowRatingDialog()) {
-            Log.d(TAG, "Triggered rating after add to favorites")
-            ratingManager.markDialogShown()
+    fun shouldTriggerOnReturnToHome(interstitialShown: Boolean = false): Boolean {
+        if (interstitialShown) {
+            Log.d(TAG, "Flow 3: Skipped - Interstitial Ad shown")
+            return false
         }
+        
+        if (ratingManager.canShowRatingDialog()) {
+            Log.d(TAG, "Flow 3: Triggered on return to Home")
+            return true
+        }
+        return false
+    }
+    
+    /**
+     * Mark that the rating dialog has been shown.
+     * Call this when actually displaying the dialog.
+     */
+    fun markDialogShown() {
+        ratingManager.markDialogShown()
     }
     
     companion object {
@@ -67,6 +120,7 @@ class RatingTriggerHelper(private val context: Context) {
  * 
  * @param shouldTrigger When true, checks if rating dialog should be shown
  * @param onRated Callback when user completes rating
+ * @param isManualTrigger True for Settings button trigger, false for automatic triggers
  * 
  * Example usage:
  * ```
@@ -81,7 +135,8 @@ class RatingTriggerHelper(private val context: Context) {
 @Composable
 fun rememberRatingDialogState(
     shouldTrigger: Boolean = false,
-    onRated: () -> Unit = {}
+    onRated: () -> Unit = {},
+    isManualTrigger: Boolean = false
 ): RatingDialogState {
     val context = androidx.compose.ui.platform.LocalContext.current
     val ratingManager = remember { RatingManager.getInstance(context) }
@@ -101,7 +156,8 @@ fun rememberRatingDialogState(
             onRated = {
                 showDialog = false
                 onRated()
-            }
+            },
+            isManualTrigger = isManualTrigger
         )
     }
 }
@@ -112,7 +168,8 @@ fun rememberRatingDialogState(
 data class RatingDialogState(
     val showDialog: Boolean,
     val onDismiss: () -> Unit,
-    val onRated: () -> Unit
+    val onRated: () -> Unit,
+    val isManualTrigger: Boolean = false
 )
 
 /**
@@ -125,7 +182,8 @@ fun RatingDialogHost(state: RatingDialogState) {
     if (state.showDialog) {
         AppRatingDialog(
             onDismiss = state.onDismiss,
-            onRated = state.onRated
+            onRated = state.onRated,
+            isManualTrigger = state.isManualTrigger
         )
     }
 }

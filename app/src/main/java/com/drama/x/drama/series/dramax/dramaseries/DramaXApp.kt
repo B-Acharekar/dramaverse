@@ -49,6 +49,12 @@ fun DramaXApp(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     var onboardingFinishInProgress by remember { mutableStateOf(false) }
+    
+    // Flow 3: Track navigation for Return to Home trigger
+    var previousStep by remember { mutableStateOf<AppStep?>(null) }
+    var wasInterstitialShown by remember { mutableStateOf(false) }
+    var shouldTriggerHomeRating by remember { mutableStateOf(false) }
+    
     val currentStep = when {
         initialAction == MainActivity.ACTION_WIDGET_UNINSTALL && uiState.currentStep == AppStep.Splash ->
             AppStep.SplashUninstall
@@ -57,6 +63,30 @@ fun DramaXApp(
         initialAction == MainActivity.ACTION_WIDGET_MY_LIST && uiState.currentStep == AppStep.Splash ->
             AppStep.Library
         else -> uiState.currentStep
+    }
+    
+    // Flow 3: Detect return to Home and trigger rating
+    LaunchedEffect(currentStep) {
+        if (currentStep == AppStep.Home && 
+            previousStep != null && 
+            previousStep != AppStep.Splash && 
+            previousStep != AppStep.SplashUninstall &&
+            previousStep != AppStep.Language &&
+            previousStep != AppStep.Onboarding &&
+            previousStep != AppStep.WelcomeBack) {
+            
+            val triggerHelper = com.drama.x.drama.series.dramax.dramaseries.data.RatingTriggerHelper.getInstance(context)
+            val shouldShowRating = triggerHelper.shouldTriggerOnReturnToHome(
+                interstitialShown = wasInterstitialShown
+            )
+            if (shouldShowRating) {
+                shouldTriggerHomeRating = true
+                triggerHelper.markDialogShown()
+            }
+        }
+        
+        previousStep = currentStep
+        wasInterstitialShown = false // Reset for next navigation
     }
 
     LaunchedEffect(Unit) {
@@ -106,7 +136,10 @@ fun DramaXApp(
             placementName = "inter_back",
             config = AdRemoteConfig.interBack,
             timeoutMs = 2_500L,
-            onFinished = viewModel::openHome
+            onFinished = {
+                wasInterstitialShown = true // Mark that ad was shown
+                viewModel.openHome()
+            }
         )
     }
 
@@ -168,6 +201,8 @@ fun DramaXApp(
 
         AppStep.Home -> HomeScreen(
             backendBaseUrl = uiState.backendBaseUrl,
+            shouldTriggerRating = shouldTriggerHomeRating,
+            onRatingTriggered = { shouldTriggerHomeRating = false },
             onOpenEpisodes = { filmId ->
                 // Open Episodes screen when clicking a film (episode number handled elsewhere)
                 viewModel.openEpisodes(filmId)
