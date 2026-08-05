@@ -240,20 +240,28 @@ fun HomeScreen(
                 nativeHomeAdState = nativeHomeAdState,
                 bottomBannerVisible = bottomBannerVisible,
                 onToggleWatchList = { film, enabled ->
+                    val isFirstFavorite = enabled && uiState.savedFilmIds.isEmpty() // BEFORE this add
                     viewModel.setReminder(backendBaseUrl, film, enabled)
-                    // Flow 2: Trigger rating dialog when adding first favorite
-                    if (enabled) {
-                        val wasFirstFavorite = favoriteTracker.markFavoriteAdded()
-                        val shouldShowRating = triggerHelper.shouldTriggerAfterAddToFavorites(
-                            interstitialShown = false, // TODO: Track from AdsManager
-                            isFirstFavorite = wasFirstFavorite
-                        )
-                        if (shouldShowRating) {
-                            showRatingDialog = true
-                            triggerHelper.markDialogShown()
-                        }
+                    if (isFirstFavorite && ratingManager.canShowRatingDialog()) {
+                        showRatingDialog = true
+                        ratingManager.markDialogShown()
                     }
                 }
+//                onToggleWatchList = { film, enabled ->
+//                    viewModel.setReminder(backendBaseUrl, film, enabled)
+//                    // Flow 2: Trigger rating dialog when adding first favorite
+//                    if (enabled) {
+//                        val wasFirstFavorite = favoriteTracker.markFavoriteAdded()
+//                        val shouldShowRating = triggerHelper.shouldTriggerAfterAddToFavorites(
+//                            interstitialShown = false, // TODO: Track from AdsManager
+//                            isFirstFavorite = wasFirstFavorite
+//                        )
+//                        if (shouldShowRating) {
+//                            showRatingDialog = true
+//                            triggerHelper.markDialogShown()
+//                        }
+//                    }
+//                }
             )
         }
         BottomNavigationBar(
@@ -296,13 +304,13 @@ fun HomeScreen(
     }
     
     // Rating dialog
-    if (showRatingDialog) {
-        AppRatingDialog(
-            onDismiss = { showRatingDialog = false },
-            onRated = { showRatingDialog = false },
-            isManualTrigger = false // Automatic trigger from Flow 2
-        )
-    }
+//    if (showRatingDialog) {
+//        AppRatingDialog(
+//            onDismiss = { showRatingDialog = false },
+//            onRated = { showRatingDialog = false },
+//            isManualTrigger = false // Automatic trigger from Flow 2
+//        )
+//    }
 }
 
 @Composable

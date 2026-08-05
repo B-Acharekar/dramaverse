@@ -177,16 +177,16 @@ data class RatingDialogState(
  * 
  * @param state The rating dialog state from rememberRatingDialogState
  */
-@Composable
-fun RatingDialogHost(state: RatingDialogState) {
-    if (state.showDialog) {
-        AppRatingDialog(
-            onDismiss = state.onDismiss,
-            onRated = state.onRated,
-            isManualTrigger = state.isManualTrigger
-        )
-    }
-}
+//@Composable
+//fun RatingDialogHost(state: RatingDialogState) {
+//    if (state.showDialog) {
+//        AppRatingDialog(
+//            onDismiss = state.onDismiss,
+//            onRated = state.onRated,
+//            isManualTrigger = state.isManualTrigger
+//        )
+//    }
+//}
 
 /**
  * Simple extension to check if rating should be triggered for a specific action.

@@ -175,12 +175,12 @@ fun ShortsScreen(
     BackHandler(onBack = onBack)
 
     val uiState by viewModel.uiState.collectAsState()
-    
+
     // Track which films should have episodes in sequential order
     var episodeModeFilmIds by remember { mutableStateOf(setOf<Int>()) }
-    
-    val feedPages = remember(uiState.items, episodeModeFilmIds) { 
-        derivedStateOf { 
+
+    val feedPages = remember(uiState.items, episodeModeFilmIds) {
+        derivedStateOf {
             // Reorganize items to ensure episode mode dramas have sequential episodes
             val reorganizedItems = if (episodeModeFilmIds.isEmpty()) {
                 uiState.items
@@ -188,11 +188,11 @@ fun ShortsScreen(
                 val episodeModeItems = uiState.items.filter { it.film.id in episodeModeFilmIds }
                     .sortedBy { it.episodeNumber }
                 val otherItems = uiState.items.filter { it.film.id !in episodeModeFilmIds }
-                
+
                 // Merge: episode mode items first in order, then others
                 episodeModeItems + otherItems
             }
-            reorganizedItems.withNativeAdPages() 
+            reorganizedItems.withNativeAdPages()
         }
     }.value
     val pagerState = rememberPagerState { feedPages.size.coerceAtLeast(1) }
@@ -243,9 +243,9 @@ fun ShortsScreen(
     }
 
     LaunchedEffect(activity, uiState.items.size) {
-        activity?.let { 
+        activity?.let {
             // Start preloading native ads immediately instead of waiting for items to load
-            AdsManager.loadNativeShortVideoFullscreen(it) 
+            AdsManager.loadNativeShortVideoFullscreen(it)
         }
     }
 
@@ -268,7 +268,7 @@ fun ShortsScreen(
             viewModel.ensurePlayback(currentVideoPage.itemIndex, backendBaseUrl)
             viewModel.loadMoreIfNeeded(currentVideoPage.itemIndex, backendBaseUrl)
         }
-        
+
         // Optimized: Only prefetch next video to reduce memory pressure and improve responsiveness
         val nextPage = pagerState.currentPage + 1
         if (nextPage < feedPages.size) {
@@ -298,10 +298,10 @@ fun ShortsScreen(
             initialPageScrolled = true
         }
     }
-    
+
     // Track if any video is showing an ad to pause playback
     var isAnyVideoShowingAd by remember { mutableStateOf(false) }
-    
+
     // Pause video when ad is showing
     LaunchedEffect(isAnyVideoShowingAd) {
         if (isAnyVideoShowingAd) {
@@ -354,29 +354,29 @@ fun ShortsScreen(
 
     LaunchedEffect(pagerState.currentPage, episodeBoundaries, isEpisodeEntry) {
         if (feedPages.isEmpty()) return@LaunchedEffect
-        
+
         val currentPage = pagerState.currentPage
         if (currentPage >= feedPages.size) return@LaunchedEffect
-        
+
         val currentFeedPage = feedPages.getOrNull(currentPage)
-        
+
         // If on an ad page, that's ok - just return (don't auto-skip)
         if (currentFeedPage is ShortsFeedPage.NativeFullscreenAd) return@LaunchedEffect
-        
+
         if (currentFeedPage !is ShortsFeedPage.Video) return@LaunchedEffect
-        
+
         val currentFilmId = currentFeedPage.item.film.id
         val isInEpisodeMode = isEpisodeEntry || episodeBoundaries.containsKey(currentFilmId)
-        
+
         if (!isInEpisodeMode) return@LaunchedEffect
-        
+
         // Use cached boundaries instead of rescanning
         val (firstVideoPageOfDrama, lastVideoPageOfDrama) = episodeBoundaries[currentFilmId] ?: return@LaunchedEffect
-        
+
         // Check if current page is before first episode or after last episode of this drama
         val currentIsBeforeDrama = currentPage < firstVideoPageOfDrama && feedPages[currentPage] !is ShortsFeedPage.NativeFullscreenAd
         val currentIsAfterDrama = currentPage > lastVideoPageOfDrama && feedPages[currentPage] !is ShortsFeedPage.NativeFullscreenAd
-        
+
         if (currentIsBeforeDrama) {
             pagerState.scrollToPage(firstVideoPageOfDrama)
         } else if (currentIsAfterDrama) {
@@ -390,7 +390,7 @@ fun ShortsScreen(
             .background(ShortsBackground)
     ) {
         val coroutineScope = rememberCoroutineScope()
-        
+
         if (uiState.items.isEmpty()) {
             ShortsSkeleton()
         } else {
@@ -408,64 +408,64 @@ fun ShortsScreen(
                     is ShortsFeedPage.Video -> {
                         val isEpisodeModeForItem = initialFilmId != null || episodeModeFilmIds.contains(feedPage.item.film.id) || episodeModeKeys.contains(feedPage.item.episodeKey())
                         ShortsPage(
-                        item = feedPage.item,
-                        itemIndex = feedPage.itemIndex,
-                        isActive = page == pagerState.currentPage,
-                        isEpisodeMode = isEpisodeModeForItem,
-                        isBookmarked = feedPage.item.film.id in uiState.savedFilmIds,
-                        backendBaseUrl = backendBaseUrl,
-                        controlsVisible = controlsVisible,
-                        isPlaying = isPlaying,
-                        showPlaybackOptions = showPlaybackOptions,
-                        showFeedbackForm = showFeedbackForm,
-                        autoNext = autoNext,
-                        autoUnlock = autoUnlock,
-                        ccEnabled = ccEnabled,
-                        playbackSpeed = playbackSpeed,
-                        bottomReservedPadding = if (isEpisodeModeForItem) 0.dp else 78.dp + bottomBannerPadding,
-                        onBack = onBack,
-                        onTogglePlay = {
-                            controlsVisible = true
-                            isPlaying = !isPlaying
-                        },
-                        onFeedbackClick = {
-                            controlsVisible = true
-                            showFeedbackForm = !showFeedbackForm
-                            showPlaybackOptions = false
-                        },
-                        onOptionsClick = {
-                            controlsVisible = true
-                            showPlaybackOptions = !showPlaybackOptions
-                            showFeedbackForm = false
-                        },
-                        onClosePopups = {
-                            showPlaybackOptions = false
-                            showFeedbackForm = false
-                        },
-                        onAutoUnlockChange = { enabled ->
-                            autoUnlock = enabled
-                        },
-                        onAutoNextChange = { enabled ->
-                            autoNext = enabled
-                        },
-                        onSubmitFeedback = { item, message ->
-                            viewModel.sendFeedback(
-                                backendBaseUrl = backendBaseUrl,
-                                filmId = item.film.id,
-                                episodeNumber = item.episodeNumber,
-                                message = message
-                            )
-                        },
-                        onLikeClick = { item, liked ->
-                            viewModel.setEpisodeLike(
-                                backendBaseUrl = backendBaseUrl,
-                                filmId = item.film.id,
-                                episodeNumber = item.episodeNumber,
-                                liked = liked
-                            )
-                        },
+                            item = feedPage.item,
+                            itemIndex = feedPage.itemIndex,
+                            isActive = page == pagerState.currentPage,
+                            isEpisodeMode = isEpisodeModeForItem,
+                            isBookmarked = feedPage.item.film.id in uiState.savedFilmIds,
+                            backendBaseUrl = backendBaseUrl,
+                            controlsVisible = controlsVisible,
+                            isPlaying = isPlaying,
+                            showPlaybackOptions = showPlaybackOptions,
+                            showFeedbackForm = showFeedbackForm,
+                            autoNext = autoNext,
+                            autoUnlock = autoUnlock,
+                            ccEnabled = ccEnabled,
+                            playbackSpeed = playbackSpeed,
+                            bottomReservedPadding = if (isEpisodeModeForItem) 0.dp else 78.dp + bottomBannerPadding,
+                            onBack = onBack,
+                            onTogglePlay = {
+                                controlsVisible = true
+                                isPlaying = !isPlaying
+                            },
+                            onFeedbackClick = {
+                                controlsVisible = true
+                                showFeedbackForm = !showFeedbackForm
+                                showPlaybackOptions = false
+                            },
+                            onOptionsClick = {
+                                controlsVisible = true
+                                showPlaybackOptions = !showPlaybackOptions
+                                showFeedbackForm = false
+                            },
+                            onClosePopups = {
+                                showPlaybackOptions = false
+                                showFeedbackForm = false
+                            },
+                            onAutoUnlockChange = { enabled ->
+                                autoUnlock = enabled
+                            },
+                            onAutoNextChange = { enabled ->
+                                autoNext = enabled
+                            },
+                            onSubmitFeedback = { item, message ->
+                                viewModel.sendFeedback(
+                                    backendBaseUrl = backendBaseUrl,
+                                    filmId = item.film.id,
+                                    episodeNumber = item.episodeNumber,
+                                    message = message
+                                )
+                            },
+                            onLikeClick = { item, liked ->
+                                viewModel.setEpisodeLike(
+                                    backendBaseUrl = backendBaseUrl,
+                                    filmId = item.film.id,
+                                    episodeNumber = item.episodeNumber,
+                                    liked = liked
+                                )
+                            },
                             onReminderClick = { item, enabled ->
-                                val isFirstFavorite = enabled && unlockedEpisodeKeys.isEmpty() // placeholder condition — see note below
+                                val isFirstFavorite = enabled && unlockedEpisodeKeys.isEmpty()
                                 viewModel.setReminder(
                                     backendBaseUrl = backendBaseUrl,
                                     film = item.film,
@@ -535,113 +535,113 @@ fun ShortsScreen(
                                     ratingManager.markDialogShown()
                                 }
                             },
-                        onProgressCheckpoint = { item, position, duration ->
-                            viewModel.saveWatchProgress(
-                                backendBaseUrl = backendBaseUrl,
-                                item = item,
-                                progressSeconds = (position / 1000).toInt(),
-                                durationSeconds = duration.takeIf { it > 0L }?.let { (it / 1000).toInt() }
-                            )
-                        },
-                        onToggleCc = { ccEnabled = !ccEnabled },
-                        onCycleSpeed = {
-                            playbackSpeed = when (playbackSpeed) {
-                                0.75f -> 1f
-                                1f -> 1.25f
-                                1.25f -> 1.5f
-                                1.5f -> 1.75f
-                                1.75f -> 2f
-                                else -> 0.75f
-                            }
-                        },
-                        dailyUnlocksUsed = dailyUnlocksUsed,
-                        dailyUnlockLimit = DAILY_UNLOCK_LIMIT,
-                        isEpisodeUnlockedLocally = { filmId, episodeNumber ->
-                            unlockedEpisodeKeys.contains("$filmId:$episodeNumber")
-                        },
-                        unlockedEpisodeKeys = unlockedEpisodeKeys,
-                        unlockedEpisodesStore = unlockedEpisodesStore,
-                        onUnlockedEpisodeReady = { targetItem ->
-                            episodeModeKeys = episodeModeKeys + targetItem.episodeKey()
-                            episodeModeFilmIds = episodeModeFilmIds + targetItem.film.id  // Add film to episode mode
-                            isPlaying = true
-                            
-                            // Find the correct page index for the unlocked episode
-                            val targetPageIndex = feedPages.indexOfFirst { page ->
-                                page is ShortsFeedPage.Video && 
-                                page.item.film.id == targetItem.film.id && 
-                                page.item.episodeNumber == targetItem.episodeNumber
-                            }
-                            
-                            if (targetPageIndex >= 0) {
-                                // Navigate to the unlocked episode's position in the list
-                                coroutineScope.launch {
-                                    pagerState.animateScrollToPage(targetPageIndex)
-                                }
-                            } else {
-                                // Fallback: use old behavior if episode not found in list
-                                viewModel.playEpisode(
+                            onProgressCheckpoint = { item, position, duration ->
+                                viewModel.saveWatchProgress(
                                     backendBaseUrl = backendBaseUrl,
-                                    itemIndex = feedPage.itemIndex,
-                                    currentItem = feedPage.item,
-                                    episodeNumber = targetItem.episodeNumber
+                                    item = item,
+                                    progressSeconds = (position / 1000).toInt(),
+                                    durationSeconds = duration.takeIf { it > 0L }?.let { (it / 1000).toInt() }
                                 )
-                            }
-                        },
-                        onWatchAdToUnlock = { targetItem, onDone ->
-                            activity?.let { act ->
-                                AdsManager.loadAndShowRewardAll(
-                                    activity = act,
-                                    onRewardEarned = {
-                                        dailyUnlocksUsed++
-                                        unlockedEpisodeKeys = unlockedEpisodeKeys + "${targetItem.film.id}:${targetItem.episodeNumber}"
-                                        unlockedEpisodesStore.unlockEpisode(targetItem.film.id, targetItem.episodeNumber)
-                                        unlockedEpisodesStore.incrementDailyUnlocks()
-                                        viewModel.unlockEpisode(
-                                            backendBaseUrl = backendBaseUrl,
-                                            filmId = targetItem.film.id,
-                                            episodeNumber = targetItem.episodeNumber
-                                        )
-                                        onDone(true)
-                                    },
-                                    onFinished = {
-                                        // Ad display attempt completed
+                            },
+                            onToggleCc = { ccEnabled = !ccEnabled },
+                            onCycleSpeed = {
+                                playbackSpeed = when (playbackSpeed) {
+                                    0.75f -> 1f
+                                    1f -> 1.25f
+                                    1.25f -> 1.5f
+                                    1.5f -> 1.75f
+                                    1.75f -> 2f
+                                    else -> 0.75f
+                                }
+                            },
+                            dailyUnlocksUsed = dailyUnlocksUsed,
+                            dailyUnlockLimit = DAILY_UNLOCK_LIMIT,
+                            isEpisodeUnlockedLocally = { filmId, episodeNumber ->
+                                unlockedEpisodeKeys.contains("$filmId:$episodeNumber")
+                            },
+                            unlockedEpisodeKeys = unlockedEpisodeKeys,
+                            unlockedEpisodesStore = unlockedEpisodesStore,
+                            onUnlockedEpisodeReady = { targetItem ->
+                                episodeModeKeys = episodeModeKeys + targetItem.episodeKey()
+                                episodeModeFilmIds = episodeModeFilmIds + targetItem.film.id  // Add film to episode mode
+                                isPlaying = true
+
+                                // Find the correct page index for the unlocked episode
+                                val targetPageIndex = feedPages.indexOfFirst { page ->
+                                    page is ShortsFeedPage.Video &&
+                                            page.item.film.id == targetItem.film.id &&
+                                            page.item.episodeNumber == targetItem.episodeNumber
+                                }
+
+                                if (targetPageIndex >= 0) {
+                                    // Navigate to the unlocked episode's position in the list
+                                    coroutineScope.launch {
+                                        pagerState.animateScrollToPage(targetPageIndex)
                                     }
-                                )
-                            } ?: run {
-                                // No activity available, skip ad and unlock directly (fallback)
-                                dailyUnlocksUsed++
-                                unlockedEpisodeKeys = unlockedEpisodeKeys + "${targetItem.film.id}:${targetItem.episodeNumber}"
-                                unlockedEpisodesStore.unlockEpisode(targetItem.film.id, targetItem.episodeNumber)
-                                viewModel.unlockEpisode(
-                                    backendBaseUrl = backendBaseUrl,
-                                    filmId = targetItem.film.id,
-                                    episodeNumber = targetItem.episodeNumber
-                                )
-                                onDone(true)
-                            }
-                        },
-                        onScrollToEpisode = { filmId, episodeNumber ->
-                            // Find the page for the selected episode
-                            val targetPageIndex = feedPages.indexOfFirst { page ->
-                                page is ShortsFeedPage.Video && 
-                                page.item.film.id == filmId && 
-                                page.item.episodeNumber == episodeNumber
-                            }
-                            if (targetPageIndex >= 0) {
-                                coroutineScope.launch {
-                                    pagerState.animateScrollToPage(targetPageIndex)
+                                } else {
+                                    // Fallback: use old behavior if episode not found in list
+                                    viewModel.playEpisode(
+                                        backendBaseUrl = backendBaseUrl,
+                                        itemIndex = feedPage.itemIndex,
+                                        currentItem = feedPage.item,
+                                        episodeNumber = targetItem.episodeNumber
+                                    )
                                 }
+                            },
+                            onWatchAdToUnlock = { targetItem, onDone ->
+                                activity?.let { act ->
+                                    AdsManager.loadAndShowRewardAll(
+                                        activity = act,
+                                        onRewardEarned = {
+                                            dailyUnlocksUsed++
+                                            unlockedEpisodeKeys = unlockedEpisodeKeys + "${targetItem.film.id}:${targetItem.episodeNumber}"
+                                            unlockedEpisodesStore.unlockEpisode(targetItem.film.id, targetItem.episodeNumber)
+                                            unlockedEpisodesStore.incrementDailyUnlocks()
+                                            viewModel.unlockEpisode(
+                                                backendBaseUrl = backendBaseUrl,
+                                                filmId = targetItem.film.id,
+                                                episodeNumber = targetItem.episodeNumber
+                                            )
+                                            onDone(true)
+                                        },
+                                        onFinished = {
+                                            // Ad display attempt completed
+                                        }
+                                    )
+                                } ?: run {
+                                    // No activity available, skip ad and unlock directly (fallback)
+                                    dailyUnlocksUsed++
+                                    unlockedEpisodeKeys = unlockedEpisodeKeys + "${targetItem.film.id}:${targetItem.episodeNumber}"
+                                    unlockedEpisodesStore.unlockEpisode(targetItem.film.id, targetItem.episodeNumber)
+                                    viewModel.unlockEpisode(
+                                        backendBaseUrl = backendBaseUrl,
+                                        filmId = targetItem.film.id,
+                                        episodeNumber = targetItem.episodeNumber
+                                    )
+                                    onDone(true)
+                                }
+                            },
+                            onScrollToEpisode = { filmId, episodeNumber ->
+                                // Find the page for the selected episode
+                                val targetPageIndex = feedPages.indexOfFirst { page ->
+                                    page is ShortsFeedPage.Video &&
+                                            page.item.film.id == filmId &&
+                                            page.item.episodeNumber == episodeNumber
+                                }
+                                if (targetPageIndex >= 0) {
+                                    coroutineScope.launch {
+                                        pagerState.animateScrollToPage(targetPageIndex)
+                                    }
+                                }
+                            },
+                            onHideControls = {
+                                controlsVisible = false
+                            },
+                            onEnterEpisodeMode = { filmId ->
+                                // Navigate to episode mode screen instead of staying in shorts
+                                onNavigateToEpisodes(filmId, null)
                             }
-                        },
-                        onHideControls = {
-                            controlsVisible = false
-                        },
-                        onEnterEpisodeMode = { filmId ->
-                            // Navigate to episode mode screen instead of staying in shorts
-                            onNavigateToEpisodes(filmId, null)
-                        }
-                    )
+                        )
                     }
                 }
             }
@@ -665,7 +665,7 @@ fun ShortsScreen(
             AppBottomBanner(modifier = Modifier.align(Alignment.BottomCenter))
         }
     }
-    
+
     // Rating dialog
     if (showRatingDialog) {
         AppRatingDialog(
@@ -1122,9 +1122,9 @@ private fun ShortsPage(
                 }
                 maxUnlocked
             }
-            
+
             val mustUnlockFirstMessage = stringResource(R.string.must_unlock_episode_first, maxUnlockedConsecutive + 1)
-            
+
             EpisodeOptionsSheet(
                 currentEpisode = item.episodeNumber,
                 totalEpisodes = item.film.episodeTotal,
@@ -1763,7 +1763,7 @@ private fun displaySaveCount(item: ShortsItem): Int {
 private fun List<SubtitleTrack>.preferredEnglishSubtitleUrl(): String {
     return firstOrNull { track ->
         track.language.equals("en", ignoreCase = true) ||
-            track.label.equals("English", ignoreCase = true)
+                track.label.equals("English", ignoreCase = true)
     }?.url ?: firstOrNull()?.url.orEmpty()
 }
 
