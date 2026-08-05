@@ -63,6 +63,66 @@ object AdsManager {
     private var suppressNextResumeSetMs = 0L
     private var suppressNextNativeClearOnDestroy = false
 
+
+    //back navigation inter ad preload
+    private var interBack: ApInterstitialAd? = null
+    private var interBackLoading = false
+
+    fun loadInterBack(activity: Activity) {
+        if (interBack != null || interBackLoading) return
+        val config = AdRemoteConfig.interBack.withDevConfigUnlimitedAds(activity)
+        val placementName = "inter_back"
+        if (!config.canRequest || !isNetworkAvailable(activity)) return
+        interBackLoading = true
+        ERainAd.getInstance().getInterstitialAds(
+            activity,
+            config.id,
+            object : AdCallback() {
+                override fun onApInterstitialLoad(interstitialAd: ApInterstitialAd?) {
+                    interBackLoading = false
+                    if (interstitialAd == null) return
+                    interBack = interstitialAd
+                    Log.d(ADS_TAG, "$placementName preloaded via ERain")
+                }
+                override fun onAdFailedToLoad(error: LoadAdError?) {
+                    interBackLoading = false
+                    error?.let { logAdFailure(placementName, it) }
+                }
+            }
+        )
+    }
+
+    /** Never blocks navigation. Reports whether an ad was actually shown. */
+    fun showInterBackIfReady(activity: Activity, onResolved: (adShown: Boolean) -> Unit) {
+        val ad = interBack
+        if (ad == null || activity.isFinishing || activity.isDestroyed) {
+            onResolved(false)
+            return
+        }
+        interBack = null
+        loadInterBack(activity) // preload the next one immediately
+        ERainAd.getInstance().forceShowInterstitial(
+            activity,
+            ad,
+            object : AdCallback() {
+                override fun onInterstitialShow() {
+                    suppressImmediateResumeInterstitial("inter_back_show")
+                    Log.d(ADS_TAG, "inter_back displayed via ERain")
+                }
+                override fun onNextAction() {}
+                override fun onAdClosed() {
+                    Log.d(ADS_TAG, "inter_back closed")
+                    onResolved(true)
+                }
+                override fun onAdFailedToShow(error: AdError?) {
+                    Log.e(ADS_TAG, "inter_back failed_to_show via ERain message=${error?.message}")
+                    onResolved(false)
+                }
+            },
+            true
+        )
+    }
+
     fun preserveNativeAdsForActivityRecreate() {
         suppressNextNativeClearOnDestroy = true
         Log.d(ADS_TAG, "native ad clear suppressed for upcoming activity recreate")

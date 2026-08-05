@@ -1,5 +1,6 @@
 package com.drama.x.drama.series.dramax.dramaseries.screen
 
+import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -42,6 +43,7 @@ private const val TAG = "RatingDialogs"
  */
 @Composable
 fun AppRatingDialog(
+    fromSettings: Boolean = false,
     onDismiss: () -> Unit,
     onRated: () -> Unit
 ) {
@@ -67,7 +69,7 @@ fun AppRatingDialog(
         in 4..5 -> stringResource(R.string.rate_dialog_happy_title)
         else -> stringResource(R.string.rateus_dialog_title)
     }
-    
+
     if (showFeedbackDialog) {
         FeedbackDialog(
             onDismiss = {
@@ -75,8 +77,7 @@ fun AppRatingDialog(
                 onDismiss()
             },
             onFeedbackSubmitted = {
-                ratingManager.markAsRated()
-                onRated()
+                onRated()   // CHANGED: no markAsRated() here anymore — already marked in Change 2
             }
         )
     } else {
@@ -153,20 +154,26 @@ fun AppRatingDialog(
                         onClick = {
                             when {
                                 selectedRating == 0 -> {
-                                    // No rating selected
                                     Toast.makeText(context, context.getString(R.string.please_select_rating), Toast.LENGTH_SHORT).show()
                                 }
                                 selectedRating in 1..3 -> {
-                                    // Low rating - show feedback dialog
+                                    ratingManager.markAsRated()   // CHANGED: mark here, not in FeedbackDialog
                                     showFeedbackDialog = true
                                 }
                                 selectedRating in 4..5 -> {
-                                    // High rating - launch In-App Review or Play Store
                                     ratingManager.markAsRated()
-                                    context.launchInAppReview(onComplete = {
+                                    if (fromSettings) {
+                                        // NEW: hard redirect to Play Store listing when triggered from Settings
+                                        context.openPlayStoreRating()
                                         onRated()
                                         onDismiss()
-                                    })
+                                    } else {
+                                        // Automatic triggers -> in-app review
+                                        context.launchInAppReview(onComplete = {
+                                            onRated()
+                                            onDismiss()
+                                        })
+                                    }
                                 }
                             }
                         },
@@ -220,6 +227,7 @@ fun AppRatingDialog(
  * Allows user to provide text feedback and sends via email.
  * Design matches app dark theme with close button and orange submit button.
  */
+@SuppressLint("LocalContextGetResourceValueCall")
 @Composable
 fun FeedbackDialog(
     onDismiss: () -> Unit,

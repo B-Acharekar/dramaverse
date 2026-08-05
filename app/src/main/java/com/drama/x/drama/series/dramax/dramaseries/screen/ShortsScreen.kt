@@ -215,13 +215,15 @@ fun ShortsScreen(
     var unlockedEpisodeKeys by remember { mutableStateOf(setOf<String>()) }
     var episodeModeKeys by remember { mutableStateOf(setOf<String>()) }
     var nativeShortVideoAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
-    
+
+    // Load persisted unlocked episodes
+    val unlockedEpisodesStore = remember { UnlockedEpisodesStore(context) }
+
     // Rating dialog state
     var showRatingDialog by remember { mutableStateOf(false) }
     val ratingManager = remember { RatingManager.getInstance(context) }
 
-    // Load persisted unlocked episodes
-    val unlockedEpisodesStore = remember { UnlockedEpisodesStore(context) }
+
     LaunchedEffect(Unit) {
         unlockedEpisodesStore.resetDailyUnlocksIfNeeded()
         unlockedEpisodeKeys = unlockedEpisodesStore.getUnlockedEpisodes()
@@ -303,6 +305,12 @@ fun ShortsScreen(
     // Pause video when ad is showing
     LaunchedEffect(isAnyVideoShowingAd) {
         if (isAnyVideoShowingAd) {
+            isPlaying = false
+        }
+    }
+
+    LaunchedEffect(showRatingDialog) {
+        if (showRatingDialog) {
             isPlaying = false
         }
     }
@@ -404,6 +412,7 @@ fun ShortsScreen(
                         itemIndex = feedPage.itemIndex,
                         isActive = page == pagerState.currentPage,
                         isEpisodeMode = isEpisodeModeForItem,
+                        isBookmarked = feedPage.item.film.id in uiState.savedFilmIds,
                         backendBaseUrl = backendBaseUrl,
                         controlsVisible = controlsVisible,
                         isPlaying = isPlaying,
@@ -455,42 +464,77 @@ fun ShortsScreen(
                                 liked = liked
                             )
                         },
-                        onReminderClick = { item, enabled ->
-                            viewModel.setReminder(
-                                backendBaseUrl = backendBaseUrl,
-                                film = item.film,
-                                enabled = enabled
-                            )
-                            // Trigger rating dialog when adding to favorites
-                            if (enabled && ratingManager.canShowRatingDialog()) {
-                                showRatingDialog = true
-                                ratingManager.markDialogShown()
-                            }
-                        },
-                        onEpisodeFinished = { index, item, position, duration ->
-                            // For auto-next, we scroll the pager instead of modifying the current item
-                            val autoNextEnabled = autoNext
-                            viewModel.completeEpisodeAndMaybePlayNext(
-                                backendBaseUrl = backendBaseUrl,
-                                itemIndex = index,
-                                item = item,
-                                progressSeconds = (position / 1000).toInt(),
-                                durationSeconds = duration.takeIf { it > 0L }?.let { (it / 1000).toInt() },
-                                autoNext = false,  // Don't auto-switch in viewmodel
-                                autoUnlock = autoUnlock
-                            )
-                            // Handle auto-next at UI layer by scrolling pager to next page
-                            if (autoNextEnabled && item.episodeNumber < item.film.episodeTotal) {
-                                coroutineScope.launch {
-                                    pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                            onReminderClick = { item, enabled ->
+                                val isFirstFavorite = enabled && unlockedEpisodeKeys.isEmpty() // placeholder condition — see note below
+                                viewModel.setReminder(
+                                    backendBaseUrl = backendBaseUrl,
+                                    film = item.film,
+                                    enabled = enabled
+                                )
+                                if (isFirstFavorite && ratingManager.canShowRatingDialog()) {
+                                    showRatingDialog = true
+                                    ratingManager.markDialogShown()
                                 }
-                            }
-                            // Trigger rating dialog after episode completion (but not if auto-next is enabled)
-                            if (!autoNextEnabled && ratingManager.canShowRatingDialog()) {
-                                showRatingDialog = true
-                                ratingManager.markDialogShown()
-                            }
-                        },
+                            },
+//                        onReminderClick = { item, enabled ->
+//                            viewModel.setReminder(
+//                                backendBaseUrl = backendBaseUrl,
+//                                film = item.film,
+//                                enabled = enabled
+//                            )
+//                            // Trigger rating dialog when adding to favorites
+//                            if (enabled && ratingManager.canShowRatingDialog()) {
+//                                showRatingDialog = true
+//                                ratingManager.markDialogShown()
+//                            }
+//                        },
+//                        onEpisodeFinished = { index, item, position, duration ->
+//                            // For auto-next, we scroll the pager instead of modifying the current item
+//                            val autoNextEnabled = autoNext
+//                            viewModel.completeEpisodeAndMaybePlayNext(
+//                                backendBaseUrl = backendBaseUrl,
+//                                itemIndex = index,
+//                                item = item,
+//                                progressSeconds = (position / 1000).toInt(),
+//                                durationSeconds = duration.takeIf { it > 0L }?.let { (it / 1000).toInt() },
+//                                autoNext = false,  // Don't auto-switch in viewmodel
+//                                autoUnlock = autoUnlock
+//                            )
+//                            // Handle auto-next at UI layer by scrolling pager to next page
+//                            if (autoNextEnabled && item.episodeNumber < item.film.episodeTotal) {
+//                                coroutineScope.launch {
+//                                    pagerState.animateScrollToPage(pagerState.currentPage + 1)
+//                                }
+//                            }
+//                            // Trigger rating dialog after episode completion (but not if auto-next is enabled)
+//                            if (!autoNextEnabled && ratingManager.canShowRatingDialog()) {
+//                                showRatingDialog = true
+//                                ratingManager.markDialogShown()
+//                            }
+//                        }
+                            onEpisodeFinished = { index, item, position, duration ->
+                                val autoNextEnabled = autoNext
+                                viewModel.completeEpisodeAndMaybePlayNext(
+                                    backendBaseUrl = backendBaseUrl,
+                                    itemIndex = index,
+                                    item = item,
+                                    progressSeconds = (position / 1000).toInt(),
+                                    durationSeconds = duration.takeIf { it > 0L }?.let { (it / 1000).toInt() },
+                                    autoNext = false,
+                                    autoUnlock = autoUnlock
+                                )
+                                if (autoNextEnabled && item.episodeNumber < item.film.episodeTotal) {
+                                    coroutineScope.launch {
+                                        pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                                    }
+                                }
+                                // Flow 1: covers both "exits the player" (autoNext off, episode ends) and
+                                // "starts next episode" (autoNext on) — either way an episode was completed.
+                                if (ratingManager.canShowRatingDialog()) {
+                                    showRatingDialog = true
+                                    ratingManager.markDialogShown()
+                                }
+                            },
                         onProgressCheckpoint = { item, position, duration ->
                             viewModel.saveWatchProgress(
                                 backendBaseUrl = backendBaseUrl,
@@ -678,6 +722,7 @@ private fun ShortsPage(
     itemIndex: Int,
     isActive: Boolean,
     isEpisodeMode: Boolean,
+    isBookmarked: Boolean,
     backendBaseUrl: String,
     controlsVisible: Boolean,
     isPlaying: Boolean,
@@ -714,7 +759,7 @@ private fun ShortsPage(
     onHideControls: () -> Unit = {},
 ) {
     var videoReady by remember(item.playUrl) { mutableStateOf(false) }
-    var reminderOn by remember(item.film.id) { mutableStateOf(false) }
+    var reminderOn by remember(item.film.id, isBookmarked) { mutableStateOf<Boolean>(isBookmarked) }
     var liked by remember(item.film.id, item.episodeNumber) { mutableStateOf(false) }
     var positionMs by remember(item.playUrl) { mutableStateOf(0L) }
     var durationMs by remember(item.playUrl) { mutableStateOf(0L) }
@@ -726,12 +771,14 @@ private fun ShortsPage(
     var selectedSubtitleUrl by remember(item.playUrl) {
         mutableStateOf(item.subtitleTracks.preferredEnglishSubtitleUrl())
     }
+
     var showSubtitleOptions by remember(item.playUrl) { mutableStateOf(false) }
     var showEpisodeOptions by remember(item.film.id) { mutableStateOf(false) }
     val subtitleUrlForPlayback = selectedSubtitleUrl.ifBlank { item.subtitleTracks.firstOrNull()?.url.orEmpty() }
     val fallbackSubtitleCues by produceState<List<SubtitleCue>>(initialValue = emptyList(), subtitleUrlForPlayback) {
         value = if (subtitleUrlForPlayback.isBlank()) emptyList() else loadSubtitleCues(subtitleUrlForPlayback)
     }
+
     val fallbackSubtitleText = fallbackSubtitleCues
         .firstOrNull { cue -> positionMs in cue.startMs..cue.endMs }
         ?.text
@@ -1498,6 +1545,18 @@ private fun HlsVideoPlayer(
             override fun onPlaybackStateChanged(playbackState: Int) {
                 if (playbackState == Player.STATE_READY) onReady()
                 if (playbackState == Player.STATE_ENDED) onEnded()
+            }
+
+            // catches completion when repeatCurrent = true (REPEAT_MODE_ONE),
+            // since STATE_ENDED never fires in that mode — ExoPlayer loops internally instead.
+            override fun onPositionDiscontinuity(
+                oldPosition: Player.PositionInfo,
+                newPosition: Player.PositionInfo,
+                reason: Int
+            ) {
+                if (reason == Player.DISCONTINUITY_REASON_AUTO_TRANSITION && player.repeatMode == ExoPlayer.REPEAT_MODE_ONE) {
+                    onEnded()
+                }
             }
 
             override fun onPlayerError(error: PlaybackException) {

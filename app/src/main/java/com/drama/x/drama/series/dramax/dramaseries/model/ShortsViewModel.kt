@@ -27,7 +27,8 @@ data class ShortsUiState(
     val episodesByFilm: Map<Int, List<EpisodeInfo>> = emptyMap(),
     val watchedEpisodesByFilm: Map<Int, Set<Int>> = emptyMap(),
     val switchingEpisodes: Map<Int, Int> = emptyMap(),
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val savedFilmIds: Set<Int> = emptySet(),
 )
 
 class ShortsViewModel(application: Application) : AndroidViewModel(application) {
@@ -61,7 +62,7 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
         genericFeedOpenNonce = if (isGenericFeed) nextGenericFeedOpenNonce() else 0
         nextPage = 1
         viewModelScope.launch {
-            _uiState.update { ShortsUiState(isLoading = true) }
+            _uiState.update { ShortsUiState(isLoading = true, savedFilmIds = currentSavedFilmIds()) }
             if (initialFilmId != null && initialFilmId != 0) {
                 // Episode mode: if a specific episode number is requested, load it; otherwise resume from watch history
                 val episodeToLoad = initialEpisodeNumber?.coerceAtLeast(1)
@@ -107,6 +108,14 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
      * ep1, ep2, ... epN (first FREE_SHORTS_PREVIEW_EPISODES free, rest locked).
      * Called only in episode mode (initialFilmId != null).
      */
+
+    private fun currentSavedFilmIds(): Set<Int> {
+        return savedWatchListStore.readItems()
+            .map { it.id }
+            .filter { it != 0 }
+            .toSet()
+    }
+
     private suspend fun loadEpisodeFeed(
         backendBaseUrl: String,
         filmId: Int,
@@ -317,7 +326,13 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
     ) {
         val filmId = film.id
         if (filmId == 0) return
-        // Repository now handles local save, so UI updates immediately
+        // Update UI state immediately (optimistic) so the sidebar icon reflects
+        // the change without waiting for the network call.
+        _uiState.update { state ->
+            state.copy(
+                savedFilmIds = if (enabled) state.savedFilmIds + filmId else state.savedFilmIds - filmId
+            )
+        }
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 repository.setReminder(

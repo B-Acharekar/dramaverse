@@ -39,6 +39,8 @@ import com.drama.x.drama.series.dramax.dramaseries.screen.SurveyUninstallScreen
 import com.drama.x.drama.series.dramax.dramaseries.screen.WelcomeBackScreen
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdRemoteConfig
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdsManager
+import com.drama.x.drama.series.dramax.dramaseries.data.RatingManager
+import com.drama.x.drama.series.dramax.dramaseries.screen.AppRatingDialog
 
 @RequiresApi(Build.VERSION_CODES.P)
 @Composable
@@ -57,6 +59,16 @@ fun DramaXApp(
         initialAction == MainActivity.ACTION_WIDGET_MY_LIST && uiState.currentStep == AppStep.Splash ->
             AppStep.Library
         else -> uiState.currentStep
+    }
+
+    val ratingManager = remember { RatingManager.getInstance(context) }
+    var showHomeRatingDialog by remember { mutableStateOf(false) }
+
+
+    LaunchedEffect(currentStep) {
+        if (currentStep == AppStep.Shorts || currentStep == AppStep.Episodes) {
+            context.findActivity()?.let { AdsManager.loadInterBack(it) }
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -95,20 +107,44 @@ fun DramaXApp(
         }
     }
 
+//    fun openHomeWithBackAd() {
+//        val activity = context.findActivity()
+//        if (activity == null || currentStep == AppStep.Home) {
+//            viewModel.openHome()
+//            return
+//        }
+//        AdsManager.loadAndShowInterstitial(
+//            activity = activity,
+//            placementName = "inter_back",
+//            config = AdRemoteConfig.interBack,
+//            timeoutMs = 2_500L,
+//            onFinished = viewModel::openHome
+//        )
+//    }
+
     fun openHomeWithBackAd() {
         val activity = context.findActivity()
-        if (activity == null || currentStep == AppStep.Home) {
+        val cameFromElsewhere = currentStep != AppStep.Home
+        if (activity == null || !cameFromElsewhere) {
             viewModel.openHome()
             return
         }
-        AdsManager.loadAndShowInterstitial(
-            activity = activity,
-            placementName = "inter_back",
-            config = AdRemoteConfig.interBack,
-            timeoutMs = 2_500L,
-            onFinished = viewModel::openHome
-        )
+        viewModel.openHome() // navigate immediately, never blocked on ad load
+        AdsManager.showInterBackIfReady(activity) { adShown ->
+            if (adShown) {
+                // Flow 3 spec: "skip the Rate dialog only for that trigger" —
+                // deliberately do NOT call markDialogShown() here, so the next
+                // eligible trigger is still checked fresh.
+                return@showInterBackIfReady
+            }
+            // No ad shown -> Flow 3: user returned to Home with no interstitial.
+            if (ratingManager.canShowRatingDialog()) {
+                showHomeRatingDialog = true
+                ratingManager.markDialogShown()
+            }
+        }
     }
+
 
     when (currentStep) {
         AppStep.Splash -> CustomSplashScreen(
@@ -265,6 +301,13 @@ fun DramaXApp(
             onLibrary = viewModel::openLibrary,
             onRewards = viewModel::openRewards,
             onProfile = viewModel::openProfile
+        )
+    }
+
+    if (showHomeRatingDialog) {
+        AppRatingDialog(
+            onDismiss = { showHomeRatingDialog = false },
+            onRated = { showHomeRatingDialog = false }
         )
     }
 

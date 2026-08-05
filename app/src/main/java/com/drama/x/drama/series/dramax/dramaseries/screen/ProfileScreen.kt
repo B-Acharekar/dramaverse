@@ -162,6 +162,10 @@ fun ProfileScreen(
     val displayedLanguage = LocaleHelper.persistedLanguageName(context) ?: currentLanguage
 
 
+    val ratingManager = remember { RatingManager.getInstance(context) }
+    var showManualRatingDialog by remember { mutableStateOf(false) }
+    var showAlreadyRatedDialog by remember { mutableStateOf(false) }
+
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
@@ -233,7 +237,14 @@ fun ProfileScreen(
                     SettingsRow(Icons.Outlined.Share, titleText = stringResource(R.string.share_app), onClick = { context.shareApp() })
                     RowDivider()
                     SettingsRow(Icons.Outlined.StarBorder, R.string.rate_us, onClick = {
-                        showRateDialog = true
+                        when {
+                            ratingManager.hasRated() -> showRateDialog = true // will resolve to AlreadyRatedDialog below
+                            !ratingManager.canShowRatingDialog() -> Unit        // shown this session already -> do nothing
+                            else -> {
+                                ratingManager.markDialogShown()
+                                showRateDialog = true
+                            }
+                        }
                         onRateUs()
                     })
                     RowDivider()
@@ -254,12 +265,11 @@ fun ProfileScreen(
     }
 
     if (showRateDialog) {
-        val ratingManager = remember { RatingManager.getInstance(context) }
-        
         if (ratingManager.hasRated()) {
             AlreadyRatedDialog(onDismiss = { showRateDialog = false })
         } else {
             AppRatingDialog(
+                fromSettings = true,   // hard Play Store redirect on 4-5★, per spec §3/§4
                 onDismiss = { showRateDialog = false },
                 onRated = {
                     showRateDialog = false

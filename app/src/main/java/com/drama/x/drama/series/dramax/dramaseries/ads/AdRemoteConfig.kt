@@ -16,10 +16,10 @@ object AdRemoteConfig {
 
 
     private val unlimitedAdsGatedPlacements = setOf(
-        "native_onboarding_1_1",
-        "native_onboarding_2_1",
-        "native_onboarding_1_4",
-        "native_onboarding_2_4",
+//        "native_onboarding_1_1",
+//        "native_onboarding_2_1",
+//        "native_onboarding_1_4",
+//        "native_onboarding_2_4",
         "native_onboarding_fullscreen_1_2",
         "native_onboarding_fullscreen_2_2"
     )
