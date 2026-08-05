@@ -145,6 +145,8 @@ private enum class CategorySort(@StringRes val label: Int) {
 @Composable
 fun HomeScreen(
     backendBaseUrl: String,
+    shouldTriggerRating: Boolean = false,
+    onRatingTriggered: () -> Unit = {},
     onOpenEpisodes: (Int?) -> Unit,
     onOpenShorts: () -> Unit,
     onLibrary: () -> Unit,
@@ -168,6 +170,16 @@ fun HomeScreen(
     // Rating dialog state
     var showRatingDialog by remember { mutableStateOf(false) }
     val ratingManager = remember { RatingManager.getInstance(context) }
+    val favoriteTracker = remember { com.drama.x.drama.series.dramax.dramaseries.data.FirstFavoriteTracker.getInstance(context) }
+    val triggerHelper = remember { com.drama.x.drama.series.dramax.dramaseries.data.RatingTriggerHelper.getInstance(context) }
+    
+    // Flow 3: Handle return to home trigger
+    LaunchedEffect(shouldTriggerRating) {
+        if (shouldTriggerRating) {
+            showRatingDialog = true
+            onRatingTriggered()
+        }
+    }
 
     LaunchedEffect(backendBaseUrl) {
         viewModel.loadHome(backendBaseUrl)
@@ -229,10 +241,17 @@ fun HomeScreen(
                 bottomBannerVisible = bottomBannerVisible,
                 onToggleWatchList = { film, enabled ->
                     viewModel.setReminder(backendBaseUrl, film, enabled)
-                    // Trigger rating dialog when adding to favorites
-                    if (enabled && ratingManager.canShowRatingDialog()) {
-                        showRatingDialog = true
-                        ratingManager.markDialogShown()
+                    // Flow 2: Trigger rating dialog when adding first favorite
+                    if (enabled) {
+                        val wasFirstFavorite = favoriteTracker.markFavoriteAdded()
+                        val shouldShowRating = triggerHelper.shouldTriggerAfterAddToFavorites(
+                            interstitialShown = false, // TODO: Track from AdsManager
+                            isFirstFavorite = wasFirstFavorite
+                        )
+                        if (shouldShowRating) {
+                            showRatingDialog = true
+                            triggerHelper.markDialogShown()
+                        }
                     }
                 }
             )
@@ -280,7 +299,8 @@ fun HomeScreen(
     if (showRatingDialog) {
         AppRatingDialog(
             onDismiss = { showRatingDialog = false },
-            onRated = { showRatingDialog = false }
+            onRated = { showRatingDialog = false },
+            isManualTrigger = false // Automatic trigger from Flow 2
         )
     }
 }

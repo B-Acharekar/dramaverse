@@ -266,16 +266,22 @@ fun ProfileScreen(
 
     if (showRateDialog) {
         if (ratingManager.hasRated()) {
+            // User already rated - show thank you message
             AlreadyRatedDialog(onDismiss = { showRateDialog = false })
-        } else {
+        } else if (ratingManager.canShowRatingDialogFromSettings()) {
+            // Can show rating dialog from Settings (manual trigger)
             AppRatingDialog(
                 fromSettings = true,   // hard Play Store redirect on 4-5★, per spec §3/§4
                 onDismiss = { showRateDialog = false },
                 onRated = {
                     showRateDialog = false
                     onRateUs()
-                }
+                },
+                isManualTrigger = true // Manual trigger from Settings button
             )
+        } else {
+            // Already shown this session - do nothing (dismiss silently)
+            showRateDialog = false
         }
     }
 
