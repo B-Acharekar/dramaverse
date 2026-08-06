@@ -172,12 +172,41 @@ fun ShortsScreen(
     viewModel: ShortsViewModel = viewModel()
 ) {
 
-    BackHandler(onBack = onBack)
-
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     // Track which films should have episodes in sequential order
     var episodeModeFilmIds by remember { mutableStateOf(setOf<Int>()) }
+    
+    // Track if user has finished watching an episode this session
+    var hasFinishedEpisodeThisSession by remember { mutableStateOf(false) }
+    
+    // Track if user has added to My List in this session (for rating popup trigger)
+    var hasAddedToMyListThisSession by remember { mutableStateOf(false) }
+    
+    // Rating dialog state
+    var showRatingDialog by remember { mutableStateOf(false) }
+    val ratingManager = remember { RatingManager.getInstance(context) }
+    
+    // Store the pending exit action when rating dialog is shown
+    var pendingExitAction: (() -> Unit)? by remember { mutableStateOf(null) }
+    
+    // Function to handle exit with rating dialog check
+    val handleExit = { exitAction: () -> Unit ->
+        if (hasFinishedEpisodeThisSession && ratingManager.canShowRatingDialog()) {
+            showRatingDialog = true
+            ratingManager.markDialogShown()
+            hasFinishedEpisodeThisSession = false
+            pendingExitAction = exitAction
+        } else {
+            exitAction()
+        }
+    }
+    
+    // Custom back handler to check for rating dialog before exiting
+    BackHandler(onBack = {
+        handleExit { onBack() }
+    })
 
     val feedPages = remember(uiState.items, episodeModeFilmIds) {
         derivedStateOf {
@@ -198,7 +227,6 @@ fun ShortsScreen(
     val pagerState = rememberPagerState { feedPages.size.coerceAtLeast(1) }
     val currentFeedPage = feedPages.getOrNull(pagerState.currentPage)
     val currentVideoPage = currentFeedPage as? ShortsFeedPage.Video
-    val context = LocalContext.current
     val activity = remember(context) { context.findActivity() }
     var controlsVisible by remember { mutableStateOf(true) }
     var isPlaying by remember { mutableStateOf(true) }
@@ -218,10 +246,6 @@ fun ShortsScreen(
 
     // Load persisted unlocked episodes
     val unlockedEpisodesStore = remember { UnlockedEpisodesStore(context) }
-
-    // Rating dialog state
-    var showRatingDialog by remember { mutableStateOf(false) }
-    val ratingManager = remember { RatingManager.getInstance(context) }
 
 
     LaunchedEffect(Unit) {
@@ -423,7 +447,8 @@ fun ShortsScreen(
                             ccEnabled = ccEnabled,
                             playbackSpeed = playbackSpeed,
                             bottomReservedPadding = if (isEpisodeModeForItem) 0.dp else 78.dp + bottomBannerPadding,
-                            onBack = onBack,
+                            viewModel = viewModel,  // Add this parameter
+                            onBack = { handleExit { onBack() } },
                             onTogglePlay = {
                                 controlsVisible = true
                                 isPlaying = !isPlaying
@@ -465,15 +490,19 @@ fun ShortsScreen(
                                 )
                             },
                             onReminderClick = { item, enabled ->
-                                val isFirstFavorite = enabled && unlockedEpisodeKeys.isEmpty()
+                                // Flow 2: First add to My List per session
+                                val isFirstAddThisSession = enabled && !hasAddedToMyListThisSession
                                 viewModel.setReminder(
                                     backendBaseUrl = backendBaseUrl,
                                     film = item.film,
                                     enabled = enabled
                                 )
-                                if (isFirstFavorite && ratingManager.canShowRatingDialog()) {
-                                    showRatingDialog = true
-                                    ratingManager.markDialogShown()
+                                if (isFirstAddThisSession) {
+                                    hasAddedToMyListThisSession = true
+                                    if (ratingManager.canShowRatingDialog()) {
+                                        showRatingDialog = true
+                                        ratingManager.markDialogShown()
+                                    }
                                 }
                             },
 //                        onReminderClick = { item, enabled ->
@@ -528,12 +557,8 @@ fun ShortsScreen(
                                         pagerState.animateScrollToPage(pagerState.currentPage + 1)
                                     }
                                 }
-                                // Flow 1: covers both "exits the player" (autoNext off, episode ends) and
-                                // "starts next episode" (autoNext on) — either way an episode was completed.
-                                if (ratingManager.canShowRatingDialog()) {
-                                    showRatingDialog = true
-                                    ratingManager.markDialogShown()
-                                }
+                                // Mark that user finished an episode - dialog will show on exit
+                                hasFinishedEpisodeThisSession = true
                             },
                             onProgressCheckpoint = { item, position, duration ->
                                 viewModel.saveWatchProgress(
@@ -651,11 +676,11 @@ fun ShortsScreen(
         if (controlsVisible && currentFeedPage is ShortsFeedPage.Video && !isCurrentEpisodeMode) {
             BottomNavigationBar(
                 selected = "Shorts",
-                onHome = onHome,
+                onHome = { handleExit { onHome() } },
                 onShorts = {},
-                onLibrary = onLibrary,
-                onRewards = onRewards,
-                onProfile = onProfile,
+                onLibrary = { handleExit { onLibrary() } },
+                onRewards = { handleExit { onRewards() } },
+                onProfile = { handleExit { onProfile() } },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = bottomBannerPadding)
@@ -666,11 +691,23 @@ fun ShortsScreen(
         }
     }
 
-    // Rating dialog
+    // Rating dialog - only shown when user exits after finishing an episode
     if (showRatingDialog) {
         AppRatingDialog(
-            onDismiss = { showRatingDialog = false },
-            onRated = { showRatingDialog = false }
+            onDismiss = {
+                showRatingDialog = false
+                hasFinishedEpisodeThisSession = false  // Reset flag
+                // Execute pending exit action or default onBack
+                pendingExitAction?.invoke() ?: onBack()
+                pendingExitAction = null
+            },
+            onRated = {
+                showRatingDialog = false
+                hasFinishedEpisodeThisSession = false  // Reset flag
+                // Execute pending exit action or default onBack
+                pendingExitAction?.invoke() ?: onBack()
+                pendingExitAction = null
+            }
         )
     }
 }
@@ -733,6 +770,7 @@ private fun ShortsPage(
     ccEnabled: Boolean,
     playbackSpeed: Float,
     bottomReservedPadding: Dp,
+    viewModel: ShortsViewModel,  // Add this parameter
     onBack: () -> Unit,
     onTogglePlay: () -> Unit,
     onFeedbackClick: () -> Unit,
@@ -861,14 +899,98 @@ private fun ShortsPage(
         }
     }
 
+    val coroutineScope = rememberCoroutineScope()
+
+    // Timeout handling for loading state - reduced from 15s to 8s for better UX
+    var loadingTimedOut by remember(item.film.id, item.episodeNumber) { mutableStateOf(false) }
+    var retryCount by remember(item.film.id, item.episodeNumber) { mutableStateOf(0) }
+    
+    // Add timeout for blank playUrl or video not ready after 8 seconds
+    LaunchedEffect(isActive, item.playUrl, videoReady) {
+        if (!isActive) return@LaunchedEffect
+        
+        if (item.playUrl.isBlank() || !videoReady) {
+            delay(8000L) // 8 second timeout - reduced from 15s
+            if (item.playUrl.isBlank() || !videoReady) {
+                loadingTimedOut = true
+            }
+        } else {
+            loadingTimedOut = false
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         if (!isActive || item.playUrl.isBlank() || isLocked) {
             LoadingBackdrop(
                 item = item,
-                showLoader = isActive && !isLocked,
+                showLoader = isActive && !isLocked && !loadingTimedOut,
                 modifier = Modifier
                     .fillMaxSize()
             )
+            // Show error state with retry button after timeout
+            if (loadingTimedOut && isActive && !isLocked) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.padding(32.dp)
+                    ) {
+                        Text(
+                            text = when {
+                                retryCount == 0 -> "Failed to load video"
+                                retryCount < 3 -> "Still having trouble loading..."
+                                else -> "Connection issues detected"
+                            },
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = when {
+                                retryCount == 0 -> "Check your internet connection"
+                                retryCount < 3 -> "Retry attempt $retryCount failed"
+                                else -> "Please check your network and try again"
+                            },
+                            color = Color(0xFFB0B0B0),
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Button(
+                            onClick = {
+                                loadingTimedOut = false
+                                videoReady = false
+                                retryCount++
+                                // Trigger reload via viewmodel - force refresh by calling ensurePlayback again
+                                coroutineScope.launch {
+                                    // Add slight delay before retry to prevent rapid retries
+                                    delay(500L)
+                                    viewModel.ensurePlayback(itemIndex, backendBaseUrl)
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Pink),
+                            shape = RoundedCornerShape(24.dp),
+                            modifier = Modifier
+                                .widthIn(min = 120.dp)
+                                .height(48.dp)
+                        ) {
+                            Text(
+                                text = "Retry",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
         } else {
             HlsVideoPlayer(
                 playUrl = item.playUrl,
@@ -879,7 +1001,10 @@ private fun ShortsPage(
                 controlsVisible = controlsVisible,
                 playbackSpeed = playbackSpeed,
                 repeatCurrent = !autoNext,
-                onReady = { videoReady = true },
+                onReady = { 
+                    videoReady = true
+                    loadingTimedOut = false // Clear timeout on successful load
+                },
                 onProgress = { position, duration ->
                     positionMs = position
                     durationMs = duration
@@ -897,9 +1022,13 @@ private fun ShortsPage(
                 onSubtitleText = { subtitleText = it },
                 seekToMs = pendingSeekMs,
                 onSeekHandled = { pendingSeekMs = null },
+                onError = {
+                    // Handle player errors
+                    loadingTimedOut = true
+                },
                 modifier = Modifier.fillMaxSize()
             )
-            if (!videoReady) {
+            if (!videoReady && !loadingTimedOut) {
                 LoadingBackdrop(
                     item = item,
                     showLoader = true,
@@ -1497,6 +1626,7 @@ private fun HlsVideoPlayer(
     onSubtitleText: (String) -> Unit,
     seekToMs: Long?,
     onSeekHandled: () -> Unit,
+    onError: () -> Unit = {},
     modifier: Modifier
 ) {
     val context = LocalContext.current
@@ -1560,7 +1690,19 @@ private fun HlsVideoPlayer(
             }
 
             override fun onPlayerError(error: PlaybackException) {
-                onReady()
+                android.util.Log.e("HlsVideoPlayer", "Playback error: ${error.message}", error)
+                // Provide more specific error handling
+                when (error.errorCode) {
+                    PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
+                    PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT -> {
+                        android.util.Log.w("HlsVideoPlayer", "Network error - connection issue")
+                    }
+                    PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED,
+                    PlaybackException.ERROR_CODE_PARSING_MANIFEST_MALFORMED -> {
+                        android.util.Log.w("HlsVideoPlayer", "Video format error - malformed content")
+                    }
+                }
+                onError() // Notify error instead of treating as ready
             }
         }
         player.addListener(listener)

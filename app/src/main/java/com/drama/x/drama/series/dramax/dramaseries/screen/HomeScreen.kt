@@ -170,8 +170,9 @@ fun HomeScreen(
     // Rating dialog state
     var showRatingDialog by remember { mutableStateOf(false) }
     val ratingManager = remember { RatingManager.getInstance(context) }
-    val favoriteTracker = remember { com.drama.x.drama.series.dramax.dramaseries.data.FirstFavoriteTracker.getInstance(context) }
-    val triggerHelper = remember { com.drama.x.drama.series.dramax.dramaseries.data.RatingTriggerHelper.getInstance(context) }
+    
+    // Track if user has added to My List in this session (for rating popup trigger)
+    var hasAddedToMyListThisSession by remember { mutableStateOf(false) }
     
     // Flow 3: Handle return to home trigger
     LaunchedEffect(shouldTriggerRating) {
@@ -240,11 +241,15 @@ fun HomeScreen(
                 nativeHomeAdState = nativeHomeAdState,
                 bottomBannerVisible = bottomBannerVisible,
                 onToggleWatchList = { film, enabled ->
-                    val isFirstFavorite = enabled && uiState.savedFilmIds.isEmpty() // BEFORE this add
+                    // Flow 2: First add to My List per session
+                    val isFirstAddThisSession = enabled && !hasAddedToMyListThisSession
                     viewModel.setReminder(backendBaseUrl, film, enabled)
-                    if (isFirstFavorite && ratingManager.canShowRatingDialog()) {
-                        showRatingDialog = true
-                        ratingManager.markDialogShown()
+                    if (isFirstAddThisSession) {
+                        hasAddedToMyListThisSession = true
+                        if (ratingManager.canShowRatingDialog()) {
+                            showRatingDialog = true
+                            ratingManager.markDialogShown()
+                        }
                     }
                 }
 //                onToggleWatchList = { film, enabled ->

@@ -88,15 +88,41 @@ class ShortsRepository(
             genre = filmJson.firstString("genre", "category", "tag").ifBlank { "Drama" },
             likeCount = likeCount
         )
+        val primaryUrl = playback.optString("hls_url")
+        val backupUrl = playback.optString("backup_hls_url")
+        
+        // Improved URL validation and selection logic
+        val finalPlayUrl = when {
+            primaryUrl.isNotBlank() && isValidVideoUrl(primaryUrl) -> primaryUrl
+            backupUrl.isNotBlank() && isValidVideoUrl(backupUrl) -> {
+                android.util.Log.i("ShortsRepository", "Using backup URL for film $filmId episode $episodeNumber")
+                backupUrl
+            }
+            primaryUrl.isNotBlank() -> {
+                android.util.Log.w("ShortsRepository", "Primary URL might be invalid but using anyway: $primaryUrl")
+                primaryUrl
+            }
+            else -> {
+                android.util.Log.w("ShortsRepository", "No valid play URL found for film $filmId episode $episodeNumber")
+                ""
+            }
+        }
+        
         ShortsItem(
             film = film,
             episodeNumber = episodeJson.optInt("episode", episodeNumber),
-            playUrl = playback.optString("hls_url").ifBlank { playback.optString("backup_hls_url") },
+            playUrl = finalPlayUrl,
             subtitleUrl = subtitleTracks.firstOrNull()?.url.orEmpty(),
             subtitleTracks = subtitleTracks,
             isLocked = episodeJson.optInt("episode", episodeNumber) > FREE_SHORTS_PREVIEW_EPISODES,
             likeCount = likeCount
         )
+    }
+    
+    private fun isValidVideoUrl(url: String): Boolean {
+        return url.isNotBlank() && 
+               (url.startsWith("http://") || url.startsWith("https://")) &&
+               (url.contains(".m3u8") || url.contains(".mp4") || url.contains("video") || url.contains("stream"))
     }
 
     suspend fun loadEpisodes(

@@ -54,11 +54,24 @@ fun DramaXApp(
     val currentStep = when {
         initialAction == MainActivity.ACTION_WIDGET_UNINSTALL && uiState.currentStep == AppStep.Splash ->
             AppStep.SplashUninstall
-        initialAction == MainActivity.ACTION_WIDGET_HOME && uiState.currentStep == AppStep.Splash ->
-            AppStep.Home
-        initialAction == MainActivity.ACTION_WIDGET_MY_LIST && uiState.currentStep == AppStep.Splash ->
-            AppStep.Library
         else -> uiState.currentStep
+    }
+    
+    // Handle shortcut navigation after splash finishes
+    LaunchedEffect(initialAction, uiState.currentStep) {
+        if (initialAction == null) return@LaunchedEffect
+        
+        // Wait until splash is done before navigating
+        if (uiState.currentStep == AppStep.Splash || 
+            uiState.currentStep == AppStep.SplashUninstall) {
+            return@LaunchedEffect
+        }
+        
+        when (initialAction) {
+            MainActivity.ACTION_WIDGET_HOME -> viewModel.startWidgetHome()
+            MainActivity.ACTION_WIDGET_MY_LIST -> viewModel.startWidgetMyList()
+            // Uninstall flow is handled by the when expression above
+        }
     }
 
     val ratingManager = remember { RatingManager.getInstance(context) }
@@ -99,13 +112,7 @@ fun DramaXApp(
         }
     }
 
-    LaunchedEffect(initialAction) {
-        when (initialAction) {
-            MainActivity.ACTION_WIDGET_HOME -> viewModel.startWidgetHome()
-            MainActivity.ACTION_WIDGET_MY_LIST -> viewModel.startWidgetMyList()
-            MainActivity.ACTION_WIDGET_UNINSTALL -> viewModel.startWidgetUninstallFlow()
-        }
-    }
+
 
 //    fun openHomeWithBackAd() {
 //        val activity = context.findActivity()
@@ -304,7 +311,7 @@ fun DramaXApp(
         )
     }
 
-    if (showHomeRatingDialog) {
+    if (showHomeRatingDialog && currentStep == AppStep.Home) {
         AppRatingDialog(
             onDismiss = { showHomeRatingDialog = false },
             onRated = { showHomeRatingDialog = false }

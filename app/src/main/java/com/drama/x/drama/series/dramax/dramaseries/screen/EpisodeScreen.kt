@@ -131,8 +131,9 @@ fun EpisodeScreen(
         if (shouldShowRating) {
             showRatingDialog = true
             triggerHelper.markDialogShown()
+        } else {
+            onBack()
         }
-        onBack()
     }
     
     // popup visibility
@@ -413,13 +414,18 @@ fun EpisodeScreen(
         }
         
         // Rating dialog for Flow 1 and Flow 2
-//        if (showRatingDialog) {
-//            AppRatingDialog(
-//                onDismiss = { showRatingDialog = false },
-//                onRated = { showRatingDialog = false },
-//                isManualTrigger = false // Automatic trigger
-//            )
-//        }
+        if (showRatingDialog) {
+            AppRatingDialog(
+                onDismiss = { 
+                    showRatingDialog = false
+                    onBack()  // Exit after dismissing dialog
+                },
+                onRated = { 
+                    showRatingDialog = false
+                    onBack()  // Exit after rating
+                }
+            )
+        }
     }
 }
 

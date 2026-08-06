@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.withContext
 
 data class ShortsUiState(
     val isLoading: Boolean = true,
@@ -62,7 +64,9 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
         genericFeedOpenNonce = if (isGenericFeed) nextGenericFeedOpenNonce() else 0
         nextPage = 1
         viewModelScope.launch {
-            _uiState.update { ShortsUiState(isLoading = true, savedFilmIds = currentSavedFilmIds()) }
+            // Preserve existing savedFilmIds when reloading, don't reset from storage
+            val existingSavedFilmIds = _uiState.value.savedFilmIds.ifEmpty { currentSavedFilmIds() }
+            _uiState.update { ShortsUiState(isLoading = true, savedFilmIds = existingSavedFilmIds) }
             if (initialFilmId != null && initialFilmId != 0) {
                 // Episode mode: if a specific episode number is requested, load it; otherwise resume from watch history
                 val episodeToLoad = initialEpisodeNumber?.coerceAtLeast(1)
@@ -228,14 +232,12 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
         val item = _uiState.value.items.getOrNull(index) ?: return
         if (item.playUrl.isNotBlank() || item.film.id == 0) return
         viewModelScope.launch {
-            val playback = withContext(Dispatchers.IO) {
-                repository.loadPlayback(
-                    backendBaseUrl = backendBaseUrl,
-                    filmId = item.film.id,
-                    episodeNumber = item.episodeNumber,
-                    language = selectedLanguageCode()
-                )
-            }.getOrNull() ?: return@launch
+            val playback = loadPlaybackWithRetry(
+                backendBaseUrl = backendBaseUrl,
+                filmId = item.film.id,
+                episodeNumber = item.episodeNumber,
+                maxRetries = 3
+            ) ?: return@launch
             _uiState.update { state ->
                 state.copy(
                     items = state.items.mapIndexed { itemIndex, existing ->
@@ -248,6 +250,86 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
         // Preload next 2 videos to eliminate loading delays during scrolling
         preloadVideoUrl(index + 1, backendBaseUrl)
         preloadVideoUrl(index + 2, backendBaseUrl)
+    }
+    
+    /**
+     * Load playback with retry logic and exponential backoff
+     */
+    private suspend fun loadPlaybackWithRetry(
+        backendBaseUrl: String,
+        filmId: Int,
+        episodeNumber: Int,
+        maxRetries: Int = 4  // Increased from 3
+    ): ShortsItem? {
+        var lastException: Exception? = null
+        
+        repeat(maxRetries) { attempt ->
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    repository.loadPlayback(
+                        backendBaseUrl = backendBaseUrl,
+                        filmId = filmId,
+                        episodeNumber = episodeNumber,
+                        language = selectedLanguageCode()
+                    )
+                }
+                
+                val playback = result.getOrNull()
+                if (playback != null && playback.playUrl.isNotBlank()) {
+                    // Validate URL is accessible before returning
+                    if (isVideoUrlAccessible(playback.playUrl)) {
+                        return playback
+                    } else {
+                        android.util.Log.w("ShortsViewModel", "Video URL not accessible: ${playback.playUrl}")
+                    }
+                }
+                
+                // If playUrl is blank, try backup URL if available
+                lastException = result.exceptionOrNull() as? Exception 
+                    ?: Exception("Empty or inaccessible playback URL received")
+                    
+            } catch (e: Exception) {
+                lastException = e
+                android.util.Log.w("ShortsViewModel", "Playback attempt ${attempt + 1} failed: ${e.message}")
+            }
+            
+            // Progressive backoff: 500ms, 1s, 2s, 3s (faster initial retries)
+            if (attempt < maxRetries - 1) {
+                val backoffDelay = when (attempt) {
+                    0 -> 500L
+                    1 -> 1000L
+                    2 -> 2000L
+                    else -> 3000L
+                }
+                kotlinx.coroutines.delay(backoffDelay)
+            }
+        }
+        
+        android.util.Log.e("ShortsViewModel", "Failed to load playback after $maxRetries attempts", lastException)
+        return null
+    }
+    
+    private suspend fun isVideoUrlAccessible(url: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val request = okhttp3.Request.Builder()
+                    .url(url)
+                    .head() // HEAD request to check accessibility without downloading
+                    .build()
+                
+                val client = okhttp3.OkHttpClient.Builder()
+                    .connectTimeout(3, TimeUnit.SECONDS)
+                    .readTimeout(3, TimeUnit.SECONDS)
+                    .build()
+                
+                client.newCall(request).execute().use { response ->
+                    response.isSuccessful
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("ShortsViewModel", "URL accessibility check failed: ${e.message}")
+                false
+            }
+        }
     }
 
     private fun preloadVideoUrl(index: Int, backendBaseUrl: String) {
