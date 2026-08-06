@@ -51,39 +51,85 @@ fun DramaXApp(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     var onboardingFinishInProgress by remember { mutableStateOf(false) }
+
+//    val currentStep = when {
+//        initialAction == MainActivity.ACTION_WIDGET_UNINSTALL && uiState.currentStep == AppStep.Splash ->
+//            AppStep.SplashUninstall
+//        initialAction == MainActivity.ACTION_WIDGET_MY_LIST && uiState.currentStep == AppStep.Splash ->
+//            AppStep.Library  // Skip splash and go directly to My List (Library)
+//        else -> uiState.currentStep
+//    }
+
     val currentStep = when {
-        initialAction == MainActivity.ACTION_WIDGET_UNINSTALL && uiState.currentStep == AppStep.Splash ->
-            AppStep.SplashUninstall
+        // Uninstall widget → skip splash, go to confirm
+        initialAction == MainActivity.ACTION_WIDGET_UNINSTALL &&
+                (uiState.currentStep == AppStep.Splash || uiState.currentStep == AppStep.SplashUninstall) ->
+            AppStep.ConfirmUninstall
+
         initialAction == MainActivity.ACTION_WIDGET_MY_LIST && uiState.currentStep == AppStep.Splash ->
-            AppStep.Library  // Skip splash and go directly to My List (Library)
+            AppStep.Library
+
+        initialAction == MainActivity.ACTION_WIDGET_HOME && uiState.currentStep == AppStep.Splash ->
+            AppStep.Home
+
         else -> uiState.currentStep
     }
-    
+
+
+    var pendingRatingOnHome by remember { mutableStateOf(false) }
+    var showHomeRatingDialog by remember { mutableStateOf(false) }
+    val ratingManager = remember { RatingManager.getInstance(context) }
+
+//    var pendingRatingOnHome by remember { mutableStateOf(false) }
     // Handle shortcut navigation after splash finishes (for actions that still need splash)
+//    LaunchedEffect(initialAction, uiState.currentStep) {
+//        if (initialAction == null) return@LaunchedEffect
+//
+//        // My List shortcut bypasses splash, so handle it immediately
+//        if (initialAction == MainActivity.ACTION_WIDGET_MY_LIST && uiState.currentStep == AppStep.Splash) {
+//            viewModel.startWidgetMyList()
+//            return@LaunchedEffect
+//        }
+//
+//        // Wait until splash is done before navigating for other actions
+//        if (uiState.currentStep == AppStep.Splash ||
+//            uiState.currentStep == AppStep.SplashUninstall) {
+//            return@LaunchedEffect
+//        }
+//
+//        when (initialAction) {
+//            MainActivity.ACTION_WIDGET_HOME -> viewModel.startWidgetHome()
+//            // ACTION_WIDGET_MY_LIST is handled above to skip splash
+//            // Uninstall flow is handled by the when expression above
+//        }
+//    }
+
+
     LaunchedEffect(initialAction, uiState.currentStep) {
         if (initialAction == null) return@LaunchedEffect
-        
-        // My List shortcut bypasses splash, so handle it immediately
-        if (initialAction == MainActivity.ACTION_WIDGET_MY_LIST && uiState.currentStep == AppStep.Splash) {
-            viewModel.startWidgetMyList()
-            return@LaunchedEffect
+
+        when {
+            initialAction == MainActivity.ACTION_WIDGET_UNINSTALL &&
+                    (uiState.currentStep == AppStep.Splash || uiState.currentStep == AppStep.SplashUninstall) -> {
+                viewModel.openConfirmUninstallFromWidget()
+                return@LaunchedEffect
+            }
+            initialAction == MainActivity.ACTION_WIDGET_MY_LIST && uiState.currentStep == AppStep.Splash -> {
+                viewModel.startWidgetMyList()
+                return@LaunchedEffect
+            }
+            initialAction == MainActivity.ACTION_WIDGET_HOME && uiState.currentStep == AppStep.Splash -> {
+                viewModel.startWidgetHome()
+                return@LaunchedEffect
+            }
         }
-        
-        // Wait until splash is done before navigating for other actions
-        if (uiState.currentStep == AppStep.Splash || 
-            uiState.currentStep == AppStep.SplashUninstall) {
+
+        if (uiState.currentStep == AppStep.Splash ||
+            uiState.currentStep == AppStep.SplashUninstall
+        ) {
             return@LaunchedEffect
-        }
-        
-        when (initialAction) {
-            MainActivity.ACTION_WIDGET_HOME -> viewModel.startWidgetHome()
-            // ACTION_WIDGET_MY_LIST is handled above to skip splash
-            // Uninstall flow is handled by the when expression above
         }
     }
-
-    val ratingManager = remember { RatingManager.getInstance(context) }
-    var showHomeRatingDialog by remember { mutableStateOf(false) }
 
 
     LaunchedEffect(currentStep) {
@@ -120,21 +166,28 @@ fun DramaXApp(
         }
     }
 
-
-
+//
 //    fun openHomeWithBackAd() {
 //        val activity = context.findActivity()
-//        if (activity == null || currentStep == AppStep.Home) {
+//        val cameFromElsewhere = currentStep != AppStep.Home
+//        if (activity == null || !cameFromElsewhere) {
 //            viewModel.openHome()
 //            return
 //        }
-//        AdsManager.loadAndShowInterstitial(
-//            activity = activity,
-//            placementName = "inter_back",
-//            config = AdRemoteConfig.interBack,
-//            timeoutMs = 2_500L,
-//            onFinished = viewModel::openHome
-//        )
+//        viewModel.openHome() // navigate immediately, never blocked on ad load
+//        AdsManager.showInterBackIfReady(activity) { adShown ->
+//            if (adShown) {
+//                // Flow 3 spec: "skip the Rate dialog only for that trigger" —
+//                // deliberately do NOT call markDialogShown() here, so the next
+//                // eligible trigger is still checked fresh.
+//                return@showInterBackIfReady
+//            }
+//            // No ad shown -> Flow 3: user returned to Home with no interstitial.
+//            if (ratingManager.canShowRatingDialog()) {
+//                showHomeRatingDialog = true
+//                ratingManager.markDialogShown()
+//            }
+//        }
 //    }
 
     fun openHomeWithBackAd() {
@@ -142,21 +195,38 @@ fun DramaXApp(
         val cameFromElsewhere = currentStep != AppStep.Home
         if (activity == null || !cameFromElsewhere) {
             viewModel.openHome()
+            // Still honor pending rating if we somehow land on Home without an ad path
+            if (pendingRatingOnHome && ratingManager.canShowRatingDialog()) {
+                showHomeRatingDialog = true
+                ratingManager.markDialogShown()
+                pendingRatingOnHome = false
+            }
             return
         }
-        viewModel.openHome() // navigate immediately, never blocked on ad load
+
+        viewModel.openHome() // navigate immediately
+
         AdsManager.showInterBackIfReady(activity) { adShown ->
             if (adShown) {
-                // Flow 3 spec: "skip the Rate dialog only for that trigger" —
-                // deliberately do NOT call markDialogShown() here, so the next
-                // eligible trigger is still checked fresh.
+                // Flow 3: skip rating only for this inter trigger; do NOT markDialogShown here
+                // Show rating AFTER inter finishes if user finished an episode
+                if (pendingRatingOnHome && ratingManager.canShowRatingDialog()) {
+                    showHomeRatingDialog = true
+                    ratingManager.markDialogShown()
+                }
+                pendingRatingOnHome = false
                 return@showInterBackIfReady
             }
-            // No ad shown -> Flow 3: user returned to Home with no interstitial.
-            if (ratingManager.canShowRatingDialog()) {
+            // No ad shown → show rating if eligible (episode finished or previous Flow 3)
+            if (pendingRatingOnHome && ratingManager.canShowRatingDialog()) {
+                showHomeRatingDialog = true
+                ratingManager.markDialogShown()
+            } else if (!pendingRatingOnHome && ratingManager.canShowRatingDialog()) {
+                // optional: keep old “return to Home with no inter” Flow 3 behavior
                 showHomeRatingDialog = true
                 ratingManager.markDialogShown()
             }
+            pendingRatingOnHome = false
         }
     }
 
@@ -217,14 +287,31 @@ fun DramaXApp(
             onBackHome = viewModel::returnFromUninstallPrompt
         )
 
+//        AppStep.Home -> HomeScreen(
+//            backendBaseUrl = uiState.backendBaseUrl,
+//            shouldTriggerRating = pendingRatingOnHome,           // NEW
+//            onRatingTriggered = { pendingRatingOnHome = false },
+//            onOpenEpisodes = { filmId ->
+//                // Open Episodes screen when clicking a film (episode number handled elsewhere)
+//                viewModel.openEpisodes(filmId)
+//            },
+//            onOpenShorts = {
+//                // Open generic Shorts screen for casual browsing
+//                viewModel.openShorts(null)
+//            },
+//            onLibrary = viewModel::openLibrary,
+//            onSearch = viewModel::openSearch,
+//            onRewards = viewModel::openRewards,
+//            onNotifications = viewModel::openNotifications,
+//            onProfile = viewModel::openProfile
+//        )
+
         AppStep.Home -> HomeScreen(
             backendBaseUrl = uiState.backendBaseUrl,
             onOpenEpisodes = { filmId ->
-                // Open Episodes screen when clicking a film (episode number handled elsewhere)
                 viewModel.openEpisodes(filmId)
             },
             onOpenShorts = {
-                // Open generic Shorts screen for casual browsing
                 viewModel.openShorts(null)
             },
             onLibrary = viewModel::openLibrary,
@@ -233,6 +320,19 @@ fun DramaXApp(
             onNotifications = viewModel::openNotifications,
             onProfile = viewModel::openProfile
         )
+
+//        AppStep.Shorts -> ShortsScreen(
+//            backendBaseUrl = uiState.backendBaseUrl,
+//            initialFilmId = uiState.selectedShortFilmId,
+//            initialEpisodeNumber = uiState.selectedEpisodeNumber,
+//            onBack = ::openHomeWithBackAd,
+//            onHome = ::openHomeWithBackAd,
+//            onLibrary = viewModel::openLibrary,
+//            onRewards = viewModel::openRewards,
+//            onProfile = viewModel::openProfile,
+//            onNavigateToEpisodes = viewModel::openEpisodes,
+//            onRequestRatingOnHome = { pendingRatingOnHome = true }
+//        )
 
         AppStep.Shorts -> ShortsScreen(
             backendBaseUrl = uiState.backendBaseUrl,
@@ -243,8 +343,22 @@ fun DramaXApp(
             onLibrary = viewModel::openLibrary,
             onRewards = viewModel::openRewards,
             onProfile = viewModel::openProfile,
-            onNavigateToEpisodes = viewModel::openEpisodes
+            onNavigateToEpisodes = viewModel::openEpisodes,
+            onRequestRatingOnHome = { pendingRatingOnHome = true }
         )
+
+//        AppStep.Episodes -> ShortsScreen(
+//            backendBaseUrl = uiState.backendBaseUrl,
+//            initialFilmId = uiState.selectedEpisodeFilmId ?: uiState.selectedShortFilmId,
+//            initialEpisodeNumber = uiState.selectedEpisodeNumber,
+//            onBack = ::openHomeWithBackAd,
+//            onHome = ::openHomeWithBackAd,
+//            onLibrary = viewModel::openLibrary,
+//            onRewards = viewModel::openRewards,
+//            onProfile = viewModel::openProfile,
+//            onNavigateToEpisodes = viewModel::openEpisodes,
+//            onRequestRatingOnHome = { pendingRatingOnHome = true }
+//        )
 
         AppStep.Episodes -> ShortsScreen(
             backendBaseUrl = uiState.backendBaseUrl,
@@ -255,7 +369,8 @@ fun DramaXApp(
             onLibrary = viewModel::openLibrary,
             onRewards = viewModel::openRewards,
             onProfile = viewModel::openProfile,
-            onNavigateToEpisodes = viewModel::openEpisodes
+            onNavigateToEpisodes = viewModel::openEpisodes,
+            onRequestRatingOnHome = { pendingRatingOnHome = true }
         )
 
         AppStep.Library -> LibraryScreen(

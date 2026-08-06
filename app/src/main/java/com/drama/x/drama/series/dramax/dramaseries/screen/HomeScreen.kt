@@ -145,8 +145,6 @@ private enum class CategorySort(@StringRes val label: Int) {
 @Composable
 fun HomeScreen(
     backendBaseUrl: String,
-    shouldTriggerRating: Boolean = false,
-    onRatingTriggered: () -> Unit = {},
     onOpenEpisodes: (Int?) -> Unit,
     onOpenShorts: () -> Unit,
     onLibrary: () -> Unit,
@@ -175,12 +173,15 @@ fun HomeScreen(
     var hasAddedToMyListThisSession by remember { mutableStateOf(false) }
     
     // Flow 3: Handle return to home trigger
-    LaunchedEffect(shouldTriggerRating) {
-        if (shouldTriggerRating) {
-            showRatingDialog = true
-            onRatingTriggered()
-        }
-    }
+//    LaunchedEffect(shouldTriggerRating) {
+//        if (shouldTriggerRating) {
+//            if (ratingManager.canShowRatingDialog()) {
+//                showRatingDialog = true
+//                ratingManager.markDialogShown()
+//            }
+//            onRatingTriggered()
+//        }
+//    }
 
     LaunchedEffect(backendBaseUrl) {
         viewModel.loadHome(backendBaseUrl)
@@ -307,7 +308,12 @@ fun HomeScreen(
             null -> Unit
         }
     }
-    
+    if (showRatingDialog) {
+        AppRatingDialog(
+            onDismiss = { showRatingDialog = false },
+            onRated = { showRatingDialog = false }
+        )
+    }
     // Rating dialog
 //    if (showRatingDialog) {
 //        AppRatingDialog(

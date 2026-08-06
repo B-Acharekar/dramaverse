@@ -107,6 +107,16 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update { it.copy(currentStep = AppStep.Language) }
     }
 
+    fun openConfirmUninstallFromWidget() {
+        pendingPostLanguageRecreate = false
+        _uiState.update {
+            it.copy(
+                currentStep = AppStep.ConfirmUninstall,
+                selectedShortFilmId = null
+            )
+        }
+    }
+
     fun onLanguageFinished(language: String) {
         val nextStep = AppStep.Onboarding
         LocaleHelper.persistLanguage(appContext, language)

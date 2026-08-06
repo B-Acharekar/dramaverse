@@ -169,7 +169,8 @@ fun ShortsScreen(
     onRewards: () -> Unit,
     onProfile:() -> Unit,
     onNavigateToEpisodes: (filmId: Int, episodeNumber: Int?) -> Unit = { _, _ -> },
-    viewModel: ShortsViewModel = viewModel()
+    viewModel: ShortsViewModel = viewModel(),
+    onRequestRatingOnHome: () -> Unit = {},
 ) {
 
     val uiState by viewModel.uiState.collectAsState()
@@ -178,35 +179,63 @@ fun ShortsScreen(
     // Track which films should have episodes in sequential order
     var episodeModeFilmIds by remember { mutableStateOf(setOf<Int>()) }
     
-    // Track if user has finished watching an episode this session
-    var hasFinishedEpisodeThisSession by remember { mutableStateOf(false) }
-    
-    // Track if user has added to My List in this session (for rating popup trigger)
-    var hasAddedToMyListThisSession by remember { mutableStateOf(false) }
-    
+//    // Track if user has finished watching an episode this session
+//    var hasFinishedEpisodeThisSession by remember { mutableStateOf(false) }
+//
+//    // Track if user has added to My List in this session (for rating popup trigger)
+//    var hasAddedToMyListThisSession by remember { mutableStateOf(false) }
+//
     // Rating dialog state
+//    var showRatingDialog by remember { mutableStateOf(false) }
+//    val ratingManager = remember { RatingManager.getInstance(context) }
+//
+//    // Store the pending exit action when rating dialog is shown
+//    var pendingExitAction: (() -> Unit)? by remember { mutableStateOf(null) }
+//
+//    // Function to handle exit with rating dialog check
+//    val handleExit = { exitAction: () -> Unit ->
+//        if (hasFinishedEpisodeThisSession && ratingManager.canShowRatingDialog()) {
+//            showRatingDialog = true
+//            ratingManager.markDialogShown()
+//            hasFinishedEpisodeThisSession = false
+//            pendingExitAction = exitAction
+//        } else {
+//            exitAction()
+//        }
+//    }
+
+    var hasFinishedEpisodeThisSession by remember { mutableStateOf(false) }
+
+    var hasAddedToMyListThisSession by remember { mutableStateOf(false) }
+// Flow 2 dialog still shows immediately inside Shorts (unchanged behavior — per spec Flow 2 fires right away).
     var showRatingDialog by remember { mutableStateOf(false) }
     val ratingManager = remember { RatingManager.getInstance(context) }
-    
-    // Store the pending exit action when rating dialog is shown
-    var pendingExitAction: (() -> Unit)? by remember { mutableStateOf(null) }
-    
-    // Function to handle exit with rating dialog check
-    val handleExit = { exitAction: () -> Unit ->
-        if (hasFinishedEpisodeThisSession && ratingManager.canShowRatingDialog()) {
-            showRatingDialog = true
-            ratingManager.markDialogShown()
-            hasFinishedEpisodeThisSession = false
-            pendingExitAction = exitAction
-        } else {
-            exitAction()
-        }
-    }
-    
+
+// Called only for navigation paths that land on Home (back button, bottom-nav Home icon).
+// Does NOT show the dialog itself — just signals that Home should show it once it composes.
+//    val exitToHome: () -> Unit = {
+//        android.util.Log.d("BackNav", "exitToHome invoked, hasFinished=$hasFinishedEpisodeThisSession")
+//        if (hasFinishedEpisodeThisSession) {
+//            onRequestRatingOnHome()
+//            hasFinishedEpisodeThisSession = false
+//        }
+//        onBack()
+//        android.util.Log.d("BackNav", "onBack() called")
+//    }
+
     // Custom back handler to check for rating dialog before exiting
-    BackHandler(onBack = {
-        handleExit { onBack() }
-    })
+//    BackHandler(onBack = {
+//        handleExit { onBack() }
+//    })
+    val exitToHome: () -> Unit = {
+        if (hasFinishedEpisodeThisSession) {
+            onRequestRatingOnHome()
+            hasFinishedEpisodeThisSession = false
+        }
+        onBack()
+    }
+
+    BackHandler(onBack = exitToHome)
 
     val feedPages = remember(uiState.items, episodeModeFilmIds) {
         derivedStateOf {
@@ -243,6 +272,7 @@ fun ShortsScreen(
     var unlockedEpisodeKeys by remember { mutableStateOf(setOf<String>()) }
     var episodeModeKeys by remember { mutableStateOf(setOf<String>()) }
     var nativeShortVideoAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
+
 
     // Load persisted unlocked episodes
     val unlockedEpisodesStore = remember { UnlockedEpisodesStore(context) }
@@ -448,7 +478,13 @@ fun ShortsScreen(
                             playbackSpeed = playbackSpeed,
                             bottomReservedPadding = if (isEpisodeModeForItem) 0.dp else 78.dp + bottomBannerPadding,
                             viewModel = viewModel,  // Add this parameter
-                            onBack = { handleExit { onBack() } },
+                            onBack = {
+                                if (hasFinishedEpisodeThisSession) {
+                                    onRequestRatingOnHome()
+                                    hasFinishedEpisodeThisSession = false
+                                }
+                                onBack()
+                            },
                             onTogglePlay = {
                                 controlsVisible = true
                                 isPlaying = !isPlaying
@@ -556,9 +592,10 @@ fun ShortsScreen(
                                     coroutineScope.launch {
                                         pagerState.animateScrollToPage(pagerState.currentPage + 1)
                                     }
+                                } else {
+                                    // Episode finished and user is not auto-advancing → eligible for Home rating
+                                    hasFinishedEpisodeThisSession = true
                                 }
-                                // Mark that user finished an episode - dialog will show on exit
-                                hasFinishedEpisodeThisSession = true
                             },
                             onProgressCheckpoint = { item, position, duration ->
                                 viewModel.saveWatchProgress(
@@ -662,10 +699,13 @@ fun ShortsScreen(
                             onHideControls = {
                                 controlsVisible = false
                             },
+//                            onEnterEpisodeMode = { filmId ->
+//                                // Navigate to episode mode screen instead of staying in shorts
+//                                handleExit { onNavigateToEpisodes(filmId, null) }
+//                            }
                             onEnterEpisodeMode = { filmId ->
-                                // Navigate to episode mode screen instead of staying in shorts
-                                handleExit { onNavigateToEpisodes(filmId, null) }
-                            }
+                                onNavigateToEpisodes(filmId, null)
+                            },
                         )
                     }
                 }
@@ -676,11 +716,11 @@ fun ShortsScreen(
         if (controlsVisible && currentFeedPage is ShortsFeedPage.Video && !isCurrentEpisodeMode) {
             BottomNavigationBar(
                 selected = "Shorts",
-                onHome = { handleExit { onHome() } },
+                onHome = onHome,        // only Home should carry the pending-rating signal
                 onShorts = {},
-                onLibrary = { handleExit { onLibrary() } },
-                onRewards = { handleExit { onRewards() } },
-                onProfile = { handleExit { onProfile() } },
+                onLibrary = onLibrary,      // navigates elsewhere — must NOT set pending rating flag
+                onRewards = onRewards,      // same
+                onProfile = onProfile,      // same
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = bottomBannerPadding)
@@ -692,22 +732,28 @@ fun ShortsScreen(
     }
 
     // Rating dialog - only shown when user exits after finishing an episode
+//    if (showRatingDialog) {
+//        AppRatingDialog(
+//            onDismiss = {
+//                showRatingDialog = false
+//                hasFinishedEpisodeThisSession = false  // Reset flag
+//                // Execute pending exit action or default onBack
+//                pendingExitAction?.invoke() ?: onBack()
+//                pendingExitAction = null
+//            },
+//            onRated = {
+//                showRatingDialog = false
+//                hasFinishedEpisodeThisSession = false  // Reset flag
+//                // Execute pending exit action or default onBack
+//                pendingExitAction?.invoke() ?: onBack()
+//                pendingExitAction = null
+//            }
+//        )
+//    }
     if (showRatingDialog) {
         AppRatingDialog(
-            onDismiss = {
-                showRatingDialog = false
-                hasFinishedEpisodeThisSession = false  // Reset flag
-                // Execute pending exit action or default onBack
-                pendingExitAction?.invoke() ?: onBack()
-                pendingExitAction = null
-            },
-            onRated = {
-                showRatingDialog = false
-                hasFinishedEpisodeThisSession = false  // Reset flag
-                // Execute pending exit action or default onBack
-                pendingExitAction?.invoke() ?: onBack()
-                pendingExitAction = null
-            }
+            onDismiss = { showRatingDialog = false },
+            onRated = { showRatingDialog = false }
         )
     }
 }
