@@ -54,14 +54,22 @@ fun DramaXApp(
     val currentStep = when {
         initialAction == MainActivity.ACTION_WIDGET_UNINSTALL && uiState.currentStep == AppStep.Splash ->
             AppStep.SplashUninstall
+        initialAction == MainActivity.ACTION_WIDGET_MY_LIST && uiState.currentStep == AppStep.Splash ->
+            AppStep.Library  // Skip splash and go directly to My List (Library)
         else -> uiState.currentStep
     }
     
-    // Handle shortcut navigation after splash finishes
+    // Handle shortcut navigation after splash finishes (for actions that still need splash)
     LaunchedEffect(initialAction, uiState.currentStep) {
         if (initialAction == null) return@LaunchedEffect
         
-        // Wait until splash is done before navigating
+        // My List shortcut bypasses splash, so handle it immediately
+        if (initialAction == MainActivity.ACTION_WIDGET_MY_LIST && uiState.currentStep == AppStep.Splash) {
+            viewModel.startWidgetMyList()
+            return@LaunchedEffect
+        }
+        
+        // Wait until splash is done before navigating for other actions
         if (uiState.currentStep == AppStep.Splash || 
             uiState.currentStep == AppStep.SplashUninstall) {
             return@LaunchedEffect
@@ -69,7 +77,7 @@ fun DramaXApp(
         
         when (initialAction) {
             MainActivity.ACTION_WIDGET_HOME -> viewModel.startWidgetHome()
-            MainActivity.ACTION_WIDGET_MY_LIST -> viewModel.startWidgetMyList()
+            // ACTION_WIDGET_MY_LIST is handled above to skip splash
             // Uninstall flow is handled by the when expression above
         }
     }

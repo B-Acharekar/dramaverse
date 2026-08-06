@@ -664,7 +664,7 @@ fun ShortsScreen(
                             },
                             onEnterEpisodeMode = { filmId ->
                                 // Navigate to episode mode screen instead of staying in shorts
-                                onNavigateToEpisodes(filmId, null)
+                                handleExit { onNavigateToEpisodes(filmId, null) }
                             }
                         )
                     }
