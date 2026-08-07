@@ -52,6 +52,15 @@ fun DramaXApp(
     val context = LocalContext.current
     var onboardingFinishInProgress by remember { mutableStateOf(false) }
 
+    // Mark as shortcut launch if app is opened via shortcuts (Home, MyList only)
+    // Uninstall shortcut should follow normal splash + ads flow
+    LaunchedEffect(initialAction) {
+        if (initialAction == MainActivity.ACTION_WIDGET_HOME || 
+            initialAction == MainActivity.ACTION_WIDGET_MY_LIST) {
+            GlobalApp.isLaunchedFromShortcut = true
+        }
+    }
+
 //    val currentStep = when {
 //        initialAction == MainActivity.ACTION_WIDGET_UNINSTALL && uiState.currentStep == AppStep.Splash ->
 //            AppStep.SplashUninstall
@@ -61,10 +70,9 @@ fun DramaXApp(
 //    }
 
     val currentStep = when {
-        // Uninstall widget → skip splash, go to confirm
-        initialAction == MainActivity.ACTION_WIDGET_UNINSTALL &&
-                (uiState.currentStep == AppStep.Splash || uiState.currentStep == AppStep.SplashUninstall) ->
-            AppStep.ConfirmUninstall
+        // Uninstall widget → show splash uninstall with ads
+        initialAction == MainActivity.ACTION_WIDGET_UNINSTALL && uiState.currentStep == AppStep.Splash ->
+            AppStep.SplashUninstall
 
         initialAction == MainActivity.ACTION_WIDGET_MY_LIST && uiState.currentStep == AppStep.Splash ->
             AppStep.Library
@@ -109,9 +117,8 @@ fun DramaXApp(
         if (initialAction == null) return@LaunchedEffect
 
         when {
-            initialAction == MainActivity.ACTION_WIDGET_UNINSTALL &&
-                    (uiState.currentStep == AppStep.Splash || uiState.currentStep == AppStep.SplashUninstall) -> {
-                viewModel.openConfirmUninstallFromWidget()
+            initialAction == MainActivity.ACTION_WIDGET_UNINSTALL && uiState.currentStep == AppStep.Splash -> {
+                // Trigger splash uninstall flow - this will be handled by the currentStep logic above
                 return@LaunchedEffect
             }
             initialAction == MainActivity.ACTION_WIDGET_MY_LIST && uiState.currentStep == AppStep.Splash -> {
@@ -140,7 +147,8 @@ fun DramaXApp(
 
     LaunchedEffect(Unit) {
         while (true) {
-            if (com.drama.x.drama.series.dramax.dramaseries.GlobalApp.shouldShowWelcomeBackOnResume) {
+            if (com.drama.x.drama.series.dramax.dramaseries.GlobalApp.shouldShowWelcomeBackOnResume && 
+                !com.drama.x.drama.series.dramax.dramaseries.GlobalApp.isLaunchedFromShortcut) {
                 val step = uiState.currentStep
                 if (step != AppStep.Splash &&
                     step != AppStep.SplashUninstall &&

@@ -23,6 +23,7 @@ class GlobalApp : AdsMultiDexApplication() {
         @SuppressLint("StaticFieldLeak")
         var currentActivity: Activity? = null
         var shouldShowWelcomeBackOnResume = false
+        var isLaunchedFromShortcut = false
     }
 
     override fun onCreate() {
@@ -55,8 +56,13 @@ class GlobalApp : AdsMultiDexApplication() {
         val lifecycleObserver = AppLifecycleObserver()
         registerActivityLifecycleCallbacks(AppActivityLifecycleCallbacks(lifecycleObserver) { appResumed ->
             // Mark that welcome back screen should be shown on next home navigation
-            if (appResumed) {
+            // Skip welcome back if app was launched from a shortcut
+            if (appResumed && !isLaunchedFromShortcut) {
                 shouldShowWelcomeBackOnResume = true
+            }
+            // Reset shortcut flag after the first resume
+            if (appResumed && isLaunchedFromShortcut) {
+                isLaunchedFromShortcut = false
             }
         })
     }
