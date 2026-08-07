@@ -732,68 +732,82 @@ internal fun SharedVideoCaption(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = if (isLocked) 16.dp else 90.dp, bottom = bottomReservedPadding + 16.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = if (isLocked) 16.dp else 90.dp, bottom = 10.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Episode ${item.episodeNumber} / ${item.film.episodeTotal}",
+                    color = SharedGold,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.sp,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(Color(0x33F5C65B))
+                        .border(1.dp, Color(0x4DF5C65B), RoundedCornerShape(4.dp))
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.trending), color = Color(0xFFE5BDBE), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+            }
+            Spacer(Modifier.height(4.dp))
             Text(
-                text = "Episode ${item.episodeNumber} / ${item.film.episodeTotal}",
-                color = SharedGold,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.sp,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(Color(0x33F5C65B))
-                    .border(1.dp, Color(0x4DF5C65B), RoundedCornerShape(4.dp))
-                    .padding(horizontal = 8.dp, vertical = 3.dp)
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.trending), color = Color(0xFFE5BDBE), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
-        }
-        Spacer(Modifier.height(4.dp))
-        Text(
-            item.film.title,
-            color = Color(0xFFE5E1E4),
-            fontSize = 20.sp,
-            lineHeight = 25.sp,
-            fontWeight = FontWeight.ExtraBold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            letterSpacing = 0.sp
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            description,
-            color = Color(0xCCE5E1E4),
-            fontSize = 14.sp,
-            lineHeight = 20.sp,
-            fontWeight = FontWeight.Normal,
-            maxLines = if (descriptionExpanded) 4 else 2,
-            overflow = TextOverflow.Ellipsis,
-            letterSpacing = 0.sp
-        )
-        if (showDescriptionToggle) {
-            Spacer(Modifier.height(3.dp))
-            Text(
-                text = if (descriptionExpanded) stringResource(R.string.view_less) else stringResource(R.string.view_more),
-                color = SharedGold,
-                fontSize = 12.sp,
+                item.film.title,
+                color = Color(0xFFE5E1E4),
+                fontSize = 20.sp,
+                lineHeight = 25.sp,
                 fontWeight = FontWeight.ExtraBold,
-                letterSpacing = 0.sp,
-                modifier = Modifier.clickable { descriptionExpanded = !descriptionExpanded }
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                letterSpacing = 0.sp
             )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                description,
+                color = Color(0xCCE5E1E4),
+                fontSize = 14.sp,
+                lineHeight = 20.sp,
+                fontWeight = FontWeight.Normal,
+                maxLines = if (descriptionExpanded) 4 else 2,
+                overflow = TextOverflow.Ellipsis,
+                letterSpacing = 0.sp
+            )
+            if (showDescriptionToggle) {
+                Spacer(Modifier.height(3.dp))
+                Text(
+                    text = if (descriptionExpanded) stringResource(R.string.view_less) else stringResource(R.string.view_more),
+                    color = SharedGold,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 0.sp,
+                    modifier = Modifier.clickable { descriptionExpanded = !descriptionExpanded }
+                )
+            }
         }
-        Spacer(Modifier.height(10.dp))
+        
         if (isEpisodeMode) {
+            Spacer(Modifier.height(2.dp))
             SharedThinSeekBar(
-                progress = if (durationMs > 0L) positionMs.toFloat() / durationMs.toFloat() else 0f,
+                progress = if (durationMs > 0L) {
+                    positionMs.toFloat() / durationMs.toFloat()
+                } else 0f,
                 onSeekFraction = { fraction ->
-                    if (durationMs > 0L) onSeekTo((durationMs * fraction).toLong())
+                    if (durationMs > 0L) {
+                        onSeekTo((durationMs * fraction).toLong())
+                    }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
             )
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
@@ -811,22 +825,29 @@ internal fun SharedVideoCaption(
                     letterSpacing = 0.sp
                 )
             }
+            Spacer(modifier = Modifier.height(bottomReservedPadding))
         } else {
-            Box(
+            Column(
                 modifier = Modifier
-                    .width(170.dp)
-                    .height(40.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(SharedPink)
-                    .clickable(onClick = onWatchNowClick),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = if (isLocked) 16.dp else 90.dp, bottom = bottomReservedPadding + 16.dp)
             ) {
-                Text(
-                    stringResource(R.string.watch_now),
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Box(
+                    modifier = Modifier
+                        .width(170.dp)
+                        .height(40.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(SharedPink)
+                        .clickable(onClick = onWatchNowClick),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        stringResource(R.string.watch_now),
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
     }
@@ -841,7 +862,7 @@ private fun SharedThinSeekBar(
     var widthPx by remember { mutableStateOf(1) }
     Box(
         modifier = modifier
-            .height(24.dp)
+            .height(32.dp)
             .onSizeChanged { widthPx = it.width.coerceAtLeast(1) }
             .pointerInput(widthPx) {
                 detectTapGestures { offset ->
@@ -856,28 +877,31 @@ private fun SharedThinSeekBar(
             },
         contentAlignment = Alignment.CenterStart
     ) {
+        // Background track with rounded ends
         Box(
-            modifier = Modifier
+            Modifier
                 .fillMaxWidth()
-                .height(3.dp)
-                .clip(RoundedCornerShape(3.dp))
-                .background(Color(0x66FFFFFF))
+                .height(4.dp)
+                .clip(RoundedCornerShape(50))
+                .background(Color.White.copy(alpha = 0.18f))
         )
+        // Played portion with rounded ends
         Box(
             modifier = Modifier
-                .fillMaxWidth(progress)
-                .height(3.dp)
-                .clip(RoundedCornerShape(3.dp))
-                .background(SharedPink)
+                .fillMaxWidth(progress.coerceIn(0f, 1f))
+                .height(4.dp)
+                .clip(RoundedCornerShape(50))
+                .background(Color(0xFFFF5168))
         )
+        // Thumb (smaller, circle with border)
         Box(
             modifier = Modifier
                 .fillMaxWidth(progress)
                 .wrapContentWidth(Alignment.End)
-                .offset(x = (-6).dp)
+                .offset(x = -6.dp)  // Center the thumb visually
                 .size(12.dp)
-                .clip(CircleShape)
-                .background(SharedPink)
+                .background(Color(0xFFFF5168), CircleShape)
+                .border(2.dp, Color.White, CircleShape)
         )
     }
 }

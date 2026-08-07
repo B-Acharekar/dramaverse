@@ -93,6 +93,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -474,7 +475,8 @@ fun ShortsScreen(
             VerticalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize(),
-                pageSpacing = 0.dp
+                pageSpacing = 0.dp,
+                beyondViewportPageCount = 1
             ) { page ->
                 when (val feedPage = feedPages[page]) {
                     ShortsFeedPage.NativeFullscreenAd -> ShortVideoNativeFullscreenAd(
@@ -484,10 +486,12 @@ fun ShortsScreen(
 
                     is ShortsFeedPage.Video -> {
                         val isEpisodeModeForItem = initialFilmId != null || episodeModeFilmIds.contains(feedPage.item.film.id) || episodeModeKeys.contains(feedPage.item.episodeKey())
+                        val shouldPreload = kotlin.math.abs(page - pagerState.currentPage) <= 1
                         ShortsPage(
                             item = feedPage.item,
                             itemIndex = feedPage.itemIndex,
                             isActive = page == pagerState.currentPage,
+                            shouldPreload = shouldPreload,
                             isEpisodeMode = isEpisodeModeForItem,
                             isBookmarked = feedPage.item.film.id in uiState.savedFilmIds,
                             backendBaseUrl = backendBaseUrl,
@@ -852,6 +856,7 @@ private fun ShortsPage(
     item: ShortsItem,
     itemIndex: Int,
     isActive: Boolean,
+    shouldPreload: Boolean,
     isEpisodeMode: Boolean,
     isBookmarked: Boolean,
     backendBaseUrl: String,
@@ -1017,7 +1022,9 @@ private fun ShortsPage(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        if (!isActive || item.playUrl.isBlank() || isLocked) {
+        val shouldMountPlayer = (isActive || shouldPreload) && item.playUrl.isNotBlank() && !isLocked
+        
+        if (!shouldMountPlayer) {
             LoadingBackdrop(
                 item = item,
                 showLoader = isActive && !isLocked && !loadingTimedOut,
@@ -1093,7 +1100,7 @@ private fun ShortsPage(
                 playUrl = item.playUrl,
                 subtitleTracks = item.subtitleTracks,
                 selectedSubtitleUrl = subtitleUrlForPlayback,
-                isPlaying = isPlaying,
+                isPlaying = isPlaying && isActive,  // Only play audio when active, buffer while preloading
                 ccEnabled = ccEnabled,
                 controlsVisible = controlsVisible,
                 playbackSpeed = playbackSpeed,
@@ -1123,9 +1130,9 @@ private fun ShortsPage(
                     // Handle player errors
                     loadingTimedOut = true
                 },
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize().alpha(if (isActive) 1f else 0f)
             )
-            if (!videoReady && !loadingTimedOut) {
+            if (isActive && !videoReady && !loadingTimedOut) {
                 LoadingBackdrop(
                     item = item,
                     showLoader = true,
@@ -1658,8 +1665,22 @@ private fun LoadingBackdrop(
     showLoader: Boolean,
     modifier: Modifier
 ) {
+    var fadeInAlpha by remember(item.film.id, item.episodeNumber) { mutableStateOf(0f) }
+    
+    // Smooth fade-in animation for thumbnail
+    LaunchedEffect(Unit) {
+        delay(100) // Slight delay before starting animation to prevent jank
+        val animationDuration = 250
+        val startTime = System.currentTimeMillis()
+        while (fadeInAlpha < 1f) {
+            val elapsed = System.currentTimeMillis() - startTime
+            fadeInAlpha = (elapsed.toFloat() / animationDuration).coerceAtMost(1f)
+            delay(16) // ~60fps
+        }
+    }
+    
     Box(modifier = modifier.background(ShortsBackground)) {
-        ShortsThumbnail(item.film.imageUrl, Modifier.fillMaxSize())
+        ShortsThumbnail(item.film.imageUrl, Modifier.fillMaxSize().alpha(fadeInAlpha))
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -1742,6 +1763,23 @@ private fun HlsVideoPlayer(
             .setTrackSelector(trackSelector)
             .build()
     }
+    
+    // Track player readiness for smooth fade-in animation
+    var playerReady by remember(playUrl) { mutableStateOf(false) }
+    var playerAlpha by remember(playUrl) { mutableStateOf(0f) }
+    
+    // Smooth fade-in when player becomes ready
+    LaunchedEffect(playerReady) {
+        if (playerReady) {
+            val animationDuration = 200
+            val startTime = System.currentTimeMillis()
+            while (playerAlpha < 1f) {
+                val elapsed = System.currentTimeMillis() - startTime
+                playerAlpha = (elapsed.toFloat() / animationDuration).coerceAtMost(1f)
+                delay(16) // ~60fps
+            }
+        }
+    }
 
     DisposableEffect(playUrl) {
         val subtitleConfigurations = subtitleTracks
@@ -1774,7 +1812,10 @@ private fun HlsVideoPlayer(
             }
 
             override fun onPlaybackStateChanged(playbackState: Int) {
-                if (playbackState == Player.STATE_READY) onReady()
+                if (playbackState == Player.STATE_READY) {
+                    playerReady = true
+                    onReady()
+                }
                 if (playbackState == Player.STATE_ENDED) onEnded()
             }
 
@@ -1853,7 +1894,9 @@ private fun HlsVideoPlayer(
     }
 
     AndroidView(
-        modifier = modifier.background(Color.Black),
+        modifier = modifier
+            .background(Color.Black)
+            .alpha(playerAlpha),
         factory = {
             (LayoutInflater.from(context).inflate(R.layout.view_shorts_player, null) as PlayerView).apply {
                 useController = false
@@ -1877,9 +1920,25 @@ private fun ShortsThumbnail(
     imageUrl: String,
     modifier: Modifier
 ) {
-    val bitmap by produceState<Bitmap?>(initialValue = null, imageUrl) {
-        value = if (imageUrl.isBlank()) null else loadShortsBitmap(imageUrl)
+    var bitmap by remember(imageUrl) { mutableStateOf<Bitmap?>(null) }
+    var isLoadingThumbnail by remember(imageUrl) { mutableStateOf(imageUrl.isNotBlank()) }
+    
+    // Load bitmap on background thread without blocking Compose
+    LaunchedEffect(imageUrl) {
+        if (imageUrl.isBlank()) {
+            bitmap = null
+            isLoadingThumbnail = false
+            return@LaunchedEffect
+        }
+        
+        isLoadingThumbnail = true
+        val loadedBitmap = withContext(Dispatchers.Default) {
+            loadShortsBitmap(imageUrl)
+        }
+        bitmap = loadedBitmap
+        isLoadingThumbnail = false
     }
+    
     if (bitmap != null) {
         Image(
             bitmap = bitmap!!.asImageBitmap(),
@@ -1888,6 +1947,7 @@ private fun ShortsThumbnail(
             contentScale = ContentScale.Crop
         )
     } else {
+        // Show gradient skeleton while loading
         Box(
             modifier = modifier.background(
                 Brush.linearGradient(
@@ -1898,10 +1958,30 @@ private fun ShortsThumbnail(
     }
 }
 
+// LRU cache for decoded thumbnails to avoid re-downloading/re-decoding the same image
+private object ThumbnailCache {
+    private val cache = object : android.util.LruCache<String, Bitmap>(20) {}
+    
+    fun get(url: String): Bitmap? = cache.get(url)
+    
+    fun put(url: String, bitmap: Bitmap) {
+        cache.put(url, bitmap)
+    }
+}
+
 private suspend fun loadShortsBitmap(imageUrl: String): Bitmap? = withContext(Dispatchers.IO) {
-    runCatching {
+    // Check cache first
+    ThumbnailCache.get(imageUrl)?.let { return@withContext it }
+    
+    // Download and decode if not in cache
+    val bitmap = runCatching {
         URL(imageUrl).openStream().use { BitmapFactory.decodeStream(it) }
     }.getOrNull()
+    
+    // Store in cache for future use
+    bitmap?.let { ThumbnailCache.put(imageUrl, it) }
+    
+    bitmap
 }
 
 private suspend fun loadSubtitleCues(subtitleUrl: String): List<SubtitleCue> = withContext(Dispatchers.IO) {

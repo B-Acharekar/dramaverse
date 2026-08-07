@@ -620,6 +620,8 @@ private fun HeroCarousel(
         modifier = Modifier
             .fillMaxWidth()
             .height(300.dp)
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(12.dp))
     ) {
         HorizontalPager(
             state = pagerState,
@@ -1197,7 +1199,7 @@ private fun EmptyFavorites(onOpenEpisodes: (Int?) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 18.dp)
+            .padding(horizontal = 16.dp)
             .height(86.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(Color(0xFF151318))
@@ -1215,44 +1217,29 @@ private fun EmptyFavorites(onOpenEpisodes: (Int?) -> Unit) {
     }
 }
 
+// 2 RankingHeroRow — same horizontal structure as before, just the box is a bit
+//    taller (less extreme aspect ratio) and the crop is anchored to the top.
 @Composable
 private fun RankingHeroRow(rank: Int, item: DramaItem, onOpenEpisodes: (Int?) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .height(154.dp) // Increased more for better prominence
+            .height(200.dp) // was 154.dp — taller box means Crop has to trim less off the top/bottom
             .clickable { onOpenEpisodes(item.id.takeIf { it != 0 }) },
         verticalAlignment = Alignment.CenterVertically
     ) {
         val (textBrush, strokeColor) = when (rank) {
             1 -> Pair(
-                Brush.linearGradient(
-                    colors = listOf(
-                        Color(0x66FF4D6D),
-                        Color(0xFFFF4D6D)
-                    )
-                ),
+                Brush.linearGradient(colors = listOf(Color(0x66FF4D6D), Color(0xFFFF4D6D))),
                 Color(0xFFFF0000)
             )
-
             2 -> Pair(
-                Brush.linearGradient(
-                    colors = listOf(
-                        Color(0xFF6B7280),
-                        Color(0xFF6B7280)
-                    )
-                ),
+                Brush.linearGradient(colors = listOf(Color(0xFF6B7280), Color(0xFF6B7280))),
                 Color(0xFFFFFFFF)
             )
-
             else -> Pair(
-                Brush.linearGradient(
-                    colors = listOf(
-                        Color(0xFF9A3412),
-                        Color(0xFF9A3412)
-                    )
-                ),
+                Brush.linearGradient(colors = listOf(Color(0xFF9A3412), Color(0xFF9A3412))),
                 Color(0xFFFF8000)
             )
         }
@@ -1261,45 +1248,52 @@ private fun RankingHeroRow(rank: Int, item: DramaItem, onOpenEpisodes: (Int?) ->
             modifier = Modifier.width(54.dp),
             contentAlignment = Alignment.Center
         ) {
-            // Border
             Text(
                 text = rank.toString(),
                 fontSize = 58.sp,
                 fontWeight = FontWeight.Black,
                 fontStyle = FontStyle.Italic,
-                style = TextStyle(
-                    color = strokeColor,
-                    drawStyle = Stroke(width = 1f)
-                )
+                style = TextStyle(color = strokeColor, drawStyle = Stroke(width = 1f))
             )
-
-            // Gradient fill
             Text(
                 text = rank.toString(),
                 fontSize = 58.sp,
                 fontWeight = FontWeight.Black,
                 fontStyle = FontStyle.Italic,
-                style = TextStyle(
-                    brush = textBrush
-                )
+                style = TextStyle(brush = textBrush)
             )
         }
+
         Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight()
                 .clip(RoundedCornerShape(12.dp))
                 .background(CardPanel)
-                .border(1.dp, brush = Brush.linearGradient(
-                    colors = listOf(Color(0x6BFF0000),
-                        Color(0x6BF4BE4E)
-                    )
-                ), RoundedCornerShape(12.dp))
+                .border(
+                    1.dp,
+                    brush = Brush.linearGradient(
+                        colors = listOf(Color(0x6BFF0000), Color(0x6BF4BE4E))
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
         ) {
-            // Using ContentScale.FillHeight to fill container without stretching
-            NetworkDramaImage(item.imageUrl, Modifier.fillMaxSize(), ContentScale.FillHeight, item.title)
-            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xE6000000)))))
-            
+            // KEY FIX: Crop (not FillHeight) + top-anchored alignment, so the
+            // visible slice is the top of the poster (face/head) instead of
+            // whatever happens to land in dead-center of a very wide box.
+            NetworkDramaImage(
+                item.imageUrl,
+                Modifier.fillMaxSize(),
+                ContentScale.Crop,
+                item.title,
+                alignment = Alignment.TopCenter
+            )
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xE6000000))))
+            )
+
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -1307,13 +1301,18 @@ private fun RankingHeroRow(rank: Int, item: DramaItem, onOpenEpisodes: (Int?) ->
                     .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
             ) {
                 Row(verticalAlignment = Alignment.Bottom) {
-                    // Removed the CornerBadge with "TOP 1", "TOP 2", "TOP 3" text
                     Spacer(Modifier.weight(1f))
                     Text(item.rating, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
                 }
                 Spacer(Modifier.height(8.dp))
                 Text(item.title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis, letterSpacing = 0.sp)
-                Text(stringResource(R.string.genre_episode_total, item.genre, item.episodeTotal), color = Color(0xFFD1D5DB), fontSize = 10.sp, maxLines = 1, letterSpacing = 0.sp)
+                Text(
+                    stringResource(R.string.genre_episode_total, item.genre, item.episodeTotal),
+                    color = Color(0xFFD1D5DB),
+                    fontSize = 10.sp,
+                    maxLines = 1,
+                    letterSpacing = 0.sp
+                )
             }
         }
     }
@@ -1626,7 +1625,7 @@ private fun ContinueWatching(
 
     SectionHeader(title = stringResource(R.string.continue_watching), action = stringResource(R.string.see_all))
     LazyRow(
-        contentPadding = PaddingValues(horizontal = 18.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         items(items, key = { item -> "${item.film.id}:${item.episodeNumber}" }) { item -> ContinueCard(item, onOpenEpisodes) }
@@ -2064,7 +2063,7 @@ private fun SectionHeader(title: String, action: String? = null, onAction: (() -
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 18.dp, end = 18.dp, top = 24.dp, bottom = 12.dp),
+            .padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
@@ -2146,7 +2145,7 @@ private fun EmptyContinueWatching(onOpenEpisodes: (Int?) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 18.dp)
+            .padding(horizontal = 16.dp)
             .height(96.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(Brush.horizontalGradient(listOf(Color(0xFF20161B), Color(0xFF131316))))
@@ -2188,12 +2187,14 @@ private fun TagPill(text: String, color: Color, background: Color, modifier: Mod
     )
 }
 
+// 1 Give NetworkDramaImage an alignment param (defaults to Center, same as before)
 @Composable
 fun NetworkDramaImage(
     imageUrl: String,
     modifier: Modifier,
     contentScale: ContentScale,
-    seed: String
+    seed: String,
+    alignment: Alignment = Alignment.Center // NEW
 ) {
     if (imageUrl.isBlank()) {
         GeneratedPoster(seed = seed, modifier = modifier)
@@ -2202,7 +2203,8 @@ fun NetworkDramaImage(
             model = imageUrl,
             contentDescription = null,
             modifier = modifier,
-            contentScale = contentScale
+            contentScale = contentScale,
+            alignment = alignment // NEW
         )
     }
 }

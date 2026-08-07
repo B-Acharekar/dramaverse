@@ -66,6 +66,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -181,6 +182,9 @@ fun ProfileScreen(
 
     Scaffold(
         containerColor = BgColor,
+        topBar = {
+            ProfileTopBar()
+        },
         bottomBar = {
             Column {
                 BottomNavigationBar(
@@ -203,9 +207,6 @@ fun ProfileScreen(
                 .padding(innerPadding),
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
-            item {
-                ProfileTopBar()
-            }
             item { ProfileStatsPanel(stats = dynamicStats) }
 
             item { SectionLabel(stringResource(R.string.account_activity)) }
@@ -1038,7 +1039,7 @@ private fun LanguagePickerSelectionRing(selected: Boolean) {
 @Composable
 private fun ProfileTopBar() {
     DramaXTopAppBar(
-        topInset = 0.dp, // Remove top inset since Scaffold innerPadding already handles status bar
+        topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(),
         showActions = false
     )
 }

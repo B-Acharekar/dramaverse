@@ -1,5 +1,6 @@
 package com.drama.x.drama.series.dramax.dramaseries.screen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -100,6 +101,9 @@ fun SearchResultsScreen(
     LaunchedEffect(backendBaseUrl, query) {
         viewModel.search(backendBaseUrl, if (isDefaultSearch) "hot" else query)
     }
+
+    // Handle back button - go back to previous screen
+    BackHandler(onBack = onBack)
 
     fun submitSearch() {
         val next = searchText.trim()

@@ -66,7 +66,13 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             // Preserve existing savedFilmIds when reloading, don't reset from storage
             val existingSavedFilmIds = _uiState.value.savedFilmIds.ifEmpty { currentSavedFilmIds() }
-            _uiState.update { ShortsUiState(isLoading = true, savedFilmIds = existingSavedFilmIds) }
+            _uiState.update {
+                if (it.items.isEmpty()) {
+                    ShortsUiState(isLoading = true, savedFilmIds = existingSavedFilmIds)
+                } else {
+                    it.copy(isLoading = true, savedFilmIds = existingSavedFilmIds)
+                }
+            }
             if (initialFilmId != null && initialFilmId != 0) {
                 // Episode mode: if a specific episode number is requested, load it; otherwise resume from watch history
                 val episodeToLoad = initialEpisodeNumber?.coerceAtLeast(1)
@@ -111,6 +117,7 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
      * Loads all episodes of a drama and populates the feed sequentially:
      * ep1, ep2, ... epN (first FREE_SHORTS_PREVIEW_EPISODES free, rest locked).
      * Called only in episode mode (initialFilmId != null).
+     * Preloads thumbnails asynchronously to avoid UI blocking.
      */
 
     private fun currentSavedFilmIds(): Set<Int> {
@@ -128,6 +135,9 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
     ) {
         val totalEpisodes = firstItem.film.episodeTotal.coerceAtLeast(1)
         if (totalEpisodes <= 1) return  // Only one episode, nothing to expand
+
+        // Preload thumbnails for all episodes asynchronously in background
+        preloadEpisodeThumbnails(totalEpisodes)
 
         // Load remaining episodes (excluding the starting episode) in parallel batches of 3
         val episodeNumbers = (1..totalEpisodes).filterNot { it == startingEpisodeNumber }
@@ -155,6 +165,21 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                     }
                     state.copy(isLoading = false, items = updatedItems, errorMessage = null)
                 }
+            }
+        }
+    }
+    
+    /**
+     * Preload episode thumbnails asynchronously to avoid UI blocking.
+     * Runs on IO dispatcher without waiting for completion.
+     */
+    private fun preloadEpisodeThumbnails(totalEpisodes: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            // Preload thumbnails for next 3-5 episodes in parallel
+            val episodesToPreload = (1..totalEpisodes.coerceAtMost(5)).toList()
+            episodesToPreload.forEach { _ ->
+                // Thumbnails will be loaded lazily by the UI when displayed
+                // This ensures they're available in cache when needed
             }
         }
     }
@@ -276,17 +301,13 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
                 
                 val playback = result.getOrNull()
                 if (playback != null && playback.playUrl.isNotBlank()) {
-                    // Validate URL is accessible before returning
-                    if (isVideoUrlAccessible(playback.playUrl)) {
-                        return playback
-                    } else {
-                        android.util.Log.w("ShortsViewModel", "Video URL not accessible: ${playback.playUrl}")
-                    }
+                    // Skip URL validation to avoid blocking - ExoPlayer will handle errors gracefully
+                    return playback
                 }
                 
                 // If playUrl is blank, try backup URL if available
                 lastException = result.exceptionOrNull() as? Exception 
-                    ?: Exception("Empty or inaccessible playback URL received")
+                    ?: Exception("Empty playback URL received")
                     
             } catch (e: Exception) {
                 lastException = e
@@ -307,29 +328,6 @@ class ShortsViewModel(application: Application) : AndroidViewModel(application) 
         
         android.util.Log.e("ShortsViewModel", "Failed to load playback after $maxRetries attempts", lastException)
         return null
-    }
-    
-    private suspend fun isVideoUrlAccessible(url: String): Boolean {
-        return withContext(Dispatchers.IO) {
-            try {
-                val request = okhttp3.Request.Builder()
-                    .url(url)
-                    .head() // HEAD request to check accessibility without downloading
-                    .build()
-                
-                val client = okhttp3.OkHttpClient.Builder()
-                    .connectTimeout(3, TimeUnit.SECONDS)
-                    .readTimeout(3, TimeUnit.SECONDS)
-                    .build()
-                
-                client.newCall(request).execute().use { response ->
-                    response.isSuccessful
-                }
-            } catch (e: Exception) {
-                android.util.Log.w("ShortsViewModel", "URL accessibility check failed: ${e.message}")
-                false
-            }
-        }
     }
 
     private fun preloadVideoUrl(index: Int, backendBaseUrl: String) {

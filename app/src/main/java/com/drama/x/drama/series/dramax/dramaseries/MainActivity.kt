@@ -7,18 +7,23 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.OnBackPressedCallback
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.ViewModelProvider
 import com.drama.x.drama.series.dramax.dramaseries.ads.AdsManager
 import com.drama.x.drama.series.dramax.dramaseries.data.DramaNotificationScheduler
 import com.drama.x.drama.series.dramax.dramaseries.data.LocaleHelper
+import com.drama.x.drama.series.dramax.dramaseries.model.AppViewModel
 import com.drama.x.drama.series.dramax.dramaseries.ui.theme.DramaXTheme
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var appViewModel: AppViewModel
+    
     companion object {
         const val ACTION_WIDGET_HOME = "com.drama.x.drama.series.dramax.dramaseries.action.WIDGET_HOME"
         const val ACTION_WIDGET_MY_LIST = "com.drama.x.drama.series.dramax.dramaseries.action.WIDGET_MY_LIST"
@@ -39,11 +44,35 @@ class MainActivity : AppCompatActivity() {
         val initialAction = intent?.action
         intent?.action = null
 
+        // Initialize ViewModel
+        appViewModel = ViewModelProvider(this)[AppViewModel::class.java]
+        
+        // Set up back button handling
+        setupBackButtonHandling()
+
         setContent {
             DramaXTheme {
-                DramaXApp(initialAction = initialAction)
+                DramaXApp(
+                    initialAction = initialAction,
+                    viewModel = appViewModel
+                )
             }
         }
+    }
+    
+    private fun setupBackButtonHandling() {
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // Try to handle back navigation within the app
+                val handled = appViewModel.handleBackNavigation()
+                if (!handled) {
+                    // If not handled by app navigation, exit the app
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        }
+        onBackPressedDispatcher.addCallback(this, callback)
     }
 
     override fun onNewIntent(intent: Intent) {

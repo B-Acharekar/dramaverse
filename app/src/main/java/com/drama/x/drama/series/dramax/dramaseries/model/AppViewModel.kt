@@ -53,8 +53,8 @@ data class AppUiState(
     val isEpisodeMode: Boolean = false,
     val searchQuery: String = "",
     val recreateRequested: Boolean = false,
-    val isFirstLaunch: Boolean = true
-
+    val isFirstLaunch: Boolean = true,
+    val navigationStack: List<AppStep> = emptyList()
 )
 
 class AppViewModel(application: Application) : AndroidViewModel(application) {
@@ -77,6 +77,127 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         
         // Optimized: Reduced from 100ms to 50ms for faster UI response while still preventing double-taps
         private const val NAVIGATION_DEBOUNCE_MS = 50L
+    }
+
+    private fun addToNavigationStack(fromStep: AppStep, toStep: AppStep) {
+        // Don't add to stack if it's a tab navigation (same level navigation)
+        val isTabNavigation = isBottomTabStep(fromStep) && isBottomTabStep(toStep)
+        if (isTabNavigation) return
+        
+        // Don't add to stack if going to same step
+        if (fromStep == toStep) return
+        
+        // Don't add certain steps to navigation history
+        val excludedSteps = setOf(
+            AppStep.Splash,
+            AppStep.SplashUninstall, 
+            AppStep.Language,
+            AppStep.Onboarding,
+            AppStep.WelcomeBack,
+            AppStep.ConfirmUninstall,
+            AppStep.SurveyUninstall
+        )
+        
+        if (fromStep in excludedSteps) return
+        
+        val currentStack = _uiState.value.navigationStack.toMutableList()
+        
+        // Remove the toStep if it already exists in stack to avoid loops
+        currentStack.removeAll { it == toStep }
+        
+        // Add fromStep to stack
+        if (fromStep !in currentStack) {
+            currentStack.add(fromStep)
+        }
+        
+        // Limit stack size to prevent memory issues
+        if (currentStack.size > 10) {
+            currentStack.removeAt(0)
+        }
+        
+        _uiState.update { it.copy(navigationStack = currentStack) }
+    }
+    
+    private fun isBottomTabStep(step: AppStep): Boolean {
+        return step in setOf(AppStep.Home, AppStep.Shorts, AppStep.Library, AppStep.Profile)
+    }
+    
+    fun handleBackNavigation(): Boolean {
+        val currentState = _uiState.value
+        val currentStep = currentState.currentStep
+        
+        // Handle special cases where back should exit app
+        val exitAppSteps = setOf(
+            AppStep.Splash,
+            AppStep.SplashUninstall,
+            AppStep.Language, 
+            AppStep.Onboarding,
+            AppStep.WelcomeBack
+        )
+        
+        if (currentStep in exitAppSteps) {
+            return false // Let system handle (exit app)
+        }
+        
+        // If we're on Home and no navigation stack, exit app
+        if (currentStep == AppStep.Home && currentState.navigationStack.isEmpty()) {
+            return false // Let system handle (exit app)  
+        }
+        
+        // Pop from navigation stack
+        val stack = currentState.navigationStack
+        if (stack.isNotEmpty()) {
+            val previousStep = stack.last()
+            val newStack = stack.dropLast(1)
+            
+            _uiState.update { 
+                it.copy(
+                    currentStep = previousStep,
+                    navigationStack = newStack,
+                    // Clear selection when going back to avoid state confusion
+                    selectedShortFilmId = null,
+                    selectedEpisodeFilmId = null,
+                    selectedEpisodeNumber = null
+                )
+            }
+            return true
+        }
+        
+        // Handle specific back navigation for screens without stack
+        return when (currentStep) {
+            AppStep.Search -> {
+                openHome()
+                true
+            }
+            AppStep.Notifications -> {
+                openHome()
+                true
+            }
+            AppStep.Planner -> {
+                openLibrary()
+                true
+            }
+            AppStep.Rewards -> {
+                // Go back to previous tab or Home
+                openHome()
+                true
+            }
+            AppStep.Episodes, AppStep.Shorts -> {
+                // Go back to Home
+                openHome()
+                true
+            }
+            AppStep.Profile, AppStep.Library -> {
+                // For bottom tabs, go to Home if no stack
+                openHome()
+                true
+            }
+            AppStep.ConfirmUninstall, AppStep.SurveyUninstall -> {
+                openHome()
+                true
+            }
+            else -> false // Let system handle
+        }
     }
 
     init {
@@ -181,6 +302,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun openHome() {
+        val currentStep = _uiState.value.currentStep
+        addToNavigationStack(currentStep, AppStep.Home)
         _uiState.update {
             it.copy(
                 currentStep = AppStep.Home,
@@ -206,6 +329,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             if (now - lastNavigationTimeMs < NAVIGATION_DEBOUNCE_MS) return@launch
             lastNavigationTimeMs = now
             lastHomeExitTimeMs = now
+            
+            val currentStep = _uiState.value.currentStep
+            addToNavigationStack(currentStep, AppStep.Shorts)
             _uiState.update {
                 it.copy(
                     currentStep = AppStep.Shorts,
@@ -223,6 +349,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             if (now - lastNavigationTimeMs < NAVIGATION_DEBOUNCE_MS) return@launch
             lastNavigationTimeMs = now
             lastHomeExitTimeMs = now
+            
+            val currentStep = _uiState.value.currentStep
+            addToNavigationStack(currentStep, AppStep.Shorts)
             _uiState.update {
                 it.copy(
                     currentStep = AppStep.Shorts,
@@ -239,6 +368,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             if (now - lastNavigationTimeMs < NAVIGATION_DEBOUNCE_MS) return@launch
             lastNavigationTimeMs = now
             lastHomeExitTimeMs = now
+            
+            val currentStep = _uiState.value.currentStep
+            addToNavigationStack(currentStep, AppStep.Profile)
             _uiState.update { it.copy(currentStep = AppStep.Profile, selectedShortFilmId = null) }
         }
     }
@@ -249,6 +381,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             if (now - lastNavigationTimeMs < NAVIGATION_DEBOUNCE_MS) return@launch
             lastNavigationTimeMs = now
             lastHomeExitTimeMs = now
+            
+            val currentStep = _uiState.value.currentStep
+            addToNavigationStack(currentStep, AppStep.Library)
             _uiState.update { it.copy(currentStep = AppStep.Library, selectedShortFilmId = null) }
         }
     }
@@ -259,21 +394,31 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             if (now - lastNavigationTimeMs < NAVIGATION_DEBOUNCE_MS) return@launch
             lastNavigationTimeMs = now
             lastHomeExitTimeMs = now
+            
+            val currentStep = _uiState.value.currentStep
+            addToNavigationStack(currentStep, AppStep.Rewards)
             _uiState.update { it.copy(currentStep = AppStep.Rewards, selectedShortFilmId = null) }
         }
     }
 
     fun openPlanner() {
+        val currentStep = _uiState.value.currentStep
+        addToNavigationStack(currentStep, AppStep.Planner)
         _uiState.update { it.copy(currentStep = AppStep.Planner, selectedShortFilmId = null) }
     }
 
     fun openNotifications() {
+        val currentStep = _uiState.value.currentStep
+        addToNavigationStack(currentStep, AppStep.Notifications)
         _uiState.update { it.copy(currentStep = AppStep.Notifications, selectedShortFilmId = null) }
     }
 
     fun openSearch(query: String) {
         val trimmed = query.trim()
         if (trimmed.isBlank()) return
+        
+        val currentStep = _uiState.value.currentStep
+        addToNavigationStack(currentStep, AppStep.Search)
         _uiState.update {
             it.copy(
                 currentStep = AppStep.Search,

@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -88,7 +89,7 @@ fun DramaXApp(
     var showHomeRatingDialog by remember { mutableStateOf(false) }
     val ratingManager = remember { RatingManager.getInstance(context) }
 
-//    var pendingRatingOnHome by remember { mutableStateOf(false) }
+    //    var pendingRatingOnHome by remember { mutableStateOf(false) }
     // Handle shortcut navigation after splash finishes (for actions that still need splash)
 //    LaunchedEffect(initialAction, uiState.currentStep) {
 //        if (initialAction == null) return@LaunchedEffect
@@ -112,14 +113,13 @@ fun DramaXApp(
 //        }
 //    }
 
-
     LaunchedEffect(initialAction, uiState.currentStep) {
         if (initialAction == null) return@LaunchedEffect
 
         when {
             initialAction == MainActivity.ACTION_WIDGET_UNINSTALL && uiState.currentStep == AppStep.Splash -> {
-                // Trigger splash uninstall flow - this will be handled by the currentStep logic above
-                return@LaunchedEffect
+                 // Trigger splash uninstall flow - this will be handled by the currentStep logic above
+                 return@LaunchedEffect
             }
             initialAction == MainActivity.ACTION_WIDGET_MY_LIST && uiState.currentStep == AppStep.Splash -> {
                 viewModel.startWidgetMyList()
@@ -200,44 +200,48 @@ fun DramaXApp(
 
     fun openHomeWithBackAd() {
         val activity = context.findActivity()
-        val cameFromElsewhere = currentStep != AppStep.Home
-        if (activity == null || !cameFromElsewhere) {
-            viewModel.openHome()
-            // Still honor pending rating if we somehow land on Home without an ad path
-            if (pendingRatingOnHome && ratingManager.canShowRatingDialog()) {
-                showHomeRatingDialog = true
-                ratingManager.markDialogShown()
-                pendingRatingOnHome = false
+        
+        // First, try to use the navigation stack via handleBackNavigation
+        // This respects the proper back history rather than always going to Shorts
+        val handled = viewModel.handleBackNavigation()
+        if (handled) {
+            // Back navigation worked - show interstitial if appropriate
+            activity?.let { 
+                AdsManager.showInterBackIfReady(it) { adShown ->
+                    if (adShown) {
+                        if (pendingRatingOnHome && ratingManager.canShowRatingDialog()) {
+                            showHomeRatingDialog = true
+                            ratingManager.markDialogShown()
+                        }
+                        pendingRatingOnHome = false
+                        return@showInterBackIfReady
+                    }
+                    // No ad shown - show rating if eligible
+                    if (pendingRatingOnHome && ratingManager.canShowRatingDialog()) {
+                        showHomeRatingDialog = true
+                        ratingManager.markDialogShown()
+                    } else if (!pendingRatingOnHome && ratingManager.canShowRatingDialog()) {
+                        showHomeRatingDialog = true
+                        ratingManager.markDialogShown()
+                    }
+                    pendingRatingOnHome = false
+                }
             }
             return
         }
-
-        viewModel.openHome() // navigate immediately
-
-        AdsManager.showInterBackIfReady(activity) { adShown ->
-            if (adShown) {
-                // Flow 3: skip rating only for this inter trigger; do NOT markDialogShown here
-                // Show rating AFTER inter finishes if user finished an episode
-                if (pendingRatingOnHome && ratingManager.canShowRatingDialog()) {
-                    showHomeRatingDialog = true
-                    ratingManager.markDialogShown()
-                }
-                pendingRatingOnHome = false
-                return@showInterBackIfReady
-            }
-            // No ad shown → show rating if eligible (episode finished or previous Flow 3)
-            if (pendingRatingOnHome && ratingManager.canShowRatingDialog()) {
-                showHomeRatingDialog = true
-                ratingManager.markDialogShown()
-            } else if (!pendingRatingOnHome && ratingManager.canShowRatingDialog()) {
-                // optional: keep old “return to Home with no inter” Flow 3 behavior
-                showHomeRatingDialog = true
-                ratingManager.markDialogShown()
-            }
+        
+        // If we're already on Home or back navigation returned false, show rating if applicable
+        if (pendingRatingOnHome && ratingManager.canShowRatingDialog()) {
+            showHomeRatingDialog = true
+            ratingManager.markDialogShown()
             pendingRatingOnHome = false
         }
     }
 
+    // Global back button handler for system back navigation
+    BackHandler(enabled = true) {
+        openHomeWithBackAd()
+    }
 
     when (currentStep) {
         AppStep.Splash -> CustomSplashScreen(

@@ -1,5 +1,6 @@
 package com.drama.x.drama.series.dramax.dramaseries.screen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -73,6 +74,9 @@ fun NotificationScreen(
     LaunchedEffect(backendBaseUrl) {
         viewModel.loadNotifications(backendBaseUrl)
     }
+
+    // Handle back button - go back to previous screen
+    BackHandler(onBack = onBack)
 
     Box(Modifier.fillMaxSize().background(Background)) {
         NotificationBackdrop()
