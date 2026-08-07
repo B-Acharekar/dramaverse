@@ -272,6 +272,7 @@ fun ShortsScreen(
     var unlockedEpisodeKeys by remember { mutableStateOf(setOf<String>()) }
     var episodeModeKeys by remember { mutableStateOf(setOf<String>()) }
     var nativeShortVideoAdState by remember { mutableStateOf<NativeAdState>(NativeAdState.Idle) }
+    var isManualEpisodeSelection by remember { mutableStateOf(false) }
 
 
     // Load persisted unlocked episodes
@@ -413,6 +414,21 @@ fun ShortsScreen(
         if (currentPage >= feedPages.size) return@LaunchedEffect
 
         val currentFeedPage = feedPages.getOrNull(currentPage)
+
+        // If on an ad page and we're doing manual episode selection, skip to next video page
+        if (isManualEpisodeSelection && currentFeedPage is ShortsFeedPage.NativeFullscreenAd) {
+            val nextPage = currentPage + 1
+            if (nextPage < feedPages.size && feedPages.getOrNull(nextPage) is ShortsFeedPage.Video) {
+                pagerState.scrollToPage(nextPage)
+            }
+            return@LaunchedEffect
+        }
+
+        // Clear the manual episode selection flag once we land on a video page
+        if (isManualEpisodeSelection && currentFeedPage is ShortsFeedPage.Video) {
+            isManualEpisodeSelection = false
+            return@LaunchedEffect
+        }
 
         // If on an ad page, that's ok - just return (don't auto-skip)
         if (currentFeedPage is ShortsFeedPage.NativeFullscreenAd) return@LaunchedEffect
@@ -637,6 +653,7 @@ fun ShortsScreen(
 
                                 if (targetPageIndex >= 0) {
                                     // Navigate to the unlocked episode's position in the list
+                                    isManualEpisodeSelection = true
                                     coroutineScope.launch {
                                         pagerState.animateScrollToPage(targetPageIndex)
                                     }
@@ -684,13 +701,14 @@ fun ShortsScreen(
                                 }
                             },
                             onScrollToEpisode = { filmId, episodeNumber ->
-                                // Find the page for the selected episode
+                                // Find the page for the selected episode (always a Video page)
                                 val targetPageIndex = feedPages.indexOfFirst { page ->
                                     page is ShortsFeedPage.Video &&
                                             page.item.film.id == filmId &&
                                             page.item.episodeNumber == episodeNumber
                                 }
                                 if (targetPageIndex >= 0) {
+                                    isManualEpisodeSelection = true
                                     coroutineScope.launch {
                                         pagerState.animateScrollToPage(targetPageIndex)
                                     }
