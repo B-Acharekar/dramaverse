@@ -343,8 +343,9 @@ internal fun SharedPlaybackOptionsSheet(
             Text(stringResource(R.string.playback_options), color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
             Spacer(Modifier.height(20.dp))
             SharedPlaybackToggleRow(stringResource(R.string.auto_next_episode), stringResource(R.string.auto_next_episode_desc), autoNext, onAutoNextChange)
-            Spacer(Modifier.height(20.dp))
-            SharedPlaybackToggleRow(stringResource(R.string.auto_unlock_episodes), stringResource(R.string.auto_unlock_episodes_desc), autoUnlock, onAutoUnlockChange)
+            // Auto Unlock feature temporarily hidden
+            // Spacer(Modifier.height(20.dp))
+            // SharedPlaybackToggleRow(stringResource(R.string.auto_unlock_episodes), stringResource(R.string.auto_unlock_episodes_desc), autoUnlock, onAutoUnlockChange)
         }
     }
 }

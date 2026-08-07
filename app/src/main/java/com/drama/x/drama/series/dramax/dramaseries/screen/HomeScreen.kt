@@ -922,12 +922,26 @@ fun DramaXTopAppBar(
 
 @Composable
 private fun HeaderAssetLogo() {
-    Image(
-        painter = painterResource(R.drawable.icon_2),
-        contentDescription = null,
-        modifier = Modifier.size(35.dp),
-        contentScale = ContentScale.Fit
-    )
+    val context = LocalContext.current
+    val headerIconBitmap = remember {
+        try {
+            val inputStream = context.assets.open("header-icon.png")
+            android.graphics.BitmapFactory.decodeStream(inputStream).also {
+                inputStream.close()
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+    
+    headerIconBitmap?.let { bitmap ->
+        Image(
+            bitmap = bitmap.asImageBitmap(),
+            contentDescription = null,
+            modifier = Modifier.size(35.dp),
+            contentScale = ContentScale.Fit
+        )
+    }
 }
 
 @Composable
@@ -1207,7 +1221,7 @@ private fun RankingHeroRow(rank: Int, item: DramaItem, onOpenEpisodes: (Int?) ->
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .height(112.dp)
+            .height(154.dp) // Increased more for better prominence
             .clickable { onOpenEpisodes(item.id.takeIf { it != 0 }) },
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -1282,7 +1296,8 @@ private fun RankingHeroRow(rank: Int, item: DramaItem, onOpenEpisodes: (Int?) ->
                     )
                 ), RoundedCornerShape(12.dp))
         ) {
-            NetworkDramaImage(item.imageUrl, Modifier.fillMaxSize(), ContentScale.Crop, item.title)
+            // Using ContentScale.FillHeight to fill container without stretching
+            NetworkDramaImage(item.imageUrl, Modifier.fillMaxSize(), ContentScale.FillHeight, item.title)
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xE6000000)))))
             
             Column(
@@ -1292,7 +1307,7 @@ private fun RankingHeroRow(rank: Int, item: DramaItem, onOpenEpisodes: (Int?) ->
                     .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
             ) {
                 Row(verticalAlignment = Alignment.Bottom) {
-                    CornerBadge(stringResource(R.string.top_rank, rank), Color(0xFF374151), icon = null, modifier = Modifier)
+                    // Removed the CornerBadge with "TOP 1", "TOP 2", "TOP 3" text
                     Spacer(Modifier.weight(1f))
                     Text(item.rating, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.sp)
                 }

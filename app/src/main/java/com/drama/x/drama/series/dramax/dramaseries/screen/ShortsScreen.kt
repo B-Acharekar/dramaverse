@@ -407,7 +407,7 @@ fun ShortsScreen(
         }
     }.value
 
-    LaunchedEffect(pagerState.currentPage, episodeBoundaries, isEpisodeEntry) {
+    LaunchedEffect(pagerState.currentPage, episodeBoundaries, isEpisodeEntry, isManualEpisodeSelection) {
         if (feedPages.isEmpty()) return@LaunchedEffect
 
         val currentPage = pagerState.currentPage
@@ -415,13 +415,20 @@ fun ShortsScreen(
 
         val currentFeedPage = feedPages.getOrNull(currentPage)
 
-        // If on an ad page and we're doing manual episode selection, skip to next video page
+        // IMMEDIATELY skip any ad page when manual episode selection is active
         if (isManualEpisodeSelection && currentFeedPage is ShortsFeedPage.NativeFullscreenAd) {
-            val nextPage = currentPage + 1
-            if (nextPage < feedPages.size && feedPages.getOrNull(nextPage) is ShortsFeedPage.Video) {
-                pagerState.scrollToPage(nextPage)
+            // Find the next video page and jump to it immediately
+            var nextVideoPage = -1
+            for (i in currentPage + 1 until feedPages.size) {
+                if (feedPages.getOrNull(i) is ShortsFeedPage.Video) {
+                    nextVideoPage = i
+                    break
+                }
             }
-            return@LaunchedEffect
+            if (nextVideoPage >= 0) {
+                pagerState.scrollToPage(nextVideoPage)
+                return@LaunchedEffect
+            }
         }
 
         // Clear the manual episode selection flag once we land on a video page
@@ -653,9 +660,21 @@ fun ShortsScreen(
 
                                 if (targetPageIndex >= 0) {
                                     // Navigate to the unlocked episode's position in the list
+                                    // Skip the Native Ad and go directly to the video
                                     isManualEpisodeSelection = true
-                                    coroutineScope.launch {
-                                        pagerState.animateScrollToPage(targetPageIndex)
+                                    
+                                    // Check if there's an ad page right before our target and skip it
+                                    val previousPageIndex = targetPageIndex - 1
+                                    if (previousPageIndex >= 0 && feedPages.getOrNull(previousPageIndex) is ShortsFeedPage.NativeFullscreenAd) {
+                                        // If there's an ad right before our target, go directly without animation to avoid showing the ad
+                                        coroutineScope.launch {
+                                            pagerState.scrollToPage(targetPageIndex)
+                                        }
+                                    } else {
+                                        // Safe to animate normally
+                                        coroutineScope.launch {
+                                            pagerState.animateScrollToPage(targetPageIndex)
+                                        }
                                     }
                                 } else {
                                     // Fallback: use old behavior if episode not found in list
@@ -701,16 +720,27 @@ fun ShortsScreen(
                                 }
                             },
                             onScrollToEpisode = { filmId, episodeNumber ->
-                                // Find the page for the selected episode (always a Video page)
-                                val targetPageIndex = feedPages.indexOfFirst { page ->
+                                // Find the page for the selected episode (should be a Video page)
+                                var targetPageIndex = feedPages.indexOfFirst { page ->
                                     page is ShortsFeedPage.Video &&
                                             page.item.film.id == filmId &&
                                             page.item.episodeNumber == episodeNumber
                                 }
                                 if (targetPageIndex >= 0) {
                                     isManualEpisodeSelection = true
-                                    coroutineScope.launch {
-                                        pagerState.animateScrollToPage(targetPageIndex)
+                                    
+                                    // Check if there's an ad page right before our target and skip it
+                                    val previousPageIndex = targetPageIndex - 1
+                                    if (previousPageIndex >= 0 && feedPages.getOrNull(previousPageIndex) is ShortsFeedPage.NativeFullscreenAd) {
+                                        // If there's an ad right before our target, go directly without animation to avoid showing the ad
+                                        coroutineScope.launch {
+                                            pagerState.scrollToPage(targetPageIndex)
+                                        }
+                                    } else {
+                                        // Safe to animate normally
+                                        coroutineScope.launch {
+                                            pagerState.animateScrollToPage(targetPageIndex)
+                                        }
                                     }
                                 }
                             },
@@ -921,6 +951,8 @@ private fun ShortsPage(
     }
 
     // Auto-show ad to unlock when autoUnlock is enabled and episode is locked
+    // Feature temporarily disabled
+    /*
     LaunchedEffect(autoUnlock, isActive, isLocked) {
         if (autoUnlock && isActive && isLocked && !isWatchingAd) {
             if (dailyUnlocksUsed >= dailyUnlockLimit) {
@@ -941,6 +973,7 @@ private fun ShortsPage(
             }
         }
     }
+    */
 
     // Auto-hide overlay after 5 seconds of playback in Episode mode
     // BUT: Don't auto-hide if any popup is visible (episodes, subtitles, etc.)
@@ -1488,10 +1521,14 @@ private fun ShortsCaption(
                 onSeekFraction = { fraction ->
                     if (durationMs > 0L) onSeekTo((durationMs * fraction).toLong())
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = (-12).dp) // Extend seek bar closer to screen edges
             )
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = (-12).dp), // Align time labels with seek bar
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
@@ -2704,14 +2741,15 @@ private fun FeedbackOptionsSheet(
                 onCheckedChange = onAutoNextChange
             )
 
-            Spacer(Modifier.height(20.dp))
-
-            PlaybackToggleRow(
-                title = stringResource(R.string.auto_unlock_episodes),
-                description = stringResource(R.string.auto_unlock_episodes_desc),
-                checked = autoUnlock,
-                onCheckedChange = onAutoUnlockChange
-            )
+            // Auto Unlock feature temporarily hidden
+            // Spacer(Modifier.height(20.dp))
+            //
+            // PlaybackToggleRow(
+            //     title = stringResource(R.string.auto_unlock_episodes),
+            //     description = stringResource(R.string.auto_unlock_episodes_desc),
+            //     checked = autoUnlock,
+            //     onCheckedChange = onAutoUnlockChange
+            // )
         }
     }
 }

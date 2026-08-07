@@ -297,6 +297,8 @@ fun EpisodeScreen(
                 onAutoNextChange  = { autoNext = it },
                 onAutoUnlockChange= { enabled ->
                     autoUnlock = enabled
+                    // Auto-unlock feature temporarily disabled
+                    /*
                     // If enabling auto-unlock and current episode is locked, show ad automatically
                     if (enabled && currentItem != null && viewModel.isEpisodeLocked(currentItem.episodeNumber)) {
                         // Check if has daily unlocks available
@@ -323,6 +325,7 @@ fun EpisodeScreen(
                             }
                         }
                     }
+                    */
                 },
                 onDismiss         = { showPlaybackOpts = false }
             )
